@@ -1,0 +1,172 @@
+.dashboard-container {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Card Styling */
+.card {
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin: 0;
+}
+
+.card .icon {
+    font-size: 1.5rem;
+    color: #3b612a;
+}
+
+/* Card Value */
+.card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3b612a;
+    margin-top: 0.5rem;
+}
+
+/* Trend Indicators */
+.trend {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.trend.up {
+    color: #16a34a; /* green for positive */
+}
+
+.trend.down {
+    color: #dc2626; /* red for negative */
+}
+
+/* Charts Section */
+.charts-section {
+    display: grid;
+    grid-template-columns: 400px 1fr; /* calendar fixed, chart takes the rest */
+    gap: 2rem;
+    align-items: start; /* keeps them aligned at the top */
+}
+
+.chart-placeholder h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+}
+
+.chart-box {
+    height: 200px;
+    background-color: #edf2f7;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a0aec0;
+    font-weight: 500;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+}
+
+
+.calendar {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    padding: 20px;
+    width: 100%;
+}
+
+.calendar header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.calendar header button {
+    background: #3b612a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.calendar header button:hover {
+    background: #3b612a;
+}
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 10px;
+}
+
+.day-name {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.day {
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 0.95rem;
+    color: #3b612a;
+}
+
+.day:hover {
+    background: #3b612a;
+    color: #d5e546;
+    font-weight: 600;
+}
+
+.today {
+    background: #3b612a;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.inactive {
+    color: #d1d5db;
+    pointer-events: none;
+}

@@ -1,0 +1,310 @@
+/* Modal general styling */
+/* Ensure modal body scrolls when content is tall */
+.modal-body {
+  max-height: 70vh; /* 70% of the viewport height */
+  overflow-y: auto;
+}
+
+/* Make sure html/body can scroll normally when modal is open */
+html, body {
+  overflow: auto !important;
+}
+
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+/* Modal header */
+.modal-header {
+  background: linear-gradient(45deg, #3b612a, #74b357);
+  color: #fff;
+  border-bottom: none;
+}
+
+.modal-header .modal-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.modal-header .btn-close {
+  filter: invert(1); /* makes close button white */
+  opacity: 0.8;
+}
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal body */
+.modal-body {
+  padding: 1.5rem 2rem;
+  background-color: #fafafa;
+}
+
+/* Form labels & inputs */
+.modal-body label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease;
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+  border-color: #3b612a;
+  box-shadow: 0 0 0 3px rgba(59, 97, 42, 0.2);
+}
+
+/* Form section titles */
+.form-section-title {
+  margin-top: 1.2rem;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #3b612a;
+  border-left: 4px solid #74b357;
+  padding-left: 8px;
+}
+
+/* Modal footer */
+.modal-footer {
+  background-color: #f0f0f0;
+  border-top: none;
+  padding: 1rem 2rem;
+  justify-content: flex-end;
+}
+
+/* Reuse our custom book button */
+.book-btn {
+  display: inline-block;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(45deg, #3b612a, #74b357);
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.book-btn:hover {
+  background: linear-gradient(45deg, #2e4b20, #5d9444);
+  transform: scale(1.05);
+}
+
+.book-btn:focus,
+.book-btn:active {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 97, 42, 0.35);
+}
+
+
+/* Room tile styles */
+.room-tiles {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.room-tile {
+  width: 80px;
+  height: 60px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  cursor:pointer;
+  user-select:none;
+  border: 2px solid transparent;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* available */
+.room-tile.available {
+  background: linear-gradient(180deg, #fff, #f3fff3);
+  color: #234a1a;
+  border-color: rgba(59,97,42,0.12);
+  box-shadow: 0 4px 10px rgba(59,97,42,0.06);
+}
+
+.room-tile.available:hover {
+  background-color: #218838;
+}
+
+/* not available (overlap) */
+.room-tile.booked {
+  background: #ffecec;
+  color: #8a1b1b;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* Cleaning (disabled) */
+.room-tile.cleaning {
+  background-color: #ffc107; /* yellow */
+  color: #212529;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Maintenance (disabled) */
+.room-tile.maintenance {
+  background-color: #6c757d; /* gray */
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Generic unavailable (fallback) */
+.room-tile.unavailable {
+  background-color: #999;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* selected tile */
+.room-tile.selected {
+  border-color: #3b612a;
+  box-shadow: 0 8px 18px rgba(59,97,42,0.15);
+  transform: translateY(-3px);
+}
+
+/* small label under tiles when none */
+#roomTilesWrapper .note {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* breakfast checkbox disabled look */
+.meal-checkbox[disabled] + label {
+  opacity: 0.5;
+}
+
+/* --- Reservation Info Blocks --- */
+.reservation-block {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  position: relative;
+}
+
+.reservation-block .form-section-title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* For multiple blocks separation */
+.reservation-block:not(:first-child)::before {
+  content: "Additional Room";
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background: #74b357;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* Inputs inside reservation blocks */
+.reservation-block input,
+.reservation-block select {
+  width: 100%;
+}
+
+/* --- Add Room button --- */
+.add-room-btn {
+  display: inline-block;
+  background: #f5f5f5;
+  border: 2px dashed #74b357;
+  color: #3b612a;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.add-room-btn:hover {
+  background: #ebfaeb;
+  transform: scale(1.02);
+}
+
+/* --- Senior/PWD field inside block --- */
+.senior-field {
+  margin-top: 0.8rem;
+}
+
+.senior-field label {
+  font-weight: 500;
+  color: #444;
+}
+
+/* --- Room tiles wrapper spacing --- */
+.room-tiles {
+  margin-top: 0.8rem;
+}
+
+/* --- Reservation block footer for action buttons --- */
+.reservation-block-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 10px;
+  flex-wrap: wrap; /* so buttons wrap nicely on smaller screens */
+}
+
+/* Check button */
+.reservation-block-footer .check-btn {
+  background: linear-gradient(45deg, #3b612a, #74b357);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.reservation-block-footer .check-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(45deg, #2e4b20, #5d9444);
+}
+
+/* Delete button */
+.reservation-block-footer .delete-btn {
+  background: #ffecec;
+  color: #8a1b1b;
+  border: 1px solid #e0baba;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.reservation-block-footer .delete-btn:hover {
+  background: #f9d7d7;
+  transform: scale(1.05);
+}

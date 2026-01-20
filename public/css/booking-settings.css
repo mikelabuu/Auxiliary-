@@ -1,0 +1,246 @@
+/* Container */
+.bookings-container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: relative;
+    overflow-x: auto;
+    overflow-y: visible; /* ensure pagination isn't clipped */
+    padding-bottom: 2.5rem; /* extra breathing room below table */
+}
+
+/* Table */
+.bookings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.bookings-table th,
+.bookings-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.bookings-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-transform: capitalize;
+}
+
+.status-pending_payment { background: #fbbf24; }
+.status-pending_discount { background: #3b82f6; }
+.status-active { background: #10b981; }
+.status-completed { background: #6b7280; }
+.status-cancelled { background: #ef4444; }
+.status-expired { background: #9ca3af; }
+
+/* Discount badges */
+.discount-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.discount-badge.pending { background: #facc15; color: #000; }
+.discount-badge.approved { background: #34d399; color: #fff; }
+.discount-badge.rejected { background: #f87171; color: #fff; }
+.discount-badge.not-submitted { background: #d1d5db; color: #000; }
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-view {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.btn-cancel {
+    background: #ef4444;
+    color: #fff;
+    margin-left: 0.5rem;
+}
+
+.btn-checkout {
+    background: #10b981;
+    color: #fff;
+    margin-left: 0.5rem;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Empty state */
+.no-bookings {
+    margin-top: 1.5rem;
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Inline form */
+.inline-form {
+    display: inline;
+}
+
+.status-pending_payment { background: #facc15; color: #1f2937; } /* Yellow */
+.status-pending_discount { background: #e5e7eb; color: #374151; } /* Gray */
+.status-paid { background: #3b82f6; color: white; } /* Blue */
+.status-confirmed { background: #22c55e; color: white; } /* Green */
+.status-active { background: #16a34a; color: white; } /* Bright Green */
+.status-completed { background: #9ca3af; color: white; } /* Neutral Gray */
+.status-cancelled { background: #4b5563; color: white; } /* Dark Gray */
+.status-no_show { background: #dc2626; color: white; } /* Red */
+.status-expired { background: #dc2626; color: white; } /* Red */
+.status-default { background: #6b7280; color: white; } /* Fallback */
+
+/* === Filter & Search Form === */
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-form input[type="text"],
+.filter-form select {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-form input[type="text"]:focus,
+.filter-form select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    outline: none;
+}
+
+.filter-form button,
+.filter-form a.btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+/* Keep layout tidy on small screens */
+@media (max-width: 640px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-form input[type="text"],
+    .filter-form select,
+    .filter-form button,
+    .filter-form a.btn {
+        width: 100%;
+    }
+}
+
+/* pagination */
+
+/* === Pagination Styling === */
+.bookings-container nav[role="navigation"] {
+    position: static !important; /* part of normal flow */
+    display: flex !important;
+    justify-content: flex-end; /* right-align; use center if preferred */
+    align-items: center;
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0; /* remove extra spacing */
+}
+
+.bookings-container nav[role="navigation"] svg {
+    width: 12px !important;
+    height: 12px !important;
+    vertical-align: middle;
+}
+
+.bookings-container nav[role="navigation"] .flex.justify-between {
+    display: none !important; /* hide "Showing x to y of z results" */
+}
+
+.bookings-container nav[role="navigation"] ul {
+    display: inline-flex !important;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.bookings-container nav[role="navigation"] ul li {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bookings-container nav[role="navigation"] ul li a,
+.bookings-container nav[role="navigation"] ul li span {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #3b82f6;
+    background: #fff;
+    min-width: 28px;
+    min-height: 28px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.bookings-container nav[role="navigation"] ul li a:hover {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.bookings-container nav[role="navigation"] ul li span[aria-current="page"] {
+    background: #3b82f6 !important;
+    color: #fff !important;
+    border-color: #3b82f6 !important;
+}
+
+.bookings-container nav[role="navigation"] ul li span[aria-disabled="true"] {
+    color: #999 !important;
+    background: #f3f4f6 !important;
+    border-color: #e5e7eb !important;
+}
