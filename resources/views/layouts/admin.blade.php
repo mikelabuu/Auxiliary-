@@ -66,6 +66,10 @@
         <span class="material-icons mr-3">credit_card</span> Payments
       </a>
 
+      <a href="{{ route('staff.balance') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <span class="material-icons mr-3">credit_card</span> Balance
+      </a>
+
       <a href="{{ route('staff.userrecords.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <span class="material-icons mr-3">people</span> Users
       </a>
@@ -77,9 +81,9 @@
       <a href="{{ route('staff.audit.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <span class="material-icons mr-3">settings</span> Audit Logs
       </a>
-      <a href="{{ route('reports.central') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+      {{-- <a href="{{ route('reports.central') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <span class="material-icons mr-3">settings</span> Data Central
-      </a>
+      </a> --}}
     </nav>
 
     <!-- Logout -->

@@ -21,6 +21,7 @@ use App\Http\Controllers\Staff\PaymentLogsController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
+use App\Http\Controllers\Staff\AdminBalanceController;
 
 use App\Http\Controllers\Staff\Reports\BookingReportController;
 use App\Http\Controllers\Staff\Reports\PaymentReportController;
@@ -144,6 +145,8 @@ Route::middleware('auth:staff')->group(function () {
     //Booking Hub
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
     Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
+
+    Route::get('/staff/balance', [AdminBalanceController::class, 'index'])->name('staff.balance');
 
     Route::prefix('staff')->group(function () {
         Route::get('/completed-bookings', [CompletedBookingsController::class, 'index'])
