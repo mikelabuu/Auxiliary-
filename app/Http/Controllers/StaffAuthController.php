@@ -147,9 +147,7 @@ class StaffAuthController extends Controller
                 case 'admin':
                     return redirect()->intended('/staff/dashboard');
                 case 'frontdesk':
-                    return redirect()->intended('/staff/staff/front-desk/dashboard');
-                case 'housekeeping':
-                    return redirect()->intended('/staff/housekeeping-dashboard');
+                    return redirect()->intended('/front-desk/dashboard');
                 case 'master_admin':
                     return redirect()->intended('/staff/dashboard');
                 default:

@@ -8,7 +8,7 @@
     <div class="sandbox-header">
       <div class="sandbox-logo">LB</div>
       <div>
-        <div class="sandbox-title">LandBank — Sandbox Payment Portal</div>
+        <div class="sandbox-title">Bank — Sandbox Payment Portal</div>
         <div class="sandbox-sub">Simulated payment page (for demo only)</div>
       </div>
     </div>
@@ -26,18 +26,12 @@
             <label>Payment Option</label>
             <select class="input" name="payment_type" required>
               <option value="full">Pay Full Amount</option>
-              <option value="reservation_fee">Pay Reservation Fee (₱500)</option>
             </select>
           </div>
 
           <div class="field">
             <label>Total Amount</label>
             <input class="input" type="text" readonly value="₱{{ number_format($payment->amount, 2) }}">
-          </div>
-
-          <div class="field">
-            <label>Reservation Fee</label>
-            <input class="input" type="text" readonly value="₱500">
           </div>
 
           <div class="field">
@@ -53,7 +47,7 @@
           <div class="field">
             <label>Simulation Mode</label>
             <select class="input" name="simulate">
-              <option value="success">Simulate Success (Immediate)</option>
+              <option value="success">Simulate Success</option>
               <option value="fail">Simulate Failure</option>
             </select>
           </div>

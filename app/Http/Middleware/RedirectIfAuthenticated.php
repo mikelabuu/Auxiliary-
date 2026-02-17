@@ -14,7 +14,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                // Redirect users
+
                 if ($guard === 'web') {
                     if (!$request->is('booking*')) {
                         return redirect('/booking');
@@ -23,8 +23,19 @@ class RedirectIfAuthenticated
 
                 // Redirect staff
                 if ($guard === 'staff') {
-                    if (!$request->is('staff/dashboard*')) {
-                        return redirect('/staff/dashboard');
+
+                    $staff = Auth::guard('staff')->user();
+
+                    if ($staff->role === 'admin') {
+                        return redirect()->route('staff.dashboard');
+                    }
+
+                    if ($staff->role === 'master_admin') {
+                        return redirect()->route('staff.dashboard');
+                    }
+
+                    if ($staff->role === 'frontdesk') {
+                        return redirect()->route('frontdesk.dashboard.index');
                     }
                 }
             }

@@ -20,6 +20,7 @@ class PaymentController extends Controller
         if (!$payment) {
             $payment = Payment::create([
                 'booking_id' => $booking->id,
+                'user_id' => $booking->user_id,
                 'amount' => $booking->payable_amount ?? $booking->total_price,
                 'status' => 'pending',
                 'payment_type' => null,
@@ -27,14 +28,14 @@ class PaymentController extends Controller
                 'gateway' => 'sandbox',
             ]);
 
-            $balance = Balance::create([
-                'booking_id' => $booking->id,
-                'user_id' => $booking->user_id,
-                'total_amount' => $booking->payable_amount ?? $booking->total_price,
-                'paid_amount' => 0,
-                'remaining_balance' => $booking->payable_amount ?? $booking->total_price,
-                'status' => 'unpaid',
-            ]);
+            // $balance = Balance::create([
+            //     'booking_id' => $booking->id,
+            //     'user_id' => $booking->user_id,
+            //     'total_amount' => $booking->payable_amount ?? $booking->total_price,
+            //     'paid_amount' => 0,
+            //     'remaining_balance' => $booking->payable_amount ?? $booking->total_price,
+            //     'status' => 'unpaid',
+            // ]);
 
         }
 

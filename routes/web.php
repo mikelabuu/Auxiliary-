@@ -21,7 +21,6 @@ use App\Http\Controllers\Staff\PaymentLogsController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
-use App\Http\Controllers\Staff\AdminBalanceController;
 
 use App\Http\Controllers\Staff\Reports\BookingReportController;
 use App\Http\Controllers\Staff\Reports\PaymentReportController;
@@ -118,7 +117,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Staff Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:staff')->group(function () {
+Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(function () {
 
     // Home and Dashboard
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
@@ -146,7 +145,7 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
     Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
 
-    Route::get('/staff/balance', [AdminBalanceController::class, 'index'])->name('staff.balance');
+    // Route::get('/staff/balance', [AdminBalanceController::class, 'index'])->name('staff.balance');
 
     Route::prefix('staff')->group(function () {
         Route::get('/completed-bookings', [CompletedBookingsController::class, 'index'])
@@ -182,14 +181,6 @@ Route::middleware('auth:staff')->group(function () {
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('staff.audit.index');
         Route::get('audit-logs/{id}', [AuditLogController::class, 'show'])->name('staff.audit.show');
-
-        Route::get('/front-desk/dashboard', [FrontDeskDashboardController::class, 'index'])->name('frontdesk.dashboard.index');
-        Route::get('/front-desk/rooms', [FrontDeskRoomController::class, 'index'])->name('frontdesk.room.index');
-
-        Route::get('/front-desk/create', [WalkInBookingController::class, 'create'])->name('frontdesk.walkin.create');
-        Route::post('/front-desk/store', [WalkInBookingController::class, 'store'])->name('frontdesk.walkin.store');
-        Route::get('/front-desk/{booking}', [WalkInBookingController::class, 'show'])->name('frontdesk.walkin.show');
-        Route::get('/front-desk/available-rooms', [WalkInBookingController::class, 'getAvailableRooms']);
     });
 
 
@@ -261,14 +252,35 @@ Route::middleware('auth:staff')->group(function () {
 
         return view('pdf.receipt', compact('booking', 'payments'));
     });
+});
 
-    //logout
+Route::middleware('auth:staff')->group(function () {
     Route::post('/staff/logout', function (Request $request) {
         Auth::guard('staff')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/staff/login');
     })->name('staff.logout');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Front Desk Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:staff', 'staff.role:frontdesk'])
+    ->prefix('front-desk')
+    ->group(function () {
+
+        Route::get('/dashboard', [FrontDeskDashboardController::class, 'index'])->name('frontdesk.dashboard.index');
+        Route::get('/rooms', [FrontDeskRoomController::class, 'index'])->name('frontdesk.room.index');
+
+        Route::get('/create', [WalkInBookingController::class, 'create'])->name('frontdesk.walkin.create');
+        Route::post('/store', [WalkInBookingController::class, 'store'])->name('frontdesk.walkin.store');
+        Route::get('/{booking}', [WalkInBookingController::class, 'show'])->name('frontdesk.walkin.show');
+        Route::get('/available-rooms', [WalkInBookingController::class, 'getAvailableRooms']);
+
 });
 
 /*
