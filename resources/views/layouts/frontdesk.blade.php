@@ -37,6 +37,9 @@
       <a href="{{ route('frontdesk.room.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <span class="material-icons mr-3">hotel</span> Rooms
       </a>
+      <a href="{{ route('frontdesk.booking') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <span class="material-icons mr-3">book</span> Bookings
+      </a>
     </nav>
 
     <!-- Logout -->

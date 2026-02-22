@@ -49,6 +49,7 @@ public function occupancyForRoom(Room $room)
     $bookings = \App\Models\Booking::query()
         ->select(
             'bookings.id as booking_id',
+            'bookings.user_id',
             'bookings.guest_name',
             'bookings.status',
             'bookings.check_in',
@@ -65,6 +66,7 @@ public function occupancyForRoom(Room $room)
     $bookings = $bookings->map(function ($b) {
         return [
             'id' => $b->booking_id,
+            'user_id' => $b->user_id,
             'guest_name' => $b->guest_name,
             'status' => ucfirst($b->status),
             'check_in_formatted' => \Carbon\Carbon::parse($b->check_in)->format('M d, Y'),

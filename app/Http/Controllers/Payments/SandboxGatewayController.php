@@ -32,26 +32,9 @@ class SandboxGatewayController extends Controller
             return back()->with('error', 'Invalid or expired booking.');
         }
 
-        $balance = $booking->balance;
-
-        if (!$balance) {
-            return back()->with('error', 'Balance record missing for this booking.');
-        }
-
         $paymentType = $request->input('payment_type'); // full | reservation_fee
         $simulate = $request->input('simulate');
         
-        // Determine payment amount safely
-        if ($paymentType === 'reservation_fee') {
-            $amountToPay = 500;
-        } else {
-            $amountToPay = $balance->remaining_balance;
-        }
-
-        if ($amountToPay <= 0) {
-            return back()->with('error', 'This booking is already fully paid.');
-        }
-
         $status = $simulate === 'fail' ? 'failed' : 'success';
 
         $payment->update([
@@ -61,18 +44,9 @@ class SandboxGatewayController extends Controller
 
         if ($status === 'success') {
 
-            $newPaidAmount = $balance->paid_amount + $amountToPay;
-            $remaining = max(0, $balance->total_amount - $newPaidAmount);
-
-            $balance->update([
-                'paid_amount' => $newPaidAmount,
-                'remaining_balance' => $remaining,
-                'status' => $remaining > 0 ? 'partially_paid' : 'fully_paid',
-            ]);
-
             $booking->update([
                 'status' => 'paid',
-                'payment_mode' => $remaining > 0 ? 'partial' : 'full',
+                'payment_mode' => 'card',
             ]);
 
             try {

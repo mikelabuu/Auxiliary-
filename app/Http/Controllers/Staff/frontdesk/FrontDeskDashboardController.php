@@ -15,16 +15,18 @@ class FrontDeskDashboardController extends Controller
 {
     public function index()
     {
-
+        $year = now()->year;
         $bookingsPerMonth = Booking::select(
             DB::raw('MONTH(check_in) as month'),
             DB::raw('COUNT(*) as total')
         )
         ->where('status', 'paid')
+        ->whereYear('check_in', $year)
+        ->groupBy(DB::raw('YEAR(check_in)'), DB::raw('MONTH(check_in)'))
         ->groupBy('month')
         ->orderBy('month')
         ->get()
-        ->keyBy('month'); // make it easy to access by month number
+        ->keyBy('month');
 
         // format for chart
         $labels = [];

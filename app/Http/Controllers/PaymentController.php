@@ -23,7 +23,7 @@ class PaymentController extends Controller
                 'user_id' => $booking->user_id,
                 'amount' => $booking->payable_amount ?? $booking->total_price,
                 'status' => 'pending',
-                'payment_type' => null,
+                'payment_type' => 'online',
                 'reference_no' => strtoupper(Str::random(10)),
                 'gateway' => 'sandbox',
             ]);

@@ -146,12 +146,29 @@ class BookingController extends Controller
         }
 
         //same day check in (comment out for testing)
-        if ($cdate->isToday() && $now->greaterThanOrEqualTo($now->copy()->setTime(12, 0, 0))) {
+        // if ($cdate->isToday() && $now->greaterThanOrEqualTo($now->copy()->setTime(12, 0, 0))) {
+        //     return back()->withErrors([
+        //         'check_in' => 'Same-day bookings are not allowed after 12:00 noon. Please choose a later date.'
+        //     ])->withInput();
+        // }
+        
+        // Check for double bookings
+        $overlappingRooms = Room::whereIn('room_number', $allRoomNumbers)
+            ->whereHas('bookings', function($query) use ($request) {
+                $query->where(function($q) use ($request) {
+                    $q->whereDate('check_in', '<', $request->check_out)
+                    ->whereDate('check_out', '>', $request->check_in);
+                })
+                ->whereIn('status', ['pending_payment', 'checked_in', 'pending_discount']);
+            })
+            ->pluck('room_number')
+            ->toArray();
+
+        if (!empty($overlappingRooms)) {
             return back()->withErrors([
-                'check_in' => 'Same-day bookings are not allowed after 12:00 noon. Please choose a later date.'
+                'reservations' => 'The following rooms are already booked for your selected dates: ' . implode(', ', $overlappingRooms)
             ])->withInput();
         }
-
 
         DB::beginTransaction();
 
@@ -303,5 +320,4 @@ class BookingController extends Controller
 
         return response()->json(['rooms' => $result]);
     }
-
 }

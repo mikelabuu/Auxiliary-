@@ -31,6 +31,7 @@ use App\Http\Controllers\Staff\Reports\CentralHubController;
 use App\Http\Controllers\Staff\frontdesk\FrontDeskDashboardController;
 use App\Http\Controllers\Staff\frontdesk\FrontDeskRoomController;
 use App\Http\Controllers\Staff\frontdesk\WalkInBookingController;
+use App\Http\Controllers\Staff\frontdesk\BookingsController;
 
 
 //for simulation only
@@ -126,24 +127,18 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     Route::get('/staff/rooms', [RoomController::class, 'index'])->name('staff.rooms');
     Route::post('/staff/rooms/store', [RoomController::class, 'store'])->name('staff.rooms.store');
 
-    //  Replace the old bookings route with the new occupancy route
-    Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
-
-    // JSON endpoint to get room details for edit (used by modal)
-    Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
-
-    // Update room
-    Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
-
     // Verify staff password before delete (AJAX)
     Route::post('/staff/rooms/{room}/verify-password', [RoomController::class, 'verifyPassword'])->name('staff.rooms.verifyPassword');
 
+    Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
+    Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
+
     // Delete room
-    Route::delete('/staff/rooms/{room}', [RoomController::class, 'destroy'])->name('staff.rooms.destroy');
+    // Route::delete('/staff/rooms/{room}', [RoomController::class, 'destroy'])->name('staff.rooms.destroy');
 
     //Booking Hub
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
-    Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
+    
 
     // Route::get('/staff/balance', [AdminBalanceController::class, 'index'])->name('staff.balance');
 
@@ -254,6 +249,12 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     });
 });
 
+/*
+|--------------------------------------------------------------------------
+| Admin & Front Desk Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth:staff')->group(function () {
     Route::post('/staff/logout', function (Request $request) {
         Auth::guard('staff')->logout();
@@ -261,6 +262,9 @@ Route::middleware('auth:staff')->group(function () {
         $request->session()->regenerateToken();
         return redirect('/staff/login');
     })->name('staff.logout');
+
+    Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
+    Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
 });
 
 /*
@@ -269,7 +273,7 @@ Route::middleware('auth:staff')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:staff', 'staff.role:frontdesk'])
+Route::middleware(['auth:staff', 'staff.role:frontdesk,master_admin'])
     ->prefix('front-desk')
     ->group(function () {
 
@@ -278,8 +282,11 @@ Route::middleware(['auth:staff', 'staff.role:frontdesk'])
 
         Route::get('/create', [WalkInBookingController::class, 'create'])->name('frontdesk.walkin.create');
         Route::post('/store', [WalkInBookingController::class, 'store'])->name('frontdesk.walkin.store');
-        Route::get('/{booking}', [WalkInBookingController::class, 'show'])->name('frontdesk.walkin.show');
-        Route::get('/available-rooms', [WalkInBookingController::class, 'getAvailableRooms']);
+        Route::get('/booking/{booking}', [WalkInBookingController::class, 'show'])->name('frontdesk.walkin.show');
+
+        Route::post('/available-rooms', [WalkInBookingController::class, 'getAvailableRoomsAjax'])->name('frontdesk.available');
+
+        route::get('/bookings', [BookingsController::class, 'viewBookings'])->name('frontdesk.booking');
 
 });
 

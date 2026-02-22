@@ -69,7 +69,6 @@
                         Updated {{ $room->updated_at->diffForHumans() }}
                     </p>
                 </div>
-                <button class="btn-update bg-blue-500 text-white px-1 py-1 rounded" data-id="{{ $room->id }}">Edit</button>
             </div>
         @endforeach
     </div>
@@ -114,6 +113,7 @@ $(function() {
                     res.bookings.forEach(b => {
                         modalBody.append(`
                             <div class="booking-entry mb-3">
+                                <p><strong>Account ID:</strong> ${b.user_id}</p>
                                 <p><strong>Guest:</strong> ${b.guest_name}</p>
                                 <p><strong>Check-in:</strong> ${b.check_in_formatted}</p>
                                 <p><strong>Check-out:</strong> ${b.check_out_formatted}</p>
