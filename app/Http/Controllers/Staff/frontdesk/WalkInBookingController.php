@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Services\AuditLogger;
+use App\Models\Region;
+use App\Models\Province;
+use App\Models\City;
+use App\Models\Barangay;
 
 class WalkInBookingController extends Controller
 {
@@ -51,7 +55,6 @@ class WalkInBookingController extends Controller
         // Validate request
         $request->validate([
             'guest_name'      => 'required|string|max:255',
-            'guest_address'   => 'required|string|max:255',
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
@@ -63,7 +66,18 @@ class WalkInBookingController extends Controller
             'reservations.*.num_guests'    => 'required|integer|min:1',
             'reservations.*.num_seniors'   => 'nullable|integer|min:0',
             'discount_amount'               => 'nullable|numeric|min:0',
+            'region_code' => 'required|string|max:255',
+            'province_code' => 'required|string|max:255',
+            'city_code' => 'required|string|max:255',
+            'baranggay_code' => 'required|string|max:255',
         ]);
+
+        $guest_address = collect([
+            $request->input('baranggay_code') ?? null,
+            City::find($request->input('city_code'))->name ?? null,
+            Province::find($request->input('province_code'))->name ?? null,
+            Region::find($request->input('region_code'))->name ?? null,
+        ])->filter()->implode(', ');
 
         $checkIn  = Carbon::parse($request->check_in);
         $checkOut = Carbon::parse($request->check_out);
@@ -148,7 +162,7 @@ class WalkInBookingController extends Controller
                 'room_numbers'    => implode(',', $allRoomNumbers),
                 'expected_guests' => $request->expected_guests,
                 'guest_name'      => $request->guest_name,
-                'guest_address'   => $request->guest_address,
+                'guest_address'   => $guest_address,
                 'guest_phone'     => $request->guest_phone,
                 'check_in'        => $request->check_in,
                 'check_out'       => $request->check_out,

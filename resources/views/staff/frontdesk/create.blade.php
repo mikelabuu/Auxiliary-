@@ -71,7 +71,7 @@
             </div>
             <div>
                 <label class="block font-medium">Guest Address</label>
-                <input type="text" name="guest_address" value="{{ old('guest_address') }}" class="w-full border rounded p-2" required>
+                <livewire:address-selector />
             </div>
             <div>
                 <label class="block font-medium">Expected Guests</label>

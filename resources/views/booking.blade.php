@@ -271,7 +271,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
-                                <input type="text" name="guest_address" id="guest_address" class="form-control" required>
+                                <livewire:address-selector />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="expected_guests">Total No. of Guests</label>

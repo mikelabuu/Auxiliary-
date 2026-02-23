@@ -11,6 +11,9 @@ use App\Models\Reservation;
 use App\Models\Balance;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Region;
+use App\Models\Province;
+use App\Models\City;
 
 class BookingController extends Controller
 {
@@ -27,7 +30,6 @@ class BookingController extends Controller
     {
         $request->validate([
             'guest_name'      => 'required|string|max:255',
-            'guest_address'   => 'required|string|max:255',
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
@@ -40,9 +42,20 @@ class BookingController extends Controller
             'reservations.*.num_seniors'     => 'nullable|integer|min:0',
             'reservations.*.meal' => 'nullable|array',
             'reservations.*.meal.*' => 'integer|min:0',
+            'region_code' => 'required|string|max:255',
+            'province_code' => 'required|string|max:255',
+            'city_code' => 'required|string|max:255',
+            'baranggay_code' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
+
+        $guest_address = collect([
+            $request->input('baranggay_code') ?? null,
+            City::find($request->input('city_code'))->name ?? null,
+            Province::find($request->input('province_code'))->name ?? null,
+            Region::find($request->input('region_code'))->name ?? null,
+        ])->filter()->implode(', ');
 
         $cin  = Carbon::parse($request->check_in);
         $cout = Carbon::parse($request->check_out);
@@ -180,7 +193,7 @@ class BookingController extends Controller
                 'room_numbers'    => implode(',', $allRoomNumbers),
                 'expected_guests' => $request->expected_guests,
                 'guest_name'      => $request->guest_name,
-                'guest_address'   => $request->guest_address,
+                'guest_address'   => $guest_address,
                 'guest_phone'     => $request->guest_phone,
                 'check_in'        => $request->check_in,
                 'check_out'       => $request->check_out,
