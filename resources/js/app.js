@@ -1,5 +1,6 @@
 import './bootstrap';
-import * as lucide from 'lucide';
+import { createIcons } from 'lucide';
+import * as icons from 'lucide';
 
 // Initialize Lucide icons globally
-lucide.replace();
+createIcons({ icons });

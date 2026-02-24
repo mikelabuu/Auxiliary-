@@ -240,6 +240,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     Route::get('/verify-receipt/{number}', [ReceiptController::class, 'verify'])
     ->name('receipts.verify');
 
+
+});
+
     //testing route for receipt
     Route::get('/test-receipt/{id}', function ($id) {
         $booking = Booking::findOrFail($id);
@@ -247,7 +250,6 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
         return view('pdf.receipt', compact('booking', 'payments'));
     });
-});
 
 /*
 |--------------------------------------------------------------------------

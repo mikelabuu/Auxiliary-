@@ -60,6 +60,7 @@
     @if ($payment)
         <p style="margin-top:15px;"><strong>Transaction ID:</strong> {{ (string)$payment->landbank_transaction_id }}</p>
         <p><strong>Date:</strong> {{ $payment->updated_at->format('M d, Y h:i A') }}</p>
+        <p><strong>Verification Link:</strong> {{ $verificationUrl}}</p>
     @endif
 
     <div style="text-align:center; margin-top:20px;">
