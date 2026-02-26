@@ -181,85 +181,84 @@ class BookingController extends Controller
         // PREVENT DOUBLE BOOKING WHILE TRANSACTION //
         //                                          //
         //                                          //
-        //                                          //
-        //                                          //
-        //              Old Block                   //
-        //                                          //
-        //                                          //
-        $overlappingRooms = Room::whereIn('room_number', $allRoomNumbers)
-            ->whereHas('bookings', function($query) use ($request) {
-                $query->where(function($q) use ($request) {
-                    $q->whereDate('check_in', '<', $request->check_out)
-                    ->whereDate('check_out', '>', $request->check_in);
-                })
-                ->whereIn('status', ['pending_payment', 'checked_in', 'pending_discount']);
-            })
-            ->pluck('room_number')
-            ->toArray();
+        try{
+            $booking = DB::transaction(function() use ($request, $user, $allRoomNumbers, $guestName, $guest_address, $totalPrice, $totalSeniors, $status, $capacityMap) {
+                // lock rooms
+                $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
+                        ->lockForUpdate()
+                        ->get();
 
-        if (!empty($overlappingRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are already booked for your selected dates: ' . implode(', ', $overlappingRooms)
-            ])->withInput();
-        }
+                $overlappingRooms = $lockedRooms->filter(function($room) use ($request) {
+                    return $room->bookings()->where(function($q) use ($request) {
+                            $q->whereDate('check_in', '<', $request->check_out)
+                            ->whereDate('check_out', '>', $request->check_in);
+                        })
+                        ->whereIn('status', ['pending_payment', 'checked_in', 'pending_discount'])
+                        ->exists();
+                })->pluck('room_number')->toArray();
 
-        DB::beginTransaction();
+                if (!empty($overlappingRooms)) {
+                    throw new \Exception('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
+                }
+                
+                //Begin Booking 
 
-        // save booking and reservations
-        try {
-            // create booking
-            $booking = Booking::create([
-                'user_id'         => $user->id,
-                'room_numbers'    => implode(',', $allRoomNumbers),
-                'expected_guests' => $request->expected_guests,
-                'guest_name'      => $guestName,
-                'guest_address'   => $guest_address,
-                'guest_phone'     => $request->guest_phone,
-                'check_in'        => $request->check_in,
-                'check_out'       => $request->check_out,
-                'discount'        => 0,
-                'total_price'     => $totalPrice,
-                'num_seniors'     => $totalSeniors,
-                'wants_discount'  => $request->boolean('request_discount'),
-                'status'          => $status,
-            ]);
+                $booking = Booking::create([
+                    'user_id'         => $user->id,
+                    'room_numbers'    => implode(',', $allRoomNumbers),
+                    'expected_guests' => $request->expected_guests,
+                    'guest_name'      => $guestName,
+                    'guest_address'   => $guest_address,
+                    'guest_phone'     => $request->guest_phone,
+                    'check_in'        => $request->check_in,
+                    'check_out'       => $request->check_out,
+                    'discount'        => 0,
+                    'total_price'     => $totalPrice,
+                    'num_seniors'     => $totalSeniors,
+                    'wants_discount'  => $request->boolean('request_discount'),
+                    'status'          => $status,
+                ]);
 
-            foreach ($request->reservations as $block) {
-                $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
-                $roomType = $block['room_type'];
-                $pricePerNight = (float) $block['price_per_night'];
-                $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
-                $meals = $block['meal'] ?? null;
-                $beds = $capacityMap[$roomType] ?? 1;
+                foreach ($request->reservations as $block) {
+                    $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
+                    $roomType = $block['room_type'];
+                    $pricePerNight = (float) $block['price_per_night'];
+                    $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
+                    $meals = $block['meal'] ?? null;
+                    $beds = $capacityMap[$roomType] ?? 1;
 
-                foreach ($roomNumbersArray as $roomNumber) {
-                    $room = Room::where('room_number', $roomNumber)->first();
+                    foreach ($roomNumbersArray as $roomNumber) {
+                        $room = Room::where('room_number', $roomNumber)->first();
 
-                    Reservation::create([
-                        'booking_id'      => $booking->id,
-                        'room_number'     => $roomNumber,
-                        'room_type'       => $roomType,
-                        'capacity'        => $beds,
-                        'price' => $pricePerNight,
-                        'num_seniors'     => min($numSeniorsBlock, $beds),
-                        'num_guests'  => (int) ($block['num_guests'] ?? 0),
-                        'meal'        => $meals,
-                    ]);
+                        Reservation::create([
+                            'booking_id'      => $booking->id,
+                            'room_number'     => $roomNumber,
+                            'room_type'       => $roomType,
+                            'capacity'        => $beds,
+                            'price' => $pricePerNight,
+                            'num_seniors'     => min($numSeniorsBlock, $beds),
+                            'num_guests'  => (int) ($block['num_guests'] ?? 0),
+                            'meal'        => $meals,
+                        ]);
 
-                    $numSeniorsBlock -= $beds;
-                    if ($numSeniorsBlock < 0) {
-                        $numSeniorsBlock = 0;
+                        $numSeniorsBlock -= $beds;
+                        if ($numSeniorsBlock < 0) {
+                            $numSeniorsBlock = 0;
+                        }
                     }
                 }
-            }
-
-            DB::commit();
-
-        } catch (\Throwable $e) {
+                
+                return $booking;
+            });
+        }
+        catch (\Throwable $e) {
             \Log::error('Booking store failed: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            dd($e->getMessage()); // stops and shows error immediately
+
+            return back()->withErrors([
+                'reservations' => $e->getMessage()
+            ])->withInput();
         }
 
         // pivot attach
