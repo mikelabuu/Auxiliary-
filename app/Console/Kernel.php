@@ -13,8 +13,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Run the expiry check every minute
-        $schedule->command('bookings:expire')->everyMinute()->withoutOverlapping();
-        $schedule->command('bookings:autocheckout')->everyMinute()->withoutOverlapping();
+        // $schedule->command('bookings:expire')->everyMinute()->withoutOverlapping();
+        // $schedule->command('bookings:autocheckout')->everyMinute()->withoutOverlapping();
+        $schedule->command('bookings:mark-no-show')->everyMinute();
     }
 
     /**

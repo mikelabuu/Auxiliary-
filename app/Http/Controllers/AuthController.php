@@ -21,20 +21,20 @@ class AuthController extends Controller
     public function loginUser(Request $request)
     {
         $credentials = $request->validate([
-            'username' => 'required',
+            'email' => 'required',
             'password' => 'required',
         ]);
 
         // Attempt login
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
+        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
             $user = Auth::user();
 
             // Check if suspended
             if ($user->is_suspended) {
                 Auth::logout();
                 return redirect()->route('login')->withErrors([
-                    'username' => 'Your account has been suspended. Please contact support.'
-                ])->onlyInput('username');
+                    'email' => 'Your account has been suspended. Please contact support.'
+                ])->onlyInput('email');
             }
 
             // Update last login timestamp
@@ -45,8 +45,8 @@ class AuthController extends Controller
         } 
 
         return back()->withErrors([
-            'username' => 'Invalid username or password',
-        ])->onlyInput('username');
+            'email' => 'Invalid email or password',
+        ])->onlyInput('email');
     }
 
     // Show signup page
@@ -60,13 +60,24 @@ class AuthController extends Controller
         
         // Validate input data
         $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_initial' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'username' => 'required|min:3|alpha_num|unique:users,username',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
+            'terms'    => 'required'
+        ]);
+
+        $full_name = implode(', ', [
+            $request->last_name,
+            $request->first_name,
+            $request->middle_initial,
         ]);
 
         // Create the user
         $user = User::create([
+            'full_name' => $full_name,
             'username' => $request->username,
             'email'    => $request->email,
             'password' => Hash::make($request->password),

@@ -7,7 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class City extends Model
 {
     protected $table = 'cities';
-    public $timestamps = false;
-    protected $primaryKey = 'code';
-    protected $keyType = 'string';
+
+    protected $fillable = [
+        'psgcCode',
+        'psgcOldCode',
+        'citymunDesc',
+        'regCode',
+        'provCode',
+        'citymunCode'
+    ];
+
+    public function barangays()
+    {
+        return $this->hasMany(Barangay::class, 'citymunCode', 'citymunCode');
+    }
 }

@@ -14,48 +14,66 @@ class AddressSelector extends Component
     public $selectedProvince = null;
     public $selectedCity = null;
     public $selectedBarangay = null;
-
+    
     public $regions = [];
     public $provinces = [];
     public $cities = [];
     public $barangays = [];
-
+    
     public function mount()
     {
-        $this->regions = Region::orderBy('name')->get();
-        $this->provinces = collect();
-        $this->cities = collect();
-        $this->barangays = collect();
+        $this->regions = Region::orderBy('regDesc')->get();
     }
 
     public function updatedSelectedRegion($value)
     {
-        $this->provinces = Province::where('region_code', $value)->orderBy('name')->get();
-        $this->selectedProvince = null;
-        $this->cities = collect();
-        $this->selectedCity = null;
-        $this->barangays = collect();
-        $this->selectedBarangay = null;
+        $this->reset([
+            'selectedProvince',
+            'selectedCity',
+            'selectedBarangay'
+        ]);
+    
+        $this->cities = [];
+        $this->barangays = [];
+    
+        // NCR special case
+        if ($value == '13') {
+    
+            // Skip provinces
+            $this->provinces = collect();
+    
+            // Load cities directly by regCode
+            $this->cities = City::where('regCode', $value)
+                                ->orderBy('citymunDesc')
+                                ->get();
+    
+        } else {
+    
+            // Normal flow
+            $this->provinces = Province::where('regCode', $value)
+                                       ->orderBy('provDesc')
+                                       ->get();
+        }
     }
+
 
     public function updatedSelectedProvince($value)
     {
-        $this->cities = City::where('province_code', $value)->orderBy('name')->get();
-        // Include NCR/HUC cities with province_code = null if region matches
-        $this->cities = City::where('province_code', $value)
-            ->orWhereNull('province_code') // include NCR/HUC cities
-            ->orderBy('name')
-            ->get();
-
-        $this->selectedCity = null;
-        $this->barangays = collect();
-        $this->selectedBarangay = null;
+        $this->reset(['selectedCity', 'selectedBarangay']);
+        $this->barangays = [];
+    
+        $this->cities = City::where('provCode', $value)
+                            ->orderBy('citymunDesc')
+                            ->get();
     }
 
     public function updatedSelectedCity($value)
     {
-        $this->barangays = Barangay::where('city_code', $value)->orderBy('name')->get();
-        $this->selectedBarangay = null;
+        $this->reset('selectedBarangay');
+    
+        $this->barangays = Barangay::where('citymunCode', $value)
+                                   ->orderBy('brgyDesc')
+                                   ->get();
     }
 
     public function render()

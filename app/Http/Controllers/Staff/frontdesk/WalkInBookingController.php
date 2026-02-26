@@ -67,17 +67,22 @@ class WalkInBookingController extends Controller
             'reservations.*.num_seniors'   => 'nullable|integer|min:0',
             'discount_amount'               => 'nullable|numeric|min:0',
             'region_code' => 'required|string|max:255',
-            'province_code' => 'required|string|max:255',
+            'province_code' => 'nullable|string|max:255',
             'city_code' => 'required|string|max:255',
-            'baranggay_code' => 'required|string|max:255',
+            'barangg=ay_code' => 'required|string|max:255',
         ]);
 
         $guest_address = collect([
-            $request->input('baranggay_code') ?? null,
-            City::find($request->input('city_code'))->name ?? null,
-            Province::find($request->input('province_code'))->name ?? null,
-            Region::find($request->input('region_code'))->name ?? null,
-        ])->filter()->implode(', ');
+            Barangay::where('brgyCode', $request->barangay_code)->value('brgyDesc'),
+        
+            City::where('citymunCode', $request->city_code)->value('citymunDesc'),
+        
+            Province::where('provCode', $request->province_code)->value('provDesc'),
+        
+            Region::where('regCode', $request->region_code)->value('regDesc'),
+        ])
+        ->filter()
+        ->implode(', ');
 
         $checkIn  = Carbon::parse($request->check_in);
         $checkOut = Carbon::parse($request->check_out);

@@ -35,15 +35,15 @@ class StaffAuthController extends Controller
         $email = strtolower($credentials['staff_email']); // normalize
         $key = 'login-attempt:' . $email . '|' . $request->ip();
 
+        $staff = Staff::where('email', $email)->first();
+        
         // Check if too many attempts
-        if (RateLimiter::tooManyAttempts($key, 5)) { // 5 attempts allowed
-            $seconds = RateLimiter::availableIn($key);
+        if (!$staff) {
+            RateLimiter::hit($key); // count failed attempt
             return back()->withErrors([
-                'staff_email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+                'staff_email' => 'No account found with this email.',
             ])->onlyInput('staff_email');
         }
-
-        $staff = Staff::where('email', $email)->first();
 
         if ($staff->is_suspended) {
             Auth::logout();

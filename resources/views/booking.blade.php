@@ -262,23 +262,40 @@
                         <h5 class="fw-semibold">Guest Information</h5>
                         <div class="row g-2">
                             <div class="col-md-6">
-                                <label class="form-label">Full name</label>
-                                <input type="text" name="guest_name" id="guest_name" class="form-control" required>
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Contact number</label>
-                                <input type="tel" name="guest_phone" id="guest_phone" class="form-control" required>
+                                <label class="form-label">Middle Name</label>
+                                <input type="text" name="middle_name" class="form-control">
                             </div>
+                        
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Suffix <small class="text-muted">(Optional)</small></label>
+                                <input type="text" name="suffix" class="form-control">
+                            </div>
+                        
+                            <div class="col-md-6">
+                                <label class="form-label">Contact number</label>
+                                <input type="tel" name="guest_phone" id="guest_phone" class="form-control" 
+                                       inputmode="numeric" pattern="^(09|\+639)\d{9}$" maxlength="13" required>
+                            </div>
+                            <!--Address Info (livewire)-->
+                            <hr class="divider">
                             <div class="col-12">
                                 <label class="form-label">Address</label>
                                 <livewire:address-selector />
                             </div>
+                            <hr class="divider">
                             <div class="col-md-6">
                                 <label class="form-label" for="expected_guests">Total No. of Guests</label>
                                 <input type="number" id="expected_guests" name="expected_guests" class="form-control" min="1" value="1" required>
                             </div>
-
-                            <!-- note: visible per-room seniors now. keep only hidden total for DB -->
+                            
                             <div class="col-md-6">
                                 <br>
                                 <div class="form-control-plaintext" id="maxSeniorsLabelDisplay">Max seniors/pwd: <span id="maxSeniorsLabel">0</span></div>
@@ -290,6 +307,7 @@
                                 I want to request a 20% discount per senior/pwd
                                 </label>
                             </div>
+                            <hr class="divider">
                         </div>
                     </section>
                     <!-- RESERVATION INFO -->

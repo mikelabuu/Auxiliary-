@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use App\Models\Region;
 use App\Models\Province;
 use App\Models\City;
+use App\Models\Barangay;
 
 class BookingController extends Controller
 {
@@ -29,7 +30,10 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'guest_name'      => 'required|string|max:255',
+            'first_name'      => 'required|string|max:255',
+            'middle_name'     => 'required|string|max:10',
+            'last_name'       => 'required|string|max:255',
+            'suffix'          => 'nullable|string|max:255',
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
@@ -43,19 +47,34 @@ class BookingController extends Controller
             'reservations.*.meal' => 'nullable|array',
             'reservations.*.meal.*' => 'integer|min:0',
             'region_code' => 'required|string|max:255',
-            'province_code' => 'required|string|max:255',
+            'province_code' => 'nullable|string|max:255',
             'city_code' => 'required|string|max:255',
-            'baranggay_code' => 'required|string|max:255',
+            'barangay_code' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
+        
+        $guestName = implode(', ', [
+            $request->last_name,
+            $request->first_name,
+            $request->middle_name,
+        ]);
+        
+        if ($request->filled('suffix')) {
+            $guestName .= ' ' . $request->suffix;
+        }
 
         $guest_address = collect([
-            $request->input('baranggay_code') ?? null,
-            City::find($request->input('city_code'))->name ?? null,
-            Province::find($request->input('province_code'))->name ?? null,
-            Region::find($request->input('region_code'))->name ?? null,
-        ])->filter()->implode(', ');
+            Barangay::where('brgyCode', $request->barangay_code)->value('brgyDesc'),
+        
+            City::where('citymunCode', $request->city_code)->value('citymunDesc'),
+        
+            Province::where('provCode', $request->province_code)->value('provDesc'),
+        
+            Region::where('regCode', $request->region_code)->value('regDesc'),
+        ])
+        ->filter()
+        ->implode(', ');
 
         $cin  = Carbon::parse($request->check_in);
         $cout = Carbon::parse($request->check_out);
@@ -157,15 +176,16 @@ class BookingController extends Controller
                 'reservations' => 'Mismatch: total seniors in reservations must equal the total seniors for this booking.'
             ])->withInput();
         }
-
-        //same day check in (comment out for testing)
-        // if ($cdate->isToday() && $now->greaterThanOrEqualTo($now->copy()->setTime(12, 0, 0))) {
-        //     return back()->withErrors([
-        //         'check_in' => 'Same-day bookings are not allowed after 12:00 noon. Please choose a later date.'
-        //     ])->withInput();
-        // }
-        
-        // Check for double bookings
+        //                                          //
+        //                                          //
+        // PREVENT DOUBLE BOOKING WHILE TRANSACTION //
+        //                                          //
+        //                                          //
+        //                                          //
+        //                                          //
+        //              Old Block                   //
+        //                                          //
+        //                                          //
         $overlappingRooms = Room::whereIn('room_number', $allRoomNumbers)
             ->whereHas('bookings', function($query) use ($request) {
                 $query->where(function($q) use ($request) {
@@ -192,7 +212,7 @@ class BookingController extends Controller
                 'user_id'         => $user->id,
                 'room_numbers'    => implode(',', $allRoomNumbers),
                 'expected_guests' => $request->expected_guests,
-                'guest_name'      => $request->guest_name,
+                'guest_name'      => $guestName,
                 'guest_address'   => $guest_address,
                 'guest_phone'     => $request->guest_phone,
                 'check_in'        => $request->check_in,

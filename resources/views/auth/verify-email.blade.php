@@ -1,31 +1,77 @@
-@extends('layouts.app')
-
-@section('title', 'Email Verification')
-
+@extends('layouts.authlayout')
+@section('title', 'Forgot Password')
 @section('content')
-
-<main id="main_content">
-    <section id="auth_section">
-        <div class="logo">
-            <img class="fhlogo" src="{{ asset('image/FHLogo.png') }}" alt="logo">
+        <div class="mb-10 transform transition-hover hover:scale-105 duration-300">
+            <img src="{{ asset('image/FHLogo2.png') }}" alt="FH" class="h-20 w-auto drop-shadow-2xl">
         </div>
-        <div class="auth_container">
-            <div id="Log_in">
-                <h1>Email Verification Required</h1>
-                <p>Thanks for signing up! Before accessing the site, please check your email for a verification link.</p>
-                @if (session('message'))
-                    <p style="color: green;">{{ session('message') }}</p>
-                @endif
-                <form method="POST" action="{{ route('verification.send') }}">
+
+        <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
+            <div class="px-8 pb-10">
+                <div>
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-extrabold text-slate-900 leading-tight mt-4">Email Verification Required</h2>
+                        <p class="text-slate-600 mt-2">Thanks for signing up! Before accessing the site, please check your email for a verification link.</p>
+                        @if ($errors->any())
+                            @foreach ($errors->all() as $error)
+                                <div id="error-alert" class="mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
+                                            <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ $error }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                        {{-- Session Error --}}
+                        @if (session('error'))
+                            <div id="error-alert" class="error-alert mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
+                                        <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ session('error') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <form class="space-y-4" method="POST" action="{{ route('verification.send') }}">
                         @csrf
-                        <button type="submit" class="auth_btn">Resend Verification Email</button>
-                </form>
+                        <p class="text-slate-600 mt-2">Didn't Receive a link? Click to verify again.</p>
+                        <button type="submit" class="w-full bg-brand hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
+                            Resend Verification Email
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-    </section>
-</main>
-
-@include('footer')
-
+        <p class="mt-10 text-white/60 text-xs font-medium tracking-wide">
+            &copy; 2026 Farmers Hostel.
+        </p>
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to handle fade and remove
+        const autoHide = (elId) => {
+            const el = document.getElementById(elId);
+            if (el) {
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => { el.style.display = 'none'; }, 500);
+                }, 5000); // 5 seconds
+            }
+        };
 
+        autoHide('error-alert');
+        autoHide('success-alert');
+    });
+</script>
+@endpush

@@ -26,18 +26,10 @@ class MarkNoShowBookings extends Command
     public function handle(): void
     {
         $now = Carbon::now('Asia/Manila');
-        $cutoff = Carbon::today('Asia/Manila')->setTime(23, 0, 0); // 11:00 PM
-
-        // Skip if not yet 11:00 PM
-        if ($now->lessThan($cutoff)) {
-            $this->info(" It’s not yet 11:00 PM — skipping check.");
-            return;
-        }
-
         $this->info("🔍 Checking for no-show bookings at {$now->format('Y-m-d H:i:s')}...");
 
         $bookings = Booking::where('status', 'paid')
-            ->whereDate('check_in', $now->toDateString())
+            ->whereDate('check_in', '<', $now->toDateString())
             ->where('status', '!=', 'active')
             ->get();
 

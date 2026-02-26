@@ -6,8 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Province extends Model
 {
-    protected $table = 'provinces';
-    public $timestamps = false;
-    protected $primaryKey = 'code';
-    protected $keyType = 'string';
+    protected $fillable = [
+        'psgcCode',
+        'psgcOldCode',
+        'provDesc',
+        'regCode',
+        'provCode'
+    ];
+
+    public function cities()
+    {
+        return $this->hasMany(City::class, 'provCode', 'provCode');
+    }
 }
