@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Staff;
 use App\Models\Room;
+use App\Models\RoomType;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -44,6 +45,22 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
+
+        // Seed Room Types (must exist before rooms reference them, so a fresh
+        // migrate+seed doesn't leave room_types empty — the migration's own
+        // backfill only pulls from rooms that already exist at migration time)
+        $roomTypesData = [
+            ['slug' => 'double',     'name' => 'Double',     'base_price' => 1600.00, 'capacity' => 2],
+            ['slug' => 'triple',     'name' => 'Triple',     'base_price' => 2100.00, 'capacity' => 3],
+            ['slug' => 'quadruple',  'name' => 'Quadruple',  'base_price' => 2400.00, 'capacity' => 4],
+            ['slug' => 'deluxe',     'name' => 'Deluxe',     'base_price' => 2500.00, 'capacity' => 2],
+            ['slug' => 'dormitory1', 'name' => 'Dormitory1', 'base_price' => 2500.00, 'capacity' => 5],
+            ['slug' => 'dormitory2', 'name' => 'Dormitory2', 'base_price' => 3000.00, 'capacity' => 6],
+        ];
+
+        foreach ($roomTypesData as $type) {
+            RoomType::firstOrCreate(['slug' => $type['slug']], $type);
+        }
 
         // Seed Rooms
         $roomsData = [

@@ -22,12 +22,7 @@
     // Built here (not via @json in the script) because Blade's @json directive
     // naively explode(',')s its raw argument text, which mangles any expression
     // containing commas inside nested arrays/closures.
-    $statusMetaJson = json_encode(collect($statusMeta)->map(fn ($m) => [
-        'label' => $m['label'],
-        'badge' => $m['badge'],
-        'dot'   => $m['dot'],
-        'bar'   => $m['bar'],
-    ]));
+    $statusMetaJson = json_encode($statusMeta);
     $roomTypesJson = json_encode($roomTypes->map(fn ($t) => [
         'id' => $t->id,
         'slug' => $t->slug,
@@ -112,10 +107,9 @@
             </div>
             <select id="roomStatusFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
                 <option value="all">All statuses</option>
-                <option value="available">Available</option>
-                <option value="occupied">Occupied</option>
-                <option value="cleaning">Cleaning</option>
-                <option value="maintenance">Maintenance</option>
+                @foreach($statusMeta as $statusKey => $sm)
+                    <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
+                @endforeach
             </select>
             <select id="wingFilterSelect" class="w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
                 <option value="all">All wings</option>
@@ -150,24 +144,23 @@
         @csrf
         <div>
             <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>
-            <input type="text" name="room_number" value="{{ old('room_number') }}" placeholder="e.g. A-101" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+            <input type="text" name="room_number" value="{{ old('room_number') }}" placeholder="e.g. A-101" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_number') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
             @error('room_number')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Type</label>
-                <select name="room_type" id="room-type" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors"></select>
+                <select name="room_type" id="room-type" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_type') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"></select>
                 @error('room_type')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
-                <select name="wing" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                <select name="wing" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('wing') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors">
                     <option value="" disabled {{ old('wing') ? '' : 'selected' }} hidden>Select wing</option>
-                    <option value="rooster" @selected(old('wing') === 'rooster')>Rooster</option>
-                    <option value="tumana" @selected(old('wing') === 'tumana')>Tumana</option>
-                    <option value="chev_re" @selected(old('wing') === 'chev_re')>Chev Re</option>
-                    <option value="torii" @selected(old('wing') === 'torii')>Torii</option>
+                    @foreach($wingOrder as $w)
+                        <option value="{{ $w }}" @selected(old('wing') === $w)>{{ $wingLabel($w) }}</option>
+                    @endforeach
                 </select>
                 @error('wing')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
             </div>
@@ -176,29 +169,27 @@
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Price (₱)</label>
-                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('price') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
                 @error('price')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
                 <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
-                    <option value="available" selected>Available</option>
-                    <option value="occupied">Occupied</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="cleaning">Cleaning</option>
+                    @foreach($statusMeta as $statusKey => $sm)
+                        <option value="{{ $statusKey }}" @selected(old('status', 'available') === $statusKey)>{{ $sm['label'] }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
 
         <div>
             <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Notes <span class="text-stone-400 font-normal normal-case">(optional)</span></label>
-            <textarea name="notes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors resize-none">{{ old('notes') }}</textarea>
+            <textarea name="notes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('notes') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors resize-none">{{ old('notes') }}</textarea>
             @error('notes')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex gap-2.5 justify-end pt-2">
-            <button type="button" data-modal-close="addRoomModal" class="text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" class="text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-5 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all cursor-pointer">Add Room</button>
+            <x-admin.modal-footer close-target="addRoomModal" submit-label="Add Room" />
         </div>
     </form>
 </x-admin.modal>
@@ -224,10 +215,9 @@
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
                     <select id="editWing" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors" required>
                         <option value="" disabled hidden>Select wing</option>
-                        <option value="rooster">Rooster</option>
-                        <option value="tumana">Tumana</option>
-                        <option value="chev_re">Chev Re</option>
-                        <option value="torii">Torii</option>
+                        @foreach($wingOrder as $w)
+                            <option value="{{ $w }}">{{ $wingLabel($w) }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -240,10 +230,9 @@
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
                     <select id="editStatus" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
-                        <option value="available">Available</option>
-                        <option value="occupied">Occupied</option>
-                        <option value="maintenance">Under Maintenance</option>
-                        <option value="cleaning">Cleaning</option>
+                        @foreach($statusMeta as $statusKey => $sm)
+                            <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -254,8 +243,7 @@
             </div>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
-            <button type="button" data-modal-close="roomEditModal" class="text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" class="text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-5 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all cursor-pointer">Save changes</button>
+            <x-admin.modal-footer close-target="roomEditModal" submit-label="Save changes" />
         </div>
     </form>
 </x-admin.modal>
@@ -284,8 +272,7 @@
             <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms — existing rooms keep their current price.</p>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
-            <button type="button" data-modal-close="typeModal" class="text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" class="text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-5 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all cursor-pointer">Save Type</button>
+            <x-admin.modal-footer close-target="typeModal" submit-label="Save Type" />
         </div>
     </form>
 </x-admin.modal>
@@ -316,8 +303,17 @@ $(function () {
         Swal.fire({ toast: true, position: 'bottom-end', icon: icon || 'success', title: message, showConfirmButton: false, timer: 2400, timerProgressBar: true });
     }
 
-    function openModal(id) { $('#' + id).removeClass('hidden').addClass('flex'); }
-    function closeModal(id) { $('#' + id).addClass('hidden').removeClass('flex'); }
+    let lastFocusedBeforeModal = null;
+    function openModal(id) {
+        lastFocusedBeforeModal = document.activeElement;
+        const modal = $('#' + id).removeClass('hidden').addClass('flex');
+        const focusable = modal.find('input, select, textarea, button').not('[data-modal-close]').first();
+        (focusable.length ? focusable : modal.find('[role="dialog"]')).trigger('focus');
+    }
+    function closeModal(id) {
+        $('#' + id).addClass('hidden').removeClass('flex');
+        if (lastFocusedBeforeModal) { $(lastFocusedBeforeModal).trigger('focus'); lastFocusedBeforeModal = null; }
+    }
 
     $('#openAddRoomBtn').on('click', () => openModal('addRoomModal'));
     $('[data-modal-close]').on('click', function () { closeModal($(this).data('modal-close')); });
@@ -478,10 +474,17 @@ $(function () {
             });
     });
 
-    /* ------------------- AUTO-FILL PRICE (Add form) ------------------- */
+    /* ------------------- AUTO-FILL PRICE (Add form) -------------------
+       Only overwrite the price if it's empty or still matches some
+       type's base price (i.e. the staff hasn't customized it away from
+       an auto-filled value) — otherwise re-selecting/changing the type
+       would silently clobber a manually-typed custom price. */
     $('#room-type').on('change', function () {
         const t = typeBySlug($(this).val());
-        if (t) $('#price').val(t.base_price);
+        if (!t) return;
+        const priceField = $('#price');
+        const currentlyDefault = !priceField.val() || roomTypes.some(rt => String(rt.base_price) === String(priceField.val()));
+        if (currentlyDefault) priceField.val(t.base_price);
     });
 
     /* ------------------- ROOM CARD CLICK (Show Occupancy) ------------------- */
@@ -545,7 +548,10 @@ $(function () {
 
     $('#editRoomType').on('change', function () {
         const t = typeBySlug($(this).val());
-        if (t) $('#editPrice').val(t.base_price);
+        if (!t) return;
+        const priceField = $('#editPrice');
+        const currentlyDefault = !priceField.val() || roomTypes.some(rt => String(rt.base_price) === String(priceField.val()));
+        if (currentlyDefault) priceField.val(t.base_price);
     });
 
     $('#roomEditForm').on('submit', function (e) {
@@ -646,6 +652,8 @@ $(function () {
             return;
         }
 
+        const roomTypeSlug = card.data('type');
+
         $.ajax({ url: `${base}/${roomId}`, method: 'DELETE' })
             .done(function (res) {
                 if (!res.success) { toast('Could not delete room.', 'error'); return; }
@@ -655,6 +663,9 @@ $(function () {
                     const remaining = wingGroup.find('.room-card').length;
                     wingGroup.find('[data-wing-count]').text(remaining);
                     if (remaining === 0) wingGroup.addClass('hidden');
+                    const deletedType = typeBySlug(roomTypeSlug);
+                    if (deletedType) deletedType.room_count = Math.max(0, deletedType.room_count - 1);
+                    renderTypeTiles();
                     recomputeAggregates();
                     applyFilters();
                 });

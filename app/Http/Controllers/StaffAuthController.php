@@ -62,6 +62,23 @@ class StaffAuthController extends Controller
             //  Clear limiter on success
             RateLimiter::clear($key);
 
+            if (!config('staff.otp_enabled')) {
+                Auth::guard('staff')->login($staff);
+                $staff->update(['last_login_at' => now()]);
+                $request->session()->regenerate();
+
+                AuditLogger::log(
+                    'staff_login',
+                    $staff,
+                    null,
+                    null,
+                    'Staff logged in (OTP disabled)',
+                    $staff
+                );
+
+                return $this->redirectForRole($staff);
+            }
+
             // Generate OTP
             $otp = rand(100000, 999999);
 
@@ -153,20 +170,7 @@ class StaffAuthController extends Controller
 
             RateLimiter::clear($key); // clear OTP attempts on success
 
-            // Redirect based on role
-            switch ($staff->role) {
-                case 'admin':
-                    return redirect('/staff/dashboard');
-                case 'frontdesk':
-                    return redirect('/front-desk/dashboard');
-                case 'master_admin':
-                    return redirect('/staff/dashboard');
-                default:
-                    Auth::guard('staff')->logout();
-                    return redirect()->route('staff.login')->withErrors([
-                        'otp_code' => 'Invalid staff role.',
-                    ]);
-            }
+            return $this->redirectForRole($staff);
         }
 
         // Record failed OTP attempt
@@ -233,5 +237,22 @@ class StaffAuthController extends Controller
         );
 
         return back()->with('status', 'A new OTP has been sent to your email.');
+    }
+
+    // Shared post-login redirect, used whether OTP is enabled or skipped.
+    private function redirectForRole(Staff $staff)
+    {
+        switch ($staff->role) {
+            case 'admin':
+            case 'master_admin':
+                return redirect('/staff/dashboard');
+            case 'frontdesk':
+                return redirect('/front-desk/dashboard');
+            default:
+                Auth::guard('staff')->logout();
+                return redirect()->route('staff.login')->withErrors([
+                    'staff_email' => 'Invalid staff role.',
+                ]);
+        }
     }
 }

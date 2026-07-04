@@ -16,7 +16,7 @@
     $meta = $statusMeta[$room->status] ?? $statusMeta['available'];
 @endphp
 
-<div class="room-card group/card relative bg-white rounded-2xl border border-stone-200/70 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 transition-all duration-200 cursor-pointer"
+<div {{ $attributes->merge(['class' => 'room-card group/card relative bg-white rounded-2xl border border-stone-200/70 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 transition-all duration-200 cursor-pointer']) }}
      data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}">
     <div class="status-bar h-1 rounded-t-2xl {{ $meta['bar'] }}"></div>
 

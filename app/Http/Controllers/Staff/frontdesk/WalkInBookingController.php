@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\RoomType;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,9 @@ class WalkInBookingController extends Controller
 
     public function store(Request $request)
     {
-        // Define room capacities
+        // Room capacity now lives on room_types (admin-editable via the Room
+        // Types & Pricing UI). Fall back to these legacy defaults only for a
+        // room_type slug that somehow has no matching room_types row.
         $roomCapacityMap = [
             'deluxe'     => 2,
             'double'     => 2,
@@ -48,6 +51,7 @@ class WalkInBookingController extends Controller
             'dormitory1' => 5,
             'dormitory2' => 6,
         ];
+        $typeCapacities = RoomType::pluck('capacity', 'slug');
 
         // Validate request
         $request->validate([
@@ -100,7 +104,7 @@ class WalkInBookingController extends Controller
             $numSeniors = (int) ($block['num_seniors'] ?? 0);
 
             // Check room capacity
-            $capacity = $roomCapacityMap[$roomType] ?? 1;
+            $capacity = $typeCapacities[$roomType] ?? $roomCapacityMap[$roomType] ?? 1;
 
             if ($numGuests > $capacity) {
                 return back()->withErrors([
@@ -181,7 +185,7 @@ class WalkInBookingController extends Controller
             // Create reservations
             foreach ($request->reservations as $block) {
                 $roomType   = strtolower($block['room_type']);
-                $capacity   = $roomCapacityMap[$roomType] ?? 1;
+                $capacity   = $typeCapacities[$roomType] ?? $roomCapacityMap[$roomType] ?? 1;
 
                 Reservation::create([
                     'booking_id'  => $booking->id,

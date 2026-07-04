@@ -24,11 +24,7 @@
 --}}
 
 @php
-    $colorMap = [
-        'clsu'  => 'bg-clsu-100 text-clsu-700',
-        'palay' => 'bg-palay-100 text-palay-700',
-        'ember' => 'bg-ember-100 text-ember-700',
-    ];
+    $colorMap = config('adminui.chip_colors');
     $chipColor = $colorMap[$color] ?? $colorMap['clsu'];
 
     $maxWidthMap = [
@@ -41,11 +37,13 @@
 
     $panelClass = 'relative bg-white rounded-2xl shadow-card-lg w-full ' . $maxWidthClass . ' overflow-hidden animate-pop'
         . ($scrollBody ? ' max-h-[90vh] overflow-y-auto' : '');
+
+    $resolvedTitleId = $titleId ?: ($title ? $id . '-title' : null);
 @endphp
 
 <div id="{{ $id }}" class="hidden fixed inset-0 z-50 items-center justify-center p-4">
     <div class="absolute inset-0 bg-stone-950/50 backdrop-blur-sm" data-modal-close="{{ $id }}"></div>
-    <div {{ $attributes->merge(['class' => $panelClass]) }}>
+    <div {{ $attributes->merge(['class' => $panelClass]) }} role="dialog" aria-modal="true" @if($resolvedTitleId) aria-labelledby="{{ $resolvedTitleId }}" @endif tabindex="-1">
         @if($title)
             <div class="flex items-center justify-between border-b border-stone-100 bg-stone-50/50 px-6 py-4">
                 <h3 class="font-bold text-stone-900 text-base flex items-center gap-2.5">
@@ -54,7 +52,7 @@
                             <x-admin.icon :name="$icon" class="w-4 h-4" stroke-width="2" />
                         </span>
                     @endif
-                    <span @if($titleId) id="{{ $titleId }}" @endif>{{ $title }}</span>
+                    <span id="{{ $resolvedTitleId }}">{{ $title }}</span>
                 </h3>
                 <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" data-modal-close="{{ $id }}" aria-label="Close">
                     <x-admin.icon name="x" class="w-4 h-4" stroke-width="2" />

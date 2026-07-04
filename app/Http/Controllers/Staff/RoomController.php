@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Booking;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
@@ -32,9 +34,6 @@ class RoomController extends Controller
 
         $roomTypes = RoomType::withCount('rooms')->orderBy('name')->get();
 
-        // Kept for backward compatibility with anything still keying off type => price.
-        $prices = $roomTypes->pluck('base_price', 'slug');
-
         return view('staff.rooms.index', compact(
             'rooms',
             'totalRooms',
@@ -42,8 +41,7 @@ class RoomController extends Controller
             'availableRooms',
             'maintenanceRooms',
             'cleaningRooms',
-            'roomTypes',
-            'prices'
+            'roomTypes'
         ));
     }
 
@@ -133,10 +131,22 @@ public function occupancyForRoom(Room $room)
         ]);
 
         $oldValues = $room->getOriginal();
+        $oldRoomNumber = $room->room_number;
 
-        $room->update(array_merge($validated, [
-            'last_edited_by' => $staff->id,
-        ]));
+        DB::transaction(function () use ($room, $validated, $staff, $oldRoomNumber) {
+            $room->update(array_merge($validated, [
+                'last_edited_by' => $staff->id,
+            ]));
+
+            // Reservation history is keyed by room_number (a snapshot string,
+            // not room_id) — without this, renaming a room orphans its past
+            // and active reservations from Room::reservations()/occupancy
+            // lookups, which still match on the room's CURRENT room_number.
+            if ($validated['room_number'] !== $oldRoomNumber) {
+                Reservation::where('room_number', $oldRoomNumber)
+                    ->update(['room_number' => $validated['room_number']]);
+            }
+        });
 
         $newValues = $room->fresh()->toArray();
 

@@ -20,11 +20,7 @@
 --}}
 
 @php
-    $colorMap = [
-        'clsu'  => 'bg-clsu-100 text-clsu-700',
-        'palay' => 'bg-palay-100 text-palay-700',
-        'ember' => 'bg-ember-100 text-ember-700',
-    ];
+    $colorMap = config('adminui.chip_colors');
     $chipColor = $colorMap[$color] ?? $colorMap['clsu'];
 @endphp
 
