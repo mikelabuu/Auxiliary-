@@ -1,131 +1,129 @@
 @extends('layouts.admin')
-@section('title', 'Admin - Booking Hub')
+
+@section('title', 'Admin - Completed Bookings')
 @section('page-title', 'Completed Bookings')
+
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<script>
-$.ajaxSetup({
-    headers: {
-        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    }
-});
-</script>
-<div class="p-6">
-    <h1 class="text-2xl font-semibold mb-6">Completed Bookings</h1>
 
-    {{-- Filters --}}
-    <form method="GET" class="flex justify-between mb-4">
-        <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID..." class="border rounded-lg px-3 py-2 w-1/3">
-        <select name="sort" class="border rounded-lg px-3 py-2" onchange="this.form.submit()">
-            <option value="latest" {{ $sort === 'latest' ? 'selected' : '' }}>Sort: Latest</option>
-            <option value="oldest" {{ $sort === 'oldest' ? 'selected' : '' }}>Sort: Oldest</option>
-        </select>
-    </form>
+<div class="space-y-6 max-w-[1680px] mx-auto">
+    <x-admin.page-header subtitle="Bookings that have been checked out.">
+        Completed <span class="font-display italic font-medium text-clsu-800">Bookings</span>
+    </x-admin.page-header>
 
-    {{-- Table --}}
-    <table class="min-w-full bg-white border rounded-lg">
-        <thead>
-            <tr class="bg-gray-100 text-left">
-                <th class="p-3">ID</th>
-                <th class="p-3">Guest Name</th>
-                <th class="p-3">Check-in</th>
-                <th class="p-3">Check-out</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($bookings as $booking)
-                <tr class="border-t">
-                    <td class="p-3">{{ $booking->id }}</td>
-                    <td class="p-3">{{ $booking->guest_name }}</td>
-                    <td class="p-3">{{ $booking->check_in->format('M d, Y') }}</td>
-                    <td class="p-3">{{ $booking->check_out->format('M d, Y') }}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
-                            Completed
-                        </span>
-                    </td>
-                    <td class="p-3">
-                        <button 
-                            class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition password-verify" 
-                            data-id="{{ $booking->id }}">
-                            View
-                        </button>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="6" class="text-center p-4 text-gray-500">No completed bookings found.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+    <x-admin.section-card icon="check-circle" title="Completed Bookings" :subtitle="$bookings->total() . ' total'" :delay="40">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
+            <div class="relative flex-1 max-w-xs">
+                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+            </div>
+            <select name="sort" onchange="this.form.submit()" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                <option value="latest" @selected($sort === 'latest')>Sort: Latest</option>
+                <option value="oldest" @selected($sort === 'oldest')>Sort: Oldest</option>
+            </select>
+            <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Search</button>
+        </form>
 
-    <div class="mt-4">
-        {{ $bookings->links() }}
-    </div>
+        @if($bookings->isEmpty())
+            <x-admin.empty-state icon="check-circle" title="No completed bookings found." />
+        @else
+            <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-stone-50/70 border-b border-stone-100">
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">ID</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Guest Name</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Check-in</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Check-out</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Status</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($bookings as $booking)
+                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">#{{ $booking->id }}</td>
+                                <td class="px-6 py-3 text-stone-800 font-medium">{{ $booking->guest_name }}</td>
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $booking->check_in->format('M d, Y') }}</td>
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $booking->check_out->format('M d, Y') }}</td>
+                                <td class="px-6 py-3">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">Completed</span>
+                                </td>
+                                <td class="px-6 py-3">
+                                    <button type="button" class="password-verify flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors cursor-pointer" data-id="{{ $booking->id }}">
+                                        <x-admin.icon name="eye" class="w-3.5 h-3.5" />
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-    {{-- Modal Container (HTML inserted via AJAX) --}}
-    <div id="bookingDetailsModal"></div>
+            <div class="mt-6">
+                {{ $bookings->links() }}
+            </div>
+        @endif
+    </x-admin.section-card>
 </div>
-@endsection
+
+{{-- Filled via AJAX with staff.partials.booking-details --}}
+<div id="bookingDetailsModal"></div>
 
 @push('scripts')
 <script>
-$(document).on('click', '.password-verify', function(e) {
-    e.preventDefault();
-    const bookingId = $(this).data('id');
+$(function () {
+    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
-    Swal.fire({
-        title: 'Enter your password',
-        input: 'password',
-        inputAttributes: {
-            placeholder: 'Password',
-            autocapitalize: 'off'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Verify',
-        showLoaderOnConfirm: true,
-        preConfirm: (password) => {
-            return $.ajax({
-                url: "{{ route('staff.completedbookings.verify-password') }}",
-                method: 'POST',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    password: password
-                }
-            }).then(response => {
-                if (!response.success) {
-                    throw new Error(response.message);
-                }
-                return true;
-            }).catch(err => {
-                Swal.showValidationMessage(err.responseJSON?.message || err.message);
-            });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed) {
+    function openModal(id) { $('#' + id).removeClass('hidden').addClass('flex'); }
+    function closeModal(id) { $('#' + id).addClass('hidden').removeClass('flex'); }
+
+    $(document).on('click', '[data-modal-close]', function () { closeModal($(this).data('modal-close')); });
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape') $('#bookingModal').addClass('hidden').removeClass('flex');
+    });
+
+    $(document).on('click', '.password-verify', function (e) {
+        e.preventDefault();
+        const bookingId = $(this).data('id');
+
+        Swal.fire({
+            title: 'Enter your password',
+            input: 'password',
+            inputAttributes: { placeholder: 'Password', autocapitalize: 'off' },
+            showCancelButton: true,
+            confirmButtonText: 'Verify',
+            showLoaderOnConfirm: true,
+            preConfirm: (password) => {
+                return $.ajax({
+                    url: "{{ route('staff.completedbookings.verify-password') }}",
+                    method: 'POST',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content'), password }
+                }).then(response => {
+                    if (!response.success) throw new Error(response.message);
+                    return true;
+                }).catch(err => Swal.showValidationMessage(err.responseJSON?.message || err.message));
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
             $.ajax({
-                url: `/staff/completed-bookings/${bookingId}/details`,
+                url: `{{ url('staff/completed-bookings') }}/${bookingId}/details`,
                 method: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        $('#bookingDetailsModal').html(response.html);
-                        $('#bookingModal').removeClass('hidden');
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
-                    }
+                success: function (response) {
+                    if (!response.success) { Swal.fire('Error', response.message, 'error'); return; }
+                    $('#bookingDetailsModal').html(response.html);
+                    openModal('bookingModal');
                 },
-                error: function() {
+                error: function () {
                     Swal.fire('Error', 'Failed to load booking details.', 'error');
                 }
             });
-        }
+        });
     });
-});
-
-$(document).on('click', '#closeBookingModal', function() {
-    $('#bookingModal').addClass('hidden');
 });
 </script>
 @endpush
+@endsection

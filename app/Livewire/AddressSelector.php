@@ -24,13 +24,7 @@ class AddressSelector extends Component
     {
         $this->theme = $theme;
 
-        // Fetch all regions from official API (cached for 30 days)
-        $this->regions = Cache::remember('psgc_regions', 2592000, function () {
-            $response = Http::get('https://psgc.gitlab.io/api/regions');
-            $data = $response->successful() ? $response->json() : [];
-            usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-            return $data;
-        });
+        $this->regions = $this->fetchCached('psgc_regions', 'https://psgc.gitlab.io/api/regions');
 
         // Restore state if old values exist (e.g. from validation redirects)
         if (old('region_code')) {
@@ -38,19 +32,9 @@ class AddressSelector extends Component
             $regionCode = explode('|', $this->selectedRegion)[0];
 
             if (str_starts_with($regionCode, '13')) {
-                $this->cities = Cache::remember("psgc_cities_region_{$regionCode}", 2592000, function () use ($regionCode) {
-                    $response = Http::get("https://psgc.gitlab.io/api/regions/{$regionCode}/cities-municipalities");
-                    $data = $response->successful() ? $response->json() : [];
-                    usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                    return $data;
-                });
+                $this->cities = $this->fetchCached("psgc_cities_region_{$regionCode}", "https://psgc.gitlab.io/api/regions/{$regionCode}/cities-municipalities");
             } else {
-                $this->provinces = Cache::remember("psgc_provinces_region_{$regionCode}", 2592000, function () use ($regionCode) {
-                    $response = Http::get("https://psgc.gitlab.io/api/regions/{$regionCode}/provinces");
-                    $data = $response->successful() ? $response->json() : [];
-                    usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                    return $data;
-                });
+                $this->provinces = $this->fetchCached("psgc_provinces_region_{$regionCode}", "https://psgc.gitlab.io/api/regions/{$regionCode}/provinces");
             }
         }
 
@@ -58,29 +42,43 @@ class AddressSelector extends Component
             $this->selectedProvince = old('province_code');
             $provinceCode = explode('|', $this->selectedProvince)[0];
 
-            $this->cities = Cache::remember("psgc_cities_province_{$provinceCode}", 2592000, function () use ($provinceCode) {
-                $response = Http::get("https://psgc.gitlab.io/api/provinces/{$provinceCode}/cities-municipalities");
-                $data = $response->successful() ? $response->json() : [];
-                usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                return $data;
-            });
+            $this->cities = $this->fetchCached("psgc_cities_province_{$provinceCode}", "https://psgc.gitlab.io/api/provinces/{$provinceCode}/cities-municipalities");
         }
 
         if (old('city_code')) {
             $this->selectedCity = old('city_code');
             $cityCode = explode('|', $this->selectedCity)[0];
 
-            $this->barangays = Cache::remember("psgc_barangays_city_{$cityCode}", 2592000, function () use ($cityCode) {
-                $response = Http::get("https://psgc.gitlab.io/api/cities-municipalities/{$cityCode}/barangays");
-                $data = $response->successful() ? $response->json() : [];
-                usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                return $data;
-            });
+            $this->barangays = $this->fetchCached("psgc_barangays_city_{$cityCode}", "https://psgc.gitlab.io/api/cities-municipalities/{$cityCode}/barangays");
         }
 
         if (old('barangay_code')) {
             $this->selectedBarangay = old('barangay_code');
         }
+    }
+
+    /**
+     * Fetch a PSGC endpoint and cache it for 30 days — but only on success.
+     * Caching a failed request's empty fallback would otherwise lock every
+     * dropdown empty for the full 30 days regardless of the API recovering.
+     */
+    private function fetchCached(string $key, string $url): array
+    {
+        $cached = Cache::get($key);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $response = Http::timeout(10)->get($url);
+        if (!$response->successful()) {
+            return [];
+        }
+
+        $data = $response->json();
+        usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
+        Cache::put($key, $data, 2592000);
+
+        return $data;
     }
 
     public function updatedSelectedRegion($value)
@@ -90,29 +88,19 @@ class AddressSelector extends Component
             'selectedCity',
             'selectedBarangay'
         ]);
-    
+
         $this->cities = [];
         $this->barangays = [];
-    
+
         if (!$value) return;
 
         $regionCode = explode('|', $value)[0];
 
         if (str_starts_with($regionCode, '13')) {
             $this->provinces = [];
-            $this->cities = Cache::remember("psgc_cities_region_{$regionCode}", 2592000, function () use ($regionCode) {
-                $response = Http::get("https://psgc.gitlab.io/api/regions/{$regionCode}/cities-municipalities");
-                $data = $response->successful() ? $response->json() : [];
-                usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                return $data;
-            });
+            $this->cities = $this->fetchCached("psgc_cities_region_{$regionCode}", "https://psgc.gitlab.io/api/regions/{$regionCode}/cities-municipalities");
         } else {
-            $this->provinces = Cache::remember("psgc_provinces_region_{$regionCode}", 2592000, function () use ($regionCode) {
-                $response = Http::get("https://psgc.gitlab.io/api/regions/{$regionCode}/provinces");
-                $data = $response->successful() ? $response->json() : [];
-                usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-                return $data;
-            });
+            $this->provinces = $this->fetchCached("psgc_provinces_region_{$regionCode}", "https://psgc.gitlab.io/api/regions/{$regionCode}/provinces");
         }
     }
 
@@ -120,33 +108,23 @@ class AddressSelector extends Component
     {
         $this->reset(['selectedCity', 'selectedBarangay']);
         $this->barangays = [];
-    
+
         if (!$value) return;
 
         $provinceCode = explode('|', $value)[0];
 
-        $this->cities = Cache::remember("psgc_cities_province_{$provinceCode}", 2592000, function () use ($provinceCode) {
-            $response = Http::get("https://psgc.gitlab.io/api/provinces/{$provinceCode}/cities-municipalities");
-            $data = $response->successful() ? $response->json() : [];
-            usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-            return $data;
-        });
+        $this->cities = $this->fetchCached("psgc_cities_province_{$provinceCode}", "https://psgc.gitlab.io/api/provinces/{$provinceCode}/cities-municipalities");
     }
 
     public function updatedSelectedCity($value)
     {
         $this->reset('selectedBarangay');
-    
+
         if (!$value) return;
 
         $cityCode = explode('|', $value)[0];
 
-        $this->barangays = Cache::remember("psgc_barangays_city_{$cityCode}", 2592000, function () use ($cityCode) {
-            $response = Http::get("https://psgc.gitlab.io/api/cities-municipalities/{$cityCode}/barangays");
-            $data = $response->successful() ? $response->json() : [];
-            usort($data, fn($a, $b) => strcmp($a['name'], $b['name']));
-            return $data;
-        });
+        $this->barangays = $this->fetchCached("psgc_barangays_city_{$cityCode}", "https://psgc.gitlab.io/api/cities-municipalities/{$cityCode}/barangays");
     }
 
     public function render()

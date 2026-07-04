@@ -1,34 +1,34 @@
-<div class="mt-6 space-y-4">
-    <h2 class="text-lg font-semibold">Active Bookings</h2>
-
+<x-admin.section-card icon="log-in" title="Active Stays" subtitle="Guests currently checked in.">
     @if($activeBookings->isEmpty())
-        <p class="text-gray-500">No active bookings at the moment.</p>
+        <x-admin.empty-state icon="log-in" title="No active bookings at the moment." />
     @else
-        <table class="min-w-full bg-white border rounded-lg">
-            <thead>
-                <tr class="bg-gray-100 text-left">
-                    <th>Booking ID</th>
-                    <th>Guest Name</th>
-                    <th>Check-in Date</th>
-                    <th>Check-out Date</th>
-                    <th>Room</th>
-                    <th>Room Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($activeBookings as $booking)
-                    @foreach($booking->reservations as $res)
-                    <tr class="border-b">
-                        <td>{{ $booking->id }}</td>
-                        <td>{{ $booking->guest_name }}</td>
-                        <td>{{ $booking->check_in->format('M d, Y') }}</td>
-                        <td>{{ $booking->check_out->format('M d, Y') }}</td>
-                        <td>{{ $res->room_number }}</td>
-                        <td>{{ $res->room->room_type }}</td>
+        <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-stone-50/70 border-b border-stone-100">
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">ID</th>
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Guest Name</th>
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Check-in</th>
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Check-out</th>
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Room</th>
+                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Room Type</th>
                     </tr>
+                </thead>
+                <tbody>
+                    @foreach($activeBookings as $booking)
+                        @foreach($booking->reservations as $res)
+                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">#{{ $booking->id }}</td>
+                                <td class="px-6 py-3 text-stone-800 font-medium">{{ $booking->guest_name }}</td>
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $booking->check_in->format('M d, Y') }}</td>
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $booking->check_out->format('M d, Y') }}</td>
+                                <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $res->room_number }}</td>
+                                <td class="px-6 py-3 text-stone-500 text-[11px] font-bold uppercase tracking-wide">{{ $res->room->room_type ?? '—' }}</td>
+                            </tr>
+                        @endforeach
                     @endforeach
-                @endforeach
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     @endif
-</div>
+</x-admin.section-card>

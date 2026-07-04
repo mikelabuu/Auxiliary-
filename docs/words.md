@@ -3,10 +3,10 @@
 This document records everything done across this project's work session: the
 admin **Room Management** page redesign, the new **Room Types** backend
 feature, the **reusable admin component library**, the follow-up code review
-and bug fixes, disabling the **staff login OTP** step, and the **Reports
-page** redesign. It's meant to be the one place a future developer (or future
-you) can read to understand what changed, why, and how the pieces fit
-together.
+and bug fixes, disabling the **staff login OTP** step, the **Reports
+page** redesign, and the **admin Booking pages** redesign. It's meant to be
+the one place a future developer (or future you) can read to understand what
+changed, why, and how the pieces fit together.
 
 ---
 
@@ -19,17 +19,18 @@ together.
 5. [Part 4 — Code Review & Fixes](#5-part-4--code-review--fixes)
 6. [Part 5 — Staff Login: OTP Disabled](#6-part-5--staff-login-otp-disabled)
 7. [Part 6 — Reports Page Redesign](#7-part-6--reports-page-redesign)
-8. [Database Reference](#8-database-reference)
-9. [Route Reference](#9-route-reference)
-10. [File Manifest](#10-file-manifest)
-11. [Setup Notes](#11-setup-notes)
-12. [Known Follow-ups](#12-known-follow-ups)
+8. [Part 7 — Booking Pages Redesign](#8-part-7--booking-pages-redesign)
+9. [Database Reference](#9-database-reference)
+10. [Route Reference](#10-route-reference)
+11. [File Manifest](#11-file-manifest)
+12. [Setup Notes](#12-setup-notes)
+13. [Known Follow-ups](#13-known-follow-ups)
 
 ---
 
 ## 1. Overview
 
-The work happened in six phases, in this order:
+The work happened in seven phases, in this order:
 
 | Phase | What | Where documented |
 |---|---|---|
@@ -39,6 +40,7 @@ The work happened in six phases, in this order:
 | 4 | Ran a multi-angle code review (`/code-review xhigh`) against the whole diff, found 15 real issues, fixed all of them | [§5](#5-part-4--code-review--fixes) |
 | 5 | Disabled the staff login OTP step (config toggle) so login works without email delivery | [§6](#6-part-5--staff-login-otp-disabled) |
 | 6 | Redesigned the admin Reports page — it was rendering essentially unstyled (Bootstrap markup, no Bootstrap loaded) | [§7](#7-part-6--reports-page-redesign) |
+| 7 | Redesigned the 4 admin-sidebar Booking pages (Bookings Hub, Completed Bookings, Booking Logs, Manual Booking), consolidated a duplicated modal, fixed a real status-badge bug | [§8](#8-part-7--booking-pages-redesign) |
 
 The app is a Laravel 11 hostel-booking admin panel ("Farmers Hostel"). Admin
 pages live under `resources/views/staff/`, share `layouts/admin.blade.php`,
@@ -156,7 +158,7 @@ Adds a nullable `notes` text column to `rooms`.
   key into `rooms.room_type`, so changing it would orphan existing rooms).
 
 **Routes** (`routes/web.php`, inside the existing `auth:staff` +
-`staff.role:admin,master_admin` group — see [§9](#9-route-reference) for the
+`staff.role:admin,master_admin` group — see [§10](#10-route-reference) for the
 full table).
 
 ### Frontend features added to the Rooms page
@@ -544,7 +546,131 @@ the same pattern already used by the Rooms page's `applyStatusToCard()`
 
 ---
 
-## 8. Database Reference
+## 8. Part 7 — Booking Pages Redesign
+
+### Scope
+
+Redesigned the **admin-sidebar** booking pages to match the design system
+established in [§4](#4-part-3--reusable-component-library) — explicitly
+**not** the front-desk role's near-duplicate booking pages
+(`WalkInBookingController`, `Staff\frontdesk\BookingsController`, and every
+view under `resources/views/staff/frontdesk/`), which live on a separate
+`layouts.frontdesk` theme with their own (Bootstrap-based) styling. That
+pair is a known follow-up — see [§13](#13-known-follow-ups) — not touched in
+this pass.
+
+Four pages, in the order they were rebuilt:
+
+| Page | View(s) | Controller |
+|---|---|---|
+| Bookings Hub | `staff/bookings/index.blade.php` + 3 embedded Livewire views (`dashboard.arrivals-departures`, `active-bookings`, `bookings-table`) | n/a (Livewire-driven) |
+| Completed Bookings | `staff/completedbookings/index.blade.php` | `CompletedBookingsController` |
+| Booking Logs | `staff/bookinglogs/index.blade.php` | `BookingLogsController` |
+| Manual Booking | `staff/manualbooking/index.blade.php` + `show.blade.php` | `ManualBookingController` |
+
+### What changed
+
+- All four pages now use `<x-admin.page-header>` / `<x-admin.section-card>` /
+  `<x-admin.stat-card>` / `<x-admin.empty-state>` / `<x-admin.icon>` from the
+  shared component library instead of ad-hoc markup.
+- **Booking Logs**: the 5 tabs (Check-ins / Check-outs / No Shows / Expiries /
+  Cancellations) became link-based toggle buttons matching the Reports page's
+  active/inactive convention; the per-tab dynamic table columns were kept
+  exactly as the controller already produces them.
+- **Manual Booking**: full restyle of the create form (guest info, dates,
+  discount) and the dynamic "reservation blocks" repeater, while leaving every
+  one of its ~260 lines of vanilla JS functionally untouched — same DOM hooks
+  (`.reservation-block`, `.available-rooms-dropdown`, `.room-number-input`,
+  `.price-per-night`, `.num-guests`, `.num-senior`, `.guest-error`,
+  `#reservations-container`, `#add-room`, `#check_in`/`#check_out`,
+  `#remaining-guests`), same AJAX endpoint
+  (`staff.manualbooking.available`), same client-side `roomCapacityMap`
+  (deliberately **not** wired to `room_types.capacity` in this pass — pure
+  UI/UX restyle, not a data-flow refactor; flagged in
+  [§13](#13-known-follow-ups)).
+- **`show.blade.php`** (the read-only manual-booking receipt view) was
+  rebuilt independently rather than forced into the shared
+  `booking-detail-body` partial below — its reservation rows use
+  `Reservation::room_type`/`Reservation::price` (the booking-time snapshot
+  columns stored directly on the reservation), not the live `Room` relation,
+  and it needs to show price-per-night, which the shared partial doesn't.
+  Reusing the partial here would have silently swapped a price snapshot for
+  live room data and dropped the price column — not a safe consolidation.
+
+### Modal consolidation
+
+Two independently hand-maintained copies of the booking-detail modal existed:
+one rendered server-side to an HTML string by
+`CompletedBookingsController::showDetails()` and injected via AJAX
+(`staff/partials/booking-details.blade.php`), and one inline inside the
+`bookings-table` Livewire view. Both were merged into a single shared partial,
+**`staff/partials/booking-detail-body.blade.php`** (guest info grid, pricing
+summary, per-room reservation cards, payment details — using
+`$booking->reservations.room` and `$booking->payments`), `@include`-d from
+both call sites:
+
+- Completed Bookings still toggles it the old way: jQuery `data-modal-close`
+  + `<x-admin.modal id="bookingModal">`.
+- The Livewire bookings-table needed a different show/hide mechanism (its own
+  `@if($selectedBooking)` Livewire state, not a jQuery class toggle), so
+  `<x-admin.modal>` gained two new opt-in props to support it without a
+  one-off bespoke modal:
+  - `alwaysVisible` (bool, default `false`) — root wrapper is `flex` instead
+    of `hidden` when true, since Livewire's own `@if` controls whether the
+    component (and thus the modal) renders at all.
+  - `closeAction` (string, default `null`) — when set, the backdrop and close
+    button emit `wire:click="{{ closeAction }}"` instead of the usual
+    `data-modal-close` attribute.
+  - Both default to the old behavior, so every existing Rooms/Reports modal
+    usage is unaffected.
+
+### Status color consistency
+
+A real bug: `livewire/bookings-table.blade.php`'s old status-badge map used
+`text-white-800` and `text-black-800` — neither is a real Tailwind class
+(Tailwind doesn't generate numbered-scale variants of `white`/`black`), so
+every badge was silently rendering with no text color override at all.
+Replaced with the same semantic map now used consistently across
+`booking-detail-body`, `bookings-table`, and `completedbookings`:
+
+```php
+$statusColorMap = [
+    'paid' => 'clsu', 'active' => 'clsu', 'completed' => 'clsu',
+    'pending_payment' => 'palay', 'pending_discount' => 'palay',
+    'cancelled' => 'ember', 'expired' => 'ember', 'no_show' => 'ember',
+];
+```
+
+### Other bugs fixed along the way
+
+- Bookings Hub's 3 Excel-export buttons were plain Bootstrap
+  `btn btn-primary/success/warning` — same "Bootstrap classes, no Bootstrap
+  loaded" bug found independently on the Rooms modals and the Reports page
+  ([§2](#2-part-1--visual-revamp-rooms), [§7](#7-part-6--reports-page-redesign)).
+  Moved into `bookings-table`'s section-card `actions` slot as three properly
+  styled icon buttons.
+- Manual Booking's JS located a reservation block's delete-button slot via
+  `block.querySelector('.mt-2.text-right')` — a coincidental pairing of two
+  Tailwind utility classes, not a semantic hook; any future restyle of that
+  div's spacing/alignment would have silently broken room deletion. Fixed by
+  adding a `data-delete-slot` attribute to that div and switching the
+  selector to `block.querySelector('[data-delete-slot]')`.
+
+### Verification
+
+Same methodology as every prior phase: `Blade::compileString()` +
+`php -l` on all 10 touched files, full `view(...)->render()` calls against
+real DB data (Completed Bookings, Booking Logs' `checkins`/`cancellations`
+tabs, Bookings Hub shell, both Manual Booking pages all rendered
+successfully), and Node.js `new Function(...)` parsing of every extracted
+`<script>` block. Manual Booking's `<livewire:address-selector />` makes a
+live external HTTP call to `psgc.gitlab.io` on mount (pre-existing, 30-day
+cached, unrelated to this redesign) — `Http::fake()` was used to isolate the
+page render from that network dependency during testing.
+
+---
+
+## 9. Database Reference
 
 ### `room_types`
 
@@ -579,7 +705,7 @@ No database changes were made for §6 (OTP disable — config-only) or §7
 
 ---
 
-## 9. Route Reference
+## 10. Route Reference
 
 ### Room Management (all under `auth:staff` + `staff.role:admin,master_admin`)
 
@@ -618,7 +744,7 @@ commented out in `routes/web.php` — see §7.)
 
 ---
 
-## 10. File Manifest
+## 11. File Manifest
 
 ### New files
 
@@ -677,7 +803,7 @@ app/Http/Controllers/Staff/Reports/CentralHubController.php   (dead — same rea
 
 ---
 
-## 11. Setup Notes
+## 12. Setup Notes
 
 To bring a checkout up to date:
 
@@ -698,7 +824,7 @@ Run `php artisan config:clear` after changing it.
 
 ---
 
-## 12. Known Follow-ups
+## 13. Known Follow-ups
 
 Not bugs, just things worth knowing about if you're picking this up next:
 
@@ -729,3 +855,18 @@ Not bugs, just things worth knowing about if you're picking this up next:
   page, before or after the redesign. Safe to delete whenever someone's
   doing a cleanup pass, unless the (also-dead) `central.blade.php` is
   revived and expected to use it.
+- **The front-desk role's booking pages are still unredesigned** —
+  `WalkInBookingController`, `Staff\frontdesk\BookingsController`, and every
+  view under `resources/views/staff/frontdesk/` are near-duplicates of the
+  admin Booking pages (§8) but live on a separate `layouts.frontdesk` theme
+  that actually loads Bootstrap, with the old color tokens. Explicitly out of
+  scope for §8 (admin-only pass); should follow the same component-library
+  treatment when it's their turn.
+- **Manual Booking's `roomCapacityMap`** (`{deluxe:2, double:2, triple:3,
+  quadruple:4, dormitory1:5, dormitory2:6}`, hardcoded in
+  `manualbooking/index.blade.php`'s JS) duplicates data that should live
+  solely in the `room_types.capacity` column (same class of duplication
+  flagged in §5). Left as-is in §8 since that pass was a pure UI/UX restyle,
+  not a data-flow refactor — fixing it means wiring room capacity into the
+  `staff.manualbooking.available` AJAX response and reading it client-side
+  instead.

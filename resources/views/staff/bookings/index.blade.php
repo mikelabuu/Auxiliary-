@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Bookings Hub')
+@section('title', 'Admin - Bookings Hub')
 @section('page-title', 'Bookings Hub')
 
 @section('content')
@@ -12,26 +12,22 @@ $.ajaxSetup({
     }
 });
 </script>
-<div class="p-6">
 
-    {{-- Import Livewire component --}}
+<div class="space-y-6 max-w-[1680px] mx-auto">
+    <x-admin.page-header subtitle="Arrivals, departures, and every active or pending booking in one place.">
+        Bookings <span class="font-display italic font-medium text-clsu-800">Hub</span>
+        <x-slot:actions>
+            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all !no-underline">
+                <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
+                New Booking
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
+
     <livewire:dashboard.arrivals-departures />
-</div>
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">Active</h1>
 
-    {{-- Import Livewire component --}}
     <livewire:active-bookings />
-</div>
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">All Bookings</h1>
-    <div class="flex justify-end mb-4 space-x-2">
-        <a href="{{ route('reports.bookings.full') }}" class="btn btn-primary">Export All Bookings</a>
-        <a href="{{ route('reports.bookings.paid') }}" class="btn btn-success">Export Paid Bookings</a>
-        <a href="{{ route('reports.bookings.completed') }}" class="btn btn-warning">Export Completed Bookings</a>
-    </div>
-    {{-- Import Livewire component --}}
+
     <livewire:bookings-table />
 </div>
 @endsection
-
