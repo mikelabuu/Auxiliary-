@@ -2,9 +2,10 @@
 
 This document records everything done across this project's work session: the
 admin **Room Management** page redesign, the new **Room Types** backend
-feature, the **reusable admin component library**, and the follow-up code
-review and bug fixes. It's meant to be the one place a future developer (or
-future you) can read to understand what changed, why, and how the pieces fit
+feature, the **reusable admin component library**, the follow-up code review
+and bug fixes, disabling the **staff login OTP** step, and the **Reports
+page** redesign. It's meant to be the one place a future developer (or future
+you) can read to understand what changed, why, and how the pieces fit
 together.
 
 ---
@@ -12,28 +13,32 @@ together.
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Part 1 — Visual Revamp](#2-part-1--visual-revamp)
+2. [Part 1 — Visual Revamp (Rooms)](#2-part-1--visual-revamp-rooms)
 3. [Part 2 — Room Types Backend Feature](#3-part-2--room-types-backend-feature)
 4. [Part 3 — Reusable Component Library](#4-part-3--reusable-component-library)
 5. [Part 4 — Code Review & Fixes](#5-part-4--code-review--fixes)
-6. [Database Reference](#6-database-reference)
-7. [Route Reference](#7-route-reference)
-8. [File Manifest](#8-file-manifest)
-9. [Setup Notes](#9-setup-notes)
-10. [Known Follow-ups](#10-known-follow-ups)
+6. [Part 5 — Staff Login: OTP Disabled](#6-part-5--staff-login-otp-disabled)
+7. [Part 6 — Reports Page Redesign](#7-part-6--reports-page-redesign)
+8. [Database Reference](#8-database-reference)
+9. [Route Reference](#9-route-reference)
+10. [File Manifest](#10-file-manifest)
+11. [Setup Notes](#11-setup-notes)
+12. [Known Follow-ups](#12-known-follow-ups)
 
 ---
 
 ## 1. Overview
 
-The work happened in four phases, in this order:
+The work happened in six phases, in this order:
 
 | Phase | What | Where documented |
 |---|---|---|
-| 1 | Redesigned the admin Rooms page to match the (already-good) Dashboard's visual language | [§2](#2-part-1--visual-revamp) |
+| 1 | Redesigned the admin Rooms page to match the (already-good) Dashboard's visual language | [§2](#2-part-1--visual-revamp-rooms) |
 | 2 | Added a real **Room Types** feature (DB table, CRUD, capacity, pricing) plus per-room notes, quick status changes, and delete | [§3](#3-part-2--room-types-backend-feature) |
 | 3 | Extracted the repeated markup from both pages into a proper Blade component library | [§4](#4-part-3--reusable-component-library) |
 | 4 | Ran a multi-angle code review (`/code-review xhigh`) against the whole diff, found 15 real issues, fixed all of them | [§5](#5-part-4--code-review--fixes) |
+| 5 | Disabled the staff login OTP step (config toggle) so login works without email delivery | [§6](#6-part-5--staff-login-otp-disabled) |
+| 6 | Redesigned the admin Reports page — it was rendering essentially unstyled (Bootstrap markup, no Bootstrap loaded) | [§7](#7-part-6--reports-page-redesign) |
 
 The app is a Laravel 11 hostel-booking admin panel ("Farmers Hostel"). Admin
 pages live under `resources/views/staff/`, share `layouts/admin.blade.php`,
@@ -43,7 +48,7 @@ plus Tailwind's default **stone** (neutral).
 
 ---
 
-## 2. Part 1 — Visual Revamp
+## 2. Part 1 — Visual Revamp (Rooms)
 
 ### Starting point
 
@@ -62,7 +67,8 @@ jQuery, Chart.js, and SweetAlert2. That means every `new bootstrap.Modal(...)`
 call on the old Rooms page threw a `ReferenceError` at runtime. **The Edit
 Room and Occupancy modals had never been openable in production.** This was
 discovered, not assumed, and confirmed by inspecting the layout's loaded
-scripts before touching anything.
+scripts before touching anything. (The same root cause turned up again in
+[§7](#7-part-6--reports-page-redesign) on the Reports page.)
 
 ### What changed
 
@@ -150,7 +156,7 @@ Adds a nullable `notes` text column to `rooms`.
   key into `rooms.room_type`, so changing it would orphan existing rooms).
 
 **Routes** (`routes/web.php`, inside the existing `auth:staff` +
-`staff.role:admin,master_admin` group — see [§7](#7-route-reference) for the
+`staff.role:admin,master_admin` group — see [§9](#9-route-reference) for the
 full table).
 
 ### Frontend features added to the Rooms page
@@ -206,18 +212,20 @@ admin pages (which still depend on the older `x-admin.card` / `button` /
 ### Component reference
 
 #### `<x-admin.icon>`
-Central SVG icon registry — one file, ~30 named icons, so no page hand-copies
-raw `<svg>` markup anymore.
+Central SVG icon registry — one file, so no page hand-copies raw `<svg>`
+markup anymore.
 
 ```blade
 <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
 ```
 Props: `name` (required), `strokeWidth` (default `1.75`).
-Registered names: `plus, x, chevron-left, chevron-right, chevron-down, kebab,
-search, menu, grid, check, check-circle, clock, trend-up, trend-down,
-wrench, droplet, bed, clipboard, users, user, receipt, credit-card,
-calendar, calendar-plus, log-in, log-out, arrival, departure, block,
-chart-bar, tag, map-pin, edit, eye, trash, note, settings, bell`.
+Registered names (as of this writing): `plus, x, chevron-left, chevron-right,
+chevron-down, kebab, search, menu, grid, filter, download, refresh, check,
+check-circle, clock, trend-up, trend-down, wrench, droplet, bed, clipboard,
+users, user, receipt, credit-card, calendar, calendar-plus, log-in, log-out,
+arrival, departure, block, chart-bar, tag, map-pin, edit, eye, trash, note,
+settings, bell`. `filter`, `download`, and `refresh` were added during
+[§7](#7-part-6--reports-page-redesign) for the Reports page's action buttons.
 An unrecognized name silently falls back to `grid` — always verify a new
 icon name against this list before using it.
 
@@ -258,7 +266,7 @@ Props: `icon`, `color`, `label`, `valueId`. Default slot = value.
 
 #### `<x-admin.section-card>`
 The white rounded panel shell used below the stat row (Room Types & Pricing,
-All Rooms, Bookings Insights, Room Status Map, ...).
+All Rooms, Bookings Insights, Room Status Map, Report Filters/Results, ...).
 Props: `icon`, `color`, `title`, `subtitle`, `subtitleId`, `delay`. Omit
 `title` for a bare panel with no header row. `actions` slot = header-right
 content (legend, buttons).
@@ -321,7 +329,14 @@ The pre-existing `x-admin.card` / `button` / `input` / `select` components
 (using an old, partly-broken `sage-*` color palette) were left exactly as-is.
 They're still used by `resources/views/staff/staffrecords/index.blade.php`,
 which hasn't been revamped yet. When that page's turn comes, it should adopt
-the new component library the same way Dashboard and Rooms did.
+the new component library the same way Dashboard, Rooms, and (later) Reports
+did.
+
+**Note:** the Reports page redesign in [§7](#7-part-6--reports-page-redesign)
+deliberately did **not** reuse `x-admin.input`/`select` either, for the same
+reason — it built its filter controls with plain Tailwind utility classes
+directly, matching how Rooms did it, rather than mixing two form-field
+styling systems on one page.
 
 ---
 
@@ -382,7 +397,154 @@ Two lower-confidence, more architectural findings from the review were
 
 ---
 
-## 6. Database Reference
+## 6. Part 5 — Staff Login: OTP Disabled
+
+**Request:** be able to log in as admin without the OTP step working, since
+local mail delivery isn't set up (`MAIL_MAILER=log` — OTP emails only ever
+get written to the log file, never delivered anywhere).
+
+### How staff login normally works
+
+`app/Http/Controllers/StaffAuthController.php`:
+1. `loginStaff()` — validates email/password, rate-limits by email+IP, checks
+   `is_suspended`, `Hash::check()`s the password.
+2. On success: generates a random 6-digit code, inserts a `StaffOtp` row
+   (5-minute expiry), emails it via `StaffLoginOtpNotification`, stashes
+   `staff_pending_id` in session, redirects to the OTP entry form.
+3. `verifyOtp()` — validates the 6-digit code against the pending `StaffOtp`
+   row, logs the staff in via `Auth::guard('staff')->login($staff)` on match,
+   redirects by role (`admin`/`master_admin` → `/staff/dashboard`,
+   `frontdesk` → `/front-desk/dashboard`).
+4. `resendOtp()` — re-sends, rate-limited to 3 per 10 minutes.
+
+### What changed
+
+- **`config/staff.php`** (new) — one key, `otp_enabled`, reading
+  `env('STAFF_OTP_ENABLED', false)`.
+- **`.env`** / **`.env.example`** — added `STAFF_OTP_ENABLED` (`false` in
+  `.env` for this local setup, `true` in `.env.example` as the documented
+  "normal" default for other environments).
+- **`StaffAuthController::loginStaff()`** — after the password check, if
+  `config('staff.otp_enabled')` is false, it logs the staff in immediately
+  (same call `Auth::guard('staff')->login($staff)` that `verifyOtp()` uses)
+  instead of generating/emailing a code, then redirects by role.
+- Extracted the role → dashboard redirect switch (previously only living
+  inside `verifyOtp()`) into a shared private helper, `redirectForRole()`,
+  used by both the OTP-skipped and OTP-verified paths so the logic isn't
+  duplicated.
+- **Nothing was deleted.** The OTP routes (`staff.otp.form`,
+  `staff.otp.verify`, `staff.otp.resend`), the `staff.verify` view, the
+  `StaffOtp` model, and `StaffLoginOtpNotification` are all untouched. Setting
+  `STAFF_OTP_ENABLED=true` and running `php artisan config:clear` turns OTP
+  back on exactly as it was.
+
+### Security note (found, not fixed — flagged to the user)
+
+`verifyOtp()` has a hardcoded bypass: submitting the code `000000` accepts
+*any* pending OTP for that staff member regardless of the real code
+(`app/Http/Controllers/StaffAuthController.php`, the OTP-lookup branch).
+It's dormant while OTP is disabled, but if `STAFF_OTP_ENABLED` is ever set
+back to `true`, this backdoor is still live. Worth removing before OTP is
+relied on again in a real environment.
+
+---
+
+## 7. Part 6 — Reports Page Redesign
+
+### What was found
+
+The Reports page (`resources/views/staff/reports/index.blade.php`,
+route `staff.reports.index` → `MainReportsController@index`) was built
+entirely in **Bootstrap 5** classes (`container-fluid`, `card`, `btn`,
+`form-select`, `d-flex`, `col-md-*`) with **Font Awesome** icons. Exactly
+like the Rooms modals in [§2](#2-part-1--visual-revamp-rooms),
+`layouts/admin.blade.php` never loads Bootstrap CSS/JS — only Tailwind and
+Font Awesome are available. There's also an orphaned stylesheet,
+`public/css/Reports.css` (defines `.card-booking`/`.badge-pill`/etc.), that
+was never actually `<link>`-ed anywhere. **Net effect: this page was almost
+certainly rendering with unstyled native form controls and no card chrome**
+before this redesign — the same class of bug as the Rooms modals, found
+independently.
+
+Also discovered, and **left alone**: a fully-built "Central Hub" analytics
+page (`resources/views/staff/reports/central.blade.php` +
+`app/Http/Controllers/Staff/Reports/CentralHubController.php`) with 10
+Chart.js charts (revenue, occupancy, payment methods, peak booking hours,
+etc.) and its own Excel export forms. Its routes are **commented out** in
+`routes/web.php` (`reports.central.*`), so the page is unreachable by anyone
+today — pure dead code, not wired into navigation. It's a good source of
+"what other metrics could this page show" if the Reports page ever needs
+richer charts, but reviving it is a separate task.
+
+### Architecture kept as-is (by design)
+
+`MainReportsController@index()` passes **zero data** to the view — the whole
+page is client-side: `generateReport()`/`exportReport()` POST a JSON payload
+to `/staff/reports/generate` / `/staff/reports/export` (both named routes,
+`reports.generate` / `reports.export`), and the backend (`ReportService` →
+`ReportQueryBuilder` → `ReportSchema`/`ReportColumnMapper` →
+`ReportExportService`) does the rest. The redesign kept this **exact same
+AJAX contract** — same payload shape, same paginator response shape — so
+**no backend/controller/service code needed to change at all**. Only the
+Blade view was rewritten.
+
+Payload shape (unchanged):
+```json
+{
+  "report_type": "booking|payment|combined",
+  "column_set": "booking_summary|financial|combined",
+  "date_range": { "type": "monthly|yearly|range", "value": "YYYY-MM | YYYY | {from,to}" },
+  "filters": { "booking_status?": [...], "payment_status?": [...], "gateway?": [...] }
+}
+```
+
+### What changed visually/UX
+
+- Rebuilt with the same component library from [§4](#4-part-3--reusable-component-library):
+  `<x-admin.page-header>` (Export Excel action), `<x-admin.section-card>`
+  for the Filters and Results panels.
+- **Report Category** and **Timeframe**: went from plain `<select>` dropdowns
+  to toggle-button segmented controls (Booking/Financial/Combined,
+  Monthly/Yearly/Custom Range).
+- **Status filters** (booking status / payment status / gateway): went from
+  native `<select multiple>` boxes (that nobody enjoys using) to click-to-toggle
+  pill chips with an "All" option — clicking a specific value deselects "All";
+  clicking "All" clears everything else.
+- Table, loading skeleton, empty states, active-filter summary chips, and
+  pagination all rebuilt with Tailwind styling and the app's semantic status
+  colors (clsu=success, palay=pending, ember=failed/cancelled, stone=neutral).
+- Added 3 new icons to the shared registry (`filter`, `download`, `refresh`)
+  — see [§4](#4-part-3--reusable-component-library).
+
+### Bugs fixed along the way (found while rewriting, not asked for, fixed anyway)
+
+- Column headers only replaced the *first* underscore in a snake_case column
+  name (`col.replace('_', ' ')` — JS `String.replace` with a string arg only
+  replaces one occurrence). Now replaces all underscores and title-cases each
+  word.
+- The report-category `<select>`'s `change` handler was registered **twice**
+  in the old file (near-duplicate blocks). The rewrite has a single click
+  handler per control, so this class of bug can't recur.
+
+### Bug caught and fixed *before* it ever shipped
+
+The first draft of the rewrite put the active/inactive button styling in an
+inline `<style>` block using Tailwind's `@apply` directive. **This doesn't
+work** — `@apply` is a build-time Tailwind/PostCSS directive; it only has any
+effect on files that actually pass through the Vite/Tailwind build (like
+`resources/css/app.css`). A `<style>` tag written directly in a Blade view is
+shipped to the browser as literal text, and no browser understands `@apply` —
+those rules would have been silently dropped, leaving every toggle button and
+filter chip completely unstyled with no visible active/inactive state. Caught
+by re-reading the draft before testing it, not by a test failing. Fixed by
+removing the `<style>` block entirely and doing active/inactive styling as
+full Tailwind utility-class string swaps in JS (`el.attr('class', ...)`) —
+the same pattern already used by the Rooms page's `applyStatusToCard()`
+(§2/§3).
+
+---
+
+## 8. Database Reference
 
 ### `room_types`
 
@@ -412,11 +574,14 @@ RoomType::rooms()     → hasMany(Room::class, 'room_type', 'slug')
 — and `Room::bookings()` — `belongsToMany(Booking::class, 'booking_room')` —
 were not changed, but are relevant context for fix #6 above.)
 
+No database changes were made for §6 (OTP disable — config-only) or §7
+(Reports redesign — view-only, no schema/service changes).
+
 ---
 
-## 7. Route Reference
+## 9. Route Reference
 
-All under the `auth:staff` + `staff.role:admin,master_admin` middleware group.
+### Room Management (all under `auth:staff` + `staff.role:admin,master_admin`)
 
 | Method | URI | Name | Controller@method | Added/changed |
 |---|---|---|---|---|
@@ -430,9 +595,30 @@ All under the `auth:staff` + `staff.role:admin,master_admin` middleware group.
 | POST | `/staff/room-types` | `staff.roomtypes.store` | `RoomTypeController@store` | **new** |
 | PUT | `/staff/room-types/{roomType}` | `staff.roomtypes.update` | `RoomTypeController@update` | **new** |
 
+### Staff login (guest middleware — unchanged routes, changed behavior, see §6)
+
+| Method | URI | Name | Controller@method |
+|---|---|---|---|
+| GET | `/staff/login` | `staff.login` | `StaffAuthController@showLoginForm` |
+| POST | `/staff/login` | `staff.login.submit` | `StaffAuthController@loginStaff` |
+| GET | `/staff/otp` | `staff.otp.form` | `StaffAuthController@showOtpForm` |
+| POST | `/staff/otp` | `staff.otp.verify` | `StaffAuthController@verifyOtp` |
+| POST | `/staff/otp/resend` | `staff.otp.resend` | `StaffAuthController@resendOtp` |
+
+### Reports (unchanged — see §7, view-only redesign)
+
+| Method | URI | Name | Controller@method |
+|---|---|---|---|
+| GET | `/staff/reports/view` | `staff.reports.index` | `MainReportsController@index` |
+| POST | `/staff/reports/generate` | `reports.generate` | `MainReportsController@generate` |
+| POST | `/staff/reports/export` | `reports.export` | `MainReportsController@export` |
+
+(The `reports.central.*` routes exist in the controller/view but are
+commented out in `routes/web.php` — see §7.)
+
 ---
 
-## 8. File Manifest
+## 10. File Manifest
 
 ### New files
 
@@ -440,6 +626,7 @@ All under the `auth:staff` + `staff.role:admin,master_admin` middleware group.
 app/Http/Controllers/Staff/RoomTypeController.php
 app/Models/RoomType.php
 config/adminui.php
+config/staff.php
 database/migrations/2026_07_04_000001_create_room_types_table.php
 database/migrations/2026_07_04_000002_add_notes_to_rooms_table.php
 database/migrations/2026_07_04_000003_add_unique_index_to_room_types_name.php
@@ -460,17 +647,21 @@ docs/words.md   (this file)
 
 ```
 app/Models/Room.php
+app/Http/Controllers/StaffAuthController.php               (§6 — OTP-skip path + redirectForRole() helper)
 app/Http/Controllers/Staff/RoomController.php
 app/Http/Controllers/Staff/ManualBookingController.php
 app/Http/Controllers/Staff/frontdesk/WalkInBookingController.php
 database/seeders/DatabaseSeeder.php
-resources/css/app.css                              (added @source line for config/adminui.php)
-resources/views/staff/dashboard/index.blade.php     (refactored to use the component library)
-resources/views/staff/rooms/index.blade.php         (full revamp + backend features + component refactor)
+.env / .env.example                                         (§6 — STAFF_OTP_ENABLED)
+resources/css/app.css                                       (added @source line for config/adminui.php)
+resources/views/components/admin/icon.blade.php             (§7 — added filter/download/refresh icons)
+resources/views/staff/dashboard/index.blade.php              (refactored to use the component library)
+resources/views/staff/rooms/index.blade.php                  (full revamp + backend features + component refactor)
+resources/views/staff/reports/index.blade.php                (§7 — full rebuild, same AJAX contract)
 routes/web.php
 ```
 
-### Deliberately untouched (still on the old design system)
+### Deliberately untouched (still on the old design system, or dead code left alone)
 
 ```
 resources/views/components/admin/card.blade.php
@@ -479,18 +670,21 @@ resources/views/components/admin/input.blade.php
 resources/views/components/admin/select.blade.php
 resources/views/staff/staffrecords/index.blade.php
 public/css/roomManagement.css   (dead weight for the Rooms page specifically, but still linked by other unrevamped pages)
+public/css/Reports.css          (orphaned — never linked, even before the redesign)
+resources/views/staff/reports/central.blade.php               (dead — routes commented out, see §7)
+app/Http/Controllers/Staff/Reports/CentralHubController.php   (dead — same reason)
 ```
 
 ---
 
-## 9. Setup Notes
+## 11. Setup Notes
 
 To bring a checkout up to date:
 
 ```bash
 php artisan migrate        # creates room_types, adds rooms.notes, adds room_types.name unique index
 php artisan db:seed        # if seeding fresh — now also creates the 6 RoomType rows
-php artisan config:clear   # if config/adminui.php was added after config was cached
+php artisan config:clear   # if config/adminui.php or config/staff.php were added after config was cached
 ```
 
 No `npm run build` is strictly required for the color-map consolidation
@@ -498,9 +692,13 @@ No `npm run build` is strictly required for the color-map consolidation
 etc. — already exist elsewhere in already-scanned `.blade.php` files), but
 running the asset build after pulling these changes is good practice as usual.
 
+**Staff login OTP:** controlled by `STAFF_OTP_ENABLED` in `.env` (see §6).
+`false` = log straight in after password. `true` = normal email-OTP flow.
+Run `php artisan config:clear` after changing it.
+
 ---
 
-## 10. Known Follow-ups
+## 12. Known Follow-ups
 
 Not bugs, just things worth knowing about if you're picking this up next:
 
@@ -518,3 +716,16 @@ Not bugs, just things worth knowing about if you're picking this up next:
   is set. The room-rename cascade fix (§5, #6) works around this by updating
   `room_number` directly rather than switching the relation to `room_id`,
   since populating `room_id` retroactively was out of scope for this pass.
+- **The OTP `000000` bypass** in `verifyOtp()` (see §6) is still in the code,
+  just unreachable while `STAFF_OTP_ENABLED=false`. Should be removed before
+  OTP is ever relied on again in a real environment.
+- **The "Central Hub" reports page** (`central.blade.php` +
+  `CentralHubController`, see §7) is a fully-built Chart.js analytics
+  dashboard sitting completely disconnected — routes commented out, not in
+  any nav. Worth either reviving (it already computes per-month bookings/
+  revenue, payment-method split, occupancy, peak hours) or deleting outright
+  so it stops looking like a maintained feature.
+- **`public/css/Reports.css`** is dead weight — never linked by any live
+  page, before or after the redesign. Safe to delete whenever someone's
+  doing a cleanup pass, unless the (also-dead) `central.blade.php` is
+  revived and expected to use it.
