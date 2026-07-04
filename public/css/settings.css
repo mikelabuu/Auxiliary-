@@ -36,6 +36,13 @@
     width: 150px;
 }
 
+.sidebar-menu li a {
+    color: inherit;       /* inherit from li */
+    text-decoration: none;
+    display: block;       /* makes whole li clickable */
+    width: 100%;
+}
+
 .sidebar-menu li:hover {
     background: #74b357;
 }
@@ -43,6 +50,10 @@
 .sidebar-menu li.active {
     background: #3b612a;
     font-weight: 600;
+}
+
+.sidebar-menu li.active a {
+    color: #fff;
 }
 
 /* Main content */

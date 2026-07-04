@@ -44,6 +44,6 @@ class PaymentLogsController extends Controller
             "Staff {$staff->name} viewed payment records (page {$payments->currentPage()} showing {$payments->count()} of {$payments->total()} total)."
         );
 
-        return view('staff.paymentlogs', compact('payments', 'search', 'sort'));
+        return view('staff.paymentlogs.index', compact('payments', 'search', 'sort'));
     }
 }

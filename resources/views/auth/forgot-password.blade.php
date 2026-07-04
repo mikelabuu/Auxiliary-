@@ -1,83 +1,60 @@
 @extends('layouts.authlayout')
-
 @section('title', 'Forgot Password')
-
 @section('content')
-        <div class="mb-10 transform transition-hover hover:scale-105 duration-300">
-            <img src="{{ asset('image/FHLogo2.png') }}" alt="FH" class="h-20 w-auto drop-shadow-2xl">
-        </div>
-
-        <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
-            <div class="px-8 pb-10">
+        <div class="bg-white/90 backdrop-blur-md w-full max-w-[500px] rounded-[32px] shadow-2xl border border-slate-100/50 overflow-hidden transition-all duration-300">
+            <!-- Logo Section -->
+            <div class="mt-8 flex flex-col items-center gap-2 transform transition-all hover:scale-105 duration-300">
+                <img src="{{ asset('image/FHLogo2.png') }}" alt="Farmers Hostel" class="h-20 w-auto drop-shadow-md">
+                <div class="text-center">
+                    <span class="block text-lg font-black text-brand tracking-tight">Farmers Hostel</span>
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">CLSU Campus</span>
+                </div>
+            </div>
+            
+            <div class="px-8 pb-10 pt-6">
                 <div>
-                    <div class="text-center mb-8">
-                        <h2 class="text-3xl font-extrabold text-slate-900 leading-tight mt-4">Forgot Password</h2>
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-black text-slate-900 leading-tight">Forgot Password?</h2>
+                        <p class="text-sm font-semibold text-slate-500 mt-1.5 leading-relaxed">No worries! Just enter your registered email address and we'll send you a password reset link.</p>
+                        
                         @if ($errors->any())
                             @foreach ($errors->all() as $error)
-                                <div id="error-alert" class="mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
-                                    <div class="flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        <div class="flex-1">
-                                            <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
-                                            <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ $error }}</p>
-                                        </div>
-                                    </div>
+                                <div id="error-alert" class="error-alert mt-4">
+                                    <x-booking.alert type="danger" :message="$error" />
                                 </div>
                             @endforeach
                         @endif
 
-                        {{-- Session Error --}}
-                        @if (session('error'))
-                            <div id="error-alert" class="mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    <div class="flex-1">
-                                        <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
-                                        <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ session('error') }}</p>
-                                    </div>
-                                </div>
+                        @if (session('status'))
+                            <div id="success-alert" class="mt-4">
+                                <x-booking.alert type="success" :message="session('status')" />
                             </div>
                         @endif
                     </div>
 
                     <form class="space-y-4" method="POST" action="{{ route('password.email') }}">
                         @csrf
-                        <input type="email" placeholder="Email address" name="email" value="{{ old('email') }}"
-                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3B612A] focus:bg-white outline-none transition-all placeholder:text-slate-400">
-                        <div class="flex justify-center">
-                            <a href="/" class="text-xs font-bold text-brand hover:underline">Go Back</a>
+                        
+                        <div class="space-y-1">
+                            <input type="email" placeholder="Email address" name="email" required
+                                   class="w-full px-5 py-4 bg-slate-50/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand/20 focus:border-brand focus:bg-white outline-none transition-all placeholder:text-slate-450 font-medium text-sm text-slate-800">
                         </div>
-                        <button type="submit" class="w-full bg-brand hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
-                            Send Reset Link
+
+                        <button type="submit" class="w-full bg-brand hover:bg-brand-light text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand/10 hover:shadow-xl transition-all active:scale-[0.98] mt-2 cursor-pointer">
+                            Email Password Reset Link
                         </button>
                     </form>
+
+                    <div class="text-center mt-6">
+                        <a href="{{ route('login') }}" class="text-xs font-bold text-brand hover:text-brand-light transition-colors flex items-center justify-center gap-1">
+                            <span class="material-icons text-[14px]">arrow_back</span>
+                            Back to login
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-        <p class="mt-10 text-white/60 text-xs font-medium tracking-wide">
-            &copy; 2026 Farmers Hostel.
+        <p class="mt-10 text-white/55 text-xs font-semibold tracking-wider">
+            &copy; {{ date('Y') }} Farmers Hostel.
         </p>
 @endsection
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to handle fade and remove
-        const autoHide = (elId) => {
-            const el = document.getElementById(elId);
-            if (el) {
-                setTimeout(() => {
-                    el.style.opacity = '0';
-                    setTimeout(() => { el.style.display = 'none'; }, 500);
-                }, 5000); // 5 seconds
-            }
-        };
-
-        autoHide('error-alert');
-        autoHide('success-alert');
-    });
-</script>
-@endpush

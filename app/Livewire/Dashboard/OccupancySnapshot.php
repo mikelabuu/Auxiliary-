@@ -14,6 +14,20 @@ class OccupancySnapshot extends Component
     public $occupied = 0;
     public $available = 0;
     public $percent = 0.0;
+    
+    // Breakdown values
+    public $dormTotal = 0;
+    public $dormOccupied = 0;
+    public $dormPercent = 0.0;
+
+    public $standardTotal = 0;
+    public $standardOccupied = 0;
+    public $standardPercent = 0.0;
+
+    public $deluxeTotal = 0;
+    public $deluxeOccupied = 0;
+    public $deluxePercent = 0.0;
+
     public $pollInterval = 60; // seconds
     public $date;
     protected $occupyingStatuses = ['active'];
@@ -31,19 +45,50 @@ class OccupancySnapshot extends Component
         $data = Cache::remember($cacheKey, 30, function () use ($today) {
             $totalRooms = Room::count();
 
-            $occupiedRooms = Reservation::whereHas('booking', function ($q) use ($today) {
+            $occupiedRoomNumbers = Reservation::whereHas('booking', function ($q) use ($today) {
                 $q->whereIn('status', $this->occupyingStatuses)
                   ->whereDate('check_in', '<=', $today);
-            })->distinct('room_number')->count('room_number');
+            })->pluck('room_number')->toArray();
 
-            $available = max(0, $totalRooms - $occupiedRooms);
-            $percent = $totalRooms ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0.0;
+            $occupiedRoomsCount = count(array_unique($occupiedRoomNumbers));
+            $available = max(0, $totalRooms - $occupiedRoomsCount);
+            $percent = $totalRooms ? round(($occupiedRoomsCount / $totalRooms) * 100, 1) : 0.0;
+
+            // Dorm rooms
+            $dormTotal = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])->count();
+            $dormOccupied = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])
+                ->whereIn('room_number', $occupiedRoomNumbers)->count();
+            $dormPercent = $dormTotal > 0 ? round(($dormOccupied / $dormTotal) * 100, 1) : 0.0;
+
+            // Standard rooms
+            $standardTotal = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])->count();
+            $standardOccupied = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])
+                ->whereIn('room_number', $occupiedRoomNumbers)->count();
+            $standardPercent = $standardTotal > 0 ? round(($standardOccupied / $standardTotal) * 100, 1) : 0.0;
+
+            // Deluxe rooms
+            $deluxeTotal = Room::where('room_type', 'deluxe')->count();
+            $deluxeOccupied = Room::where('room_type', 'deluxe')
+                ->whereIn('room_number', $occupiedRoomNumbers)->count();
+            $deluxePercent = $deluxeTotal > 0 ? round(($deluxeOccupied / $deluxeTotal) * 100, 1) : 0.0;
 
             return [
                 'total' => $totalRooms,
-                'occupied' => $occupiedRooms,
+                'occupied' => $occupiedRoomsCount,
                 'available' => $available,
                 'percent' => $percent,
+                
+                'dormTotal' => $dormTotal,
+                'dormOccupied' => $dormOccupied,
+                'dormPercent' => $dormPercent,
+                
+                'standardTotal' => $standardTotal,
+                'standardOccupied' => $standardOccupied,
+                'standardPercent' => $standardPercent,
+                
+                'deluxeTotal' => $deluxeTotal,
+                'deluxeOccupied' => $deluxeOccupied,
+                'deluxePercent' => $deluxePercent,
             ];
         });
 
@@ -52,7 +97,18 @@ class OccupancySnapshot extends Component
         $this->available = $data['available'];
         $this->percent = $data['percent'];
 
-        // dispatch an event for the frontend chart to update
+        $this->dormTotal = $data['dormTotal'];
+        $this->dormOccupied = $data['dormOccupied'];
+        $this->dormPercent = $data['dormPercent'];
+
+        $this->standardTotal = $data['standardTotal'];
+        $this->standardOccupied = $data['standardOccupied'];
+        $this->standardPercent = $data['standardPercent'];
+
+        $this->deluxeTotal = $data['deluxeTotal'];
+        $this->deluxeOccupied = $data['deluxeOccupied'];
+        $this->deluxePercent = $data['deluxePercent'];
+
         $this->dispatch('occupancy-updated', [
             'total' => $this->total,
             'occupied' => $this->occupied,

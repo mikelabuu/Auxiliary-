@@ -96,9 +96,9 @@
 
 
 .calendar {
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    background: var(--color-sage-surface);
+    border-radius: var(--rounded-lg, 16px);
+    border: 1px solid rgba(122, 143, 133, 0.15);
     padding: 20px;
     width: 100%;
 }
@@ -111,62 +111,68 @@
 }
 
 .calendar header h2 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #333;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-sage-primary);
+    font-family: var(--font-display);
 }
 
 .calendar header button {
-    background: #3b612a;
-    color: white;
-    border: none;
-    border-radius: 8px;
+    background: var(--color-sage-neutral);
+    color: var(--color-sage-primary);
+    border: 1px solid rgba(122, 143, 133, 0.2);
+    border-radius: var(--rounded-md, 10px);
     padding: 6px 12px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: bold;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.2s;
 }
 
 .calendar header button:hover {
-    background: #3b612a;
+    background: rgba(122, 143, 133, 0.1);
+    color: var(--color-sage-primary);
 }
 
 .days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .day-name {
     font-weight: 600;
-    color: #6b7280;
-    font-size: 0.9rem;
+    color: var(--color-sage-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .day {
-    padding: 12px;
-    border-radius: 12px;
+    padding: 10px;
+    border-radius: var(--rounded-md, 10px);
     cursor: pointer;
-    transition: 0.3s;
-    font-size: 0.95rem;
-    color: #3b612a;
+    transition: 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-sage-primary);
+    border: 1px solid transparent;
 }
 
 .day:hover {
-    background: #3b612a;
-    color: #d5e546;
-    font-weight: 600;
+    background: var(--color-sage-neutral);
+    color: var(--color-sage-primary);
+    border-color: rgba(122, 143, 133, 0.1);
 }
 
 .today {
-    background: #3b612a;
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    background: var(--color-sage-tertiary);
+    color: var(--color-sage-on-primary, #ffffff);
+    font-weight: 700;
 }
 
 .inactive {
-    color: #d1d5db;
+    color: rgba(122, 143, 133, 0.35);
     pointer-events: none;
 }

@@ -98,6 +98,14 @@
                                 Cancel
                             </button>
                         @endif
+                        @if(in_array($booking->status, ['active']))
+                            <button 
+                                class="px-3 py-1 text-sm font-medium text-black-600 rounded-md bg-yellow-500 transition password-verify" 
+                                data-action="checkout" 
+                                data-id="{{ $booking->id }}">
+                                checkout
+                            </button>
+                        @endif
                     </td>
                 </tr>
             @empty
@@ -239,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     Livewire.dispatch('openBookingModal', { bookingId });
                 } else if (action === 'cancel') {
                     Livewire.dispatch('cancelBookingConfirmed', { bookingId });
+                }else if (action === 'checkout') {
+                    Livewire.dispatch('checkoutBookingConfirmed', { bookingId });
                 }
             }
         });

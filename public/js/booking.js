@@ -1,34 +1,51 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // DOM refs
-  const bookingModalEl = document.getElementById('bookingModal');
   const bookingForm = document.getElementById('bookingForm');
-
-
-  const openButtons = document.querySelectorAll('.btn-open-booking');
   const check_in = document.getElementById('check_in');
   const check_out = document.getElementById('check_out');
+  const check_in_hidden = document.getElementById('check_in_hidden');
+  const check_out_hidden = document.getElementById('check_out_hidden');
   const room_numbers_hidden = document.getElementById('selected_room_number');
-
   const bookingFormAlert = document.getElementById('bookingFormAlert');
-
-
-  const maxSeniorsLabel = document.getElementById('maxSeniorsLabel');
   const expectedGuestsInput = document.getElementById('expected_guests');
-
-  // template/container refs
-  const reservationContainer = document.getElementById('reservationBlocksContainer');
-  const tpl = document.getElementById('reservationBlockTemplate');
-  const btnAddRoom = document.getElementById('btnAddRoom');
-
-  // Hidden DB inputs
+  const maxSeniorsLabel = document.getElementById('maxSeniorsLabel');
   const num_seniors_hidden = document.getElementById('num_seniors');
+  const reservationContainer = document.getElementById('reservationBlocks');
+  const tpl = document.getElementById('reservationBlockTemplate');
+  const bookingStateHost = bookingForm;
+  const initialRoomType = bookingStateHost?.dataset.initialRoomType || window.INITIAL_ROOM_TYPE || '';
+  const initialGuests = parseInt(bookingStateHost?.dataset.initialGuests || window.INITIAL_GUESTS || '1', 10);
 
+  if (!reservationContainer || !tpl) return; // Only run on checkout page
 
-  // Utility: format price
   function formatPrice(num) { return '₱' + Number(num).toLocaleString(); }
 
+  // Update nights stay badge on top dates widget
+  function updateNightsStayBadge() {
+    const badge = document.getElementById('nights_duration_badge');
+    if (!badge) return;
+    const d1Val = check_in?.value;
+    const d2Val = check_out?.value;
+    if (d1Val && d2Val) {
+      const d1 = new Date(d1Val);
+      const d2 = new Date(d2Val);
+      const nights = Math.max(1, Math.round((d2 - d1) / 86400000));
+      if (nights > 0) {
+        badge.textContent = `${nights} Night${nights > 1 ? 's' : ''} Stay`;
+        badge.classList.remove('hidden');
+        return;
+      }
+    }
+    badge.classList.add('hidden');
+  }
 
-  // Prevent selecting past dates
+  // Sync flatpickr dates to hidden inputs for form submission
+  function syncDates() {
+    if (check_in_hidden && check_in) check_in_hidden.value = check_in.value;
+    if (check_out_hidden && check_out) check_out_hidden.value = check_out.value;
+    updateNightsStayBadge();
+    generateBookingSummary();
+  }
+
   function setMinDates() {
     if (!check_in || !check_out) return;
     const today = new Date();
@@ -41,80 +58,44 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   setMinDates();
 
-  // caps for seniors display
   function updateCapsDisplay() {
-    const cap = getExpectedGuestsCap();
-    if (maxSeniorsLabel) maxSeniorsLabel.textContent = cap;
-    // also adjust per-block senior max inputs later
+    const v = parseInt(expectedGuestsInput?.value) || 1;
+    if (maxSeniorsLabel) maxSeniorsLabel.textContent = v;
+    generateBookingSummary();
   }
 
-  // helper: expected guests value
-  function getExpectedGuestsCap() {
-    if (expectedGuestsInput) {
-    const v = parseInt(expectedGuestsInput.value);
-    return (isNaN(v) || v < 1) ? 1 : v;
-    }
-    return 1;
-  }
-
-  expectedGuestsInput && expectedGuestsInput.addEventListener('input', () => {
-    updateCapsDisplay();
-  });
-
-  // reset modal state
-  function resetModalState() {
-    // clear blocks
-    reservationContainer && (reservationContainer.innerHTML = '');
-    selectedRoomNumbersSet.clear();
-    if (room_numbers_hidden) room_numbers_hidden.value = '';
-    if (num_seniors_hidden) num_seniors_hidden.value = 0;
-    if (expectedGuestsInput) expectedGuestsInput.value = 1;
-    updateCapsDisplay();
-  }
+  expectedGuestsInput?.addEventListener('input', updateCapsDisplay);
+  document.getElementById('request_discount')?.addEventListener('change', generateBookingSummary);
 
   function bindMealInputs(block) {
     const guestInput = block.querySelector('.res-num-guests');
     const mealInputs = block.querySelectorAll('.meal-qty');
-
     function enforce() {
       const maxGuests = parseInt(guestInput.value, 10) || 0;
       let totalMeals = 0;
-
-      mealInputs.forEach(input => {
-        let val = parseInt(input.value, 10) || 0;
-        totalMeals += val;
-      });
-
-      // If meals exceed guests, trim the *last edited* field
+      mealInputs.forEach(input => { totalMeals += parseInt(input.value, 10) || 0; });
       if (totalMeals > maxGuests) {
         let excess = totalMeals - maxGuests;
-
-        // find the active (last changed) element
         const active = document.activeElement;
         if (active && active.classList.contains('meal-qty')) {
           let currentVal = parseInt(active.value, 10) || 0;
           active.value = Math.max(0, currentVal - excess);
         } else {
-          // fallback: trim from the last input
           const last = mealInputs[mealInputs.length - 1];
           let currentVal = parseInt(last.value, 10) || 0;
           last.value = Math.max(0, currentVal - excess);
         }
       }
     }
-
-    mealInputs.forEach(input => {
-      input.addEventListener('input', enforce);
-    });
-
+    mealInputs.forEach(input => input.addEventListener('input', enforce));
     guestInput.addEventListener('input', enforce);
-    enforce(); // run once on init
+    enforce();
   }
-  // --- Block system ---
+
   let nextBlockIndex = 0;
   const selectedRoomNumbersSet = new Set();
 
-  function createReservationBlock(prefill = {}) {
+  window.addReservationBlock = function(prefill = {}) {
     const index = nextBlockIndex++;
     const html = tpl.innerHTML.replace(/__INDEX__/g, index);
     const wrapper = document.createElement('div');
@@ -139,14 +120,13 @@ document.addEventListener('DOMContentLoaded', function () {
         let v = parseInt(numGuestsInput.value) || 0;
         if (v > cap) numGuestsInput.value = cap;
         if (v < 1) numGuestsInput.value = 1;
+        generateBookingSummary();
       });
     }
 
-    // prefill if provided
     if (prefill.room_type) {
       roomTypeSelect.value = prefill.room_type;
       const opt = roomTypeSelect.selectedOptions[0];
-
       if (opt) {
         resBeds.value = opt.dataset.beds || '';
         resPriceHidden.value = opt.dataset.price || '';
@@ -154,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // update beds/price on room type change
     roomTypeSelect.addEventListener('change', () => {
       const opt = roomTypeSelect.selectedOptions[0];
       resBeds.value = (opt && opt.dataset.beds) ? opt.dataset.beds : '';
@@ -162,72 +141,119 @@ document.addEventListener('DOMContentLoaded', function () {
       resPrice.value = formatPrice(resPriceHidden.value || 0);
       roomTilesWrap.innerHTML = '';
       roomNumberHidden.value = '';
+      if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
+        setTimeout(() => btnCheck.click(), 120);
+      }
+      generateBookingSummary();
     });
 
-    // limit per-block seniors to room capacity
     numSeniorsInput.addEventListener('input', () => {
       const cap = parseInt(resBeds.value) || 0;
       let v = parseInt(numSeniorsInput.value) || 0;
       if (v > cap) numSeniorsInput.value = cap;
       if (v < 0) numSeniorsInput.value = 0;
       updateAggregateHiddenInputs();
+      generateBookingSummary();
     });
 
-    // per-block availability check
     btnCheck.addEventListener('click', async () => {
       const roomType = roomTypeSelect.value;
       if (!roomType) { showFormError('Choose a room type first'); return; }
       if (!check_in.value || !check_out.value) { showFormError('Please choose check-in/out dates'); return; }
-      roomTilesWrap.innerHTML = '<div class="note">Checking availability...</div>';
+      
+      // Beautiful animated SVG spinner
+      roomTilesWrap.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-6 text-slate-400">
+            <svg class="animate-spin h-7 w-7 text-[#0a4f2d] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Retrieving open rooms...</span>
+        </div>
+      `;
+
       try {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         const resp = await fetch('/rooms/available', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token},
-        body: JSON.stringify({ room_type: roomType, check_in: check_in.value, check_out: check_out.value })
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token},
+          body: JSON.stringify({ room_type: roomType, check_in: check_in.value, check_out: check_out.value })
         });
         if (!resp.ok) throw new Error('Network response not ok');
         const data = await resp.json();
         renderRoomTilesForBlock(index, data.rooms || [], block);
-        } catch (err) {
-        roomTilesWrap.innerHTML = '<div class="note text-danger">Error checking availability</div>';
+      } catch (err) {
+        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-red-600 py-4">Error checking availability</div>';
         console.error(err);
       }
     });
 
-    // remove block
     btnRemove.addEventListener('click', () => {
       const rn = roomNumberHidden.value;
       if (rn) selectedRoomNumbersSet.delete(rn);
       block.remove();
       updateAggregateHiddenInputs();
-      // show/hide remove buttons depending on blocks count
+      generateBookingSummary();
       document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
     });
 
-    // bind per-block meal inputs
-    const mealInputs = block.querySelectorAll('.meal-qty');
-    if (mealInputs.length) {
-      bindMealInputs(block);  // new function that enforces meal ≤ num_guests
-    }
+    // Wire up custom plus/minus meal increment buttons
+    block.querySelectorAll('.btn-minus-meal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.nextElementSibling;
+        let val = parseInt(input.value) || 0;
+        if (val > 0) {
+          val--;
+          input.value = val;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    });
+
+    block.querySelectorAll('.btn-plus-meal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        const guestInput = block.querySelector('.res-num-guests');
+        const maxGuests = parseInt(guestInput.value) || 0;
+        
+        // Count total meals currently selected
+        const mealInputs = block.querySelectorAll('.meal-qty');
+        let totalMeals = 0;
+        mealInputs.forEach(inp => totalMeals += parseInt(inp.value) || 0);
+
+        if (totalMeals < maxGuests) {
+          let val = parseInt(input.value) || 0;
+          val++;
+          input.value = val;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          showFormError('Total breakfast selections cannot exceed the number of guests allocated to this room.');
+        }
+      });
+    });
+
+    if (block.querySelectorAll('.meal-qty').length) bindMealInputs(block);
 
     reservationContainer.appendChild(block);
-    // show remove only if >1 blocks
+    if (typeof Alpine !== 'undefined') Alpine.initTree(block);
+    
     document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
-
-
+    
+    // Auto check if dates exist
+    if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
+      setTimeout(() => btnCheck.click(), 100);
+    }
+    generateBookingSummary();
     return block;
-  }
+  };
 
   function renderRoomTilesForBlock(index, rooms, blockEl) {
     const tilesWrap = blockEl.querySelector('.room-tiles-wrapper');
     tilesWrap.innerHTML = '';
-
     if (!rooms.length) {
-      tilesWrap.innerHTML = '<div class="note">No rooms</div>';
+      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-slate-500 py-4">No rooms available</div>';
       return;
     }
-
     const container = document.createElement('div');
     container.className = 'room-tiles';
 
@@ -237,107 +263,69 @@ document.addEventListener('DOMContentLoaded', function () {
       tile.innerText = r.room_number;
       tile.dataset.roomNumber = r.room_number;
 
-      // Assign classes and interactivity based on status
       if (r.status === 'available') {
         tile.classList.add('available');
         tile.addEventListener('click', () => {
           const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
           const prev = hiddenInput.value;
-
-          // Deselect if same room clicked
           if (prev === r.room_number) {
             hiddenInput.value = '';
             tile.classList.remove('selected');
+            const check = tile.querySelector('.selected-check');
+            if (check) check.remove();
             selectedRoomNumbersSet.delete(r.room_number);
           } else {
-            // Prevent duplicate across blocks
-            if (selectedRoomNumbersSet.has(r.room_number)) {
-              alert('That room is already selected in another block');
-              return;
-            }
-            // Clear previous selection in this block
+            if (selectedRoomNumbersSet.has(r.room_number)) { showFormError('That room is already selected in another block'); return; }
             const prevSelected = blockEl.querySelector('.room-tile.selected');
             if (prevSelected) {
               prevSelected.classList.remove('selected');
+              const check = prevSelected.querySelector('.selected-check');
+              if (check) check.remove();
               selectedRoomNumbersSet.delete(prevSelected.dataset.roomNumber);
             }
-            // Set new selection
             hiddenInput.value = r.room_number;
             tile.classList.add('selected');
+            
+            // Add a check icon to selected tile
+            const checkSpan = document.createElement('span');
+            checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white material-icons';
+            checkSpan.innerText = 'check';
+            tile.appendChild(checkSpan);
+            
             selectedRoomNumbersSet.add(r.room_number);
           }
-
           updateAggregateHiddenInputs();
+          generateBookingSummary();
         });
-      } else if (r.status === 'booked') {
-        tile.classList.add('booked');
-        tile.title = 'Unavailable for selected dates';
-      } else if (r.status === 'cleaning') {
-        tile.classList.add('cleaning');
-        tile.title = 'Room under cleaning';
-      } else if (r.status === 'maintenance') {
-        tile.classList.add('maintenance');
-        tile.title = 'Room under maintenance';
-      } else {
-        // fallback if unknown status
-        tile.classList.add('unavailable');
-        tile.title = 'Room unavailable';
-      }
-
+      } else if (r.status === 'booked') { tile.classList.add('booked'); tile.title = 'Unavailable';
+      } else if (r.status === 'cleaning') { tile.classList.add('cleaning'); tile.title = 'Cleaning';
+      } else if (r.status === 'maintenance') { tile.classList.add('maintenance'); tile.title = 'Maintenance';
+      } else { tile.classList.add('unavailable'); tile.title = 'Unavailable'; }
       container.appendChild(tile);
     });
-
     tilesWrap.appendChild(container);
   }
 
   function updateAggregateHiddenInputs() {
-    // room_numbers CSV
     const allSelected = Array.from(selectedRoomNumbersSet);
     if (room_numbers_hidden) room_numbers_hidden.value = allSelected.join(',');
-
-    // total seniors across blocks
     let totalSeniors = 0;
     document.querySelectorAll('.res-num-seniors').forEach(inp => { totalSeniors += parseInt(inp.value) || 0; });
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
-
   }
 
   function showFormError(msg) {
     if (bookingFormAlert) {
-    bookingFormAlert.innerText = msg;
-    bookingFormAlert.classList.remove('d-none');
-    } else {
-    alert(msg);
-    }
+      bookingFormAlert.innerText = msg;
+      bookingFormAlert.classList.remove('d-none');
+      bookingFormAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else { alert(msg); }
   }
 
-  // initial block creation when opening modal
-  openButtons.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      resetModalState();
-      // create one reservation block and prefill room type from button data
-      const dataTypeId = btn.dataset.roomTypeId || '';
-      const firstBlock = createReservationBlock({ room_type: dataTypeId });
-      // show modal
-      if (bookingModalEl) {
-        const modal = new bootstrap.Modal(bookingModalEl);
-        modal.show();
-      }
-    });
-  });
-
-  // add-room button
-  btnAddRoom && btnAddRoom.addEventListener('click', () => createReservationBlock({}));
-
-  // form submit validation
   bookingForm && bookingForm.addEventListener('submit', function(e) {
     bookingFormAlert && bookingFormAlert.classList.add('d-none');
-
-    // ensure blocks exist
     const blocks = document.querySelectorAll('.reservation-block');
-    if (!blocks || blocks.length === 0) { e.preventDefault(); showFormError('Please add at least one room.'); return; }
-
+    if (!blocks || blocks.length === 0) { e.preventDefault(); showFormError('Please add at least one room type.'); return; }
 
     const expected = parseInt(expectedGuestsInput.value) || 0;
     let totalCapacity = 0;
@@ -345,37 +333,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let totalGuests = 0;
     const roomsSelected = [];
 
-
     for (const b of blocks) {
       const beds = parseInt(b.querySelector('.res-beds').value) || 0;
       const numSen = parseInt(b.querySelector('.res-num-seniors').value) || 0;
       const roomNum = b.querySelector('.res-room-number-hidden').value || '';
       const numGuests = parseInt(b.querySelector('.res-num-guests')?.value) || 0;
 
-      if (!roomNum) { e.preventDefault(); showFormError('Please select a room in each reservation block.'); return; }
-      // per-room senior <= beds
+      if (!roomNum) { e.preventDefault(); showFormError('Please select a specific room from availability for each room type.'); return; }
       if (numSen > beds) { e.preventDefault(); showFormError('Seniors in a room cannot exceed that room\'s capacity.'); return; }
+      if (numGuests > beds) { e.preventDefault(); showFormError('Guests in a room cannot exceed that room’s capacity.'); return; }
+      if (numGuests < 1) { e.preventDefault(); showFormError('Each room must have at least 1 guest.'); return; }
 
-      if (numGuests > beds) {
-        e.preventDefault();
-        showFormError('Guests in a room cannot exceed that room’s capacity.');
-        return;
-      }
-      if (numGuests < 1) {
-        e.preventDefault();
-        showFormError('Each room must have at least 1 guest.');
-        return;
-      }
-
-      // inside for (const b of blocks)
       let totalMeals = 0;
       b.querySelectorAll('.meal-qty').forEach(inp => totalMeals += parseInt(inp.value) || 0);
-
-      if (totalMeals !== numGuests) {
-        e.preventDefault();
-        showFormError(`Meals in room ${roomNum || ''} must equal the number of guests assigned to that room.`);
-        return;
-      }
+      if (totalMeals !== numGuests) { e.preventDefault(); showFormError(`Meals in room ${roomNum} must equal the number of guests assigned to that room.`); return; }
 
       totalGuests += numGuests;
       totalCapacity += beds;
@@ -383,35 +354,16 @@ document.addEventListener('DOMContentLoaded', function () {
       roomsSelected.push(roomNum);
     }
 
-    if (totalGuests !== expected) {
-      e.preventDefault();
-      showFormError(`Mismatch: total assigned guests (${totalGuests}) must equal expected guests (${expected}).`);
-      return;
-    }
-
+    if (totalGuests !== expected) { e.preventDefault(); showFormError(`Mismatch: total assigned guests (${totalGuests}) must equal expected guests (${expected}).`); return; }
     if (totalCapacity < expected) { e.preventDefault(); showFormError(`Total capacity ${totalCapacity} is less than expected ${expected}`); return; }
     if (totalSeniors > expected) { e.preventDefault(); showFormError('Total seniors exceed expected guests'); return; }
-
-    if (num_seniors_hidden && parseInt(num_seniors_hidden.value) !== totalSeniors) {
-      e.preventDefault();
-      showFormError(`Mismatch: total seniors in reservations (${totalSeniors}) must equal total seniors for the booking (${num_seniors_hidden.value}).`);
-      return;
-    }
-
-
-    // duplicates check
+    if (num_seniors_hidden && parseInt(num_seniors_hidden.value) !== totalSeniors) { e.preventDefault(); showFormError(`Mismatch: total seniors in reservations (${totalSeniors}) must equal total seniors for the booking.`); return; }
     if (roomsSelected.length !== (new Set(roomsSelected)).size) { e.preventDefault(); showFormError('Duplicate rooms selected'); return; }
 
-
-    // final set hidden fields
     if (room_numbers_hidden) room_numbers_hidden.value = roomsSelected.join(',');
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
-
-
-    // allow submit to proceed
   });
 
-  // helper: enforce checkout min date based on checkin
   check_in && check_in.addEventListener('change', function() {
     const checkInDate = new Date(this.value);
     if (checkInDate) {
@@ -420,5 +372,128 @@ document.addEventListener('DOMContentLoaded', function () {
       check_out.min = minCheckOut;
       if (check_out.value && check_out.value < minCheckOut) check_out.value = '';
     }
+    syncDates();
+    autoCheckAllBlocks();
   });
+
+  check_out && check_out.addEventListener('change', function() {
+    syncDates();
+    autoCheckAllBlocks();
+  });
+
+  function autoCheckAllBlocks() {
+    if (!check_in || !check_out || !check_in.value || !check_out.value) return;
+    document.querySelectorAll('.reservation-block').forEach(block => {
+      const select = block.querySelector('.room-type-select');
+      if (select && select.value) {
+        const btn = block.querySelector('.btn-check-availability');
+        if (btn) setTimeout(() => btn.click(), 80);
+      }
+    });
+  }
+
+  function generateBookingSummary() {
+    const container = document.getElementById('summaryInvoice');
+    if (!container) return;
+
+    const checkInVal  = check_in?.value  || '';
+    const checkOutVal = check_out?.value || '';
+
+    if (!checkInVal || !checkOutVal) {
+      container.innerHTML = `
+        <div class="text-center py-10 text-slate-400">
+            <span class="material-icons text-5xl mb-3 block text-slate-200">event</span>
+            <p class="font-semibold">Please select your stay dates.</p>
+        </div>`;
+      return;
+    }
+
+    let nights = 1;
+    const d1 = new Date(checkInVal);
+    const d2 = new Date(checkOutVal);
+    nights = Math.max(1, Math.round((d2 - d1) / 86400000));
+
+    const blocks = document.querySelectorAll('.reservation-block');
+    if (blocks.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-10 text-slate-400">
+            <span class="material-icons text-5xl mb-3 block text-slate-200">hotel</span>
+            <p class="font-semibold">Please add a room to your allocation.</p>
+        </div>`;
+      return;
+    }
+
+    let totalPrice = 0;
+    let roomRows = '';
+
+    blocks.forEach(block => {
+      const typeSelect = block.querySelector('.room-type-select');
+      const typeName   = typeSelect?.selectedOptions[0]?.text?.split('(')[0]?.trim() || 'Unknown Room';
+      const price      = parseFloat(block.querySelector('.res-price-hidden')?.value) || 0;
+      const roomNum    = block.querySelector('.res-room-number-hidden')?.value || '—';
+      const numGuests  = parseInt(block.querySelector('.res-num-guests')?.value)  || 0;
+      const blockTotal = price * nights;
+      totalPrice += blockTotal;
+
+      roomRows += `
+        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-slate-100 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-slate-800 truncate">${typeName}</p>
+            <p class="text-[11px] font-semibold text-slate-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
+            <p class="text-[11px] font-semibold text-slate-500">${formatPrice(price)} &times; ${nights} night(s)</p>
+          </div>
+          <span class="text-sm font-extrabold text-[#0a4f2d]">${formatPrice(blockTotal)}</span>
+        </div>`;
+    });
+
+    const discountNote = document.getElementById('request_discount')?.checked
+      ? `
+      <div class="mt-4 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl px-4 py-3 border border-amber-200/50 leading-relaxed flex items-start gap-1.5">
+          <span class="material-icons text-[16px] text-amber-500">info</span>
+          <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
+      </div>`
+      : '';
+
+    container.innerHTML = `
+      <div class="space-y-1 bg-slate-50/50 p-4.5 rounded-[18px] border border-slate-100 shadow-inner">
+        ${roomRows}
+      </div>
+      <div class="mt-5 bg-[#0a4f2d]/5 p-4.5 rounded-[18px] border border-[#0a4f2d]/10 flex justify-between items-center shadow-xs">
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Due</span>
+          <span class="block text-[11px] font-semibold text-slate-400 mt-0.5">${blocks.length} room(s) for ${nights} night(s)</span>
+        </div>
+        <div class="text-2xl font-black text-[#0a4f2d]">${formatPrice(totalPrice)}</div>
+      </div>
+      ${discountNote}
+    `;
+  }
+  
+  window.generateBookingSummary = generateBookingSummary;
+
+  // Initialize page
+  setTimeout(() => {
+    // initialize flatpickr
+    if (typeof flatpickr !== 'undefined') {
+      flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        minDate: 'today',
+        disableMobile: true
+      });
+    }
+    
+    syncDates();
+    
+    // Auto-add first block if from URL params
+    if (initialRoomType) {
+      if (expectedGuestsInput && initialGuests) {
+        expectedGuestsInput.value = initialGuests;
+        updateCapsDisplay();
+      }
+      addReservationBlock({ room_type: initialRoomType });
+    } else if (reservationContainer.querySelectorAll('.reservation-block').length === 0) {
+      addReservationBlock({});
+    }
+  }, 100);
+
 });

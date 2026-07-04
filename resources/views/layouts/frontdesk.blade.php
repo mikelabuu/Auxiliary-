@@ -11,7 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,33 +21,50 @@
 <body class="flex h-screen bg-gray-100">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-[#3b612a] text-white flex flex-col">
-    <div class="header">
-      <img class="sidebar-logo" src="{{ asset('image/FHLogo2.png') }}" alt="logo" />
+  <aside class="w-64 bg-clsuGreen text-white flex flex-col shrink-0 shadow-lg">
+    <div class="h-20 flex items-center justify-center border-b border-clsuGreenLight bg-clsuGreenDark px-4">
+      <img src="{{ asset('image/FHLogo2.png') }}" class="h-12 w-auto object-contain mr-2" alt="logo">
+      <div class="flex flex-col">
+          <span class="text-xs font-bold text-clsuGold tracking-widest uppercase">Farmers Hostel</span>
+          <span class="text-[10px] text-gray-300 font-semibold tracking-wider">FRONT DESK</span>
+      </div>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 px-4 py-6 space-y-2">
-      <a href="{{ route('frontdesk.dashboard.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">dashboard</span> Dashboard
-      </a>
-      <a href="{{ route('frontdesk.walkin.create') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">book_online</span> Walk-Ins
-      </a>
-      <a href="{{ route('frontdesk.room.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">hotel</span> Rooms
-      </a>
-      <a href="{{ route('frontdesk.booking') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">book</span> Bookings
-      </a>
+    <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+      <!-- SECTION: MAIN -->
+      <div class="px-4 py-1.5">
+        <span class="text-[9px] font-bold text-clsuGold tracking-wider uppercase opacity-75">Main</span>
+      </div>
+      <div class="px-2 space-y-1">
+        <x-frontdesk.sidebar-link :href="route('frontdesk.dashboard.index')" icon="dashboard" :active="request()->routeIs('frontdesk.dashboard.index')">
+          Dashboard
+        </x-frontdesk.sidebar-link>
+      </div>
+
+      <!-- SECTION: OPERATIONS -->
+      <div class="px-4 py-1.5 pt-3">
+        <span class="text-[9px] font-bold text-clsuGold tracking-wider uppercase opacity-75">Operations</span>
+      </div>
+      <div class="px-2 space-y-1">
+        <x-frontdesk.sidebar-link :href="route('frontdesk.walkin.create')" icon="edit_calendar" :active="request()->routeIs('frontdesk.walkin.create')">
+          Manual Booking
+        </x-frontdesk.sidebar-link>
+        <x-frontdesk.sidebar-link :href="route('frontdesk.room.index')" icon="hotel" :active="request()->routeIs('frontdesk.room.index')">
+          Rooms
+        </x-frontdesk.sidebar-link>
+        <x-frontdesk.sidebar-link :href="route('frontdesk.booking')" icon="book" :active="request()->routeIs('frontdesk.booking')">
+          Bookings
+        </x-frontdesk.sidebar-link>
+      </div>
     </nav>
 
     <!-- Logout -->
-    <div class="p-4 border-t border-green-800">
+    <div class="p-4 border-t border-clsuGreenLight bg-clsuGreenDark">
       <form method="POST" action="{{ route('staff.logout') }}">
         @csrf
-        <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition">
-          <span class="material-icons mr-2">logout</span> Logout
+        <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-red-700 hover:bg-red-800 text-white font-medium rounded-lg transition duration-150 shadow">
+          <span class="material-icons mr-2 text-base">logout</span> Logout
         </button>
       </form>
     </div>
@@ -70,7 +87,7 @@
 
         <!-- User info -->
         <span class="text-gray-600">{{ Auth::guard('staff')->user()->name }}</span>
-        <img src="" class="w-10 h-10 rounded-full border-2 border-[#3b612a]" alt="Profile">
+        <img src="{{ asset('image/icon/admin2.png') }}" class="w-10 h-10 rounded-full border-2 border-[#3b612a]" alt="Profile">
       </div>
     </header>
 

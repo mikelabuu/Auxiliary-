@@ -6,6 +6,121 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Fonts */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+    --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    
+    /* CLSU Green Theme */
+    --color-clsu-50:  #F0FBF2;
+    --color-clsu-100: #DCF4E1;
+    --color-clsu-200: #B7E8C2;
+    --color-clsu-300: #86D69B;
+    --color-clsu-400: #4CB86D;
+    --color-clsu-500: #239B48;
+    --color-clsu-600: #167C39;
+    --color-clsu-700: #12632F;
+    --color-clsu-800: #114E28;
+    --color-clsu-900: #0F4022;
+    --color-clsu-950: #082414;
+
+    /* Palay Gold Theme */
+    --color-palay-50:  #FFFBEA;
+    --color-palay-100: #FFF3C4;
+    --color-palay-200: #FFE58A;
+    --color-palay-300: #FFD24D;
+    --color-palay-400: #FDBB1F;
+    --color-palay-500: #F0A400;
+    --color-palay-600: #C6820B;
+    --color-palay-700: #99630E;
+    --color-palay-800: #714A11;
+    --color-palay-900: #4E3410;
+
+    /* Ember Attention Theme */
+    --color-ember-50:  #FEF2F2;
+    --color-ember-500: #EF4444;
+    --color-ember-600: #DC2626;
+    --color-ember-700: #B91C1C;
+
+    /* Shadows */
+    --shadow-soft: 0px 4px 20px rgba(0, 0, 0, 0.03);
+    --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 1px 2px rgba(8,36,20,0.04), 0 10px 30px -10px rgba(8,36,20,0.10);
+    --shadow-card-lg: 0 4px 10px rgba(8,36,20,0.05), 0 22px 45px -14px rgba(8,36,20,0.18);
+    --shadow-glow: 0 1px 1px rgba(255,255,255,0.06) inset, 0 18px 40px -14px rgba(8,36,20,0.55);
+}
+
+/* Custom scrollbars for a minimal feel */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
+
+/* Modern Utilities */
+.bg-dot-pattern {
+    background-image: radial-gradient(rgba(107, 114, 128, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Field-row texture — evokes plowed rows / rice-terrace lines */
+.field-rows {
+    background-image:
+        linear-gradient(180deg, #0b2c19 0%, #082414 55%, #06190d 100%),
+        repeating-linear-gradient(180deg, rgba(255,255,255,0.028) 0px, rgba(255,255,255,0.028) 1px, transparent 1px, transparent 36px);
+}
+
+/* Timeline vertical line */
+.timeline-item { position: relative; }
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -20px;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(18,99,47,0.20), rgba(18,99,47,0.03));
+}
+
+/* Label fade transition */
+.label-fade { transition: opacity .12s ease; }
+
+/* CSS-driven collapsible sidebar layout styles */
+@media (min-width: 1024px) {
+    #shell[data-collapsed="true"] #sidebar { width: 76px !important; }
+    #shell[data-collapsed="true"] #topheader { left: 76px !important; }
+    #shell[data-collapsed="true"] #mainContent { margin-left: 76px !important; }
+    #shell[data-collapsed="true"] .label-fade { display: none !important; }
+    #shell[data-collapsed="true"] #collapseToggle svg { transform: rotate(180deg); }
+}
+
+/* Tabular figures */
+.tabnum { font-variant-numeric: tabular-nums; }
+.font-display { font-family: 'Fraunces', ui-serif, Georgia, serif; }
+.font-data { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeUp .6s cubic-bezier(.16,1,.3,1) both; }
+
+@keyframes popIn {
+    from { opacity: 0; transform: translateY(-6px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-pop { animation: popIn .15s cubic-bezier(.16,1,.3,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-in, .animate-pop { animation: none; }
+    * { transition-duration: 0.01ms !important; }
 }

@@ -8,22 +8,40 @@ use App\Models\User;
 use App\Models\Room;
 use App\Models\Booking;
 use App\Models\Reservation;
-use App\Models\Balance;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\Region;
-use App\Models\Province;
-use App\Models\City;
-use App\Models\Barangay;
+
 
 class BookingController extends Controller
 {
-    // Show booking form
-    public function showBookingForm()
+    // Show welcome landing page
+    public function welcome()
+    {
+        $user = Auth::user();
+        $username = $user ? $user->username : null;
+        $roomTypes = config('room_types', []);
+        return view('welcome', compact('username', 'roomTypes'));
+    }
+
+    // Show checkout form
+    public function showCheckoutForm(Request $request)
     {
         $user = Auth::user();
         $username = $user->username;
-        return view('booking', compact('username'));
+        $roomTypes = config('room_types', []);
+        
+        $roomTypeKey = $request->query('room_type');
+        $checkIn = $request->query('check_in');
+        $checkOut = $request->query('check_out');
+        $guests = $request->query('guests', 1);
+
+        $selectedRoomType = null;
+        if ($roomTypeKey && isset($roomTypes[$roomTypeKey])) {
+            $selectedRoomType = $roomTypes[$roomTypeKey];
+            $selectedRoomType['id'] = $roomTypeKey;
+        }
+        
+        return view('checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests'));
     }
 
     // Handle booking submission
@@ -64,17 +82,18 @@ class BookingController extends Controller
             $guestName .= ' ' . $request->suffix;
         }
 
+        $brgyName = explode('|', $request->barangay_code)[1] ?? '';
+        $cityName = explode('|', $request->city_code)[1] ?? '';
+        $provName = $request->province_code ? (explode('|', $request->province_code)[1] ?? '') : '';
+
         $guest_address = collect([
-            Barangay::where('brgyCode', $request->barangay_code)->value('brgyDesc'),
-        
-            City::where('citymunCode', $request->city_code)->value('citymunDesc'),
-        
-            Province::where('provCode', $request->province_code)->value('provDesc'),
-        
-            Region::where('regCode', $request->region_code)->value('regDesc'),
+            $brgyName,
+            $cityName,
+            $provName,
         ])
         ->filter()
         ->implode(', ');
+
 
         $cin  = Carbon::parse($request->check_in);
         $cout = Carbon::parse($request->check_out);
@@ -217,6 +236,7 @@ class BookingController extends Controller
                     'num_seniors'     => $totalSeniors,
                     'wants_discount'  => $request->boolean('request_discount'),
                     'status'          => $status,
+                    'payment_mode'    => 'system',
                 ]);
 
                 foreach ($request->reservations as $block) {

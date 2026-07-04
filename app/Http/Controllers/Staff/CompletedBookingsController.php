@@ -20,7 +20,7 @@ class CompletedBookingsController extends Controller
             ->orderBy('updated_at', $sort === 'oldest' ? 'asc' : 'desc')
             ->paginate(10);
 
-        return view('staff.completedbookings', compact('bookings', 'search', 'sort'));
+        return view('staff.completedbookings.index', compact('bookings', 'search', 'sort'));
     }
 
     public function verifyPassword(Request $request)

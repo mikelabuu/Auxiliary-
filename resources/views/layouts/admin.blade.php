@@ -5,159 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@yield('title', 'Hotel Booking Admin')</title>
 
-  {{-- dashboard CSS --}}
-  <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-  <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Tailwind CSS via Vite -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   @livewireStyles
 </head>
-<body class="flex h-screen bg-gray-100">
+<body class="bg-stone-50 font-sans text-stone-900 antialiased">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-[#3b612a] text-white flex flex-col">
-    <div class="header">
-      <img class="sidebar-logo" src="{{ asset('image/FHLogo2.png') }}" alt="logo" />
-    </div>
+  <div id="shell" x-data="{ collapsed: localStorage.getItem('sidebar_collapsed') === 'true', mobileOpen: false }" :data-collapsed="collapsed ? 'true' : 'false'">
+    
+    <!-- Mobile drawer backdrop -->
+    <div id="sidebarBackdrop" 
+         class="fixed inset-0 bg-clsu-950/50 backdrop-blur-sm z-20 transition-opacity duration-200 lg:hidden"
+         :class="mobileOpen ? 'opacity-100 block' : 'opacity-0 hidden'"
+         @click="mobileOpen = false"></div>
 
-    <!-- Nav -->
-    <nav class="flex-1 px-4 py-6 space-y-2">
-      <a href="{{ route('staff.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">dashboard</span> Dashboard
-      </a>
+    <x-admin.sidebar />
+    <x-admin.topbar />
 
-      <a href="{{ route('staff.rooms') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">hotel</span> Rooms
-      </a>
-
-      <!-- Bookings Dropdown -->
-      <div x-data="{ open: false }" class="space-y-1">
-        <button @click="open = !open" class="w-full flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition focus:outline-none">
-          <span class="material-icons mr-3">book_online</span> Bookings
-          <span class="material-icons ml-auto" x-show="!open">expand_more</span>
-          <span class="material-icons ml-auto" x-show="open">expand_less</span>
-        </button>
-
-        <!-- Dropdown items -->
-        <div x-show="open" x-transition class="pl-12 space-y-1">
-          <a href="{{ route('staff.bookings.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-600 transition">
-            <span class="material-icons mr-2 text-sm">list</span> All bookings
-          </a>
-          <a href="{{ route('staff.completedbookings.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-600 transition">
-            <span class="material-icons mr-2 text-sm">list</span> Completed Bookings
-          </a>
-          <a href="{{ route('staff.bookinglogs.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-600 transition">
-            <span class="material-icons mr-2 text-sm">settings</span>Booking Logs
-          </a>
-        </div>
+    <!-- Main content wrapper matching farmersnew.html -->
+    <main id="mainContent" class="lg:ml-64 pt-16 min-h-screen relative transition-[margin] duration-200">
+      <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[440px] overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute -top-24 left-[18%] w-[420px] h-[420px] bg-clsu-200/40 rounded-full blur-3xl"></div>
+        <div class="absolute -top-28 right-[8%] w-[360px] h-[360px] bg-palay-200/30 rounded-full blur-3xl"></div>
+        <!-- Sheaf-of-grain watermark -->
+        <svg class="absolute top-2 right-10 w-56 h-56 text-clsu-800 opacity-[0.07] rotate-6 hidden md:block" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+          <path d="M100,182 C68,140 58,86 80,16"/>
+          <path d="M100,182 C84,132 80,68 92,10"/>
+          <path d="M100,182 C100,120 100,58 100,10"/>
+          <path d="M100,182 C116,132 120,68 108,10"/>
+          <path d="M100,182 C132,140 142,86 120,16"/>
+          <ellipse cx="100" cy="148" rx="27" ry="9" stroke-width="3"/>
+        </svg>
       </div>
 
-      <a href="{{ route('staff.discounts.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-          <span class="material-icons mr-3">discount</span> Discounts
-      </a>
-
-      <a href="{{ route('staff.paymentlogs.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">credit_card</span> Payments
-      </a>
-
-      {{-- <a href="{{ route('staff.balance') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">credit_card</span> Balance
-      </a> --}}
-
-      <a href="{{ route('staff.userrecords.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">people</span> Users
-      </a>
-
-      <a href="{{ route('staff.staffrecords.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">badge</span> Staff
-      </a>
-
-      <a href="{{ route('staff.audit.index') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">settings</span> Audit Logs
-      </a>
-      {{-- <a href="{{ route('reports.central') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <span class="material-icons mr-3">settings</span> Data Central
-      </a> --}}
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4 border-t border-green-800">
-      <form method="POST" action="{{ route('staff.logout') }}">
-        @csrf
-        <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition">
-          <span class="material-icons mr-2">logout</span> Logout
-        </button>
-      </form>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="flex-1 flex flex-col">
-    <!-- Top bar -->
-    <header class="h-16 bg-white shadow flex items-center px-6 justify-between">
-      <!-- Left: Page title -->
-      <h1 class="text-2xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h1>
-
-      <!-- Right: Clock + User Info -->
-      <div class="flex items-center space-x-6">
-        <!-- Digital clock/date -->
-        <div class="flex flex-col text-right text-sm text-gray-700">
-          <span class="font-medium" id="localTime">--:--:--</span>
-          <span class="text-gray-500 text-xs" id="todayDate">Loading...</span>
-        </div>
-        @livewire('staff.discount-alert')
-
-        <!-- User info -->
-        <span class="text-gray-600">{{ Auth::guard('staff')->user()->name }}</span>
-        <img src="" class="w-10 h-10 rounded-full border-2 border-[#3b612a]" alt="Profile">
+      <div class="relative z-10 p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-7 max-w-[1680px] mx-auto">
+        @yield('content')
       </div>
-    </header>
+    </main>
 
+  </div>
 
-
-    <!-- Dynamic Content -->
-    <section class="flex-1 p-6 overflow-y-auto">
-      @yield('content')
-    </section>
-  </main>
-  <script src="//unpkg.com/alpinejs" defer></script>
   <script>
-  function updateTimeAndDate() {
-    const timeEl = document.getElementById('localTime');
-    const dateEl = document.getElementById('todayDate');
-
-    const now = new Date();
-
-    // Format time as HH:MM:SS AM/PM
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
-
-    // Format date as Month Day, Year (e.g., Sep 5, 2025)
-    const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-    const dateString = now.toLocaleDateString(undefined, options);
-
-    timeEl.textContent = timeString;
-    dateEl.textContent = dateString;
-  }
-
-  // Update immediately
-  updateTimeAndDate();
-
-  // Update every second
-  setInterval(updateTimeAndDate, 1000);
-</script>
-@livewireScripts
-@stack('scripts')
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const date = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+      const el = document.getElementById('liveClock');
+      if (el) el.textContent = time + ' · ' + date;
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+  </script>
+  @livewireScripts
+  @stack('scripts')
 </body>
 </html>

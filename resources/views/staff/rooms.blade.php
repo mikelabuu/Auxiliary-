@@ -6,37 +6,32 @@
 @section('content')
 
 <!-- ==================== Top: Global Overview Section ==================== -->
-<section class="overview-section">
-    <div class="analytics-grid">
-        <!-- Analytics Cards -->
-        <div class="analytics-card total">
-            <h3>Total Rooms</h3>
-            <p class="count">{{ $totalRooms }}</p>
-        </div>
-        <div class="analytics-card active-bookings">
-            <h3>Occupied Rooms</h3>
-            <p class="count">{{ $occupiedRooms }}</p>
-        </div>
-        <div class="analytics-card maintenance">
-            <h3>Under Maintenance</h3>
-            <p class="count">{{ $maintenanceRooms }}</p>
-        </div>
-        <div class="analytics-card cleaning">
-            <h3>Cleaning</h3>
-            <p class="count">{{ $cleaningRooms }}</p>
-        </div>
+<section class="mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <x-card hoverable="true" title="Total Rooms" icon="hotel">
+            <p class="text-3xl font-extrabold text-slate-800 mt-1">{{ $totalRooms }}</p>
+        </x-card>
+        <x-card hoverable="true" title="Occupied Rooms" icon="book_online">
+            <p class="text-3xl font-extrabold text-blue-600 mt-1">{{ $occupiedRooms }}</p>
+        </x-card>
+        <x-card hoverable="true" title="Under Maintenance" icon="construction">
+            <p class="text-3xl font-extrabold text-red-600 mt-1">{{ $maintenanceRooms }}</p>
+        </x-card>
+        <x-card hoverable="true" title="Cleaning" icon="cleaning_services">
+            <p class="text-3xl font-extrabold text-amber-600 mt-1">{{ $cleaningRooms }}</p>
+        </x-card>
     </div>
 
     <!-- Room Type Cards -->
-    <div class="room-type-grid">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
         @foreach($prices as $type => $price)
-            <div class="room-type-card">
-                <div class="room-type-image">
-                    <img src="{{ asset('image/roomtypes/'.$type.'.jpg') }}" alt="{{ ucfirst($type) }}">
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                <div class="h-28 overflow-hidden bg-gray-50">
+                    <img src="{{ asset('image/roomtypes/'.$type.'.jpg') }}" alt="{{ ucfirst($type) }}" class="w-full h-full object-cover transition duration-300 hover:scale-105">
                 </div>
-                <div class="room-type-info">
-                    <strong>{{ ucfirst($type) }}</strong>
-                    <p>₱{{ number_format($price) }}</p>
+                <div class="p-4 flex flex-col justify-between">
+                    <strong class="text-gray-800 text-sm tracking-wide">{{ ucfirst($type) }}</strong>
+                    <p class="text-emerald-700 font-bold text-base mt-1">₱{{ number_format($price) }}</p>
                 </div>
             </div>
         @endforeach
@@ -45,31 +40,60 @@
 
 
 <!-- ==================== Middle: Rooms Display Section ==================== -->
-<section class="rooms-display">
-    <div class="filter-bar mb-4 flex gap-3 items-center">
-        <label class="font-medium">Filter by status:</label>
-        <select id="roomStatusFilter" class="border rounded px-2 py-1">
-            <option value="all">All Rooms</option>
-            <option value="available">Available</option>
-            <option value="occupied">Occupied</option>
-            <option value="maintenance">Under Maintenance</option>
-        </select>
+<section class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Rooms</h1>
+            <p class="text-gray-500 text-xs font-medium mt-0.5">Manage room availability, wing status, and booking properties.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-gray-700 uppercase tracking-wide">Filter by status:</span>
+            <select id="roomStatusFilter" class="w-48 px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-800 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer">
+                <option value="all">All Rooms</option>
+                <option value="available">Available</option>
+                <option value="occupied">Occupied</option>
+                <option value="maintenance">Under Maintenance</option>
+            </select>
+        </div>
     </div>
-    <h1>Rooms</h1><br>
-    <div class="room-card-grid">
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
         @foreach($rooms as $room)
-            <div class="room-card bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer relative"
+            @php
+                $statusColors = [
+                    'available' => 'bg-green-50 text-green-700 border-green-200',
+                    'occupied' => 'bg-blue-50 text-blue-700 border-blue-200',
+                    'maintenance' => 'bg-red-50 text-red-700 border-red-200',
+                    'cleaning' => 'bg-amber-50 text-amber-700 border-amber-200',
+                ];
+                $colorClass = $statusColors[$room->status] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+            @endphp
+            <div class="room-card bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden relative group"
                 data-room-id="{{ $room->id }}">
 
-                <div class="p-4 text-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Room {{ $room->room_number }}</h2>
-                    <p class="text-gray-500">{{ ucfirst($room->room_type) }} - {{ ucfirst($room->wing) }}</p>
-                    <p class="room-status {{ $room->status }} mt-2">{{ ucfirst($room->status) }}</p>
-                    <p class="text-sm text-gray-400 mt-1">
-                        Updated {{ $room->updated_at->diffForHumans() }}
-                    </p>
+                <div class="p-4 text-center flex flex-col items-center h-full justify-between">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-800 mb-0.5">Room {{ $room->room_number }}</h2>
+                        <p class="text-gray-500 text-[10px] font-bold tracking-wide uppercase">{{ ucfirst($room->room_type) }}</p>
+                        <p class="text-gray-400 text-[9px] mt-0.5 tracking-wider uppercase font-semibold">Wing: {{ ucfirst($room->wing) }}</p>
+                    </div>
+                    
+                    <div class="mt-2.5">
+                        <span class="room-status inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $colorClass }}">
+                            {{ ucfirst($room->status) }}
+                        </span>
+                        
+                        <p class="text-[9px] text-gray-400 mt-2.5 italic">
+                            Updated {{ $room->updated_at->diffForHumans() }}
+                        </p>
+                    </div>
+                    
+                    <div class="mt-3.5 w-full">
+                        <x-button variant="primary" class="btn-update w-full text-[11px] py-1.5 rounded-xl font-bold" data-id="{{ $room->id }}">
+                            Edit
+                        </x-button>
+                    </div>
                 </div>
-                <button class="btn-update bg-blue-500 text-white px-1 py-1 rounded" data-id="{{ $room->id }}">Edit</button>
             </div>
         @endforeach
     </div>
@@ -77,39 +101,35 @@
 
 
 <!-- ==================== Bottom: Add New Room Section ==================== -->
-<section class="form-section">
-    <h2 class="form-title">Add Room</h2>
-    <form id="add-room-form" class="room-form" action="{{ route('staff.rooms.store') }}" method="POST">
-        @csrf
-        <div class="form-group">
-            <label for="room-number">Room Number</label>
-            <input type="text" id="room-number" name="room_number" required>
-        </div>
-        <div class="form-group">
-            <label for="room-type">Room Type</label>
-            <select id="room-type" name="room_type" required>
+<section class="max-w-xl mb-12">
+    <x-card title="Add New Room" icon="add_box">
+        <form id="add-room-form" action="{{ route('staff.rooms.store') }}" method="POST" class="space-y-4">
+            @csrf
+            
+            <x-input label="Room Number" name="room_number" id="room-number" placeholder="Enter Room Number" required />
+            
+            <x-select label="Room Type" name="room_type" id="room-type" required>
                 <option value="" disabled selected hidden>-- Select Room Type --</option>
                 @foreach($prices as $type => $price)
                     <option value="{{ $type }}" data-price="{{ $price }}">{{ ucfirst($type) }} - ₱{{ number_format($price) }}</option>
                 @endforeach
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="wing">Wing</label>
-            <select id="wing" name="wing" required>
+            </x-select>
+            
+            <x-select label="Wing" name="wing" id="wing" required>
                 <option value="" disabled selected hidden>-- Select Wing --</option>
                 <option value="rooster">Rooster</option>
                 <option value="tumana">Tumana</option>
                 <option value="chev_re">Chev Re</option>
                 <option value="torii">Torii</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" id="price" name="price" readonly step="0.01">
-        </div>
-        <button type="submit" class="btn-submit">Add Room</button>
-    </form>
+            </x-select>
+            
+            <x-input label="Price" name="price" id="price" type="number" readonly step="0.01" />
+            
+            <div class="pt-2">
+                <x-button variant="primary" class="w-full rounded-xl">Add Room</x-button>
+            </div>
+        </form>
+    </x-card>
 </section>
 
 
@@ -117,30 +137,35 @@
 
 <!-- ==================== Update Room Modal ==================== -->
 <div class="modal fade" id="roomEditModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-2xl border-0 overflow-hidden shadow-2xl">
       <form id="roomEditForm">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Room</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-header border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+          <h5 class="modal-title font-bold text-gray-800 text-base flex items-center gap-2">
+            <span class="material-icons text-emerald-600 text-lg">edit</span> Edit Room
+          </h5>
+          <button type="button" class="btn-close focus:outline-none" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body px-6 py-4 space-y-4">
           <input type="hidden" name="room_id" id="editRoomId">
-          <div class="mb-3">
-            <label class="form-label">Room Number</label>
-            <input type="text" name="room_number" id="editRoomNumber" class="form-control" required>
+          
+          <div>
+            <label class="block text-xs font-bold text-gray-700 tracking-wider uppercase mb-1.5">Room Number</label>
+            <input type="text" name="room_number" id="editRoomNumber" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-600" required>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Room Type</label>
-            <select name="room_type" id="editRoomType" class="form-select" required>
+          
+          <div>
+            <label class="block text-xs font-bold text-gray-700 tracking-wider uppercase mb-1.5">Room Type</label>
+            <select name="room_type" id="editRoomType" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer" required>
               @foreach($prices as $type => $price)
                 <option value="{{ $type }}">{{ ucfirst($type) }}</option>
               @endforeach
             </select>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Wing</label>
-            <select id="editWing" name="wing" class="form-control" required>
+          
+          <div>
+            <label class="block text-xs font-bold text-gray-700 tracking-wider uppercase mb-1.5">Wing</label>
+            <select id="editWing" name="wing" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer" required>
                 <option value="" disabled selected hidden>-- Select Wing --</option>
                 <option value="rooster">Rooster</option>
                 <option value="tumana">Tumana</option>
@@ -148,14 +173,15 @@
                 <option value="torii">Torii</option>
             </select>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Price (₱)</label>
-            <input type="number" step="0.01" name="price" id="editPrice" class="form-control" readonly required>
+          
+          <div>
+            <label class="block text-xs font-bold text-gray-700 tracking-wider uppercase mb-1.5">Price (₱)</label>
+            <input type="number" step="0.01" name="price" id="editPrice" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 text-sm cursor-not-allowed outline-none" readonly required>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save changes</button>
+        <div class="modal-footer border-t border-gray-100 px-6 py-4 flex gap-2 justify-end">
+          <x-button type="button" variant="neutral" class="rounded-xl px-4 py-2" data-bs-dismiss="modal">Cancel</x-button>
+          <x-button type="submit" variant="primary" class="rounded-xl px-4 py-2">Save changes</x-button>
         </div>
       </form>
     </div>
@@ -164,12 +190,14 @@
 <!-- ==================== Room Bookings Modal ==================== -->
 <div class="modal fade" id="occupancyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Current Occupant</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content rounded-2xl border-0 overflow-hidden shadow-2xl">
+            <div class="modal-header border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+                <h5 class="modal-title font-bold text-gray-800 text-base flex items-center gap-2">
+                    <span class="material-icons text-emerald-600 text-lg">info</span> Current Occupant
+                </h5>
+                <button type="button" class="btn-close focus:outline-none" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="occupancyModalBody">
+            <div class="modal-body px-6 py-5" id="occupancyModalBody">
                 <p class="text-center text-gray-500">Loading...</p>
             </div>
         </div>

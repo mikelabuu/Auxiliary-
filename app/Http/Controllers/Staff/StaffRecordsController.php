@@ -30,7 +30,7 @@ class StaffRecordsController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('staff.staffrecords', compact('staffs', 'search', 'sort'));
+        return view('staff.staffrecords.index', compact('staffs', 'search', 'sort'));
     }
 
     // Handle signup post
@@ -94,6 +94,7 @@ class StaffRecordsController extends Controller
         $staff->name = $request->name;
         $staff->email = $request->email;
 
+        $passwordChanged = false;
         if ($request->filled('password')) {
             $staff->password = Hash::make($request->password);
             $passwordChanged = true;

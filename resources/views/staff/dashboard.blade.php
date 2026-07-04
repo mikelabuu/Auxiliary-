@@ -11,45 +11,29 @@ $.ajaxSetup({
     }
 });
 </script>
-<div class="dashboard-container">
+<div class="space-y-6">
 
     <!-- Analytics Cards -->
-    <div class="analytics-grid">
-        <div class="card">
-            <div class="card-header">
-                <i class="icon fas fa-bed"></i>
-                <h2>Total Rooms</h2>
-            </div>
-            <p class="value">{{ $totalRooms  }}</p>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <x-card hoverable="true" title="Total Rooms" icon="hotel">
+            <p class="text-3xl font-extrabold text-slate-800 tracking-tight mt-1">{{ $totalRooms }}</p>
+        </x-card>
 
-        <div class="card">
-            <div class="card-header">
-                <i class="icon fas fa-book"></i>
-                <h2>Total Bookings</h2>
-            </div>
-            <p class="value">{{ $totalBookings }}</p>
-        </div>
+        <x-card hoverable="true" title="Total Bookings" icon="book">
+            <p class="text-3xl font-extrabold text-slate-800 tracking-tight mt-1">{{ $totalBookings }}</p>
+        </x-card>
 
-        <div class="card">
-            <div class="card-header">
-                <i class="icon fas fa-users"></i>
-                <h2>Users</h2>
-            </div>
-            <p class="value">{{ $totalUsers }}</p>
-        </div>
+        <x-card hoverable="true" title="Users" icon="people">
+            <p class="text-3xl font-extrabold text-slate-800 tracking-tight mt-1">{{ $totalUsers }}</p>
+        </x-card>
 
-        <div class="card">
-            <div class="card-header">
-                <i>₱</i>
-                <h2>Revenue</h2>
-            </div>
-            <p class="value"><p class="value"><p>₱{{ number_format($totalRevenue, 2) }}</p></p>
-        </div>
+        <x-card hoverable="true" title="Revenue" icon="payments">
+            <p class="text-3xl font-extrabold text-emerald-600 tracking-tight mt-1">₱{{ number_format($totalRevenue, 2) }}</p>
+        </x-card>
     </div>
 
     {{-- New row: Arrivals/Departures + Occupancy --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2">
             <livewire:dashboard.arrivals-departures />
         </div>
@@ -60,29 +44,33 @@ $.ajaxSetup({
     </div>
 
     <!-- Charts -->
-    <div class="charts-section">
-        <div class="calendar">
-            <header>
-                <button id="prev">&lt;</button>
-                <h2 id="monthYear"></h2>
-                <button id="next">&gt;</button>
-            </header>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <x-card title="Calendar Snapshot" icon="calendar_today">
+            <div class="calendar p-2">
+                <header class="flex items-center justify-between mb-4 bg-emerald-800 text-white p-3 rounded-xl shadow-sm">
+                    <button id="prev" class="p-1 px-3 bg-emerald-700 hover:bg-emerald-600 rounded transition">&lt;</button>
+                    <h2 id="monthYear" class="text-base font-bold tracking-wide"></h2>
+                    <button id="next" class="p-1 px-3 bg-emerald-700 hover:bg-emerald-600 rounded transition">&gt;</button>
+                </header>
 
-            <div class="days">
-            <div class="day-name">Sun</div>
-            <div class="day-name">Mon</div>
-            <div class="day-name">Tue</div>
-            <div class="day-name">Wed</div>
-            <div class="day-name">Thu</div>
-            <div class="day-name">Fri</div>
-            <div class="day-name">Sat</div>
-        </div>
-        <div class="days" id="calendarDays"></div>
-    </div>
+                <div class="days grid grid-cols-7 text-center font-semibold text-gray-500 mb-2">
+                    <div class="day-name">Sun</div>
+                    <div class="day-name">Mon</div>
+                    <div class="day-name">Tue</div>
+                    <div class="day-name">Wed</div>
+                    <div class="day-name">Thu</div>
+                    <div class="day-name">Fri</div>
+                    <div class="day-name">Sat</div>
+                </div>
+                <div class="days grid grid-cols-7 gap-1 text-center font-medium" id="calendarDays"></div>
+            </div>
+        </x-card>
 
-      <div class="chart-card">
-          <canvas id="bookingsChart"></canvas>
-      </div>
+        <x-card title="Bookings Insights" icon="bar_chart">
+            <div class="h-80">
+                <canvas id="bookingsChart" class="w-full h-full"></canvas>
+            </div>
+        </x-card>
     </div>
 </div>  
 

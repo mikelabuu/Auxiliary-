@@ -1,60 +1,63 @@
 @extends('layouts.settings_layout')
 
 @section('settings-content')
-    <h2 class="tab-title">Profile Settings</h2>
-    <p>Account Status: 
-        @if(auth()->user()->email_verified_at)
-            <span class="text-green-600">Verified</span>
-        @else
-            <span class="text-red-600">Not Verified</span>
-        @endif
-    </p>
+    <x-booking.page-header title="Profile Settings" subtitle="Update your personal details and account password.">
+        <x-slot name="actions">
+            <div class="flex items-center gap-2 text-sm font-semibold">
+                <span class="text-slate-450">Account Status:</span>
+                @if(auth()->user()->email_verified_at)
+                    <x-booking.badge status="active">Verified</x-booking.badge>
+                @else
+                    <x-booking.badge status="pending">Not Verified</x-booking.badge>
+                @endif
+            </div>
+        </x-slot>
+    </x-booking.page-header>
 
-    {{-- Profile Update --}}
-    <form method="POST" action="{{ route('settings.update') }}">
-        @csrf
-        @method('PUT')
+    <div class="space-y-8">
+        <!-- Profile Update Section -->
+        <x-booking.card title="Personal Information" icon="manage_accounts">
+            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4">
+                @csrf
+                @method('PUT')
 
-        <div class="form-group">
-            <label>Username</label>
-            <input type="text" name="username" value="{{ auth()->user()->username }}" required>
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <x-booking.input label="Username" name="username" :value="auth()->user()->username" required />
+                    <x-booking.input label="Email Address" name="email" type="email" :value="auth()->user()->email" required />
+                </div>
 
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" value="{{ auth()->user()->email }}" required>
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <x-booking.input label="Phone Number (Optional)" name="phone" :value="auth()->user()->phone" />
+                </div>
 
-        <div class="form-group">
-            <label>Phone (optional)</label>
-            <input type="text" name="phone" value="{{ auth()->user()->phone }}">
-        </div>
+                <div class="pt-2 border-t border-slate-50 flex justify-end">
+                    <x-booking.button variant="primary">
+                        <span class="material-icons text-[18px] mr-1.5">save</span>
+                        Save Profile
+                    </x-booking.button>
+                </div>
+            </form>
+        </x-booking.card>
 
-        <button type="submit" class="btn-save">Save Profile</button>
-    </form>
+        <!-- Password Update Section -->
+        <x-booking.card title="Change Password" icon="lock">
+            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4">
+                @csrf
+                @method('PUT')
 
-    <hr>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <x-booking.input label="Current Password" name="current_password" type="password" required />
+                    <x-booking.input label="New Password" name="password" type="password" required />
+                    <x-booking.input label="Confirm New Password" name="password_confirmation" type="password" required />
+                </div>
 
-    {{-- Password Update --}}
-    <form method="POST" action="{{ route('settings.update') }}">
-        @csrf
-        @method('PUT')
-
-        <div class="form-group">
-            <label for="current_password">Current Password</label>
-            <input type="password" id="current_password" name="current_password" required>
-        </div>
-
-        <div class="form-group">
-            <label for="password">New Password</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-
-        <div class="form-group">
-            <label for="password_confirmation">Confirm New Password</label>
-            <input type="password" id="password_confirmation" name="password_confirmation" required>
-        </div>
-
-        <button type="submit" class="btn-save">Update Password</button>
-    </form>
+                <div class="pt-2 border-t border-slate-50 flex justify-end">
+                    <x-booking.button variant="primary">
+                        <span class="material-icons text-[18px] mr-1.5">lock_reset</span>
+                        Update Password
+                    </x-booking.button>
+                </div>
+            </form>
+        </x-booking.card>
+    </div>
 @endsection

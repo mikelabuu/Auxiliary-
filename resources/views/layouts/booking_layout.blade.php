@@ -32,9 +32,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js"></script>
 </head>
 <body>
-
 <!-- Nav Bar -->
-    <main class="flex-1 flex flex-col">
+    <div class="main-wrapper">
         <nav>
             <div class="logo">
                 <a href="{{ route('booking.form') }}"><img class="fhlogo" src="{{ asset('image/FHLogo2.png') }}" alt="logo" /></a>
@@ -52,8 +51,10 @@
                 </li>
             </ul>
         </nav>
-        @yield('content')
-  </main> 
+        <div class="content">
+            @yield('content')
+        </div>
+    <div>
 </body>
 
 @include('footer')

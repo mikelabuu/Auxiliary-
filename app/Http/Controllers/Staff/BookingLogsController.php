@@ -95,6 +95,6 @@ class BookingLogsController extends Controller
                 break;
         }
 
-        return view('staff.bookinglogs', compact('logs', 'tab', 'search'));
+        return view('staff.bookinglogs.index', compact('logs', 'tab', 'search'));
     }
 }

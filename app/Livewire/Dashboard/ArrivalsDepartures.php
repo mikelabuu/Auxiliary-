@@ -72,7 +72,6 @@ class ArrivalsDepartures extends Component
     public function render()
     {
         $today = $this->date;
-        //\Log::info('[ArrivalsDepartures] Poll triggered at ' . now());
 
         // get arrivals & departures
         $bookings = Booking::with('reservations')
@@ -129,9 +128,51 @@ class ArrivalsDepartures extends Component
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
+        // Fetch upcoming arrivals & departures for the week (next 7 days, excluding today)
+        $upcomingBookings = Booking::with('reservations.room')
+            ->where(function ($q) use ($today) {
+                $q->whereBetween('check_in', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])
+                  ->whereIn('status', ['paid', 'confirmed']);
+            })
+            ->orWhere(function ($q) use ($today) {
+                $q->whereBetween('check_out', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])
+                  ->where('status', 'active');
+            })
+            ->orderBy('check_in')
+            ->limit(5)
+            ->get()
+            ->map(function ($b) use ($today) {
+                $isArrival = $b->check_in && Carbon::parse($b->check_in)->isAfter(Carbon::parse($today)->endOfDay());
+                $type = $isArrival ? 'arrival' : 'departure';
+                
+                $roomType = $b->reservations->first()?->room?->room_type ?? 'Room';
+                $roomType = ucfirst(str_replace(['dormitory1', 'dormitory2'], 'Dormitory', $roomType));
+                
+                $dateStr = $isArrival 
+                    ? 'Check-in ' . Carbon::parse($b->check_in)->format('M d')
+                    : 'Check-out ' . Carbon::parse($b->check_out)->format('M d');
+
+                $parts = explode(' ', trim($b->guest_name));
+                $initials = '';
+                if (count($parts) >= 2) {
+                    $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+                } else {
+                    $initials = strtoupper(substr($b->guest_name, 0, 2));
+                }
+
+                return [
+                    'guest_name' => $b->guest_name,
+                    'initials' => $initials ?: 'G',
+                    'type' => $type,
+                    'details' => $roomType . ' · ' . $dateStr,
+                    'status' => strtoupper($b->status),
+                ];
+            });
+
         return view('livewire.dashboard.arrivals-departures', [
             'arrivalsDepartures' => $paginated,
             'total' => $list->count(),
+            'upcomingBookings' => $upcomingBookings,
         ]);
     }
 
@@ -220,8 +261,8 @@ class ArrivalsDepartures extends Component
         AuditLogger::log(
             'booking_checked_out',
             $booking,
-            ['status' => 'paid'],
             ['status' => 'active'],
+            ['status' => 'completed'],
             "Booking #{$booking->id} checked out by {$staff->name}"
         );
 

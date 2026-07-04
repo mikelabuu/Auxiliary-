@@ -41,7 +41,7 @@ class AuthController extends Controller
             $user->update(['last_login_at' => now()]);
 
             $request->session()->regenerate();
-            return redirect()->intended('/booking');
+            return redirect()->intended('/checkout');
         } 
 
         return back()->withErrors([

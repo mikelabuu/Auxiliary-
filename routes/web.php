@@ -22,11 +22,13 @@ use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
 
+use App\Http\Controllers\Staff\ManualBookingController;
+
 use App\Http\Controllers\Staff\Reports\BookingReportController;
 use App\Http\Controllers\Staff\Reports\PaymentReportController;
 use App\Http\Controllers\Staff\Reports\UserReportController;
 use App\Http\Controllers\Staff\Reports\DiscountReportController;
-use App\Http\Controllers\Staff\Reports\CentralHubController;
+use App\Http\Controllers\Staff\Reports\MainReportsController;
 
 use App\Http\Controllers\Staff\frontdesk\FrontDeskDashboardController;
 use App\Http\Controllers\Staff\frontdesk\FrontDeskRoomController;
@@ -48,13 +50,17 @@ use App\Http\Controllers\ReceiptController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    /** @intelephense-ignore */
-    return auth()->check() ? redirect('/booking') : view('auth');
-})->name('login');
+Route::get('/', [BookingController::class, 'welcome'])->name('home');
+
+Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
 
 Route::middleware('guest')->group(function () {
-    // User Login forms
+    // Login form
+    Route::get('/login', function () {
+        return view('auth');
+    })->name('login');
+
+    // User Login actions
     Route::post('/login/user', [AuthController::class, 'loginUser'])->name('login.user');
     // Signup
     Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
@@ -82,11 +88,10 @@ Route::middleware('guest')->group(function () {
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Booking page
-    Route::get('/booking', [BookingController::class, 'showBookingForm'])->name('booking.form');
+    // Checkout page
+    Route::get('/checkout', [BookingController::class, 'showCheckoutForm'])->name('checkout.form');
     Route::get('/booking/{booking}', [BookingController::class, 'show'])->name('booking.show');
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
-    Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
 
     //discount
     Route::get('discount/{booking}/create', [DiscountController::class, 'create'])->name('discount.create');
@@ -176,6 +181,12 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('staff.audit.index');
         Route::get('audit-logs/{id}', [AuditLogController::class, 'show'])->name('staff.audit.show');
+        
+        Route::get('/manual-booking', [ManualBookingController::class, 'create'])->name('staff.manualbooking');
+        Route::post('/manual-booking/store', [ManualBookingController::class, 'store'])->name('staff.manualbooking.store');
+        Route::get('/manual-booking/{booking}', [ManualBookingController::class, 'show'])->name('staff.manualbooking.show');
+        Route::post('/manual-booking/available-rooms', [ManualBookingController::class, 'getAvailableRoomsAjax'])->name('staff.manualbooking.available');
+        
     });
 
 
@@ -201,7 +212,7 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     Route::get('/staff/discounts/file/{file}/preview', [DiscountAdminController::class, 'previewFile'])->name('staff.discounts.file.preview');
 
     //reports group for staff
-    Route::prefix('reports')->group(function () {
+    Route::prefix('/staff/reports')->group(function () {
 
         // Bookings Reports
         Route::get('bookings/full', [BookingReportController::class, 'exportFull'])->name('reports.bookings.full');
@@ -223,19 +234,24 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
         Route::get('discounts/pending', [DiscountReportController::class, 'exportPending'])->name('reports.discounts.pending');
         Route::get('discounts/approved', [DiscountReportController::class, 'exportApproved'])->name('reports.discounts.approved');
         Route::get('discounts/rejected', [DiscountReportController::class, 'exportRejected'])->name('reports.discounts.rejected');
+        
+        Route::get('/view', [MainReportsController::class, 'index'])->name('staff.reports.index');
+        Route::post('/generate', [MainReportsController::class, 'generate'])->name('reports.generate');
+        Route::post('/export', [MainReportsController::class, 'export'])->name('reports.export');
 
-        // Central Hub
-        Route::get('central', [CentralHubController::class, 'index'])->name('reports.central');
 
-        // Central Hub Exports
-        Route::get('central/bookings', [CentralHubController::class, 'exportBookings'])->name('reports.central.bookings');
-        Route::get('central/revenue', [CentralHubController::class, 'exportRevenue'])->name('reports.central.revenue');
-        Route::get('central/occupancy', [CentralHubController::class, 'exportOccupancy'])->name('reports.central.occupancy');
-        Route::get('central/payments', [CentralHubController::class, 'exportPayments'])->name('reports.central.payments');
-        Route::get('central/discounts', [CentralHubController::class, 'exportDiscounts'])->name('reports.central.discounts');
+        // // Central Hub
+        // Route::get('central', [CentralHubController::class, 'index'])->name('reports.central');
+
+        // // Central Hub Exports
+        // Route::get('central/bookings', [CentralHubController::class, 'exportBookings'])->name('reports.central.bookings');
+        // Route::get('central/revenue', [CentralHubController::class, 'exportRevenue'])->name('reports.central.revenue');
+        // Route::get('central/occupancy', [CentralHubController::class, 'exportOccupancy'])->name('reports.central.occupancy');
+        // Route::get('central/payments', [CentralHubController::class, 'exportPayments'])->name('reports.central.payments');
+        // Route::get('central/discounts', [CentralHubController::class, 'exportDiscounts'])->name('reports.central.discounts');
 
     });
- 
+
     //testing route for receipt
     Route::get('/test-receipt/{id}', function ($id) {
         $booking = Booking::findOrFail($id);
@@ -261,6 +277,10 @@ Route::middleware('auth:staff')->group(function () {
 
     Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
+    
+    //verify receipt route
+    Route::get('/verify-receipt/{number}', [ReceiptController::class, 'verify'])
+    ->name('receipts.verify');
 });
 
 /*
@@ -283,6 +303,7 @@ Route::middleware(['auth:staff', 'staff.role:frontdesk,master_admin'])
         Route::post('/available-rooms', [WalkInBookingController::class, 'getAvailableRoomsAjax'])->name('frontdesk.available');
 
         route::get('/bookings', [BookingsController::class, 'viewBookings'])->name('frontdesk.booking');
+        route::post('/booking/{booking}/checkout', [BookingsController::class, 'checkout'])->name('frontdesk.booking.checkout');
 
 });
 
@@ -300,7 +321,7 @@ Route::get('/email/verify', function () {
 // Verify via link
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill(); // updates email_verified_at
-    return redirect('/booking'); // redirect after verification
+    return redirect('/checkout'); // redirect after verification
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
 // Resend verification email

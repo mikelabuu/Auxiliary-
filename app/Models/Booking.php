@@ -26,6 +26,7 @@ class Booking extends Model
         'wants_discount',
         'room_numbers',       // Stored as CSV
         'expected_guests',    // 
+        'payment_mode',
     ];
 
     protected $casts = [

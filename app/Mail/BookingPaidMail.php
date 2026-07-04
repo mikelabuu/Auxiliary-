@@ -48,7 +48,7 @@ class BookingPaidMail extends Mailable
             'payment' => $this->payment,
             'qrBase64' => $qrBase64,
             'receipt_number' => $receiptNumber,
-            'verificationUrl' => $verificationUrl,
+            'verificationUrl' => $verificationUrl
         ])->setPaper('a4')->setWarnings(false);
 
         // Save PDF to storage

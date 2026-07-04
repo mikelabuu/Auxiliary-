@@ -25,111 +25,117 @@ $.ajaxSetup({
     }
 });
 </script>
-<div class="p-6 space-y-6">
-
-    <h1 class="text-2xl font-bold mb-4">Staff Records</h1>
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-100 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Staff Records</h1>
+            <p class="text-gray-500 text-xs font-medium mt-0.5">Manage administrative and staff accounts and permission levels.</p>
+        </div>
+    </div>
 
     {{-- Search & Sort --}}
-    <form method="GET" action="{{ route('staff.staffrecords.index') }}" class="flex flex-wrap items-center gap-3 mb-4">
-        <input type="text" name="search" value="{{ $search }}" placeholder="Search by username or email"
-               class="border rounded-lg px-3 py-2 w-64">
+    <x-card>
+        <form method="GET" action="{{ route('staff.staffrecords.index') }}" class="flex flex-wrap items-end gap-4">
+            <div class="w-full md:w-72">
+                <x-input label="Search" name="search" :value="$search" placeholder="Search by username or email" class="!mb-0" />
+            </div>
 
-        <select name="sort" class="border rounded-lg px-3 py-2">
-            <option value="latest" {{ $sort == 'latest' ? 'selected' : '' }}>Newest First</option>
-            <option value="oldest" {{ $sort == 'oldest' ? 'selected' : '' }}>Oldest First</option>
-        </select>
+            <div class="w-full md:w-48">
+                <x-select label="Sort By" name="sort" class="!mb-0">
+                    <option value="latest" {{ $sort == 'latest' ? 'selected' : '' }}>Newest First</option>
+                    <option value="oldest" {{ $sort == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                </x-select>
+            </div>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Apply</button>
-    </form>
+            <x-button variant="primary" type="submit" class="h-[42px] px-6">
+                Apply Filters
+            </x-button>
+        </form>
+    </x-card>
 
     {{-- Table --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full text-sm text-left">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-4 py-2">ID</th>
-                    <th class="px-4 py-2">Username</th>
-                    <th class="px-4 py-2">Email</th>
-                    <th class="px-4 py-2">Role</th>
-                    <th class="px-4 py-2">Status</th>
-                    <th class="px-4 py-2">Last Login</th>
-                    <th class="px-4 py-2">Created At</th>
-                    @if (Auth::guard('staff')->user()->role === 'master_admin')
-                        <th class="px-4 py-2">Action</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($staffs as $staff)
-                    <tr class="border-t">
-                        <td class="px-4 py-2 font-medium">{{ $staff->id }}</td>
-                        <td class="px-4 py-2">{{ $staff->name }}</td>
-                        <td class="px-4 py-2">{{ $staff->email }}</td>
-                        <td class="px-4 py-2">
-                            @if($staff->role === 'admin')
-                                <span class="text-red-600 font-semibold">Admin</span>
-                            @elseif($staff->role ==='frontdesk')
-                                <span class="text-yellow-600 font-semibold">Front Desk</span>
-                            @elseif($staff->role === 'master_admin')
-                                <span class="text-black-800 font-bold">Master Admin</span>
-                            @elseif($staff->role ==='housekeeping')
-                                <span class="text-blue-600 font-semibold">Housekeeping</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2">
-                            @if($staff->is_suspended)
-                                <span class="text-red-600 font-semibold">Suspended</span>
-                            @elseif(!$staff->is_suspended && $staff->role === 'master_admin')
-                                <span class="text-purple-600 font-semibold">Master Account</span>
-                            @else
-                                <span class="text-green-600 font-semibold">Not Suspended</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2">
-                            {{ $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->format('M d, Y g:i A') : 'N/A' }}
-                        </td>
-                        <td class="px-4 py-2">{{ $staff->created_at->format('M d, Y g:i A') }}</td>
-                        @if ($staff->role !== 'master_admin')
-                            <td class="px-4 py-2">
-                                @if(!$staff->is_suspended)
-                                    <button 
-                                        class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition password-verify-btn"
-                                        data-action="suspend"
-                                        data-staff-id="{{ $staff->id }}">
-                                        Suspend
-                                    </button>
-                                @else
-                                    <button 
-                                        class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition password-verify-btn"
-                                        data-action="unsuspend"
-                                        data-staff-id="{{ $staff->id }}">
-                                        Unsuspend
-                                    </button>
-                                @endif
-                            </td>
+    <x-card title="Accounts List" icon="list">
+        <div class="overflow-x-auto rounded-xl border border-gray-100 bg-white">
+            <table class="min-w-full divide-y divide-gray-100 text-sm text-left">
+                <thead class="bg-gray-50 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-3.5">ID</th>
+                        <th class="px-6 py-3.5">Username</th>
+                        <th class="px-6 py-3.5">Email</th>
+                        <th class="px-6 py-3.5">Role</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5">Last Login</th>
+                        <th class="px-6 py-3.5">Created At</th>
+                        @if (Auth::guard('staff')->user()->role === 'master_admin')
+                            <th class="px-6 py-3.5 text-right">Action</th>
                         @endif
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-4 text-center text-gray-500">No staff records found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-gray-700">
+                    @forelse ($staffs as $staff)
+                        <tr class="hover:bg-gray-50/50 transition duration-150">
+                            <td class="px-6 py-4 font-bold text-gray-900">{{ $staff->id }}</td>
+                            <td class="px-6 py-4 font-medium">{{ $staff->name }}</td>
+                            <td class="px-6 py-4 text-gray-500">{{ $staff->email }}</td>
+                            <td class="px-6 py-4">
+                                @if($staff->role === 'admin')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-100">Admin</span>
+                                @elseif($staff->role === 'frontdesk')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 font-semibold">Front Desk</span>
+                                @elseif($staff->role === 'master_admin')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-900 text-white font-extrabold shadow-sm">Master Admin</span>
+                                @elseif($staff->role === 'housekeeping')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">Housekeeping</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($staff->is_suspended)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">Suspended</span>
+                                @elseif(!$staff->is_suspended && $staff->role === 'master_admin')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">Master Account</span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">Active</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-gray-500">
+                                {{ $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->format('M d, Y g:i A') : 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-500">{{ $staff->created_at->format('M d, Y g:i A') }}</td>
+                            @if (Auth::guard('staff')->user()->role === 'master_admin')
+                                <td class="px-6 py-4 text-right">
+                                    @if ($staff->role !== 'master_admin')
+                                        @if(!$staff->is_suspended)
+                                            <x-button variant="danger" class="btn-sm py-1 px-3 text-xs password-verify-btn rounded-lg" data-action="suspend" data-staff-id="{{ $staff->id }}">
+                                                Suspend
+                                            </x-button>
+                                        @else
+                                            <x-button variant="success" class="btn-sm py-1 px-3 text-xs password-verify-btn rounded-lg" data-action="unsuspend" data-staff-id="{{ $staff->id }}">
+                                                Unsuspend
+                                            </x-button>
+                                        @endif
+                                    @endif
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-10 text-center text-gray-400 font-medium">No staff records found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    {{-- Pagination --}}
-    <div class="mt-4">
-        {{ $staffs->links() }}
-    </div>
-
-</div>
-<div class="p-6 space-y-6">
+        {{-- Pagination --}}
+        <div class="mt-4">
+            {{ $staffs->links() }}
+        </div>
+    </x-card>
 
     {{-- Validation Errors --}}
     @if($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-            <ul class="list-disc list-inside">
+        <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl relative mb-4">
+            <ul class="list-disc list-inside space-y-1 text-sm font-semibold">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -138,166 +144,83 @@ $.ajaxSetup({
     @endif
 
     @if (Auth::guard('staff')->user()->role === 'master_admin')
-        <div class="p-4 bg-white rounded shadow">
-            <h1 class="text-2xl font-bold mb-4">Create Staff Account</h1>
-            <form method="POST" action="{{ route('staff.create-staff') }}" class="space-y-4">
-                @csrf
-
-                {{-- Name --}}
-                <div>
-                    <label for="name" class="block font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" name="name" id="name" value="{{ old('name') }}"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Full Name" required>
-                </div>
-
-                {{-- Email --}}
-                <div>
-                    <label for="email" class="block font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Email address" required>
-                </div>
-
-                {{-- Role --}}
-                <div>
-                    <label for="role" class="block font-medium text-gray-700 mb-1">Role</label>
-                    <select name="role" id="role" class="border rounded-lg px-3 py-2 w-full" required>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <x-card title="Create Staff Account" icon="person_add">
+                <form method="POST" action="{{ route('staff.create-staff') }}" class="space-y-4">
+                    @csrf
+                    
+                    <x-input label="Name" name="name" placeholder="Full Name" required />
+                    <x-input label="Email" name="email" type="email" placeholder="Email address" required />
+                    
+                    <x-select label="Role" name="role" required>
                         <option value="">Select Role</option>
                         <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                         <option value="frontdesk" {{ old('role') == 'frontdesk' ? 'selected' : '' }}>Frontdesk</option>
                         <option value="housekeeping" {{ old('role') == 'housekeeping' ? 'selected' : '' }}>Housekeeping</option>
-                    </select>
-                </div>
-                {{-- Password --}}
-                <div>
-                    <label for="password" class="block font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" name="password" id="password"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Enter password" required>
-                </div>
-                {{-- Confirm Password --}}
-                <div>
-                    <label for="password_confirmation" class="block font-medium text-gray-700 mb-1">Confirm Password</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Confirm password" required>
-                </div>
+                    </x-select>
+                    
+                    <x-input label="Password" name="password" type="password" placeholder="Enter password" required />
+                    <x-input label="Confirm Password" name="password_confirmation" type="password" placeholder="Confirm password" required />
+                    
+                    <div class="pt-2">
+                        <x-button variant="primary" type="submit" class="w-full rounded-xl">Create Staff</x-button>
+                    </div>
+                </form>
+            </x-card>
 
-                {{-- Submit Button --}}
-                <div>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Create Staff
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div class="p-4 bg-white rounded shadow">
-            <h1 class="text-2xl font-bold mb-4">Edit Staff Account</h1>
-
-            <form method="POST" action="{{ route('staff.master-update') }}" class="space-y-4">
-                @csrf
-                @method('PUT')
-
-                {{-- Select Staff --}}
-                <div>
-                    <label for="staff_id" class="block font-medium text-gray-700 mb-1">Select Staff</label>
-                    <select name="staff_id" id="staff_id" class="border rounded-lg px-3 py-2 w-full" required>
+            <x-card title="Edit Staff Account" icon="manage_accounts">
+                <form method="POST" action="{{ route('staff.master-update') }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    
+                    <x-select label="Select Staff" name="staff_id" required>
                         <option value="">Select Staff</option>
                         @foreach ($staffs as $staff)
                             <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->role }})</option>
                         @endforeach
-                    </select>
-                </div>
-
-                {{-- Name --}}
-                <div>
-                    <label for="name" class="block font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" name="name" id="name" class="border rounded-lg px-3 py-2 w-full"
-                        placeholder="Full Name">
-                </div>
-
-                {{-- Email --}}
-                <div>
-                    <label for="email" class="block font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" id="email" class="border rounded-lg px-3 py-2 w-full"
-                        placeholder="Email address">
-                </div>
-
-                {{-- Role --}}
-                <div>
-                    <label for="role" class="block font-medium text-gray-700 mb-1">Role</label>
-                    <select name="role" id="role" class="border rounded-lg px-3 py-2 w-full" required>
+                    </x-select>
+                    
+                    <x-input label="Name" name="name" placeholder="Full Name" />
+                    <x-input label="Email" name="email" type="email" placeholder="Email address" />
+                    
+                    <x-select label="Role" name="role" required>
                         <option value="">Select Role</option>
                         <option value="admin">Admin</option>
                         <option value="frontdesk">Frontdesk</option>
                         <option value="housekeeping">Housekeeping</option>
-                    </select>
-                </div>
-
-                {{-- Password (optional) --}}
-                <div>
-                    <label for="password" class="block font-medium text-gray-700 mb-1">New Password (optional)</label>
-                    <input type="password" name="password" id="password"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Enter new password">
-                </div>
-
-                <div>
-                    <label for="password_confirmation" class="block font-medium text-gray-700 mb-1">Confirm Password</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation"
-                        class="border rounded-lg px-3 py-2 w-full" placeholder="Confirm password">
-                </div>
-
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Update Staff
-                </button>
-            </form>
+                    </x-select>
+                    
+                    <x-input label="New Password (optional)" name="password" type="password" placeholder="Enter new password" />
+                    <x-input label="Confirm Password" name="password_confirmation" type="password" placeholder="Confirm password" />
+                    
+                    <div class="pt-2">
+                        <x-button variant="primary" type="submit" class="w-full rounded-xl">Update Staff</x-button>
+                    </div>
+                </form>
+            </x-card>
         </div>
     @else
         {{-- Logged-in staff can edit their own account --}}
-        <div class="p-4 bg-white rounded shadow">
-            <h2 class="text-lg font-semibold mb-2">Edit Your Account</h2>
-            <form id="edit-account-form" method="POST" action="{{ route('staff.update', auth()->guard('staff')->user()->id) }}">
-                @csrf
-                @method('PUT')
-
-                {{-- Name --}}
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium" for="name">Name</label>
-                    <input type="text" name="name" id="name" value="{{ old('name', auth()->guard('staff')->user()->name) }}" 
-                        class="border rounded-lg px-3 py-2 w-full">
-                    @error('name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Email --}}
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium" for="email">Email</label>
-                    <input type="email" name="email" id="email" value="{{ old('email', auth()->guard('staff')->user()->email) }}" 
-                        class="border rounded-lg px-3 py-2 w-full">
-                    @error('email') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- New Password --}}
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium" for="password">New Password (optional)</label>
-                    <input type="password" name="password" id="password" placeholder="Enter new password" 
-                        class="border rounded-lg px-3 py-2 w-full">
-                    @error('password') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Confirm Password --}}
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium" for="password_confirmation">Confirm New Password</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" placeholder="Confirm new password" 
-                        class="border rounded-lg px-3 py-2 w-full">
-                </div>
-
-                {{-- Current Password for Verification --}}
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium" for="current_password">Current Password</label>
-                    <input type="password" name="current_password" id="current_password" placeholder="Enter current password to confirm changes" 
-                        class="border rounded-lg px-3 py-2 w-full" required>
-                    @error('current_password') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                </div>
-
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full">Save Changes</button>
-            </form>
+        <div class="max-w-xl">
+            <x-card title="Edit Your Account" icon="manage_accounts">
+                <form id="edit-account-form" method="POST" action="{{ route('staff.update', auth()->guard('staff')->user()->id) }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    
+                    <x-input label="Name" name="name" :value="auth()->guard('staff')->user()->name" />
+                    <x-input label="Email" name="email" type="email" :value="auth()->guard('staff')->user()->email" />
+                    <x-input label="New Password (optional)" name="password" type="password" placeholder="Enter new password" />
+                    <x-input label="Confirm New Password" name="password_confirmation" type="password" placeholder="Confirm new password" />
+                    
+                    <hr class="border-gray-100 my-4">
+                    
+                    <x-input label="Current Password (required to save changes)" name="current_password" type="password" placeholder="Enter current password" required />
+                    
+                    <div class="pt-2">
+                        <x-button variant="primary" type="submit" class="w-full rounded-xl">Save Changes</x-button>
+                    </div>
+                </form>
+            </x-card>
         </div>
     @endif
 </div>

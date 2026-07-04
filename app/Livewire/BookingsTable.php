@@ -5,10 +5,12 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Booking;
+use App\Models\Checkout;
 use App\Models\CancellationLog;
 use Carbon\Carbon;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BookingsTable extends Component
 {
@@ -24,7 +26,8 @@ class BookingsTable extends Component
     protected $listeners = [
         'refreshBookingsTable' => '$refresh',
         'openBookingModal' => 'selectBooking',
-        'cancelBookingConfirmed' => 'cancelBooking'
+        'cancelBookingConfirmed' => 'cancelBooking',
+        'checkoutBookingConfirmed' => 'checkoutBooking',
     ];
 
     // Reset pagination whenever filters or search change
@@ -93,6 +96,45 @@ class BookingsTable extends Component
             );
             session()->flash('success', "Booking #{$booking->id} cancelled.");
         }
+    }
+
+    public function checkoutBooking($bookingId)
+    {
+
+        $staff = auth('staff')->user();
+        $booking = Booking::with('reservations.room')->find($bookingId);
+
+        if (!$booking) {
+            session()->flash('error', 'Booking not found.');
+            return;
+        }
+
+        
+        DB::transaction(function () use ($booking, $staff) {
+
+            $booking->update(['status' => 'completed']);
+
+            foreach ($booking->reservations as $reservation) {
+                $reservation->room->update(['status' => 'available']);
+            }
+
+            Checkout::create([
+                'booking_id' => $booking->id,
+                'checked_out_at' => Carbon::now('Asia/Manila'),
+                'method' => 'manual',
+                'processed_by' => $staff->id,
+            ]);
+
+            AuditLogger::log(
+                'booking_checked_out',
+                $booking,
+                ['status' => 'active'],
+                ['status' => 'completed'],
+                "Booking #{$booking->id} checked out by {$staff->name}"
+            );
+        });
+
+        session()->flash('success', "Booking #{$booking->id} checked out.");
     }
 
     public function render()

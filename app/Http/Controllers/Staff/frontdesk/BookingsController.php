@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff\frontdesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Checkout;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,37 @@ class BookingsController extends Controller{
         // Paginate results
         $bookings = $query->paginate($perPage)->withQueryString();
 
-        return view('staff.frontdesk.bookings', compact('bookings', 'search', 'sort'));
+        return view('staff.frontdesk.bookings.index', compact('bookings', 'search', 'sort'));
+    }
+    
+    public function checkout(Booking $booking)
+    {
+        $staff = auth('staff')->user();
+
+        DB::transaction(function () use ($booking, $staff) {
+
+            $booking->update(['status' => 'completed']);
+
+            foreach ($booking->reservations as $reservation) {
+                $reservation->room->update(['status' => 'available']);
+            }
+
+            CheckOut::create([
+                'booking_id' => $booking->id,
+                'checked_out_at' => now('Asia/Manila'),
+                'method' => 'manual',
+                'processed_by' => $staff->id,
+            ]);
+
+            AuditLogger::log(
+                'booking_checked_out',
+                $booking,
+                ['status' => 'active'],
+                ['status' => 'completed'],
+                "Booking #{$booking->id} checked out by {$staff->name}"
+            );
+        });
+
+        return back()->with('success', "Booking #{$booking->id} checked out.");
     }
 }

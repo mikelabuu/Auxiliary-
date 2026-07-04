@@ -16,9 +16,7 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
 
                 if ($guard === 'web') {
-                    if (!$request->is('booking*')) {
-                        return redirect('/booking');
-                    }
+                    return redirect('/');
                 }
 
                 // Redirect staff

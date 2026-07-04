@@ -14,6 +14,6 @@ class AdminBalanceController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15);
 
-        return view('staff.balance', compact('balances'));
+        return view('staff.balance.index', compact('balances'));
     }
 }

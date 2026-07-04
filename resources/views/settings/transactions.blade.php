@@ -1,93 +1,169 @@
 @extends('layouts.settings_layout')
 @section('title', 'My Payments')
-<link rel="stylesheet" href="{{ asset('css/payments.settings.css') }}">
-<script src="https://cdn.tailwindcss.com"></script>
 @section('page-title', 'My Payments')
 
 @section('settings-content')
-<div class="bookings-container">
-    <br>
-    <h2 class="tab-title">My Payments</h2>
+    <x-booking.page-header title="My Payments" subtitle="View details of payment transactions processed for your bookings."></x-booking.page-header>
 
-    {{-- Search + Filters --}}
-    <form method="GET" action="{{ route('settings.transactions') }}" class="filter-form">
-        <input type="text" name="search" placeholder="Search by ID, booking, reference, or gateway..." value="{{ request('search') }}">
+    {{-- Search + Filters Form Card --}}
+    <form method="GET" action="{{ route('settings.transactions') }}" class="bg-slate-50/50 border border-slate-100 p-5 rounded-2xl mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <!-- Search Text -->
+            <div class="lg:col-span-2">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Search</label>
+                <input type="text" name="search" placeholder="Search by ID, booking, reference, gateway..." value="{{ request('search') }}"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all font-semibold">
+            </div>
 
-        <select name="status">
-            <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
-            <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>Success</option>
-            <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
-        </select>
+            <!-- Status Select -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Status</label>
+                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all cursor-pointer font-semibold">
+                    <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
+                    <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>Success</option>
+                    <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
+                </select>
+            </div>
 
-        <select name="sort_by">
-            <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Sort by Date</option>
-            <option value="amount" {{ request('sort_by') == 'amount' ? 'selected' : '' }}>Sort by Amount</option>
-            <option value="status" {{ request('sort_by') == 'status' ? 'selected' : '' }}>Sort by Status</option>
-        </select>
+            <!-- Sort By Select -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Sort by</label>
+                <select name="sort_by" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all cursor-pointer font-semibold">
+                    <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Transaction Date</option>
+                    <option value="amount" {{ request('sort_by') == 'amount' ? 'selected' : '' }}>Payment Amount</option>
+                    <option value="status" {{ request('sort_by') == 'status' ? 'selected' : '' }}>Payment Status</option>
+                </select>
+            </div>
 
-        <select name="sort_dir">
-            <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>Descending</option>
-            <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
-        </select>
+            <!-- Sort Direction / Actions -->
+            <div class="flex gap-2">
+                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all cursor-pointer font-semibold">
+                    <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>Descending</option>
+                    <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                </select>
 
-        <button type="submit" class="btn btn-view">Apply</button>
-        @if(request()->has('search') || request()->has('status'))
-            <a href="{{ route('settings.transactions') }}" class="btn btn-cancel">Reset</a>
-        @endif
+                <x-booking.button variant="primary" class="py-2.5 px-4 flex-shrink-0">
+                    Apply
+                </x-booking.button>
+                @if(request()->has('search') || request()->has('status'))
+                    <x-booking.button variant="neutral" href="{{ route('settings.transactions') }}" class="py-2.5 px-4 flex-shrink-0">
+                        Reset
+                    </x-booking.button>
+                @endif
+            </div>
+        </div>
     </form>
 
+    {{-- Transactions Log list --}}
     @if($payments->count())
-        <table class="bookings-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Booking ID</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Reference No</th>
-                    <th>Gateway</th>
-                    <th>Landbank Transaction ID</th>
-                    <th>Created At</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($payments as $payment)
-                    <tr>
-                        <td>#{{ $payment->id }}</td>
-                        <td>#{{ $payment->booking_id }}</td>
-                        <td>₱{{ number_format($payment->amount, 2) }}</td>
-                        <td>
-                            <span class="status-badge status-{{ $payment->status }}">
-                                {{ ucfirst($payment->status) }}
-                            </span>
-                        </td>
-                        <td>{{ $payment->reference_no }}</td>
-                        <td>{{ $payment->gateway }}</td>
-                        <td>
-                            @if($payment->gateway === 'sandbox')
-                                {{ $payment->landbank_transaction_id }}
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <td>{{ $payment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}</td>
+        <!-- Desktop Table view -->
+        <div class="hidden md:block overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 text-xs font-bold uppercase border-b border-slate-100">
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Booking ID</th>
+                        <th class="p-4">Amount</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Reference No</th>
+                        <th class="p-4">Gateway</th>
+                        <th class="p-4">Landbank Ref ID</th>
+                        <th class="p-4">Date processed</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-50 text-sm font-semibold text-slate-700">
+                    @foreach($payments as $payment)
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="p-4 font-bold text-slate-900">#{{ $payment->id }}</td>
+                            <td class="p-4">
+                                <a href="{{ route('booking.show', $payment->booking_id) }}" class="text-brand hover:underline font-bold">
+                                    #{{ $payment->booking_id }}
+                                </a>
+                            </td>
+                            <td class="p-4 font-extrabold text-slate-900">
+                                ₱{{ number_format($payment->amount, 2) }}
+                            </td>
+                            <td class="p-4">
+                                <x-booking.badge :status="$payment->status" />
+                            </td>
+                            <td class="p-4 text-slate-500 font-mono text-xs">{{ $payment->reference_no }}</td>
+                            <td class="p-4 uppercase text-xs">{{ $payment->gateway }}</td>
+                            <td class="p-4 text-slate-550 font-mono text-xs">
+                                @if($payment->gateway === 'sandbox')
+                                    {{ $payment->landbank_transaction_id }}
+                                @else
+                                    <span class="text-slate-350">N/A</span>
+                                @endif
+                            </td>
+                            <td class="p-4 text-slate-400 text-xs font-medium">
+                                {{ $payment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile list view -->
+        <div class="grid grid-cols-1 gap-4 md:hidden">
+            @foreach($payments as $payment)
+                <div class="border border-slate-150 rounded-2xl p-5 bg-white space-y-4 shadow-sm hover:shadow transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-black text-slate-900">Payment #{{ $payment->id }}</span>
+                        <x-booking.badge :status="$payment->status" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-y-2.5 gap-x-2 text-xs font-semibold text-slate-550 border-t border-slate-50 pt-3">
+                        <div>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Booking</span>
+                            <a href="{{ route('booking.show', $payment->booking_id) }}" class="text-brand hover:underline font-bold">
+                                #{{ $payment->booking_id }}
+                            </a>
+                        </div>
+                        <div>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Amount Paid</span>
+                            <span class="text-slate-900 font-extrabold">₱{{ number_format($payment->amount, 2) }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Gateway</span>
+                            <span class="text-slate-800 uppercase text-xs">{{ $payment->gateway }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Date</span>
+                            <span class="text-slate-800 text-[10px]">
+                                {{ $payment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}
+                            </span>
+                        </div>
+                        <div class="col-span-2 border-t border-slate-50/50 pt-2.5">
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Reference No</span>
+                            <span class="text-slate-800 font-mono text-[10px] block truncate">{{ $payment->reference_no }}</span>
+                        </div>
+                        @if($payment->gateway === 'sandbox' && $payment->landbank_transaction_id)
+                            <div class="col-span-2">
+                                <span class="block text-[9px] text-slate-400 uppercase tracking-wider">Landbank Ref ID</span>
+                                <span class="text-slate-800 font-mono text-[10px] block truncate">{{ $payment->landbank_transaction_id }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
 
         {{-- Pagination --}}
-        <div class="pagination-wrapper mt-6 flex flex-col items-center space-y-2">
+        <div class="pagination-wrapper mt-8 flex flex-col items-center space-y-2">
             <div>
                 {{ $payments->links('vendor.pagination.simple-tailwind') }}
             </div>
 
-            <div class="text-gray-400 text-sm">
+            <div class="text-slate-400 font-bold text-xs">
                 Showing {{ $payments->firstItem() }} to {{ $payments->lastItem() }} of {{ $payments->total() }} results
             </div>
         </div>
     @else
-        <p class="no-bookings">You don't have any payments yet.</p>
+        <x-booking.empty-state 
+            title="No Payments Logged" 
+            description="You do not have any transaction history yet. Your payment transaction statements will appear here after booking checkout."
+            icon="payments"
+        />
     @endif
-</div>
 @endsection

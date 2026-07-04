@@ -8,7 +8,7 @@ use App\Models\Checkout;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-class AutoCheckoutBookings extends Command
+class AutoCheckOutBookings extends Command
 {
     /**
      * The name and signature of the console command.

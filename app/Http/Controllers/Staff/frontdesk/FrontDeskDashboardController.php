@@ -16,14 +16,14 @@ class FrontDeskDashboardController extends Controller
     public function index()
     {
         $year = now()->year;
-        $bookingsPerMonth = Booking::select(
-            DB::raw('MONTH(check_in) as month'),
+
+        $bookingsPerMonth = Payment::select(
+            DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(*) as total')
         )
-        ->where('status', 'paid')
-        ->whereYear('check_in', $year)
-        ->groupBy(DB::raw('YEAR(check_in)'), DB::raw('MONTH(check_in)'))
-        ->groupBy('month')
+        ->where('status', 'success')
+        ->whereYear('created_at', $year)
+        ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
         ->orderBy('month')
         ->get()
         ->keyBy('month');
@@ -43,8 +43,7 @@ class FrontDeskDashboardController extends Controller
         $totalRevenue = Payment::where('status', 'success')->sum('amount');
 
         //dd(Auth::guard('staff')->user());
-        $staff = Auth::guard('staff')->user(); // get logged-in staff user
-        return view('staff.frontdesk.dashboard', compact(
+        return view('staff.frontdesk.dashboard.index', compact(
             'totalRooms', 
             'totalUsers', 
             'totalBookings',

@@ -11,7 +11,7 @@ class BookingHubController extends Controller
 {
     public function index()
     {
-        return view('staff.bookings'); // renders the Blade wrapper
+        return view('staff.bookings.index'); // renders the Blade wrapper
     }
     public function verifyPassword(Request $request)
     {

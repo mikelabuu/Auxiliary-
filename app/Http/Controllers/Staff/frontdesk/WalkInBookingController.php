@@ -13,10 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Services\AuditLogger;
-use App\Models\Region;
-use App\Models\Province;
-use App\Models\City;
-use App\Models\Barangay;
+
 
 class WalkInBookingController extends Controller
 {
@@ -33,7 +30,7 @@ class WalkInBookingController extends Controller
         $availableRooms = Room::where('status', 'available')->get();
         $totalAvailableRooms = $availableRooms->count();
 
-        return view('staff.frontdesk.create', compact(
+        return view('staff.frontdesk.walkin.create', compact(
             'availableRooms',
             'totalAvailableRooms',
             'upcomingBookings',
@@ -69,20 +66,21 @@ class WalkInBookingController extends Controller
             'region_code' => 'required|string|max:255',
             'province_code' => 'nullable|string|max:255',
             'city_code' => 'required|string|max:255',
-            'barangg=ay_code' => 'required|string|max:255',
+            'barangay_code' => 'required|string|max:255',
         ]);
 
+        $brgyName = explode('|', $request->barangay_code)[1] ?? '';
+        $cityName = explode('|', $request->city_code)[1] ?? '';
+        $provName = $request->province_code ? (explode('|', $request->province_code)[1] ?? '') : '';
+
         $guest_address = collect([
-            Barangay::where('brgyCode', $request->barangay_code)->value('brgyDesc'),
-        
-            City::where('citymunCode', $request->city_code)->value('citymunDesc'),
-        
-            Province::where('provCode', $request->province_code)->value('provDesc'),
-        
-            Region::where('regCode', $request->region_code)->value('regDesc'),
+            $brgyName,
+            $cityName,
+            $provName,
         ])
         ->filter()
         ->implode(', ');
+
 
         $checkIn  = Carbon::parse($request->check_in);
         $checkOut = Carbon::parse($request->check_out);
@@ -177,7 +175,7 @@ class WalkInBookingController extends Controller
                 'wants_discount'  => $request->input('discount_amount', 0) > 0,
                 'status'          => $status,
                 'payable_amount'  => $totalPrice - ($request->input('discount_amount', 0)),
-                'payment_mode' => 'walkin',
+                'payment_mode' => 'manual',
             ]);
 
             // Create reservations
@@ -209,9 +207,9 @@ class WalkInBookingController extends Controller
                     'user_id'      => $booking->user_id,
                     'amount'       => $booking->payable_amount ?? $booking->total_price,
                     'status'       => 'success',
-                    'payment_type' => 'cash',
+                    'payment_type' => 'manual',
                     'reference_no' => strtoupper(Str::random(10)),
-                    'gateway'      => 'walkin',
+                    'gateway'      => 'manual',
                 ]);
             }
 
@@ -233,7 +231,7 @@ class WalkInBookingController extends Controller
             DB::commit();
 
             AuditLogger::log(
-                'walkin_booking_created',
+                'manual_booking_created',
                 $booking,
                 null,
                 ['status' => $status],
@@ -252,7 +250,7 @@ class WalkInBookingController extends Controller
 
     public function show(Booking $booking)
     {
-        return view('staff.frontdesk.show', compact('booking'));
+        return view('staff.frontdesk.walkin.show', compact('booking'));
     }
 
     public function getAvailableRoomsAjax(Request $request)

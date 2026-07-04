@@ -34,7 +34,7 @@ class UserRecordsController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('staff.userrecords', compact('users', 'search', 'sort'));
+        return view('staff.userrecords.index', compact('users', 'search', 'sort'));
     }
 
     public function verifyPassword(Request $request)

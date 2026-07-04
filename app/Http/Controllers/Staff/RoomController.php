@@ -31,7 +31,7 @@ class RoomController extends Controller
 
         $prices = Room::select('room_type', \DB::raw('MAX(price) as price')) ->groupBy('room_type') ->pluck('price', 'room_type');
 
-        return view('staff.rooms', compact(
+        return view('staff.rooms.index', compact(
             'rooms',
             'totalRooms',
             'occupiedRooms',
