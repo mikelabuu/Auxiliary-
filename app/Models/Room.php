@@ -15,6 +15,7 @@ class Room extends Model
         'wing',
         'price',
         'status',
+        'notes',
         'last_edited_by',
     ];
 
@@ -22,6 +23,11 @@ class Room extends Model
     {
         return $this->belongsToMany(Booking::class, 'booking_room')
                     ->withTimestamps();
+    }
+
+    public function roomType()
+    {
+        return $this->belongsTo(RoomType::class, 'room_type', 'slug');
     }
 
     public function lastEditedBy()

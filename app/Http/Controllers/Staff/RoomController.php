@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;
+use App\Models\RoomType;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,10 @@ class RoomController extends Controller
         $maintenanceRooms = $rooms->where('status', 'maintenance')->count();
         $cleaningRooms = $rooms->where('status', 'cleaning')->count();
 
-        $prices = Room::select('room_type', \DB::raw('MAX(price) as price')) ->groupBy('room_type') ->pluck('price', 'room_type');
+        $roomTypes = RoomType::withCount('rooms')->orderBy('name')->get();
+
+        // Kept for backward compatibility with anything still keying off type => price.
+        $prices = $roomTypes->pluck('base_price', 'slug');
 
         return view('staff.rooms.index', compact(
             'rooms',
@@ -38,6 +42,7 @@ class RoomController extends Controller
             'availableRooms',
             'maintenanceRooms',
             'cleaningRooms',
+            'roomTypes',
             'prices'
         ));
     }
@@ -84,19 +89,22 @@ public function occupancyForRoom(Room $room)
     {
         $staff = Auth::guard('staff')->user();
 
-        $request->validate([
+        $validated = $request->validate([
             'room_number' => 'required|unique:rooms,room_number',
             'room_type'   => 'required|string|max:255',
             'wing'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
+            'status'      => 'nullable|in:available,occupied,maintenance,cleaning',
+            'notes'       => 'nullable|string|max:2000',
         ]);
 
         $room = Room::create([
-            'room_number' => $request->room_number,
-            'room_type'   => $request->room_type,
-            'wing'        => $request->wing,
-            'price'       => $request->price,
-            'status'      => 'available',
+            'room_number' => $validated['room_number'],
+            'room_type'   => $validated['room_type'],
+            'wing'        => $validated['wing'],
+            'price'       => $validated['price'],
+            'status'      => $validated['status'] ?? 'available',
+            'notes'       => $validated['notes'] ?? null,
             'last_edited_by'=> $staff->id,
         ]);
 
@@ -120,6 +128,8 @@ public function occupancyForRoom(Room $room)
             'room_type'   => 'required|string',
             'wing'        => 'required|string',
             'price'       => 'required|numeric|min:0',
+            'status'      => 'nullable|in:available,occupied,maintenance,cleaning',
+            'notes'       => 'nullable|string|max:2000',
         ]);
 
         $oldValues = $room->getOriginal();
@@ -131,9 +141,9 @@ public function occupancyForRoom(Room $room)
         $newValues = $room->fresh()->toArray();
 
         AuditLogger::log(
-        'room_updated', 
-            $room, 
-            $oldValues, 
+        'room_updated',
+            $room,
+            $oldValues,
             $newValues,
             "Room {$room->room_number} was updated by {$staff->name}"
         );
@@ -143,6 +153,65 @@ public function occupancyForRoom(Room $room)
             'room' => $room
         ]);
     }
+
+    public function updateStatus(Request $request, Room $room)
+    {
+        $staff = Auth::guard('staff')->user();
+
+        $validated = $request->validate([
+            'status' => 'required|in:available,occupied,maintenance,cleaning',
+        ]);
+
+        $oldValues = $room->getOriginal();
+
+        $room->update([
+            'status'         => $validated['status'],
+            'last_edited_by' => $staff->id,
+        ]);
+
+        AuditLogger::log(
+            'room_status_updated',
+            $room,
+            $oldValues,
+            $room->fresh()->toArray(),
+            "Room {$room->room_number} status set to {$validated['status']} by {$staff->name}"
+        );
+
+        return response()->json([
+            'success' => true,
+            'room' => $room,
+        ]);
+    }
+
+    public function destroy(Room $room)
+    {
+        $staff = Auth::guard('staff')->user();
+
+        if ($room->reservations()->exists() || $room->bookings()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Room {$room->room_number} has booking history and cannot be deleted.",
+            ], 422);
+        }
+
+        $oldValues = $room->toArray();
+        $roomNumber = $room->room_number;
+
+        AuditLogger::log(
+            'room_deleted',
+            $room,
+            $oldValues,
+            null,
+            "Room {$roomNumber} was deleted by {$staff->name}"
+        );
+
+        $room->delete();
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
     public function edit(Room $room)
     {
         return response()->json([

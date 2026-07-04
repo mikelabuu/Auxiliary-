@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\Staff\RoomController;
+use App\Http\Controllers\Staff\RoomTypeController;
 use App\Http\Controllers\Staff\DiscountAdminController;
 use App\Http\Controllers\Staff\BookingHubController;
 use App\Http\Controllers\Staff\CompletedBookingsController;
@@ -137,9 +138,14 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
     Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
     Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
+    Route::patch('/staff/rooms/{room}/status', [RoomController::class, 'updateStatus'])->name('staff.rooms.updateStatus');
 
     // Delete room
-    // Route::delete('/staff/rooms/{room}', [RoomController::class, 'destroy'])->name('staff.rooms.destroy');
+    Route::delete('/staff/rooms/{room}', [RoomController::class, 'destroy'])->name('staff.rooms.destroy');
+
+    // Room Types
+    Route::post('/staff/room-types', [RoomTypeController::class, 'store'])->name('staff.roomtypes.store');
+    Route::put('/staff/room-types/{roomType}', [RoomTypeController::class, 'update'])->name('staff.roomtypes.update');
 
     //Booking Hub
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
