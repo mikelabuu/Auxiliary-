@@ -73,7 +73,7 @@
                                     {{ strtoupper(substr(auth()->user()->username ?? 'U', 0, 1)) }}
                                 </span>
                                 <span class="text-[12px] font-semibold uppercase tracking-[0.14em]">{{ $username ?? auth()->user()->username ?? 'Account' }}</span>
-                                <x-booking.icon name="chevron-right" class="h-3.5 w-3.5 transition-transform duration-200" ::class="open ? 'rotate-90' : ''" />
+                                <x-booking.ui.icon name="chevron-right" class="h-3.5 w-3.5 transition-transform duration-200" ::class="open ? 'rotate-90' : ''" />
                             </button>
 
                             <div x-show="open"
@@ -87,19 +87,19 @@
                                  style="display: none;"
                             >
                                 <a href="{{ route('settings.profile') }}" class="flex items-center gap-3 px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink/70 hover:bg-cream hover:text-emerald-deep transition-colors">
-                                    <x-booking.icon name="user" class="h-4 w-4 text-emerald" /> My Profile
+                                    <x-booking.ui.icon name="user" class="h-4 w-4 text-emerald" /> My Profile
                                 </a>
                                 <a href="{{ route('settings.bookings') }}" class="flex items-center gap-3 px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink/70 hover:bg-cream hover:text-emerald-deep transition-colors">
-                                    <x-booking.icon name="book-open" class="h-4 w-4 text-emerald" /> My Bookings
+                                    <x-booking.ui.icon name="book-open" class="h-4 w-4 text-emerald" /> My Bookings
                                 </a>
                                 <a href="{{ route('settings.transactions') }}" class="flex items-center gap-3 px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink/70 hover:bg-cream hover:text-emerald-deep transition-colors">
-                                    <x-booking.icon name="credit-card" class="h-4 w-4 text-emerald" /> Transactions
+                                    <x-booking.ui.icon name="credit-card" class="h-4 w-4 text-emerald" /> Transactions
                                 </a>
                                 <div class="mx-5 my-1 h-px bg-emerald-deep/10"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="flex w-full items-center gap-3 px-5 py-3 text-left text-[12px] font-bold uppercase tracking-[0.14em] text-ember-600 hover:bg-ember-50 transition-colors cursor-pointer">
-                                        <x-booking.icon name="log-out" class="h-4 w-4" /> Log Out
+                                        <x-booking.ui.icon name="log-out" class="h-4 w-4" /> Log Out
                                     </button>
                                 </form>
                             </div>
@@ -113,7 +113,7 @@
 
                 <!-- Mobile Menu Button -->
                 <button id="mobileMenuBtn" class="focus-ring press grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/20 md:hidden cursor-pointer" aria-label="Open navigation menu">
-                    <x-booking.icon name="menu" class="h-4 w-4" />
+                    <x-booking.ui.icon name="menu" class="h-4 w-4" />
                 </button>
             </div>
         </nav>
@@ -129,33 +129,33 @@
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-gold">Hostel</span></span>
                     </div>
                     <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-cream-warm hover:text-ink transition-all cursor-pointer" aria-label="Close navigation menu">
-                        <x-booking.icon name="x" class="h-4 w-4" />
+                        <x-booking.ui.icon name="x" class="h-4 w-4" />
                     </button>
                 </div>
 
                 <nav class="mt-7 flex flex-col gap-1">
                     <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                        <x-booking.icon name="home" class="h-4 w-4 text-emerald" /> Home
+                        <x-booking.ui.icon name="home" class="h-4 w-4 text-emerald" /> Home
                     </a>
                     <a href="{{ route('home') }}#rooms" id="mobileRoomsLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                        <x-booking.icon name="bed" class="h-4 w-4 text-emerald" /> Rooms
+                        <x-booking.ui.icon name="bed" class="h-4 w-4 text-emerald" /> Rooms
                     </a>
                     <a href="{{ route('home') }}#gallery" id="mobileGalleryLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                        <x-booking.icon name="images" class="h-4 w-4 text-emerald" /> Gallery
+                        <x-booking.ui.icon name="images" class="h-4 w-4 text-emerald" /> Gallery
                     </a>
                     <a href="#Footer" id="mobileContactLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                        <x-booking.icon name="mail" class="h-4 w-4 text-emerald" /> Contact
+                        <x-booking.ui.icon name="mail" class="h-4 w-4 text-emerald" /> Contact
                     </a>
                     @auth
                         <div class="my-2 h-px bg-emerald-deep/10"></div>
                         <a href="{{ route('settings.profile') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                            <x-booking.icon name="user" class="h-4 w-4 text-emerald" /> My Profile
+                            <x-booking.ui.icon name="user" class="h-4 w-4 text-emerald" /> My Profile
                         </a>
                         <a href="{{ route('settings.bookings') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                            <x-booking.icon name="book-open" class="h-4 w-4 text-emerald" /> My Bookings
+                            <x-booking.ui.icon name="book-open" class="h-4 w-4 text-emerald" /> My Bookings
                         </a>
                         <a href="{{ route('settings.transactions') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-cream-warm hover:text-emerald-deep transition-all">
-                            <x-booking.icon name="credit-card" class="h-4 w-4 text-emerald" /> Transactions
+                            <x-booking.ui.icon name="credit-card" class="h-4 w-4 text-emerald" /> Transactions
                         </a>
                     @endauth
                 </nav>
@@ -166,7 +166,7 @@
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf
                         <button type="submit" class="press flex w-full items-center justify-center gap-2 rounded-full bg-ember-50 py-3 px-4 text-[12px] font-bold uppercase tracking-[0.16em] text-ember-700 hover:bg-ember-100 transition-all cursor-pointer">
-                            <x-booking.icon name="log-out" class="h-4 w-4" /> Log Out
+                            <x-booking.ui.icon name="log-out" class="h-4 w-4" /> Log Out
                         </button>
                     </form>
                 @else
@@ -233,7 +233,7 @@
                         <div class="flex items-center gap-2 border-b border-gold/50 py-2 focus-within:border-gold transition-colors">
                             <input id="footer-email" type="email" required placeholder="you@fieldwork.ph" class="min-w-0 flex-1 bg-transparent text-sm text-cream placeholder:text-cream/40 focus:outline-none" />
                             <button type="submit" aria-label="Subscribe" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-gold text-ink transition hover:bg-gold-soft cursor-pointer">
-                                <x-booking.icon name="arrow-right" class="h-4 w-4" />
+                                <x-booking.ui.icon name="arrow-right" class="h-4 w-4" />
                             </button>
                         </div>
                     </form>
@@ -244,7 +244,7 @@
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-[10px] uppercase tracking-[0.3em] text-cream/50 md:flex-row">
                 <p>&copy; {{ date('Y') }} Farmers Hostel · CLSU Campus</p>
                 <a href="{{ route('staff.login') }}" class="gold-underline focus-ring inline-flex items-center gap-2 rounded">
-                    <x-booking.icon name="lock" class="h-3 w-3" /> Staff Portal
+                    <x-booking.ui.icon name="lock" class="h-3 w-3" /> Staff Portal
                 </a>
             </div>
         </div>

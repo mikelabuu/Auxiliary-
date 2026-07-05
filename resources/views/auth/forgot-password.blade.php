@@ -1,21 +1,21 @@
-@extends('layouts.authlayout')
+@extends('layouts.public.auth')
 @section('title', 'Forgot Password')
 @section('content')
-    <x-booking.auth-card
+    <x-booking.ui.auth-card
         title="Forgot Password?"
         subtitle="No worries! Enter your registered email and we'll send you a password reset link."
     >
         @if ($errors->any())
             @foreach ($errors->all() as $error)
                 <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.alert type="danger" :message="$error" />
+                    <x-booking.ui.alert type="danger" :message="$error" />
                 </div>
             @endforeach
         @endif
 
         @if (session('status'))
             <div id="success-alert" class="mb-4">
-                <x-booking.alert type="success" :message="session('status')" />
+                <x-booking.ui.alert type="success" :message="session('status')" />
             </div>
         @endif
 
@@ -35,7 +35,7 @@
                 Back to login
             </a>
         </div>
-    </x-booking.auth-card>
+    </x-booking.ui.auth-card>
 
     <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
         &copy; {{ date('Y') }} Farmers Hostel.

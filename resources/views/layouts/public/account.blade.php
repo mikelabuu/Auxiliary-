@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.public.base')
 @section('title', 'User Center')
 @section('content')
 <div class="min-h-screen bg-canvas pt-28 pb-24">
@@ -36,10 +36,10 @@
         <!-- Main Account Content Panel -->
         <main class="flex-grow w-full bg-white rounded-3xl border border-stone-200/70 p-6 sm:p-8 shadow-[0_10px_30px_-18px_rgba(17,78,40,0.14)]">
             @if(session('status'))
-                <div class="mb-6"><x-booking.alert type="success">{{ session('status') }}</x-booking.alert></div>
+                <div class="mb-6"><x-booking.ui.alert type="success">{{ session('status') }}</x-booking.ui.alert></div>
             @endif
             @if(session('error'))
-                <div class="mb-6"><x-booking.alert type="danger">{{ session('error') }}</x-booking.alert></div>
+                <div class="mb-6"><x-booking.ui.alert type="danger">{{ session('error') }}</x-booking.ui.alert></div>
             @endif
             @yield('settings-content')
         </main>

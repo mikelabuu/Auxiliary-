@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.public.base')
 @section('title', 'Booking Summary | Farmers Hostel')
 @section('content')
 <div class="min-h-screen bg-canvas pt-28 pb-24">
@@ -83,7 +83,7 @@
             </div>
         </div>
         <div>
-            <x-booking.badge :status="$booking->status" class="!px-3 !py-1 text-xs" />
+            <x-booking.ui.badge :status="$booking->status" class="!px-3 !py-1 text-xs" />
         </div>
     </div>
 
@@ -93,7 +93,7 @@
         <!-- Left Side: Guest Info + Reservation Items Breakdown (Col-Span: 2) -->
         <div class="lg:col-span-2 space-y-8">
             <!-- Guest Details Card -->
-            <x-booking.card title="Guest Details" icon="badge">
+            <x-booking.ui.card title="Guest Details" icon="badge">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm font-semibold">
                     <div>
                         <span class="block text-[10px] text-stone-400 uppercase tracking-widest mb-0.5">Primary Guest Name</span>
@@ -124,7 +124,7 @@
                         <span class="text-ink font-bold">{{ $booking->check_out->format('F d, Y') }} (12:00 NN)</span>
                     </div>
                 </div>
-            </x-booking.card>
+            </x-booking.ui.card>
 
             <!-- Reservation Room Breakdown -->
             <div class="space-y-4">
@@ -139,7 +139,7 @@
                             <div>
                                 <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
                                     <span class="text-sm font-bold text-ink">Room #{{ $reservation->room_number }}</span>
-                                    <x-booking.badge status="active">{{ ucfirst($reservation->room_type) }}</x-booking.badge>
+                                    <x-booking.ui.badge status="active">{{ ucfirst($reservation->room_type) }}</x-booking.ui.badge>
                                 </div>
 
                                 <div class="text-xs font-semibold space-y-2">
@@ -184,7 +184,7 @@
         <!-- Right Side: Billing Summary Card & Action CTAs (Col-Span: 1) -->
         <div class="space-y-6 lg:sticky lg:top-28">
             <!-- Payment Billing card -->
-            <x-booking.card title="Payment Summary" icon="receipt_long">
+            <x-booking.ui.card title="Payment Summary" icon="receipt_long">
                 <div class="space-y-4 text-sm font-semibold">
                     <div class="flex justify-between items-center text-stone-500">
                         <span>Subtotal Price</span>
@@ -214,10 +214,10 @@
 
                             @if(!$discountRequested)
                                 <p class="text-xs text-stone-400 leading-relaxed font-semibold">Please upload Senior Citizen or PWD verification documents to apply your 20% discount.</p>
-                                <x-booking.button variant="secondary" href="{{ route('discount.create', $booking->id) }}" class="w-full py-3 flex items-center justify-center gap-1.5 text-xs">
+                                <x-booking.ui.button variant="secondary" href="{{ route('discount.create', $booking->id) }}" class="w-full py-3 flex items-center justify-center gap-1.5 text-xs">
                                     <span class="material-icons text-[16px]">upload_file</span>
                                     Request &amp; Upload IDs
-                                </x-booking.button>
+                                </x-booking.ui.button>
                             @else
                                 @if($discount && $discount->status === 'pending')
                                     <div class="p-3 bg-palay-50 border border-palay-200 rounded-xl text-xs space-y-3">
@@ -235,7 +235,7 @@
                                 @elseif($discount)
                                     <div class="flex items-center gap-2">
                                         <span class="text-stone-400 text-xs">Request Status:</span>
-                                        <x-booking.badge :status="$discount->status" />
+                                        <x-booking.ui.badge :status="$discount->status" />
                                     </div>
                                 @endif
                             @endif
@@ -245,20 +245,20 @@
                     <!-- Primary Payments Button -->
                     @if($booking->status === 'pending_payment')
                         <div class="pt-4 border-t border-stone-100">
-                            <x-booking.button variant="primary" href="{{ route('bookings.pay', $booking->id) }}" class="w-full py-3.5 flex items-center justify-center gap-1.5 text-sm">
+                            <x-booking.ui.button variant="primary" href="{{ route('bookings.pay', $booking->id) }}" class="w-full py-3.5 flex items-center justify-center gap-1.5 text-sm">
                                 <span class="material-icons text-[18px]">payment</span>
                                 Proceed to Payment
-                            </x-booking.button>
+                            </x-booking.ui.button>
                         </div>
                     @endif
                 </div>
-            </x-booking.card>
+            </x-booking.ui.card>
 
             <!-- Navigation control links -->
-            <x-booking.button variant="neutral" href="{{ route('settings.bookings') }}" class="w-full py-3 flex items-center justify-center gap-1.5">
+            <x-booking.ui.button variant="neutral" href="{{ route('settings.bookings') }}" class="w-full py-3 flex items-center justify-center gap-1.5">
                 <span class="material-icons text-[18px]">arrow_back</span>
                 Return to My Bookings
-            </x-booking.button>
+            </x-booking.ui.button>
         </div>
     </div>
 </div>

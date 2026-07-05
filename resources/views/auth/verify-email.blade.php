@@ -1,21 +1,21 @@
-@extends('layouts.authlayout')
+@extends('layouts.public.auth')
 @section('title', 'Verify Email')
 @section('content')
-    <x-booking.auth-card
+    <x-booking.ui.auth-card
         title="Email Verification Required"
         subtitle="Thanks for signing up! Before accessing the site, please verify your email by clicking the link we just emailed you."
     >
         @if ($errors->any())
             @foreach ($errors->all() as $error)
                 <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.alert type="danger" :message="$error" />
+                    <x-booking.ui.alert type="danger" :message="$error" />
                 </div>
             @endforeach
         @endif
 
         @if (session('message'))
             <div id="success-alert" class="mb-4">
-                <x-booking.alert type="success" :message="session('message')" />
+                <x-booking.ui.alert type="success" :message="session('message')" />
             </div>
         @endif
 
@@ -35,7 +35,7 @@
                 </button>
             </form>
         </div>
-    </x-booking.auth-card>
+    </x-booking.ui.auth-card>
 
     <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
         &copy; {{ date('Y') }} Farmers Hostel.

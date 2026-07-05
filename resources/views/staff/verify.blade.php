@@ -1,4 +1,4 @@
-@extends('layouts.authlayout')
+@extends('layouts.public.auth')
 @section('content')
         <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
             <div class="mt-6 flex justify-center transform transition-hover hover:scale-105 duration-300">

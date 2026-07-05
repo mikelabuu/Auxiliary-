@@ -1,9 +1,9 @@
-@extends('layouts.settings_layout')
+@extends('layouts.public.account')
 @section('title', 'My Payments')
 @section('page-title', 'My Payments')
 
 @section('settings-content')
-    <x-booking.page-header title="My Payments" subtitle="View details of payment transactions processed for your bookings."></x-booking.page-header>
+    <x-booking.ui.page-header title="My Payments" subtitle="View details of payment transactions processed for your bookings."></x-booking.ui.page-header>
 
     {{-- Search + Filters Form Card --}}
     <form method="GET" action="{{ route('settings.transactions') }}" class="bg-stone-50/60 border border-stone-200/70 p-5 rounded-2xl mb-6">
@@ -38,9 +38,9 @@
                     <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
                 </select>
 
-                <x-booking.button variant="primary" class="py-2.5 px-4 flex-shrink-0">Apply</x-booking.button>
+                <x-booking.ui.button variant="primary" class="py-2.5 px-4 flex-shrink-0">Apply</x-booking.ui.button>
                 @if(request()->has('search') || request()->has('status'))
-                    <x-booking.button variant="neutral" href="{{ route('settings.transactions') }}" class="py-2.5 px-4 flex-shrink-0">Reset</x-booking.button>
+                    <x-booking.ui.button variant="neutral" href="{{ route('settings.transactions') }}" class="py-2.5 px-4 flex-shrink-0">Reset</x-booking.ui.button>
                 @endif
             </div>
         </div>
@@ -71,7 +71,7 @@
                                 <a href="{{ route('booking.show', $payment->booking_id) }}" class="text-clsu-700 hover:text-clsu-900 hover:underline font-bold">#{{ $payment->booking_id }}</a>
                             </td>
                             <td class="p-4 font-extrabold text-ink">₱{{ number_format($payment->amount, 2) }}</td>
-                            <td class="p-4"><x-booking.badge :status="$payment->status" /></td>
+                            <td class="p-4"><x-booking.ui.badge :status="$payment->status" /></td>
                             <td class="p-4 text-stone-500 font-mono text-xs">{{ $payment->reference_no }}</td>
                             <td class="p-4 uppercase text-xs">{{ $payment->gateway }}</td>
                             <td class="p-4 text-stone-500 font-mono text-xs">
@@ -94,7 +94,7 @@
                 <div class="border border-stone-200/70 rounded-2xl p-5 bg-white space-y-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-black text-ink">Payment #{{ $payment->id }}</span>
-                        <x-booking.badge :status="$payment->status" />
+                        <x-booking.ui.badge :status="$payment->status" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-y-2.5 gap-x-2 text-xs font-semibold text-stone-600 border-t border-stone-100 pt-3">
@@ -137,7 +137,7 @@
             </div>
         </div>
     @else
-        <x-booking.empty-state
+        <x-booking.ui.empty-state
             title="No Payments Logged"
             description="You don't have any transaction history yet. Your payment statements will appear here after booking checkout."
             icon="payments"

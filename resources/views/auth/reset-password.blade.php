@@ -1,14 +1,14 @@
-@extends('layouts.authlayout')
+@extends('layouts.public.auth')
 @section('title', 'Reset Password')
 @section('content')
-    <x-booking.auth-card
+    <x-booking.ui.auth-card
         title="Reset Password"
         subtitle="Please enter your email and set a new password."
     >
         @if ($errors->any())
             @foreach ($errors->all() as $error)
                 <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.alert type="danger" :message="$error" />
+                    <x-booking.ui.alert type="danger" :message="$error" />
                 </div>
             @endforeach
         @endif
@@ -30,7 +30,7 @@
                 Reset Password
             </button>
         </form>
-    </x-booking.auth-card>
+    </x-booking.ui.auth-card>
 
     <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
         &copy; {{ date('Y') }} Farmers Hostel.

@@ -235,6 +235,14 @@ body.theme-boutique {
 .press { transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1); }
 .press:active { transform: scale(0.97); }
 
+/* Room capacity filter pills — .active is toggled by room-filters.js */
+.room-filter-pill.active {
+    background: var(--color-emerald-deep);
+    border-color: var(--color-emerald-deep);
+    color: var(--color-cream);
+    box-shadow: 0 10px 24px -12px oklch(32% 0.06 160 / 0.6);
+}
+
 .focus-ring:focus-visible {
     outline: 2px solid var(--color-emerald);
     outline-offset: 3px;

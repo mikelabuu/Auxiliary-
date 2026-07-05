@@ -16,9 +16,9 @@
 
     @if($actionText && $actionUrl)
         <div class="mt-6">
-            <x-booking.button variant="primary" :href="$actionUrl">
+            <x-booking.ui.button variant="primary" :href="$actionUrl">
                 {{ $actionText }}
-            </x-booking.button>
+            </x-booking.ui.button>
         </div>
     @endif
 </div>

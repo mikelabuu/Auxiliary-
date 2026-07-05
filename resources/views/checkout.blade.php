@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.public.base')
 @section('title', 'Checkout | Farmers Hostel')
 @section('content')
 
@@ -20,13 +20,13 @@
             <!-- Error feedback display -->
             @if ($errors->any())
                 <div class="mb-6">
-                    <x-booking.alert type="danger">
+                    <x-booking.ui.alert type="danger">
                         <ul class="list-disc list-inside space-y-1">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
-                    </x-booking.alert>
+                    </x-booking.ui.alert>
                 </div>
             @endif
             <div id="bookingFormAlert" class="mb-6 p-4 bg-ember-50 text-ember-800 border border-ember-200 rounded-2xl text-sm font-semibold d-none"></div>

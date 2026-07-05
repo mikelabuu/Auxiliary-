@@ -1,9 +1,9 @@
-@extends('layouts.settings_layout')
+@extends('layouts.public.account')
 @section('title', 'My Bookings')
 @section('page-title', 'My Bookings')
 
 @section('settings-content')
-    <x-booking.page-header title="My Bookings" subtitle="View and manage your room reservation history."></x-booking.page-header>
+    <x-booking.ui.page-header title="My Bookings" subtitle="View and manage your room reservation history."></x-booking.ui.page-header>
 
     {{-- Search + Filters Form Card --}}
     <form method="GET" action="{{ route('settings.bookings') }}" class="bg-stone-50/60 border border-stone-200/70 p-5 rounded-2xl mb-6">
@@ -43,9 +43,9 @@
                     <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
                 </select>
 
-                <x-booking.button variant="primary" class="py-2.5 px-4 flex-shrink-0">Apply</x-booking.button>
+                <x-booking.ui.button variant="primary" class="py-2.5 px-4 flex-shrink-0">Apply</x-booking.ui.button>
                 @if(request()->has('search') || request()->has('status'))
-                    <x-booking.button variant="neutral" href="{{ route('settings.bookings') }}" class="py-2.5 px-4 flex-shrink-0">Reset</x-booking.button>
+                    <x-booking.ui.button variant="neutral" href="{{ route('settings.bookings') }}" class="py-2.5 px-4 flex-shrink-0">Reset</x-booking.ui.button>
                 @endif
             </div>
         </div>
@@ -54,13 +54,13 @@
     {{-- Error messages --}}
     @if ($errors->any())
         <div class="mb-6">
-            <x-booking.alert type="danger">
+            <x-booking.ui.alert type="danger">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
-            </x-booking.alert>
+            </x-booking.ui.alert>
         </div>
     @endif
 
@@ -93,27 +93,27 @@
                             <td class="p-4">
                                 <span class="text-clsu-800 font-black">₱{{ number_format($booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price, 2) }}</span>
                             </td>
-                            <td class="p-4"><x-booking.badge :status="$booking->status" /></td>
+                            <td class="p-4"><x-booking.ui.badge :status="$booking->status" /></td>
                             <td class="p-4">
                                 @if($booking->wants_discount)
                                     @if($booking->discount_status === 'pending')
-                                        <x-booking.badge status="pending">Pending</x-booking.badge>
+                                        <x-booking.ui.badge status="pending">Pending</x-booking.ui.badge>
                                     @elseif($booking->discount_status === 'approved')
-                                        <x-booking.badge status="approved">Approved</x-booking.badge>
+                                        <x-booking.ui.badge status="approved">Approved</x-booking.ui.badge>
                                     @elseif($booking->discount_status === 'rejected')
-                                        <x-booking.badge status="rejected">Rejected</x-booking.badge>
+                                        <x-booking.ui.badge status="rejected">Rejected</x-booking.ui.badge>
                                     @else
-                                        <x-booking.badge status="default">Not Submitted</x-booking.badge>
+                                        <x-booking.ui.badge status="default">Not Submitted</x-booking.ui.badge>
                                     @endif
                                 @else
-                                    <x-booking.badge status="no_request">No Request</x-booking.badge>
+                                    <x-booking.ui.badge status="no_request">No Request</x-booking.ui.badge>
                                 @endif
                             </td>
                             <td class="p-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <x-booking.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-3.5">View</x-booking.button>
+                                    <x-booking.ui.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-3.5">View</x-booking.ui.button>
                                     @if($booking->status === 'pending_payment')
-                                        <x-booking.button variant="danger" type="button" onclick="openCancelModal({{ $booking->id }})" class="py-1.5 px-3.5">Cancel</x-booking.button>
+                                        <x-booking.ui.button variant="danger" type="button" onclick="openCancelModal({{ $booking->id }})" class="py-1.5 px-3.5">Cancel</x-booking.ui.button>
                                     @endif
                                 </div>
                             </td>
@@ -129,7 +129,7 @@
                 <div class="border border-stone-200/70 rounded-2xl p-5 bg-white space-y-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-black text-ink">Booking #{{ $booking->id }}</span>
-                        <x-booking.badge :status="$booking->status" />
+                        <x-booking.ui.badge :status="$booking->status" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-y-2.5 gap-x-2 text-xs font-semibold text-stone-600 border-t border-b border-stone-100 py-3">
@@ -157,18 +157,18 @@
                             <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Discount</span>
                             <span>
                                 @if($booking->wants_discount)
-                                    <x-booking.badge :status="$booking->discount_status ?? 'default'" />
+                                    <x-booking.ui.badge :status="$booking->discount_status ?? 'default'" />
                                 @else
-                                    <x-booking.badge status="no_request">No Request</x-booking.badge>
+                                    <x-booking.ui.badge status="no_request">No Request</x-booking.ui.badge>
                                 @endif
                             </span>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <x-booking.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="py-2.5 flex-1 text-xs">View Details</x-booking.button>
+                        <x-booking.ui.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="py-2.5 flex-1 text-xs">View Details</x-booking.ui.button>
                         @if($booking->status === 'pending_payment')
-                            <x-booking.button variant="danger" type="button" onclick="openCancelModal({{ $booking->id }})" class="py-2.5 flex-1 text-xs">Cancel Booking</x-booking.button>
+                            <x-booking.ui.button variant="danger" type="button" onclick="openCancelModal({{ $booking->id }})" class="py-2.5 flex-1 text-xs">Cancel Booking</x-booking.ui.button>
                         @endif
                     </div>
                 </div>
@@ -183,7 +183,7 @@
             </div>
         </div>
     @else
-        <x-booking.empty-state
+        <x-booking.ui.empty-state
             title="No Bookings Yet"
             description="You don't have any room reservations yet. Explore our available rooms and make your first booking today!"
             icon="hotel"
@@ -193,7 +193,7 @@
     @endif
 
     <!-- Cancellation Modal -->
-    <x-booking.modal id="cancelModal" title="Cancel Room Booking">
+    <x-booking.ui.modal id="cancelModal" title="Cancel Room Booking">
         <form id="cancelForm" method="POST" class="space-y-4">
             @csrf
             <div>
@@ -207,7 +207,7 @@
                 <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-ember-600 hover:bg-ember-700 text-white shadow-sm transition-all cursor-pointer">Confirm Cancellation</button>
             </div>
         </form>
-    </x-booking.modal>
+    </x-booking.ui.modal>
 
     <script>
         function openCancelModal(bookingId) {

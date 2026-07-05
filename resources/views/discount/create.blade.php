@@ -1,8 +1,8 @@
-@extends('layouts.guest')
+@extends('layouts.public.base')
 @section('title', 'Request Discount')
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <x-booking.page-header title="Request Senior / PWD Discount" subtitle="Please upload verification documents for each room reservation to apply the 20% discount."></x-booking.page-header>
+    <x-booking.ui.page-header title="Request Senior / PWD Discount" subtitle="Please upload verification documents for each room reservation to apply the 20% discount."></x-booking.ui.page-header>
 
     @if ($booking->num_seniors > 0)
     <form action="{{ route('discount.store', $booking->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -10,7 +10,7 @@
 
         @foreach ($booking->reservations as $reservation)
             @if($reservation->num_seniors > 0)
-                <x-booking.card title="Room #{{ $reservation->room_number }} Allocation Details" icon="badge">
+                <x-booking.ui.card title="Room #{{ $reservation->room_number }} Allocation Details" icon="badge">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between text-xs font-semibold text-slate-550 border-b border-slate-50 pb-3">
                             <span>Room Type: <strong class="text-slate-800">{{ ucfirst($reservation->room_type) }}</strong></span>
@@ -35,21 +35,21 @@
                             <p class="text-[10px] text-slate-400 mt-2 font-medium leading-relaxed">Accepted formats: JPG, JPEG, PNG. Max file size: 2MB per document. Ensure details are clearly legible.</p>
                         </div>
                     </div>
-                </x-booking.card>
+                </x-booking.ui.card>
             @endif
         @endforeach
 
         <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-3">
-            <x-booking.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="w-full sm:w-auto py-3">
+            <x-booking.ui.button variant="neutral" href="{{ route('booking.show', $booking->id) }}" class="w-full sm:w-auto py-3">
                 Cancel and Go Back
-            </x-booking.button>
-            <x-booking.button variant="primary" type="submit" class="w-full sm:w-auto py-3 font-extrabold shadow-lg">
+            </x-booking.ui.button>
+            <x-booking.ui.button variant="primary" type="submit" class="w-full sm:w-auto py-3 font-extrabold shadow-lg">
                 Submit Discount Documents
-            </x-booking.button>
+            </x-booking.ui.button>
         </div>
     </form>
     @else
-        <x-booking.empty-state 
+        <x-booking.ui.empty-state 
             title="No Seniors Declared" 
             description="You did not declare any senior citizens or PWDs for this room reservation booking."
             icon="sentiment_dissatisfied"

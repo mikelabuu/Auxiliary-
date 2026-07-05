@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.public.base')
 @section('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')
 @section('nav_dark', '1')
 @section('content')
@@ -48,10 +48,10 @@
                             <input type="hidden" id="widget_guests" value="1">
                             <div class="flex items-center gap-1">
                                 <button type="button" id="btn_minus_guests" aria-label="Decrease guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-cream text-ink ring-1 ring-emerald-deep/10 transition hover:ring-gold/60 cursor-pointer">
-                                    <x-booking.icon name="minus" class="h-3 w-3" />
+                                    <x-booking.ui.icon name="minus" class="h-3 w-3" />
                                 </button>
                                 <button type="button" id="btn_plus_guests" aria-label="Increase guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-cream text-ink ring-1 ring-emerald-deep/10 transition hover:ring-gold/60 cursor-pointer">
-                                    <x-booking.icon name="plus" class="h-3 w-3" />
+                                    <x-booking.ui.icon name="plus" class="h-3 w-3" />
                                 </button>
                             </div>
                         </div>
@@ -59,7 +59,7 @@
                     <button type="button" id="btnSearchRooms"
                             class="focus-ring press group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]">
                         <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100" style="box-shadow:inset 0 0 24px color-mix(in oklch, var(--color-gold) 35%, transparent)"></span>
-                        <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.icon name="arrow-right" class="h-4 w-4" /></span>
+                        <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
                     </button>
                 </div>
                 <div class="mt-3 flex items-center justify-center gap-2 border-t border-emerald-deep/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald">
@@ -71,11 +71,11 @@
 
             <!-- Trust chips -->
             <div class="mt-8 flex flex-wrap items-center justify-center gap-y-3 divide-x divide-cream/20 text-[11px] font-medium uppercase tracking-[0.22em] text-cream/90">
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.icon name="map-pin" class="h-4 w-4 text-gold" /> CLSU Campus</span>
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.icon name="badge-check" class="h-4 w-4 text-gold" /> No prepayment</span>
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.icon name="clock" class="h-4 w-4 text-gold" /> 24/7 front desk</span>
-                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.icon name="wifi" class="h-4 w-4 text-gold" /> Free Wi-Fi</span>
-                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.icon name="tag" class="h-4 w-4 text-gold" /> Senior / PWD 20%</span>
+                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="map-pin" class="h-4 w-4 text-gold" /> CLSU Campus</span>
+                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="badge-check" class="h-4 w-4 text-gold" /> No prepayment</span>
+                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="clock" class="h-4 w-4 text-gold" /> 24/7 front desk</span>
+                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.ui.icon name="wifi" class="h-4 w-4 text-gold" /> Free Wi-Fi</span>
+                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.ui.icon name="tag" class="h-4 w-4 text-gold" /> Senior / PWD 20%</span>
             </div>
         </div>
     </header>
@@ -84,22 +84,10 @@
     <section class="relative -mt-6 px-4 sm:px-6">
         <div class="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-emerald-deep text-cream shadow-boutique-card" data-aos="fade-up">
             <div class="grid grid-cols-2 divide-x divide-cream/10 md:grid-cols-4">
-                <div class="px-6 py-10 text-center">
-                    <p class="font-display text-4xl italic text-gold md:text-5xl">{{ count($roomTypes) }}</p>
-                    <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cream/70">Room Types</p>
-                </div>
-                <div class="px-6 py-10 text-center">
-                    <p class="font-display text-4xl italic text-gold md:text-5xl">24/7</p>
-                    <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cream/70">Campus Security</p>
-                </div>
-                <div class="px-6 py-10 text-center">
-                    <p class="font-display text-4xl italic text-gold md:text-5xl">100%</p>
-                    <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cream/70">On Campus</p>
-                </div>
-                <div class="px-6 py-10 text-center">
-                    <p class="font-display text-4xl italic text-gold md:text-5xl">₱{{ number_format($minPrice ?? 1600) }}</p>
-                    <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-cream/70">From / Night</p>
-                </div>
+                <x-booking.cards.stat :value="count($roomTypes)" label="Room Types" />
+                <x-booking.cards.stat value="24/7" label="Campus Security" />
+                <x-booking.cards.stat value="100%" label="On Campus" />
+                <x-booking.cards.stat value="₱{{ number_format($minPrice ?? 1600) }}" label="From / Night" />
             </div>
         </div>
     </section>
@@ -107,128 +95,70 @@
     <!-- ====== FEATURES ====== -->
     <section class="mx-auto max-w-7xl px-6 py-24 md:py-28">
         <div class="grid gap-8 md:grid-cols-3">
-            <div class="rounded-2xl bg-cream-warm p-8 ring-1 ring-emerald-deep/5" data-aos="fade-up" data-aos-delay="100">
-                <div class="mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 ring-1 ring-emerald-deep/10">
-                    <x-booking.icon name="leaf" class="h-5 w-5 text-emerald-deep" />
-                </div>
-                <h3 class="font-display text-2xl text-ink">Heart of Campus</h3>
-                <p class="mt-3 text-sm leading-relaxed text-ink/60">Located directly inside CLSU, offering unparalleled convenience for visiting researchers, alumni, and university guests.</p>
-            </div>
-            <div class="rounded-2xl bg-cream-warm p-8 ring-1 ring-emerald-deep/5" data-aos="fade-up" data-aos-delay="200">
-                <div class="mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 ring-1 ring-emerald-deep/10">
-                    <x-booking.icon name="shield" class="h-5 w-5 text-emerald-deep" />
-                </div>
-                <h3 class="font-display text-2xl text-ink">24/7 Security</h3>
-                <p class="mt-3 text-sm leading-relaxed text-ink/60">Peace of mind with round-the-clock campus security and dedicated hostel staff on duty from dawn to well past dusk.</p>
-            </div>
-            <div class="rounded-2xl bg-cream-warm p-8 ring-1 ring-emerald-deep/5" data-aos="fade-up" data-aos-delay="300">
-                <div class="mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 ring-1 ring-emerald-deep/10">
-                    <x-booking.icon name="wifi" class="h-5 w-5 text-emerald-deep" />
-                </div>
-                <h3 class="font-display text-2xl text-ink">Modern Amenities</h3>
-                <p class="mt-3 text-sm leading-relaxed text-ink/60">Stay connected and comfortable — high-speed Wi-Fi, air-conditioned rooms, and inclusive guest kits in every stay.</p>
-            </div>
+            <x-booking.cards.feature icon="leaf" title="Heart of Campus"
+                description="Located directly inside CLSU, offering unparalleled convenience for visiting researchers, alumni, and university guests."
+                data-aos="fade-up" data-aos-delay="100" />
+            <x-booking.cards.feature icon="shield" title="24/7 Security"
+                description="Peace of mind with round-the-clock campus security and dedicated hostel staff on duty from dawn to well past dusk."
+                data-aos="fade-up" data-aos-delay="200" />
+            <x-booking.cards.feature icon="wifi" title="Modern Amenities"
+                description="Stay connected and comfortable — high-speed Wi-Fi, air-conditioned rooms, and inclusive guest kits in every stay."
+                data-aos="fade-up" data-aos-delay="300" />
         </div>
     </section>
 
-    <!-- Ornament I -->
-    <div role="presentation" class="mx-auto flex w-full max-w-xs flex-col items-center gap-3 py-6 text-center">
-        <span aria-hidden="true" class="h-px w-12 bg-gold/70"></span>
-        <span class="font-display text-xl italic text-gold/90">I</span>
-        <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald/70">The Experience</span>
-    </div>
+    <x-booking.sections.ornament numeral="I" label="The Experience" />
 
     <!-- ====== THREE CHAPTERS ====== -->
     <section class="relative bg-cream-warm py-24 md:py-32">
         <div class="mx-auto max-w-7xl px-6">
-            <div class="mb-16 max-w-2xl" data-aos="fade-up">
-                <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-emerald">
-                    <span class="h-px w-8 bg-emerald/50"></span>The experience
-                </span>
-                <h2 class="text-balance mt-4 font-display text-5xl leading-[1.05] text-ink md:text-6xl">A stay written in <span class="italic text-gold">three chapters</span></h2>
-            </div>
+            <x-booking.sections.heading eyebrow="The experience" class="mb-16" data-aos="fade-up">
+                A stay written in <span class="italic text-gold">three chapters</span>
+            </x-booking.sections.heading>
 
             <div class="space-y-24 md:space-y-32">
-                <!-- Chapter 01 -->
-                <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16" data-aos="fade-up">
-                    <div class="relative">
-                        <div class="overflow-hidden rounded-3xl shadow-boutique-card">
-                            <img src="{{ asset('image/2.jpg') }}" alt="The CLSU campus surrounding Farmers Hostel" loading="lazy" class="aspect-[4/5] w-full object-cover transition duration-[1200ms] hover:scale-[1.04] md:aspect-[5/6]">
-                        </div>
-                        <div class="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-gold/25 blur-2xl"></div>
-                    </div>
-                    <div class="max-w-lg">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-emerald">Chapter 01 · The Setting</p>
-                        <h3 class="text-balance mt-4 font-display text-3xl leading-tight text-ink md:text-4xl">A quiet farmstead inside a working campus</h3>
-                        <p class="drop-cap text-pretty mt-5 text-base leading-relaxed text-ink/60" style="max-width:62ch">Wake to mist over the CLSU rice paddies. Walk two minutes to the research fields, the laboratories, or a proper Filipino breakfast. Every stay is grounded in place.</p>
-                        <div class="mt-8 h-px w-16 bg-gold"></div>
-                    </div>
-                </div>
+                <x-booking.cards.chapter index="01" label="The Setting" title="A quiet farmstead inside a working campus"
+                    image="image/2.jpg" alt="The CLSU campus surrounding Farmers Hostel">
+                    Wake to mist over the CLSU rice paddies. Walk two minutes to the research fields, the laboratories, or a proper Filipino breakfast. Every stay is grounded in place.
+                </x-booking.cards.chapter>
 
-                <!-- Chapter 02 (flipped) -->
-                <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16" data-aos="fade-up">
-                    <div class="relative md:order-2">
-                        <div class="overflow-hidden rounded-3xl shadow-boutique-card">
-                            <img src="{{ asset('image/deluxe.jpg') }}" alt="Deluxe room interior at Farmers Hostel" loading="lazy" class="aspect-[4/5] w-full object-cover transition duration-[1200ms] hover:scale-[1.04] md:aspect-[5/6]">
-                        </div>
-                        <div class="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-gold/25 blur-2xl"></div>
-                    </div>
-                    <div class="max-w-lg md:order-1">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-emerald">Chapter 02 · The Rooms</p>
-                        <h3 class="text-balance mt-4 font-display text-3xl leading-tight text-ink md:text-4xl">Considered spaces, made for rest</h3>
-                        <p class="drop-cap text-pretty mt-5 text-base leading-relaxed text-ink/60" style="max-width:62ch">Rattan, walnut, brass, and crisp linen. Each of the six rooms is finished with the same restraint — a boutique lodge in the middle of the fields, never a dormitory pretending otherwise.</p>
-                        <div class="mt-8 h-px w-16 bg-gold"></div>
-                    </div>
-                </div>
+                <x-booking.cards.chapter index="02" label="The Rooms" title="Considered spaces, made for rest"
+                    image="image/deluxe.jpg" alt="Deluxe room interior at Farmers Hostel" :flip="true">
+                    Rattan, walnut, brass, and crisp linen. Each of the six rooms is finished with the same restraint — a boutique lodge in the middle of the fields, never a dormitory pretending otherwise.
+                </x-booking.cards.chapter>
 
-                <!-- Chapter 03 -->
-                <div class="grid items-center gap-10 md:grid-cols-2 md:gap-16" data-aos="fade-up">
-                    <div class="relative">
-                        <div class="overflow-hidden rounded-3xl shadow-boutique-card">
-                            <img src="{{ asset('image/4.jpg') }}" alt="Filipino silog breakfast served at the hostel" loading="lazy" class="aspect-[4/5] w-full object-cover transition duration-[1200ms] hover:scale-[1.04] md:aspect-[5/6]">
-                        </div>
-                        <div class="pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-gold/25 blur-2xl"></div>
-                    </div>
-                    <div class="max-w-lg">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-emerald">Chapter 03 · The Table</p>
-                        <h3 class="text-balance mt-4 font-display text-3xl leading-tight text-ink md:text-4xl">Breakfast, on the house, every morning</h3>
-                        <p class="drop-cap text-pretty mt-5 text-base leading-relaxed text-ink/60" style="max-width:62ch">Garlic rice, tapa, mango, and a cup of brewed barako — set at your table before you leave for the field. Simple, generous, unmistakably Filipino.</p>
-                        <div class="mt-8 h-px w-16 bg-gold"></div>
-                    </div>
-                </div>
+                <x-booking.cards.chapter index="03" label="The Table" title="Breakfast, on the house, every morning"
+                    image="image/4.jpg" alt="Filipino silog breakfast served at the hostel">
+                    Garlic rice, tapa, mango, and a cup of brewed barako — set at your table before you leave for the field. Simple, generous, unmistakably Filipino.
+                </x-booking.cards.chapter>
             </div>
         </div>
     </section>
 
-    <!-- Ornament II -->
-    <div role="presentation" class="mx-auto flex w-full max-w-xs flex-col items-center gap-3 py-6 text-center">
-        <span aria-hidden="true" class="h-px w-12 bg-gold/70"></span>
-        <span class="font-display text-xl italic text-gold/90">II</span>
-        <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald/70">The Living Quarters</span>
-    </div>
+    <x-booking.sections.ornament numeral="II" label="The Living Quarters" />
 
     <!-- ====== LIVING QUARTERS (ROOMS) ====== -->
     <section id="rooms" class="mx-auto max-w-7xl scroll-mt-28 px-6 pt-8 pb-24">
-        <div class="mb-12 grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end" data-aos="fade-up">
-            <div class="max-w-2xl">
-                <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-emerald">
-                    <span class="h-px w-8 bg-emerald/50"></span>Choose your stay
-                </span>
-                <h2 class="text-balance mt-4 font-display text-5xl leading-[1.05] text-ink md:text-6xl">The <span class="italic text-gold">Living Quarters</span></h2>
-                <p class="mt-4 max-w-xl text-base text-ink/60">Six thoughtfully appointed rooms — from an intimate double to a six-bunk dormitory. Rates start at ₱{{ number_format($minPrice ?? 1600) }} and every stay includes a proper Filipino breakfast.</p>
-            </div>
-        </div>
+        <x-booking.sections.heading
+            eyebrow="Accommodations"
+            description="{{ count($roomTypes) }} fully-serviced rooms, ideal for short stays, transient guests, and university researchers. Filter by capacity or explore each option in detail — you can book in a single click."
+            class="mb-10" data-aos="fade-up">
+            Reserve a <span class="italic text-gold">room</span> now
+        </x-booking.sections.heading>
+
+        <!-- Capacity filter pills -->
+        <x-booking.sections.room-filters class="mb-12" data-aos="fade-up" data-aos-delay="100" />
 
         <!-- Error List -->
         @if ($errors->any())
             <div class="mx-auto mb-8 max-w-3xl">
-                <x-booking.alert type="danger">
+                <x-booking.ui.alert type="danger">
                     <ul class="list-disc list-inside space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
                     </ul>
-                </x-booking.alert>
+                </x-booking.ui.alert>
             </div>
         @endif
 
@@ -249,10 +179,13 @@
         </div>
 
         <!-- Room Grid -->
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3" data-aos="fade-up" data-aos-delay="150">
             @foreach ($roomTypes as $type)
-                <div data-aos="fade-up" data-aos-delay="{{ ($loop->index % 3 + 1) * 100 }}">
-                    <x-booking.room-card
+                <div data-room-item
+                     data-beds="{{ $type['beds'] }}"
+                     data-premium="{{ ($type['badge'] ?? '') === 'Premium' ? 1 : 0 }}"
+                     class="transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
+                    <x-booking.cards.room
                         :title="$type['title']"
                         :beds="$type['beds']"
                         :price="$type['price']"
@@ -268,31 +201,30 @@
                 </div>
             @endforeach
         </div>
+
+        <!-- Filter empty state -->
+        <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-emerald-deep/20 bg-cream-warm px-8 py-16 text-center">
+            <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-emerald/40" />
+            <p class="mt-4 font-display text-2xl text-ink">No rooms in this range</p>
+            <p class="mt-2 text-sm text-ink/55">Try a different capacity — or the dormitories for larger groups.</p>
+        </div>
     </section>
 
-    <!-- Ornament III -->
-    <div role="presentation" class="mx-auto flex w-full max-w-xs flex-col items-center gap-3 py-6 text-center">
-        <span aria-hidden="true" class="h-px w-12 bg-gold/70"></span>
-        <span class="font-display text-xl italic text-gold/90">III</span>
-        <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald/70">In Their Words</span>
-    </div>
+    <x-booking.sections.ornament numeral="III" label="In Their Words" />
 
     <!-- ====== TESTIMONIALS ====== -->
     <section class="relative overflow-hidden bg-cream-warm py-24 md:py-28">
         <div class="mx-auto max-w-5xl px-6">
             <div class="grid grid-cols-1 items-end gap-8 md:grid-cols-[minmax(0,1fr)_auto]" data-aos="fade-up">
-                <div class="max-w-xl">
-                    <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-emerald">
-                        <span class="h-px w-8 bg-emerald/50"></span>Guest experiences
-                    </span>
-                    <h2 class="text-balance mt-4 font-display text-4xl leading-tight text-ink md:text-5xl">Loved by <span class="italic text-gold">academics</span> and travelers alike.</h2>
-                </div>
+                <x-booking.sections.heading eyebrow="Guest experiences" class="max-w-xl">
+                    Loved by <span class="italic text-gold">academics</span> and travelers alike.
+                </x-booking.sections.heading>
                 <div class="flex items-center gap-3">
                     <button class="swiper-button-prev-custom focus-ring press grid h-11 w-11 place-items-center rounded-full bg-cream ring-1 ring-emerald-deep/10 transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Previous testimonial">
-                        <x-booking.icon name="chevron-left" class="h-4 w-4" />
+                        <x-booking.ui.icon name="chevron-left" class="h-4 w-4" />
                     </button>
                     <button class="swiper-button-next-custom focus-ring press grid h-11 w-11 place-items-center rounded-full bg-cream ring-1 ring-emerald-deep/10 transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Next testimonial">
-                        <x-booking.icon name="chevron-right" class="h-4 w-4" />
+                        <x-booking.ui.icon name="chevron-right" class="h-4 w-4" />
                     </button>
                 </div>
             </div>
@@ -306,22 +238,12 @@
                         ['quote' => 'The Deluxe Room felt genuinely premium, and the hot shower was perfect. I will be booking again next harvest season.', 'name' => 'Alumni Sy', 'role' => 'CLSU Alumni', 'initials' => 'AS'],
                     ] as $t)
                         <div class="swiper-slide h-auto">
-                            <figure class="rounded-3xl bg-cream p-10 shadow-boutique-card md:p-14">
-                                <div class="flex gap-1 text-gold">
-                                    @for ($i = 0; $i < 5; $i++)
-                                        <x-booking.icon name="star" class="h-4 w-4 fill-gold text-gold" />
-                                    @endfor
-                                </div>
-                                <x-booking.icon name="quote" class="mt-8 h-6 w-6 text-gold" />
-                                <blockquote class="mt-4 font-display text-2xl italic leading-relaxed text-ink md:text-3xl">&ldquo;{{ $t['quote'] }}&rdquo;</blockquote>
-                                <figcaption class="mt-8 flex items-center gap-4 border-t border-emerald-deep/10 pt-6">
-                                    <div class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald-deep font-display text-sm text-cream">{{ $t['initials'] }}</div>
-                                    <div>
-                                        <p class="font-semibold text-ink">{{ $t['name'] }}</p>
-                                        <p class="text-xs uppercase tracking-[0.2em] text-ink/50">{{ $t['role'] }}</p>
-                                    </div>
-                                </figcaption>
-                            </figure>
+                            <x-booking.cards.testimonial
+                                :quote="$t['quote']"
+                                :name="$t['name']"
+                                :role="$t['role']"
+                                :initials="$t['initials']"
+                            />
                         </div>
                     @endforeach
                 </div>
@@ -329,22 +251,16 @@
         </div>
     </section>
 
-    <!-- Ornament IV -->
-    <div role="presentation" class="mx-auto flex w-full max-w-xs flex-col items-center gap-3 py-6 text-center">
-        <span aria-hidden="true" class="h-px w-12 bg-gold/70"></span>
-        <span class="font-display text-xl italic text-gold/90">IV</span>
-        <span class="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald/70">Visual Tour</span>
-    </div>
+    <x-booking.sections.ornament numeral="IV" label="Visual Tour" />
 
     <!-- ====== GALLERY (BENTO) ====== -->
     <section id="gallery" class="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
-        <div class="mb-12 text-center" data-aos="fade-up">
-            <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-emerald">
-                <span class="h-px w-8 bg-emerald/50"></span>Visual tour
-            </span>
-            <h2 class="text-balance mt-4 font-display text-5xl leading-tight text-ink md:text-6xl">Our <span class="italic text-gold">gallery</span></h2>
-            <p class="mx-auto mt-4 max-w-xl text-base text-ink/60">A quiet walk through our rooms, common spaces, dining hall, and campus greenery.</p>
-        </div>
+        <x-booking.sections.heading
+            eyebrow="Visual tour"
+            description="A quiet walk through our rooms, common spaces, dining hall, and campus greenery."
+            align="center" class="mb-12" data-aos="fade-up">
+            Our <span class="italic text-gold">gallery</span>
+        </x-booking.sections.heading>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:h-[560px] lg:grid-cols-4 lg:grid-rows-6" data-aos="fade-up" data-aos-delay="100">
             @php
@@ -370,7 +286,7 @@
 
         <div class="mt-10 flex justify-center" data-aos="fade-up">
             <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press inline-flex items-center gap-3 rounded-full border border-emerald-deep/20 bg-cream-warm px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:bg-cream cursor-pointer">
-                <x-booking.icon name="sparkles" class="h-4 w-4 text-gold" />
+                <x-booking.ui.icon name="sparkles" class="h-4 w-4 text-gold" />
                 Explore the full gallery
             </button>
         </div>
@@ -384,7 +300,7 @@
             <p class="mx-auto mt-4 max-w-md text-base text-ink/60">Pick your dates, choose a room, and confirm. No prepayment required.</p>
             <div class="mt-8">
                 <button type="button" onclick="document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });" class="press focus-ring inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
-                    <x-booking.icon name="calendar" class="h-4 w-4" />
+                    <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                     Reserve your stay
                 </button>
             </div>
@@ -482,12 +398,12 @@
                     </template>
 
                     <button type="button" @click="close()" aria-label="Close room details" class="absolute top-4 right-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-ink/40 text-cream backdrop-blur-md transition-colors hover:bg-ink/60 cursor-pointer">
-                        <x-booking.icon name="x" class="h-4 w-4" />
+                        <x-booking.ui.icon name="x" class="h-4 w-4" />
                     </button>
 
                     <div class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-ink/70 to-transparent px-6 pb-5 pt-10">
                         <p class="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold">
-                            <x-booking.icon name="map-pin" class="h-3.5 w-3.5" />
+                            <x-booking.ui.icon name="map-pin" class="h-3.5 w-3.5" />
                             <span x-text="room ? room.floor : ''"></span>
                         </p>
                         <h2 class="font-display text-3xl leading-tight text-cream" x-text="room ? room.title : ''"></h2>
@@ -508,7 +424,7 @@
                                 <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald/70">Capacity</p>
                                 <p class="mt-1 text-sm font-semibold text-ink" x-text="room ? room.capacity : ''"></p>
                                 <p class="mt-1 flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.22em] text-ink/50">
-                                    <x-booking.icon name="users" class="h-3 w-3" />
+                                    <x-booking.ui.icon name="users" class="h-3 w-3" />
                                     <span x-text="room ? room.beds + ' pax max' : ''"></span>
                                 </p>
                             </div>
@@ -539,7 +455,7 @@
                                 <template x-for="item in (room ? room.includes : [])" :key="item">
                                     <li class="flex items-center gap-2 text-sm font-medium text-ink/75">
                                         <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-deep/8 text-emerald-deep">
-                                            <x-booking.icon name="check" class="h-3 w-3" />
+                                            <x-booking.ui.icon name="check" class="h-3 w-3" />
                                         </span>
                                         <span x-text="item"></span>
                                     </li>
@@ -550,7 +466,7 @@
                         <!-- Policies -->
                         <div class="rounded-2xl border border-gold/30 bg-gold-soft/30 px-5 py-4">
                             <p class="mb-2.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-ink/70">
-                                <x-booking.icon name="clock" class="h-3.5 w-3.5 text-gold" />
+                                <x-booking.ui.icon name="clock" class="h-3.5 w-3.5 text-gold" />
                                 Stay policies
                             </p>
                             <div class="grid grid-cols-1 gap-y-1.5 text-xs font-medium text-ink/70 sm:grid-cols-2">
@@ -566,7 +482,7 @@
                 <div class="sticky bottom-0 z-20 flex gap-3 border-t border-emerald-deep/10 bg-cream-warm/95 px-6 py-5 backdrop-blur-xl">
                     <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-emerald-deep/15 bg-cream px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 transition-all hover:bg-cream-warm cursor-pointer">Close</button>
                     <button type="button" @click="bookThis()" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
-                        <x-booking.icon name="calendar" class="h-4 w-4" />
+                        <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                         Book this room
                     </button>
                 </div>
@@ -578,6 +494,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="{{ asset('js/booking.js') }}"></script>
     <script src="{{ asset('js/availability-search.js') }}"></script>
+    <script src="{{ asset('js/room-filters.js') }}"></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
     <script>

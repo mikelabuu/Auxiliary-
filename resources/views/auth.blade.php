@@ -1,7 +1,7 @@
-@extends('layouts.authlayout')
+@extends('layouts.public.auth')
 @section('title', 'Farmers Hostel | Book Now')
 @section('content')
-    <x-booking.auth-card>
+    <x-booking.ui.auth-card>
         <!-- Dual Tabs -->
         <div class="flex p-1.5 gap-1.5 bg-stone-100/70 -mt-1 mb-6 rounded-2xl border border-stone-200/50">
             <button id="loginTab" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all bg-white text-clsu-800 shadow-sm border border-stone-200 cursor-pointer">Log In</button>
@@ -17,14 +17,14 @@
                 @if ($errors->any())
                     @foreach ($errors->all() as $error)
                         <div id="error-alert" class="error-alert mt-4 text-left">
-                            <x-booking.alert type="danger" :message="$error" />
+                            <x-booking.ui.alert type="danger" :message="$error" />
                         </div>
                     @endforeach
                 @endif
 
                 @if (session('error'))
                     <div id="error-alert" class="error-alert mt-4 text-left">
-                        <x-booking.alert type="danger" :message="session('error')" />
+                        <x-booking.ui.alert type="danger" :message="session('error')" />
                     </div>
                 @endif
             </div>
@@ -95,7 +95,7 @@
                 </button>
             </form>
         </div>
-    </x-booking.auth-card>
+    </x-booking.ui.auth-card>
 
     <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider flex items-center gap-1.5">
         <span>&copy; {{ date('Y') }} Farmers Hostel.</span>

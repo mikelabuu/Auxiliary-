@@ -42,7 +42,7 @@
 
         <!-- Capacity pill -->
         <div class="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-cream-warm/95 px-3 py-1 text-[11px] font-medium text-ink">
-            <x-booking.icon name="users" class="h-3.5 w-3.5 text-emerald" />
+            <x-booking.ui.icon name="users" class="h-3.5 w-3.5 text-emerald" />
             {{ $capacity }}
         </div>
     </div>
@@ -72,12 +72,12 @@
         <div class="mt-4 flex flex-1 flex-wrap content-start gap-2">
             @forelse ($amenities as $amenity)
                 <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-cream-warm px-3 py-1 text-[11px] font-medium text-ink ring-1 ring-emerald-deep/10">
-                    <x-booking.icon :name="$amenity['icon'] ?? 'check'" class="h-3.5 w-3.5 text-emerald" />
+                    <x-booking.ui.icon :name="$amenity['icon'] ?? 'check'" class="h-3.5 w-3.5 text-emerald" />
                     {{ $amenity['label'] ?? $amenity }}
                 </span>
             @empty
                 <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-cream-warm px-3 py-1 text-[11px] font-medium text-ink ring-1 ring-emerald-deep/10">
-                    <x-booking.icon name="wifi" class="h-3.5 w-3.5 text-emerald" />
+                    <x-booking.ui.icon name="wifi" class="h-3.5 w-3.5 text-emerald" />
                     Free Wi-Fi
                 </span>
             @endforelse
