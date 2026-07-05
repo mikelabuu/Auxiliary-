@@ -11,6 +11,20 @@ class Booking extends Model
 
     use HasFactory;
 
+    /**
+     * Statuses that make a booking's rooms unavailable to other guests.
+     * Single source of truth — used by both the availability endpoints and
+     * the double-booking guard inside BookingController::store().
+     */
+    public const BLOCKING_STATUSES = [
+        'pending_payment',
+        'pending_discount',
+        'paid',
+        'confirmed',
+        'active',
+        'checked_in',
+    ];
+
     protected $fillable = [
         'user_id',
         'guest_name',

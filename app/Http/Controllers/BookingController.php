@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Room;
 use App\Models\Booking;
 use App\Models\Reservation;
+use App\Support\RoomCatalog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -19,8 +20,9 @@ class BookingController extends Controller
     {
         $user = Auth::user();
         $username = $user ? $user->username : null;
-        $roomTypes = config('room_types', []);
-        return view('welcome', compact('username', 'roomTypes'));
+        $roomTypes = RoomCatalog::all();
+        $minPrice = RoomCatalog::minPrice();
+        return view('welcome', compact('username', 'roomTypes', 'minPrice'));
     }
 
     // Show checkout form
@@ -28,18 +30,14 @@ class BookingController extends Controller
     {
         $user = Auth::user();
         $username = $user->username;
-        $roomTypes = config('room_types', []);
-        
+        $roomTypes = RoomCatalog::all();
+
         $roomTypeKey = $request->query('room_type');
         $checkIn = $request->query('check_in');
         $checkOut = $request->query('check_out');
         $guests = $request->query('guests', 1);
 
-        $selectedRoomType = null;
-        if ($roomTypeKey && isset($roomTypes[$roomTypeKey])) {
-            $selectedRoomType = $roomTypes[$roomTypeKey];
-            $selectedRoomType['id'] = $roomTypeKey;
-        }
+        $selectedRoomType = RoomCatalog::find($roomTypeKey);
         
         return view('checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests'));
     }
@@ -59,8 +57,10 @@ class BookingController extends Controller
             'reservations'    => 'required|array|min:1',
             'reservations.*.room_type'       => 'required|string',
             'reservations.*.room_number'     => 'required|string', // CSV per block
-            'reservations.*.price_per_night' => 'required|numeric|min:0',
-            'reservations.*.beds'            => 'required|integer|min:1',
+            // price/beds are posted for display continuity but the backend
+            // recomputes both from RoomCatalog — never trust client pricing.
+            'reservations.*.price_per_night' => 'nullable|numeric',
+            'reservations.*.beds'            => 'nullable|integer',
             'reservations.*.num_seniors'     => 'nullable|integer|min:0',
             'reservations.*.meal' => 'nullable|array',
             'reservations.*.meal.*' => 'integer|min:0',
@@ -107,30 +107,31 @@ class BookingController extends Controller
         $cdate = Carbon::parse($request->check_in, 'Asia/Manila');
         $now = Carbon::now('Asia/Manila');
 
-        // safer: central capacity map
-        $capacityMap = [
-            'double'      => 2,
-            'triple'      => 3,
-            'quadruple'   => 4,
-            'deluxe'      => 2,
-            'dormitory1'  => 5,
-            'dormitory2'  => 6,
-        ];
+        // authoritative catalog: capacity AND nightly rate come from here,
+        // never from the submitted form
+        $catalog = RoomCatalog::all();
 
         foreach ($request->reservations as $block) {
             $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
             $roomType = $block['room_type'];
-            $pricePerNight = (float) $block['price_per_night'];
             $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
 
-            // validate rooms exist
-            $rooms = Room::whereIn('room_number', $roomNumbersArray)->get();
+            $catalogType = $catalog[$roomType] ?? null;
+            if (!$catalogType) {
+                return back()->withErrors(['reservations' => "Unknown room type: {$roomType}."])->withInput();
+            }
+            $pricePerNight = (float) $catalogType['price'];
+
+            // validate rooms exist AND actually belong to the claimed type
+            $rooms = Room::whereIn('room_number', $roomNumbersArray)
+                ->where('room_type', $roomType)
+                ->get();
             if ($rooms->count() !== count($roomNumbersArray)) {
-                return back()->withErrors(['reservations' => 'Some selected rooms are invalid.'])->withInput();
+                return back()->withErrors(['reservations' => 'Some selected rooms are invalid for the chosen room type.'])->withInput();
             }
 
-            // capacity: trust backend map, not frontend "beds"
-            $beds = $capacityMap[$roomType] ?? 1;
+            // capacity: trust backend catalog, not frontend "beds"
+            $beds = (int) $catalogType['beds'];
             $blockCapacity = $beds * count($roomNumbersArray);
             $totalCapacity += $blockCapacity;
 
@@ -201,7 +202,7 @@ class BookingController extends Controller
         //                                          //
         //                                          //
         try{
-            $booking = DB::transaction(function() use ($request, $user, $allRoomNumbers, $guestName, $guest_address, $totalPrice, $totalSeniors, $status, $capacityMap) {
+            $booking = DB::transaction(function() use ($request, $user, $allRoomNumbers, $guestName, $guest_address, $totalPrice, $totalSeniors, $status, $catalog) {
                 // lock rooms
                 $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
                         ->lockForUpdate()
@@ -212,7 +213,7 @@ class BookingController extends Controller
                             $q->whereDate('check_in', '<', $request->check_out)
                             ->whereDate('check_out', '>', $request->check_in);
                         })
-                        ->whereIn('status', ['pending_payment', 'checked_in', 'pending_discount'])
+                        ->whereIn('status', Booking::BLOCKING_STATUSES)
                         ->exists();
                 })->pluck('room_number')->toArray();
 
@@ -242,10 +243,10 @@ class BookingController extends Controller
                 foreach ($request->reservations as $block) {
                     $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
                     $roomType = $block['room_type'];
-                    $pricePerNight = (float) $block['price_per_night'];
+                    $pricePerNight = (float) ($catalog[$roomType]['price'] ?? 0);
                     $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
                     $meals = $block['meal'] ?? null;
-                    $beds = $capacityMap[$roomType] ?? 1;
+                    $beds = (int) ($catalog[$roomType]['beds'] ?? 1);
 
                     foreach ($roomNumbersArray as $roomNumber) {
                         $room = Room::where('room_number', $roomNumber)->first();
@@ -334,13 +335,7 @@ class BookingController extends Controller
             ->get();
 
         // Get bookings that overlap with the given range AND block availability
-        $bookings = Booking::whereIn('status', [
-                'pending_discount',
-                'pending_payment',
-                'paid',
-                'confirmed',
-                'active',
-            ])
+        $bookings = Booking::whereIn('status', Booking::BLOCKING_STATUSES)
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn)
             ->get();
@@ -371,5 +366,61 @@ class BookingController extends Controller
         });
 
         return response()->json(['rooms' => $result]);
+    }
+
+    /**
+     * Live availability summary for the landing-page search widget.
+     * Returns, per room type, how many rooms are open for the date range.
+     */
+    public function availabilitySummary(Request $request)
+    {
+        $request->validate([
+            'check_in'  => 'required|date|after_or_equal:today',
+            'check_out' => 'required|date|after:check_in',
+        ]);
+
+        $checkIn  = $request->input('check_in');
+        $checkOut = $request->input('check_out');
+
+        // Room numbers held by any blocking booking that overlaps the range
+        $bookedRoomNumbers = Booking::whereIn('status', Booking::BLOCKING_STATUSES)
+            ->where('check_in', '<', $checkOut)
+            ->where('check_out', '>', $checkIn)
+            ->get()
+            ->flatMap(fn ($b) => array_map('trim', (array) $b->room_numbers))
+            ->filter()
+            ->unique()
+            ->all();
+
+        $rooms   = Room::all();
+        $catalog = RoomCatalog::all();
+
+        $summary = [];
+        foreach ($catalog as $slug => $type) {
+            $ofType = $rooms->where('room_type', $slug);
+
+            $available = $ofType->filter(function ($r) use ($bookedRoomNumbers) {
+                return $r->status === 'available'
+                    && !in_array(trim($r->room_number), $bookedRoomNumbers);
+            })->count();
+
+            $summary[] = [
+                'room_type' => $slug,
+                'title'     => $type['title'],
+                'price'     => (float) $type['price'],
+                'beds'      => (int) $type['beds'],
+                'total'     => $ofType->count(),
+                'available' => $available,
+            ];
+        }
+
+        $nights = max(1, Carbon::parse($checkIn)->diffInDays(Carbon::parse($checkOut)));
+
+        return response()->json([
+            'check_in'  => $checkIn,
+            'check_out' => $checkOut,
+            'nights'    => $nights,
+            'summary'   => $summary,
+        ]);
     }
 }

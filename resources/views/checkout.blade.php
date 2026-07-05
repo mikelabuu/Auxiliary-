@@ -2,148 +2,92 @@
 @section('title', 'Checkout | Farmers Hostel')
 @section('content')
 
-    <style>
-        .d-none { display: none !important; }
-        .room-tiles {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .room-tile {
-            padding: 10px 6px;
-            text-align: center;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-            color: #475569;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            user-select: none;
-        }
-        .room-tile:hover {
-            border-color: #cbd5e1;
-            background-color: #f1f5f9;
-        }
-        .room-tile.available {
-            border-color: #bbf7d0;
-            background-color: #f0fdf4;
-            color: #15803d;
-        }
-        .room-tile.available:hover {
-            background-color: #dcfce7;
-            border-color: #86efac;
-        }
-        .room-tile.selected {
-            background-color: var(--color-nautical-teal) !important;
-            color: #ffffff !important;
-            border-color: var(--color-nautical-teal) !important;
-            box-shadow: 0 4px 12px rgba(8, 78, 114, 0.3);
-        }
-        .room-tile.booked {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            border-color: #fecaca;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .room-tile.cleaning {
-            background-color: #fef3c7;
-            color: #b45309;
-            border-color: #fde68a;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .room-tile.maintenance {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border-color: #e2e8f0;
-            cursor: not-allowed;
-            opacity: 0.6;
-            text-decoration: line-through;
-        }
-        .flatpickr-calendar {
-            box-shadow: var(--shadow-md) !important;
-            border: 1px solid var(--color-slate-100) !important;
-            border-radius: 1rem !important;
-        }
-    </style>
-
-    <div class="min-h-screen bg-slate-50 pt-28 pb-20">
+    <div class="min-h-screen bg-canvas pt-28 pb-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8 flex items-center justify-between">
+            <div class="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Checkout</h1>
-                    <p class="text-sm font-semibold text-slate-500 mt-1">Complete your booking details to secure your reservation.</p>
+                    <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-emerald mb-3">
+                        <span class="h-px w-8 bg-emerald/50"></span> Almost there
+                    </span>
+                    <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Complete your <span class="italic text-gold">booking</span></h1>
+                    <p class="text-sm font-medium text-ink/55 mt-3">Fill in your details to secure your reservation — no payment needed yet.</p>
                 </div>
-                <a href="{{ route('home') }}" class="text-sm font-bold text-nautical-teal hover:underline flex items-center gap-1">
-                    <span class="material-icons text-[16px]">arrow_back</span> Back to Rooms
+                <a href="{{ route('home') }}#rooms" class="gold-underline self-start sm:self-end text-[11px] font-bold uppercase tracking-[0.3em] text-ink/70 hover:text-ink transition-colors">
+                    &larr; Back to Rooms
                 </a>
             </div>
 
             <!-- Error feedback display -->
             @if ($errors->any())
-                <div class="mb-6 p-4 bg-red-50 text-red-800 border border-red-200/60 rounded-xl text-sm font-semibold">
-                    <ul class="list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="mb-6">
+                    <x-booking.alert type="danger">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </x-booking.alert>
                 </div>
             @endif
-            <div id="bookingFormAlert" class="mb-6 p-4 bg-red-50 text-red-800 border border-red-200/60 rounded-xl text-sm font-semibold d-none"></div>
+            <div id="bookingFormAlert" class="mb-6 p-4 bg-ember-50 text-ember-800 border border-ember-200 rounded-2xl text-sm font-semibold d-none"></div>
 
             <form id="bookingForm" method="POST" action="{{ route('booking.store') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 @csrf
-                
+
                 <!-- Hidden aggregate values needed for backend forms -->
                 <input type="hidden" name="room_numbers" id="selected_room_number">
                 <input type="hidden" name="num_seniors" id="num_seniors" value="0">
-                <!-- Check-in and Check-out are used globally by JS, we will store them here -->
                 <input type="hidden" name="check_in" id="check_in_hidden">
                 <input type="hidden" name="check_out" id="check_out_hidden">
 
                 <!-- Left Column: Guest Details & Config -->
                 <div class="lg:col-span-8 space-y-6">
-                    
+
                     <!-- DATES -->
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/60">
-                        <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
-                            <span class="w-1 h-4 rounded-full bg-nautical-teal"></span>
-                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Stay Dates</h4>
+                    <div class="bg-cream-warm rounded-3xl p-6 sm:p-8 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)]">
+                        <div class="flex items-center justify-between gap-3 mb-5">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-8 h-8 rounded-xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10 flex items-center justify-center shrink-0"><span class="material-icons text-[18px]">event</span></span>
+                                <div>
+                                    <span class="block text-[9px] font-black text-stone-400 uppercase tracking-[0.18em] leading-none">Step 1 of 3</span>
+                                    <h4 class="text-sm font-bold text-ink tracking-tight mt-1">Stay Dates</h4>
+                                </div>
+                            </div>
+                            <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold-soft/40 border border-gold/40 text-ink/80 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 tracking-wider uppercase mb-1.5">Check-in</label>
-                                <input type="text" id="check_in" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-nautical-teal focus:ring-2 focus:ring-nautical-teal/20 outline-none font-semibold cursor-pointer" placeholder="Select Date" value="{{ $checkIn ?? '' }}">
+                                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Check-in</label>
+                                <input type="text" id="check_in" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none font-semibold cursor-pointer transition-all" placeholder="Select Date" value="{{ $checkIn ?? '' }}">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 tracking-wider uppercase mb-1.5">Check-out</label>
-                                <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-nautical-teal focus:ring-2 focus:ring-nautical-teal/20 outline-none font-semibold cursor-pointer" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
+                                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Check-out</label>
+                                <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none font-semibold cursor-pointer transition-all" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
                             </div>
                         </div>
                     </div>
 
                     <!-- GUEST INFO (Imported from Partial) -->
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/60">
+                    <div class="bg-cream-warm rounded-3xl p-6 sm:p-8 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)]">
                         @include('booking.partials.step-guest')
                     </div>
 
                     <!-- ROOM SELECTION -->
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/60">
-                        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="w-1 h-4 rounded-full bg-nautical-teal"></span>
-                                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Room Allocation</h4>
+                    <div class="bg-cream-warm rounded-3xl p-6 sm:p-8 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)]">
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-8 h-8 rounded-xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10 flex items-center justify-center shrink-0"><span class="material-icons text-[18px]">meeting_room</span></span>
+                                <div>
+                                    <span class="block text-[9px] font-black text-stone-400 uppercase tracking-[0.18em] leading-none">Step 3 of 3</span>
+                                    <h4 class="text-sm font-bold text-ink tracking-tight mt-1">Room Allocation</h4>
+                                </div>
                             </div>
-                            <button type="button" onclick="window.addReservationBlock()" class="text-xs font-bold text-nautical-teal bg-sky-wash px-3 py-1.5 rounded-lg border border-nautical-teal/20 hover:bg-nautical-teal hover:text-white transition-colors">
-                                + Add Room Type
+                            <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/20 bg-cream px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
+                                <span class="material-icons text-[15px]">add</span> Add Room Type
                             </button>
                         </div>
-                        <p class="text-sm text-slate-500 font-medium mb-4">Please configure the rooms you want to book. You must select specific room numbers for each type.</p>
-                        
+                        <p class="text-sm text-stone-500 font-medium mb-4">Configure the rooms you want to book. You must select specific room numbers for each type.</p>
+
                         <div id="reservationBlocks" class="space-y-4">
                             <!-- JS will inject blocks here -->
                         </div>
@@ -153,27 +97,51 @@
 
                 <!-- Right Column: Sticky Summary -->
                 <div class="lg:col-span-4">
-                    <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/80 sticky top-28">
-                        <h3 class="text-lg font-black text-slate-900 border-b border-slate-100 pb-4 mb-4">Booking Summary</h3>
-                        
+                    <div class="bg-cream-warm rounded-3xl p-6 ring-1 ring-emerald-deep/5 shadow-boutique-card sticky top-28">
+                        <h3 class="text-xl text-ink border-b border-emerald-deep/10 pb-4 mb-4 font-display flex items-center gap-2.5">
+                            <span class="material-icons text-emerald-deep text-[20px]">receipt_long</span>
+                            Booking <span class="italic text-gold -ml-1">Summary</span>
+                        </h3>
+
                         <!-- Summary Invoice will be rendered here by JS -->
-                        <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-slate-600">
+                        <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-stone-600">
                             <div class="text-center py-8">
-                                <span class="material-icons text-slate-300 text-4xl mb-2 block">receipt_long</span>
+                                <span class="material-icons text-stone-300 text-4xl mb-2 block">receipt_long</span>
                                 <p>Select dates and rooms to view summary.</p>
                             </div>
                         </div>
 
-                        <button type="submit" id="btnSubmitBooking" class="w-full py-4 rounded-xl text-sm font-black bg-gradient-to-r from-nautical-teal to-cobalt-pop text-white shadow-[0_4px_14px_rgba(8,78,114,0.3)] hover:shadow-[0_6px_20px_rgba(8,78,114,0.4)] hover:-translate-y-0.5 transition-all cursor-pointer">
+                        <button type="submit" id="btnSubmitBooking" class="press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-semibold uppercase tracking-[0.2em] bg-emerald-deep text-cream transition-all cursor-pointer flex items-center justify-center gap-2 hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
+                            <span class="material-icons text-[18px]">check_circle</span>
                             Confirm Booking
                         </button>
-                        <p class="text-center mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Payment collected later
-                        </p>
+                        <div class="mt-4 grid grid-cols-3 gap-1 text-center">
+                            <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
+                                <span class="material-icons text-[16px] text-clsu-600">lock</span> Secure
+                            </div>
+                            <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
+                                <span class="material-icons text-[16px] text-clsu-600">credit_card_off</span> No prepayment
+                            </div>
+                            <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
+                                <span class="material-icons text-[16px] text-clsu-600">verified</span> Instant hold
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- Mobile sticky total bar (summary column is off-screen on phones) -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-cream-warm/95 backdrop-blur-md border-t border-gold/30 px-4 py-3 shadow-[0_-12px_30px_rgba(6,40,30,0.12)] flex items-center justify-between gap-3">
+        <div>
+            <p class="text-[9px] font-bold text-emerald/70 uppercase tracking-[0.28em] leading-none">Total due</p>
+            <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">₱0</p>
+        </div>
+        <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">
+            <span class="material-icons text-[16px]">check_circle</span>
+            Confirm
+        </button>
     </div>
 
     <!-- Template for Room Blocks -->

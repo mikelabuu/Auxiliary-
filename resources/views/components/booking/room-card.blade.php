@@ -7,78 +7,99 @@
     'capacity' => '',
     'badge' => null,
     'amenities' => [],
+    'floor' => '',
+    'description' => '',
+    'index' => 1,
 ])
 
 @php
     $formattedPrice = number_format($price);
+    $indexLabel = str_pad($index, 2, '0', STR_PAD_LEFT);
 @endphp
 
-<div class="relative bg-white rounded-[24px] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(10,79,45,0.08)] hover:-translate-y-1 transition-all duration-500 flex flex-col h-full group border border-slate-200/80 p-2">
-    <!-- Image -->
-    <div class="relative h-64 overflow-hidden flex-shrink-0 rounded-[20px] bg-slate-100">
-        <img src="{{ asset($image) }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" alt="{{ $title }}" loading="lazy">
-        
+<article data-room-card="{{ $typeId }}" class="group flex h-full flex-col">
+    <!-- Portrait image -->
+    <div class="hover-lift-premium relative aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep sm:aspect-[4/5]">
+        <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy"
+             class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105">
+        <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/45 via-transparent to-transparent"></div>
+
+        <!-- Editorial index -->
+        <span aria-hidden="true" class="absolute top-4 left-4 font-display text-xs italic tracking-[0.2em] text-cream/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">— {{ $indexLabel }}</span>
+
+        <!-- Gold corner hairlines on hover -->
+        <span aria-hidden="true" class="pointer-events-none absolute top-3 right-3 h-6 w-6">
+            <span class="absolute top-0 right-0 h-px w-0 bg-gold transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-full"></span>
+            <span class="absolute top-0 right-0 h-0 w-px bg-gold transition-[height] duration-500 delay-100 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:h-full"></span>
+        </span>
+
         @if ($badge)
-            <div class="absolute top-3 left-3 bg-[#d4af37] text-[#0a4f2d] px-3 py-1 rounded-[9999px] text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
-                {{ $badge }}
-            </div>
+            <span class="absolute top-4 left-16 rounded-full bg-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink shadow-sm">{{ $badge }}</span>
         @endif
 
-        <div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-[9999px] text-[10px] font-bold text-slate-800 shadow-sm flex items-center gap-1.5">
-            <span class="material-icons text-[14px] text-[#0a4f2d]">people</span>
+        <!-- Live availability pill (filled by availability-search.js) -->
+        <div data-avail-slot class="absolute top-12 right-3 z-10"></div>
+
+        <!-- Capacity pill -->
+        <div class="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-cream-warm/95 px-3 py-1 text-[11px] font-medium text-ink">
+            <x-booking.icon name="users" class="h-3.5 w-3.5 text-emerald" />
             {{ $capacity }}
         </div>
     </div>
 
     <!-- Body -->
-    <div class="px-3 pt-4 pb-2 flex flex-col flex-1">
-        <h4 class="text-xl font-bold tracking-tight text-slate-900" style="font-family: var(--font-serif);">{{ $title }}</h4>
-        
-        <!-- Price -->
-        <div class="flex items-baseline justify-between mt-1">
-            <div class="flex items-baseline gap-1">
-                <span class="text-lg font-bold text-[#0a4f2d]">₱{{ $formattedPrice }}</span>
-                <span class="text-xs font-semibold text-slate-500">/ night</span>
-            </div>
-            <span class="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-                <span class="material-icons text-[13px] text-slate-400">bed</span>
-                {{ $beds }} pax max
-            </span>
-        </div>
+    <div class="mt-6 flex flex-1 flex-col">
+        @if ($floor)
+            <p class="text-[11px] uppercase tracking-[0.3em] text-emerald/80">{{ $floor }}</p>
+        @endif
 
-        <!-- Amenities (Pills) -->
-        <div class="mt-4 flex-1">
-            <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
-                @forelse ($amenities as $amenity)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-[9999px] bg-slate-50 border border-slate-200 text-slate-600">
-                        <span class="material-icons text-[13px] text-[#0a4f2d]">{{ $amenity['icon'] ?? 'check_circle' }}</span>
-                        {{ $amenity['label'] ?? $amenity }}
-                    </span>
-                @empty
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-[9999px] bg-slate-50 border border-slate-200 text-slate-600">
-                        <span class="material-icons text-[13px] text-[#0a4f2d]">wifi</span>
-                        Free Wi-Fi
-                    </span>
-                @endforelse
+        <div class="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+            <h3 class="text-balance font-display text-2xl leading-tight text-ink">{{ $title }}</h3>
+            <div class="shrink-0 text-right">
+                <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-emerald/70">From</p>
+                <p class="font-display text-xl leading-none text-ink">₱{{ $formattedPrice }}</p>
+                <p class="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink/50">per night</p>
             </div>
         </div>
 
-        <!-- CTA Buttons -->
-        <div class="mt-6 flex flex-col sm:flex-row gap-2">
+        <span aria-hidden="true" class="mt-4 block h-px w-10 bg-gold"></span>
+
+        @if ($description)
+            <p class="text-pretty mt-4 text-sm leading-relaxed text-ink/60">{{ $description }}</p>
+        @endif
+
+        <!-- Amenity chips -->
+        <div class="mt-4 flex flex-1 flex-wrap content-start gap-2">
+            @forelse ($amenities as $amenity)
+                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-cream-warm px-3 py-1 text-[11px] font-medium text-ink ring-1 ring-emerald-deep/10">
+                    <x-booking.icon :name="$amenity['icon'] ?? 'check'" class="h-3.5 w-3.5 text-emerald" />
+                    {{ $amenity['label'] ?? $amenity }}
+                </span>
+            @empty
+                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-cream-warm px-3 py-1 text-[11px] font-medium text-ink ring-1 ring-emerald-deep/10">
+                    <x-booking.icon name="wifi" class="h-3.5 w-3.5 text-emerald" />
+                    Free Wi-Fi
+                </span>
+            @endforelse
+        </div>
+
+        <!-- CTAs -->
+        <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             <button type="button"
-               onclick="bookRoomDirect('{{ $typeId }}')"
-               class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 relative group overflow-hidden cursor-pointer shadow-[0_4px_12px_rgba(10,79,45,0.3)] hover:shadow-[0_6px_16px_rgba(10,79,45,0.4)] hover:-translate-y-0.5"
-               style="background-color: var(--color-clsu-green);"
+                data-book-btn
+                onclick="bookRoomDirect('{{ $typeId }}')"
+                aria-label="Book {{ $title }} for ₱{{ $formattedPrice }} per night"
+                class="press focus-ring inline-flex min-h-11 items-center rounded-full bg-emerald-deep px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_22%,transparent)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-deep disabled:hover:shadow-none"
             >
-                <span class="material-icons text-[16px]">calendar_month</span>
-                Book
+                <span data-book-label>Book · ₱{{ $formattedPrice }}</span>
             </button>
             <button type="button"
-               onclick="window.dispatchEvent(new CustomEvent('open-room-detail', { detail: { roomId: '{{ $typeId }}' } }))"
-               class="flex-[0.8] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-[#0a4f2d] bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all duration-300 cursor-pointer"
+                onclick="window.dispatchEvent(new CustomEvent('open-room-detail', { detail: { roomId: '{{ $typeId }}' } }))"
+                aria-label="View details for {{ $title }}"
+                class="gold-underline focus-ring rounded text-[11px] font-bold uppercase tracking-[0.3em] text-ink cursor-pointer"
             >
-                Details
+                View Details
             </button>
         </div>
     </div>
-</div>
+</article>

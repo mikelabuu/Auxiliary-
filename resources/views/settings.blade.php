@@ -4,7 +4,7 @@
     <x-booking.page-header title="Profile Settings" subtitle="Update your personal details and account password.">
         <x-slot name="actions">
             <div class="flex items-center gap-2 text-sm font-semibold">
-                <span class="text-slate-450">Account Status:</span>
+                <span class="text-stone-400">Account Status:</span>
                 @if(auth()->user()->email_verified_at)
                     <x-booking.badge status="active">Verified</x-booking.badge>
                 @else
@@ -30,7 +30,7 @@
                     <x-booking.input label="Phone Number (Optional)" name="phone" :value="auth()->user()->phone" />
                 </div>
 
-                <div class="pt-2 border-t border-slate-50 flex justify-end">
+                <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.button variant="primary">
                         <span class="material-icons text-[18px] mr-1.5">save</span>
                         Save Profile
@@ -51,7 +51,7 @@
                     <x-booking.input label="Confirm New Password" name="password_confirmation" type="password" required />
                 </div>
 
-                <div class="pt-2 border-t border-slate-50 flex justify-end">
+                <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.button variant="primary">
                         <span class="material-icons text-[18px] mr-1.5">lock_reset</span>
                         Update Password

@@ -19,6 +19,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function formatPrice(num) { return '₱' + Number(num).toLocaleString(); }
 
+  // Animated currency count-up for summary totals
+  function animateCurrency(el, from, to, ms = 380) {
+    if (!el) return;
+    if (from === to || !window.requestAnimationFrame) { el.textContent = formatPrice(to); return; }
+    const start = performance.now();
+    function frame(now) {
+      const t = Math.min(1, (now - start) / ms);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = formatPrice(Math.round(from + (to - from) * eased));
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  let lastSummaryTotal = 0;
+
+  // Generic ± steppers: any .btn-step inside a .stepper wrapper adjusts the
+  // wrapped input and fires 'input' so existing clamps/summary logic reacts.
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-step');
+    if (!btn) return;
+    const wrap = btn.closest('.stepper');
+    const input = wrap ? wrap.querySelector('input') : null;
+    if (!input) return;
+    const step = parseInt(btn.dataset.step, 10) || 0;
+    const min = input.min !== '' ? parseInt(input.min, 10) : 0;
+    const max = input.max !== '' ? parseInt(input.max, 10) : Infinity;
+    let v = (parseInt(input.value, 10) || 0) + step;
+    v = Math.min(max, Math.max(min, v));
+    input.value = v;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
   // Update nights stay badge on top dates widget
   function updateNightsStayBadge() {
     const badge = document.getElementById('nights_duration_badge');
@@ -113,6 +145,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const roomNumberHidden = block.querySelector('.res-room-number-hidden');
     const btnRemove = block.querySelector('.btn-remove-block');
     const numGuestsInput = block.querySelector('.res-num-guests');
+    const capacityHint = block.querySelector('.capacity-hint');
+
+    function refreshCapacityHint() {
+      if (!capacityHint) return;
+      const beds = parseInt(resBeds.value, 10) || 0;
+      capacityHint.textContent = beds
+        ? 'Sleeps up to ' + beds + ' guest' + (beds > 1 ? 's' : '') + ' in this room'
+        : '';
+    }
 
     if (numGuestsInput) {
       numGuestsInput.addEventListener('input', () => {
@@ -131,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resBeds.value = opt.dataset.beds || '';
         resPriceHidden.value = opt.dataset.price || '';
         resPrice.value = formatPrice(opt.dataset.price || '0');
+        refreshCapacityHint();
       }
     }
 
@@ -139,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
       resBeds.value = (opt && opt.dataset.beds) ? opt.dataset.beds : '';
       resPriceHidden.value = (opt && opt.dataset.price) ? opt.dataset.price : '';
       resPrice.value = formatPrice(resPriceHidden.value || 0);
+      refreshCapacityHint();
       roomTilesWrap.innerHTML = '';
       roomNumberHidden.value = '';
       if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
@@ -163,12 +206,12 @@ document.addEventListener('DOMContentLoaded', function () {
       
       // Beautiful animated SVG spinner
       roomTilesWrap.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-6 text-slate-400">
-            <svg class="animate-spin h-7 w-7 text-[#0a4f2d] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div class="flex flex-col items-center justify-center py-6 text-stone-400">
+            <svg class="animate-spin h-7 w-7 text-emerald-deep mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Retrieving open rooms...</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">Retrieving open rooms...</span>
         </div>
       `;
 
@@ -183,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = await resp.json();
         renderRoomTilesForBlock(index, data.rooms || [], block);
       } catch (err) {
-        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-red-600 py-4">Error checking availability</div>';
+        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-ember-600 py-4">Error checking availability</div>';
         console.error(err);
       }
     });
@@ -251,15 +294,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const tilesWrap = blockEl.querySelector('.room-tiles-wrapper');
     tilesWrap.innerHTML = '';
     if (!rooms.length) {
-      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-slate-500 py-4">No rooms available</div>';
+      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-stone-500 py-4">No rooms available</div>';
       return;
     }
     const container = document.createElement('div');
     container.className = 'room-tiles';
 
-    rooms.forEach(r => {
+    rooms.forEach((r, i) => {
       const tile = document.createElement('div');
       tile.classList.add('room-tile');
+      tile.style.setProperty('--i', i); // staggered entrance (see app.css)
       tile.innerText = r.room_number;
       tile.dataset.roomNumber = r.room_number;
 
@@ -362,6 +406,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (room_numbers_hidden) room_numbers_hidden.value = roomsSelected.join(',');
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
+
+    // All client checks passed — lock both submit buttons against double-submit
+    ['btnSubmitBooking', 'btnSubmitBookingMobile'].forEach(id => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      b.classList.add('opacity-80', 'pointer-events-none');
+      b.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="ml-2">Placing booking…</span>';
+    });
   });
 
   check_in && check_in.addEventListener('change', function() {
@@ -392,6 +444,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  function fmtShortDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+  }
+
+  // Animate both the sidebar total and the mobile sticky-bar total
+  function syncTotals(totalPrice) {
+    animateCurrency(document.getElementById('summaryTotalAmount'), lastSummaryTotal, totalPrice);
+    animateCurrency(document.getElementById('mobileTotalAmount'), lastSummaryTotal, totalPrice);
+    lastSummaryTotal = totalPrice;
+  }
+
   function generateBookingSummary() {
     const container = document.getElementById('summaryInvoice');
     if (!container) return;
@@ -401,10 +466,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!checkInVal || !checkOutVal) {
       container.innerHTML = `
-        <div class="text-center py-10 text-slate-400">
-            <span class="material-icons text-5xl mb-3 block text-slate-200">event</span>
+        <div class="text-center py-10 text-stone-400">
+            <span class="material-icons text-5xl mb-3 block text-stone-200">event</span>
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
+      syncTotals(0);
       return;
     }
 
@@ -416,10 +482,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const blocks = document.querySelectorAll('.reservation-block');
     if (blocks.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-10 text-slate-400">
-            <span class="material-icons text-5xl mb-3 block text-slate-200">hotel</span>
+        <div class="text-center py-10 text-stone-400">
+            <span class="material-icons text-5xl mb-3 block text-stone-200">hotel</span>
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
+      syncTotals(0);
       return;
     }
 
@@ -435,38 +502,70 @@ document.addEventListener('DOMContentLoaded', function () {
       const blockTotal = price * nights;
       totalPrice += blockTotal;
 
+      // Breakfast chips for this room
+      const mealChips = [];
+      block.querySelectorAll('.meal-qty').forEach(inp => {
+        const q = parseInt(inp.value, 10) || 0;
+        if (q > 0) {
+          const m = inp.name && inp.name.match(/\[meal\]\[([a-z0-9_]+)\]/i);
+          if (m) mealChips.push(q + '× ' + m[1].charAt(0).toUpperCase() + m[1].slice(1));
+        }
+      });
+      const mealLine = mealChips.length
+        ? `<p class="text-[11px] font-semibold text-emerald mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
+        : '';
+
       roomRows += `
-        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-slate-100 last:border-0">
+        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-emerald-deep/10 last:border-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-800 truncate">${typeName}</p>
-            <p class="text-[11px] font-semibold text-slate-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
-            <p class="text-[11px] font-semibold text-slate-500">${formatPrice(price)} &times; ${nights} night(s)</p>
+            <p class="text-sm font-bold text-stone-800 truncate">${typeName}</p>
+            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
+            <p class="text-[11px] font-semibold text-stone-500">${formatPrice(price)} &times; ${nights} night(s)</p>
+            ${mealLine}
           </div>
-          <span class="text-sm font-extrabold text-[#0a4f2d]">${formatPrice(blockTotal)}</span>
+          <span class="text-sm font-extrabold text-emerald-deep tabnum">${formatPrice(blockTotal)}</span>
         </div>`;
     });
 
     const discountNote = document.getElementById('request_discount')?.checked
       ? `
-      <div class="mt-4 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl px-4 py-3 border border-amber-200/50 leading-relaxed flex items-start gap-1.5">
-          <span class="material-icons text-[16px] text-amber-500">info</span>
+      <div class="mt-4 text-xs font-bold text-ink/75 bg-gold-soft/30 rounded-xl px-4 py-3 border border-gold/40 leading-relaxed flex items-start gap-1.5">
+          <span class="material-icons text-[16px] text-gold">info</span>
           <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
       </div>`
       : '';
 
+    const guestsTotal = parseInt(expectedGuestsInput?.value) || 1;
+
     container.innerHTML = `
-      <div class="space-y-1 bg-slate-50/50 p-4.5 rounded-[18px] border border-slate-100 shadow-inner">
+      <div class="grid grid-cols-3 items-center bg-cream ring-1 ring-emerald-deep/10 rounded-2xl px-2 py-3 text-center">
+        <div>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Check-in</span>
+          <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
+        </div>
+        <div class="border-x border-emerald-deep/10">
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
+          <span class="block text-[13px] font-extrabold text-emerald-deep mt-0.5">${nights}</span>
+        </div>
+        <div>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Check-out</span>
+          <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
+        </div>
+      </div>
+      <div class="mt-1.5 text-center text-[11px] font-semibold text-stone-400">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
+      <div class="space-y-1 bg-cream p-4 rounded-2xl ring-1 ring-emerald-deep/5 mt-3">
         ${roomRows}
       </div>
-      <div class="mt-5 bg-[#0a4f2d]/5 p-4.5 rounded-[18px] border border-[#0a4f2d]/10 flex justify-between items-center shadow-xs">
+      <div class="mt-5 bg-emerald-deep p-5 rounded-2xl flex justify-between items-center">
         <div>
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Due</span>
-          <span class="block text-[11px] font-semibold text-slate-400 mt-0.5">${blocks.length} room(s) for ${nights} night(s)</span>
+          <span class="text-[10px] font-bold uppercase tracking-[0.24em] text-cream/60">Total Due</span>
+          <span class="block text-[11px] font-semibold text-cream/45 mt-0.5">${blocks.length} room(s) for ${nights} night(s)</span>
         </div>
-        <div class="text-2xl font-black text-[#0a4f2d]">${formatPrice(totalPrice)}</div>
+        <div class="font-display text-2xl text-gold tabnum" id="summaryTotalAmount">${formatPrice(totalPrice)}</div>
       </div>
       ${discountNote}
     `;
+    syncTotals(totalPrice);
   }
   
   window.generateBookingSummary = generateBookingSummary;

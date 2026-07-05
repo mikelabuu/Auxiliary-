@@ -54,6 +54,7 @@ use App\Http\Controllers\ReceiptController;
 Route::get('/', [BookingController::class, 'welcome'])->name('home');
 
 Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
+Route::post('/rooms/availability-summary', [BookingController::class, 'availabilitySummary'])->name('rooms.availability_summary');
 
 Route::middleware('guest')->group(function () {
     // Login form

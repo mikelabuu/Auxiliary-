@@ -2,26 +2,28 @@
     'label' => null,
     'name',
     'type' => 'text',
-    'value' => ''
+    'value' => '',
 ])
 
 <div class="mb-4">
     @if($label)
-        <label for="{{ $name }}" class="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-1.5">{{ $label }}</label>
+        <label for="{{ $name }}" class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">{{ $label }}</label>
     @endif
-    
-    <input 
-        type="{{ $type }}" 
-        name="{{ $name }}" 
-        id="{{ $name }}" 
+
+    <input
+        type="{{ $type }}"
+        name="{{ $name }}"
+        id="{{ $name }}"
         value="{{ old($name, $value) }}"
         {{ $attributes->merge([
-            'class' => 'w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-800 text-sm transition-all focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none ' . 
-            ($errors->has($name) ? 'border-red-400 focus:border-red-500 focus:ring-red-500 bg-red-50/10' : '')
+            'class' => 'w-full px-4 py-2.5 rounded-xl border bg-stone-50/60 text-stone-800 text-sm transition-all focus:bg-white focus:ring-2 outline-none ' .
+            ($errors->has($name)
+                ? 'border-ember-300 focus:border-ember-400 focus:ring-ember-200 bg-ember-50/40'
+                : 'border-stone-200 focus:border-clsu-400 focus:ring-clsu-200')
         ]) }}
     >
-    
+
     @error($name)
-        <p class="text-xs text-red-500 mt-1 font-medium">{{ $message }}</p>
+        <p class="text-xs text-ember-600 mt-1.5 font-semibold">{{ $message }}</p>
     @enderror
 </div>
