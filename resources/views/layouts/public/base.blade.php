@@ -49,7 +49,7 @@
              class="mx-auto flex max-w-6xl items-center justify-between rounded-full border px-4 py-3 backdrop-blur-xl sm:px-6 transition-[background-color,border-color,box-shadow,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] {{ $navDark ? 'border-white/15 bg-ink/40 text-cream' : 'border-emerald-deep/10 bg-cream-warm/85 text-ink shadow-[0_10px_40px_-16px_rgba(6,40,30,0.25)]' }}">
             <!-- Logo -->
             <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="focus-ring flex min-w-0 items-center gap-3 rounded-full">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-deep text-cream font-display text-lg italic">F</span>
+                <x-booking.ui.logo-mark class="h-9 w-9" />
                 <span class="hidden truncate font-display text-lg tracking-tight sm:block">Farmers <span class="italic text-gold">Hostel</span></span>
             </a>
 
@@ -125,7 +125,7 @@
             <div>
                 <div class="flex items-center justify-between pb-6 border-b border-emerald-deep/10">
                     <div class="flex items-center gap-2.5">
-                        <span class="grid h-9 w-9 place-items-center rounded-full bg-emerald-deep text-cream font-display text-lg italic">F</span>
+                        <x-booking.ui.logo-mark class="h-9 w-9" />
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-gold">Hostel</span></span>
                     </div>
                     <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-cream-warm hover:text-ink transition-all cursor-pointer" aria-label="Close navigation menu">
@@ -249,6 +249,11 @@
             </div>
         </div>
     </footer>
+
+    <!-- Gradual blur — content softly blurs as it exits the bottom of the viewport -->
+    <div class="gradual-blur" aria-hidden="true">
+        <div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
 
     @livewireScripts
     @stack('scripts')

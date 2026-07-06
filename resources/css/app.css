@@ -313,18 +313,104 @@ body.theme-boutique {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Staggered 3D character flip — used with x-booking.ui.flip-text */
-.flip-text-wrapper { perspective: 1000px; }
-@keyframes flip-char {
-    0%        { transform: rotateX(0); }
-    45%, 100% { transform: rotateX(-360deg); }
+/* Occasional gold sheen sweep — hero primary CTA only */
+.cta-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, color-mix(in oklch, var(--color-gold) 60%, white) 50%, transparent 58%);
+    opacity: 0.3;
+    transform: translateX(-100%);
+    animation: cta-shine-sweep 3s cubic-bezier(0.22, 1, 0.36, 1) 1.2s infinite;
 }
-.flip-char {
-    transform-style: preserve-3d;
-    animation: flip-char var(--flip-duration, 2.2s) cubic-bezier(0.22, 1, 0.36, 1) var(--flip-delay, 0s) var(--flip-iteration, infinite) both;
+@keyframes cta-shine-sweep {
+    0%        { transform: translateX(-100%); }
+    30%, 100% { transform: translateX(100%); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .flip-char { animation: none; }
+    .cta-shine::after { animation: none; opacity: 0; }
+}
+
+/* Per-character 3D flip-fade loop — used with x-booking.ui.flip-fade-text
+   (ported from vengence-ui flip-fade-text) */
+.flip-fade-wrapper { perspective: 900px; }
+@keyframes flip-fade-char {
+    0%        { opacity: 0; transform: rotateX(90deg) translateY(0.18em); filter: blur(8px); }
+    12%       { opacity: 1; transform: rotateX(0) translateY(0); filter: blur(0px); }
+    74%       { opacity: 1; transform: rotateX(0) translateY(0); filter: blur(0px); }
+    86%, 100% { opacity: 0; transform: rotateX(-90deg) translateY(-0.18em); filter: blur(8px); }
+}
+.flip-fade-char {
+    display: inline-block;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, opacity, filter;
+    animation: flip-fade-char var(--ff-duration, 4.5s) cubic-bezier(0.2, 0.65, 0.3, 0.9) var(--ff-delay, 0s) var(--ff-iteration, infinite) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .flip-fade-char { animation: none; opacity: 1; transform: none; filter: none; }
+}
+
+/* Odometer-style rolling counter — hero guests stepper
+   (ported from vengence-ui animated-number; welcome.blade.php drives it via WAAPI) */
+.anim-number {
+    display: inline-grid;
+    overflow: hidden;
+    vertical-align: bottom;
+}
+.anim-number > span { grid-area: 1 / 1; }
+
+/* Progressive bottom-edge blur — public pages soft-exit under the viewport
+   (ported from reactbits gradual-blur: stacked backdrop-filter layers, each
+   masked to its own band so the blur ramps up toward the edge) */
+.gradual-blur {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6.5rem;
+    z-index: 30;
+    pointer-events: none;
+}
+.gradual-blur > div {
+    position: absolute;
+    inset: 0;
+}
+.gradual-blur > div:nth-child(1) {
+    -webkit-backdrop-filter: blur(0.6px); backdrop-filter: blur(0.6px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+}
+.gradual-blur > div:nth-child(2) {
+    -webkit-backdrop-filter: blur(1.2px); backdrop-filter: blur(1.2px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+    mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+}
+.gradual-blur > div:nth-child(3) {
+    -webkit-backdrop-filter: blur(2.4px); backdrop-filter: blur(2.4px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+    mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+}
+.gradual-blur > div:nth-child(4) {
+    -webkit-backdrop-filter: blur(4.8px); backdrop-filter: blur(4.8px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+    mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+}
+.gradual-blur > div:nth-child(5) {
+    -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+    mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+}
+.gradual-blur > div:nth-child(6) {
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
+}
+
+/* Soft legibility glow for the hero headline over the photo backdrop */
+.hero-text-glow {
+    text-shadow: 0 1px 3px rgba(9, 20, 16, 0.45), 0 10px 40px rgba(9, 20, 16, 0.6);
 }
 
 /* Interactive room-number tiles on the checkout availability picker */

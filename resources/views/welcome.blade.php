@@ -4,19 +4,20 @@
 @section('content')
 
     <!-- ====== HERO ====== -->
-    <header id="firstsection" class="film-grain vignette-emerald relative isolate flex min-h-[92dvh] flex-col justify-end overflow-hidden bg-emerald-deep">
+    <header id="firstsection" class="vignette-emerald relative isolate flex min-h-[92dvh] flex-col justify-end overflow-hidden bg-emerald-deep">
         <!-- Ken-burns backdrop -->
         <div class="absolute inset-0 z-0 will-change-transform">
             <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior, nestled inside the CLSU campus" fetchpriority="high" class="h-full w-full animate-ken-burns object-cover">
-            <div class="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/25 to-ink/80"></div>
+            <div class="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/45 to-ink/85"></div>
+            <canvas id="heroNoise" aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full" style="image-rendering: pixelated"></canvas>
         </div>
 
         <!-- Headline -->
         <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-36 pb-14 text-center text-cream sm:pt-44">
             <p class="text-[11px] font-semibold uppercase tracking-[0.5em] text-gold animate-[fade-in-up_0.8s_ease-out_both]">A Premium Stay on Campus · Est. 1998</p>
             <div aria-hidden="true" class="mx-auto mt-6 hairline-gold w-24"></div>
-            <h1 class="text-balance mt-6 font-display leading-[1.05] animate-[fade-in-up_1s_ease-out_0.2s_both]" style="font-size:clamp(2.5rem, 8vw, 6.5rem)">
-                Welcome to<br><x-booking.ui.flip-text text="Farmers" :duration="2.6" class="italic text-gold" /> Hostel
+            <h1 class="text-balance hero-text-glow mt-6 font-display leading-[1.05] animate-[fade-in-up_1s_ease-out_0.2s_both]" style="font-size:clamp(2.5rem, 8vw, 6.5rem)">
+                Welcome to<br><x-booking.ui.flip-fade-text text="Farmers" :duration="4.5" class="italic text-gold" /> Hostel
             </h1>
             <p class="text-pretty mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/85 sm:text-lg animate-[fade-in-up_1s_ease-out_0.4s_both]">
                 Unparalleled comfort and convenience inside the Central Luzon State University agricultural research campus — a two-minute walk to the lab, the field, and a proper Filipino breakfast.
@@ -44,7 +45,7 @@
                     <div class="px-4 py-3 text-left md:border-l md:border-emerald-deep/10 md:px-6 md:py-4">
                         <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald">Guests</p>
                         <div class="flex min-h-11 items-center justify-between">
-                            <span class="text-sm font-medium text-ink"><span id="guests_display">1</span> guest<span id="guests_plural" class="hidden">s</span></span>
+                            <span class="text-sm font-medium text-ink"><span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span></span>
                             <input type="hidden" id="widget_guests" value="1">
                             <div class="flex items-center gap-1">
                                 <button type="button" id="btn_minus_guests" aria-label="Decrease guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-cream text-ink ring-1 ring-emerald-deep/10 transition hover:ring-gold/60 cursor-pointer">
@@ -57,7 +58,7 @@
                         </div>
                     </div>
                     <button type="button" id="btnSearchRooms"
-                            class="focus-ring press group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]">
+                            class="focus-ring press cta-shine group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]">
                         <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100" style="box-shadow:inset 0 0 24px color-mix(in oklch, var(--color-gold) 35%, transparent)"></span>
                         <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
                     </button>
@@ -495,6 +496,7 @@
     <script src="{{ asset('js/booking.js') }}"></script>
     <script src="{{ asset('js/availability-search.js') }}"></script>
     <script src="{{ asset('js/room-filters.js') }}"></script>
+    <script src="{{ asset('js/noise-grain.js') }}" defer></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
     <script>
@@ -518,11 +520,40 @@
             const plural = document.getElementById('guests_plural');
             const hiddenInput = document.getElementById('widget_guests');
 
+            // Odometer roll (vengence-ui animated-number): outgoing value slides
+            // out, incoming slides in from the opposite edge based on direction.
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             function setGuests(val) {
                 val = Math.min(40, Math.max(1, val));
+                const prev = parseInt(hiddenInput.value) || 1;
                 hiddenInput.value = val;
-                display.textContent = val;
                 plural && plural.classList.toggle('hidden', val === 1);
+                if (val === prev) return;
+
+                const current = display.querySelector('span:not(.is-leaving)');
+                if (reduceMotion || !current || !current.animate) {
+                    display.textContent = '';
+                    const s = document.createElement('span');
+                    s.textContent = val;
+                    display.appendChild(s);
+                    return;
+                }
+
+                const dir = val > prev ? 1 : -1;
+                const next = document.createElement('span');
+                next.textContent = val;
+                display.appendChild(next);
+
+                const easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+                current.classList.add('is-leaving');
+                current.animate([
+                    { transform: 'translateY(0)', opacity: 1, filter: 'blur(0px)' },
+                    { transform: `translateY(${dir * -100}%)`, opacity: 0, filter: 'blur(2px)' },
+                ], { duration: 260, easing, fill: 'forwards' }).onfinish = () => current.remove();
+                next.animate([
+                    { transform: `translateY(${dir * 100}%)`, opacity: 0, filter: 'blur(2px)' },
+                    { transform: 'translateY(0)', opacity: 1, filter: 'blur(0px)' },
+                ], { duration: 260, easing });
             }
             if (minusBtn && plusBtn && display && hiddenInput) {
                 minusBtn.addEventListener('click', (e) => { e.stopPropagation(); setGuests((parseInt(hiddenInput.value) || 1) - 1); });
