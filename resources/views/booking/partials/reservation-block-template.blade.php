@@ -13,35 +13,45 @@
         </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-        <!-- Room Type -->
-        <div class="md:col-span-5">
-            <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Room Type</label>
-            <select name="reservations[__INDEX__][room_type]" class="room-type-select w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-emerald focus:ring-2 focus:ring-emerald/25 outline-none transition-all cursor-pointer font-bold" required>
-                <option value="">Select room type...</option>
-                @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
-                    <option value="{{ $type['id'] }}" data-beds="{{ $type['beds'] }}" data-price="{{ $type['price'] }}">{{ $type['title'] }} ({{ $type['beds'] }} pax)</option>
-                @endforeach
-            </select>
+    <!-- Room Type — visual picker cards. The hidden select keeps the
+         form-name contract with booking.js and the backend. -->
+    <div>
+        <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Choose a Room Style</label>
+        <select name="reservations[__INDEX__][room_type]" class="room-type-select hidden" tabindex="-1" aria-hidden="true">
+            <option value="">Select room type...</option>
+            @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
+                <option value="{{ $type['id'] }}" data-beds="{{ $type['beds'] }}" data-price="{{ $type['price'] }}">{{ $type['title'] }} ({{ $type['beds'] }} pax)</option>
+            @endforeach
+        </select>
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
+                <button type="button" data-type-value="{{ $type['id'] }}"
+                        class="type-card group relative cursor-pointer overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-[0_8px_22px_-18px_rgba(6,40,30,0.4)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold hover:shadow-[0_14px_30px_-18px_rgba(6,40,30,0.5)]">
+                    <span class="block h-20 w-full overflow-hidden sm:h-24">
+                        <img src="{{ asset($type['image']) }}" alt="{{ $type['title'] }}" loading="lazy"
+                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    </span>
+                    <span class="type-card-check absolute right-2 top-2 hidden h-6 w-6 place-items-center rounded-full bg-emerald-deep text-cream shadow-md ring-2 ring-cream">
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <span class="block px-3 py-2.5">
+                        <span class="block truncate text-xs font-bold text-ink">{{ $type['title'] }}</span>
+                        <span class="mt-0.5 block text-[11px] font-bold text-emerald-deep tabnum">₱{{ number_format($type['price']) }}<span class="font-medium text-stone-400"> / night · sleeps {{ $type['beds'] }}</span></span>
+                    </span>
+                </button>
+            @endforeach
         </div>
 
-        <!-- Beds capacity -->
-        <div class="md:col-span-3">
-            <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Max Capacity</label>
-            <div class="relative flex items-center">
-                <span class="material-icons text-stone-400 absolute left-3.5 text-[16px] pointer-events-none">bed</span>
-                <input type="number" name="reservations[__INDEX__][beds]" class="res-beds w-full pl-10 pr-3 py-2.5 rounded-xl border border-stone-200/70 bg-stone-50/70 text-stone-600 text-sm outline-none font-bold text-center select-none cursor-default pointer-events-none" readonly placeholder="--">
-            </div>
-        </div>
-
-        <!-- Price label -->
-        <div class="md:col-span-4">
-            <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Rate / Night</label>
-            <div class="relative flex items-center">
-                <span class="material-icons text-emerald absolute left-3.5 text-[16px] pointer-events-none">payments</span>
-                <input type="hidden" name="reservations[__INDEX__][price_per_night]" class="res-price-hidden">
-                <input type="text" class="res-price w-full pl-10 pr-3 py-2.5 rounded-xl border border-gold/40 bg-gold-soft/20 text-emerald-deep text-sm outline-none font-bold text-center select-none cursor-default pointer-events-none" readonly placeholder="₱--">
-            </div>
+        <!-- Selected-type recap consumed and filled by booking.js -->
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+            <input type="hidden" name="reservations[__INDEX__][beds]" class="res-beds">
+            <input type="hidden" name="reservations[__INDEX__][price_per_night]" class="res-price-hidden">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold-soft/20 px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep">
+                <span class="material-icons text-[14px]">payments</span>
+                <input type="text" class="res-price w-20 border-0 bg-transparent p-0 text-[11px] font-bold text-emerald-deep outline-none pointer-events-none select-none" readonly placeholder="₱--" tabindex="-1" aria-label="Nightly rate">
+            </span>
+            <span class="capacity-hint text-[11px] font-semibold text-stone-400"></span>
         </div>
     </div>
 
@@ -58,7 +68,6 @@
                     <span class="material-icons text-[16px]">add</span>
                 </button>
             </div>
-            <small class="capacity-hint text-[10px] text-stone-400 mt-1.5 block font-medium"></small>
         </div>
         <div>
             <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">Seniors / PWD in Room</label>
@@ -115,13 +124,18 @@
         </div>
     </div>
 
-    <!-- Availability Check section -->
+    <!-- Availability section — loads automatically once dates + type are set -->
     <div class="mt-5 pt-4 border-t border-stone-100">
-        <!-- Hint -->
-        <p class="text-[11px] text-stone-400 font-medium mb-3 flex items-center gap-1.5">
-            <span class="material-icons text-[14px] text-emerald">touch_app</span>
-            Select a room type above, then tap <strong class="text-stone-600 font-bold mx-0.5">Check Availability</strong> to see open rooms.
-        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <p class="text-[11px] text-stone-400 font-medium flex items-center gap-1.5">
+                <span class="material-icons text-[14px] text-emerald">touch_app</span>
+                Pick a room style above — open rooms for your dates appear here. Tap a room number to reserve it.
+            </p>
+            <button type="button" class="btn-check-availability press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/20 bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
+                <span class="material-icons text-[13px]">refresh</span>
+                Refresh
+            </button>
+        </div>
 
         <!-- Tile status legend -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2">
@@ -133,12 +147,7 @@
         </div>
 
         <!-- Room Tiles wrapper populated via AJAX -->
-        <div class="room-tiles-wrapper mb-3"></div>
+        <div class="room-tiles-wrapper mb-1"></div>
         <input type="hidden" name="reservations[__INDEX__][room_number]" class="res-room-number-hidden">
-
-        <button type="button" class="btn-check-availability press focus-ring inline-flex min-h-11 items-center gap-2 px-6 py-2.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.16em] bg-emerald-deep text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_22%,transparent)]">
-            <span class="material-icons text-[16px]">search</span>
-            Check Availability
-        </button>
     </div>
 </div>

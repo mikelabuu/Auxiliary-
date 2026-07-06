@@ -481,6 +481,23 @@ body.theme-boutique {
     text-decoration: line-through;
 }
 
+/* Checkout progress rail — booking.js toggles .done per step */
+.checkout-step.done .step-dot {
+    background: var(--color-emerald-deep);
+    border-color: var(--color-emerald-deep);
+    color: var(--color-cream);
+}
+.checkout-step.done .step-num { display: none; }
+.checkout-step.done .step-check { display: block; }
+.checkout-step.done .step-bar { background: var(--color-emerald-deep); }
+
+/* Checkout room-type picker card in its chosen state (classes toggled by booking.js) */
+.type-card.selected {
+    border-color: var(--color-emerald-deep);
+    box-shadow: 0 0 0 2px var(--color-emerald-deep), 0 14px 30px -18px rgba(6, 40, 30, 0.5);
+    transform: translateY(-2px);
+}
+
 /* Flatpickr calendar polish */
 .flatpickr-calendar {
     box-shadow: var(--shadow-card-lg) !important;

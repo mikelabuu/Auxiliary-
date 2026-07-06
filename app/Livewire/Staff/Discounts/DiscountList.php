@@ -50,8 +50,16 @@ class DiscountList extends Component
 
         $discounts = $query->paginate(10);
 
+        $counts = [
+            ''         => Discount::count(),
+            'pending'  => Discount::where('status', 'pending')->count(),
+            'approved' => Discount::where('status', 'approved')->count(),
+            'rejected' => Discount::where('status', 'rejected')->count(),
+        ];
+
         return view('livewire.staff.discounts.discount-list', [
-            'discounts' => $discounts
+            'discounts' => $discounts,
+            'counts' => $counts,
         ]);
     }
 }

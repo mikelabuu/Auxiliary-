@@ -26,11 +26,44 @@ class RoomController extends Controller
                   ->whereDate('check_out', '>=', $today);
         }])->get();
 
+        // Stay context per room number: the stay spanning today ("current")
+        // and the soonest upcoming arrival ("next"), from blocking bookings.
+        $stays = Reservation::query()
+            ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
+            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+            ->whereDate('bookings.check_out', '>=', $today)
+            ->orderBy('bookings.check_in')
+            ->get(['reservations.room_number', 'bookings.guest_name', 'bookings.check_in', 'bookings.check_out']);
+
+        $stayContext = [];
+        foreach ($stays as $stay) {
+            $roomNumber = trim($stay->room_number);
+            $checkIn  = Carbon::parse($stay->check_in);
+            $checkOut = Carbon::parse($stay->check_out);
+
+            if ($checkIn->lte($today) && $checkOut->gte($today)) {
+                $stayContext[$roomNumber]['current'] ??= [
+                    'guest' => $stay->guest_name,
+                    'until' => $checkOut->format('M d'),
+                ];
+            } elseif (!isset($stayContext[$roomNumber]['next']) && $checkIn->gt($today)) {
+                $stayContext[$roomNumber]['next'] = [
+                    'guest' => $stay->guest_name,
+                    'from'  => $checkIn->format('M d'),
+                ];
+            }
+        }
+
         $totalRooms = $rooms->count();
         $occupiedRooms = $rooms->where('status', 'occupied')->count();
         $availableRooms = $rooms->where('status', 'available')->count();
         $maintenanceRooms = $rooms->where('status', 'maintenance')->count();
         $cleaningRooms = $rooms->where('status', 'cleaning')->count();
+
+        // Bookable today = housekeeping-available AND no stay spanning today.
+        $availableNowByType = $rooms->groupBy(fn ($r) => strtolower($r->room_type))
+            ->map(fn ($group) => $group->filter(fn ($r) => $r->status === 'available'
+                && !isset($stayContext[trim($r->room_number)]['current']))->count());
 
         $roomTypes = RoomType::withCount('rooms')->orderBy('name')->get();
 
@@ -41,7 +74,9 @@ class RoomController extends Controller
             'availableRooms',
             'maintenanceRooms',
             'cleaningRooms',
-            'roomTypes'
+            'roomTypes',
+            'stayContext',
+            'availableNowByType'
         ));
     }
 

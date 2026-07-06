@@ -17,6 +17,8 @@
     ];
     $color = $statusColorMap[$booking->status] ?? 'stone';
     $badgeClass = $badgeClassMap[$color] ?? 'bg-stone-100 text-stone-600 border-stone-200';
+    $nights = max(1, \Carbon\Carbon::parse($booking->check_in)->diffInDays(\Carbon\Carbon::parse($booking->check_out)));
+    $payment = $booking->payments->sortByDesc('id')->first();
 @endphp
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
@@ -27,8 +29,23 @@
                 <x-admin.icon name="chevron-left" class="w-4 h-4" stroke-width="2" />
                 Back to Bookings
             </a>
+            <button type="button" onclick="window.print()" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm cursor-pointer">
+                <x-admin.icon name="printer" class="w-4 h-4" />
+                Print
+            </button>
+            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all !no-underline">
+                <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
+                New Booking
+            </a>
         </x-slot:actions>
     </x-admin.page-header>
+
+    @if(session('success'))
+        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
+            <x-admin.icon name="check-circle" class="w-4 h-4 shrink-0" />
+            {{ session('success') }}
+        </div>
+    @endif
 
     <x-admin.section-card icon="user" title="Guest &amp; Stay Information" :delay="40">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -68,6 +85,7 @@
                     <div>
                         <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Check-In &rarr; Check-Out</p>
                         <p class="text-sm font-semibold text-stone-800 font-data tabnum">{{ \Carbon\Carbon::parse($booking->check_in)->format('M d, Y') }} &rarr; {{ \Carbon\Carbon::parse($booking->check_out)->format('M d, Y') }}</p>
+                        <p class="text-xs text-stone-400 mt-0.5">{{ $nights }} night{{ $nights === 1 ? '' : 's' }}</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
@@ -77,6 +95,16 @@
                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $badgeClass }}">{{ ucwords(str_replace('_', ' ', $booking->status)) }}</span>
                     </div>
                 </div>
+                @if($payment)
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.icon name="credit-card" class="w-4 h-4" /></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Payment Reference</p>
+                        <p class="text-sm font-semibold text-stone-800 font-data tabnum">{{ $payment->reference_no }}</p>
+                        <p class="text-xs text-stone-400 mt-0.5">{{ ucfirst($payment->payment_type) }} · {{ ucfirst($payment->status) }}</p>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </x-admin.section-card>

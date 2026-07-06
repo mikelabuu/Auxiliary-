@@ -17,6 +17,40 @@
                 </a>
             </div>
 
+            <!-- Live progress rail — booking.js toggles .done per step -->
+            <ol id="checkoutProgress" class="mb-8 grid grid-cols-3 gap-3">
+                <li data-progress-step="dates" class="checkout-step">
+                    <div class="flex items-center gap-2.5">
+                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-stone-300 bg-cream-warm text-[11px] font-bold text-stone-500 transition-all duration-200">
+                            <span class="step-num">1</span>
+                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Dates</span>
+                    </div>
+                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-emerald-deep/10 transition-colors duration-300"></span>
+                </li>
+                <li data-progress-step="details" class="checkout-step">
+                    <div class="flex items-center gap-2.5">
+                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-stone-300 bg-cream-warm text-[11px] font-bold text-stone-500 transition-all duration-200">
+                            <span class="step-num">2</span>
+                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Your details</span>
+                    </div>
+                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-emerald-deep/10 transition-colors duration-300"></span>
+                </li>
+                <li data-progress-step="rooms" class="checkout-step">
+                    <div class="flex items-center gap-2.5">
+                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-stone-300 bg-cream-warm text-[11px] font-bold text-stone-500 transition-all duration-200">
+                            <span class="step-num">3</span>
+                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Rooms</span>
+                    </div>
+                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-emerald-deep/10 transition-colors duration-300"></span>
+                </li>
+            </ol>
+
             <!-- Error feedback display -->
             @if ($errors->any())
                 <div class="mb-6">
@@ -137,6 +171,7 @@
         <div>
             <p class="text-[9px] font-bold text-emerald/70 uppercase tracking-[0.28em] leading-none">Total due</p>
             <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">₱0</p>
+            <p id="mobileMetaLine" class="text-[10px] font-semibold text-stone-400 mt-0.5"></p>
         </div>
         <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">
             <span class="material-icons text-[16px]">check_circle</span>

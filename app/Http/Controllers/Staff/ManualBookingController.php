@@ -63,7 +63,9 @@ class ManualBookingController extends Controller
             'reservations'    => 'required|array|min:1',
             'reservations.*.room_type'     => 'required|string',
             'reservations.*.room_number'   => 'required|string',
-            'reservations.*.price_per_night' => 'required|numeric|min:0',
+            // posted for display continuity only — the nightly rate is
+            // recomputed from the rooms table below, never trusted from JS
+            'reservations.*.price_per_night' => 'nullable|numeric|min:0',
             'reservations.*.num_guests'    => 'required|integer|min:1',
             'reservations.*.num_seniors'   => 'nullable|integer|min:0',
             'discount_amount'               => 'nullable|numeric|min:0',
@@ -94,14 +96,30 @@ class ManualBookingController extends Controller
         $totalGuests    = 0;
         $totalSeniors   = 0;
         $totalPrice     = 0;
+        $roomPrices     = []; // room_number => authoritative nightly rate
+
+        // Authoritative room records — price and type ownership come from
+        // here, not from whatever the client posted.
+        $dbRooms = Room::whereIn(
+            'room_number',
+            collect($request->reservations)->pluck('room_number')->all()
+        )->get()->keyBy('room_number');
 
         // Validate reservations & calculate totals
         foreach ($request->reservations as $block) {
             $roomType   = strtolower($block['room_type']);
             $roomNumber = $block['room_number'];
-            $price      = (float) $block['price_per_night'];
             $numGuests  = (int) $block['num_guests'];
             $numSeniors = (int) ($block['num_seniors'] ?? 0);
+
+            $room = $dbRooms->get($roomNumber);
+            if (!$room || strtolower($room->room_type) !== $roomType) {
+                return back()->withErrors([
+                    'reservations' => "Room {$roomNumber} does not exist or is not a {$roomType} room."
+                ])->withInput();
+            }
+            $price = (float) $room->price;
+            $roomPrices[$roomNumber] = $price;
 
             // Check room capacity
             $capacity = $typeCapacities[$roomType] ?? $roomCapacityMap[$roomType] ?? 1;
@@ -146,7 +164,7 @@ class ManualBookingController extends Controller
         // Check if any of these rooms are already booked for the selected range
         $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
             ->whereHas('booking', function ($q) use ($request) {
-                $q->whereIn('status', ['pending_payment', 'paid', 'confirmed', 'active'])
+                $q->whereIn('status', Booking::BLOCKING_STATUSES)
                 ->where('check_in', '<', $request->check_out)
                 ->where('check_out', '>', $request->check_in);
             })
@@ -192,7 +210,7 @@ class ManualBookingController extends Controller
                     'room_number' => $block['room_number'],
                     'room_type'   => $block['room_type'],
                     'capacity'    => $capacity,
-                    'price'       => (float) $block['price_per_night'],
+                    'price'       => $roomPrices[$block['room_number']] ?? 0,
                     'num_guests'  => (int) $block['num_guests'],
                     'num_seniors' => (int) ($block['num_seniors'] ?? 0),
                 ]);
@@ -254,6 +272,8 @@ class ManualBookingController extends Controller
 
     public function show(Booking $booking)
     {
+        $booking->load('reservations', 'payments');
+
         return view('staff.manualbooking.show', compact('booking'));
     }
 
@@ -272,7 +292,7 @@ class ManualBookingController extends Controller
 
         // Get reservations that overlap
         $reservations = Reservation::whereHas('booking', function($q) use ($checkIn, $checkOut) {
-            $q->whereIn('status', ['pending_payment','paid','confirmed','active'])
+            $q->whereIn('status', Booking::BLOCKING_STATUSES)
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn);
         })->get();
@@ -280,8 +300,17 @@ class ManualBookingController extends Controller
         // Collect booked room numbers
         $bookedRoomNumbers = $reservations->pluck('room_number')->toArray();
 
+        // Staff-managed capacities per type slug (legacy fallback for slugs
+        // that have no room_types row)
+        $legacyCapacities = [
+            'deluxe' => 2, 'double' => 2, 'triple' => 3,
+            'quadruple' => 4, 'dormitory1' => 5, 'dormitory2' => 6,
+        ];
+        $typeCapacities = RoomType::pluck('capacity', 'slug');
+        $typeNames      = RoomType::pluck('name', 'slug');
+
         // Map rooms to availability
-        $result = $rooms->map(function ($room) use ($bookedRoomNumbers) {
+        $result = $rooms->map(function ($room) use ($bookedRoomNumbers, $typeCapacities, $typeNames, $legacyCapacities) {
             if (in_array($room->room_number, $bookedRoomNumbers)) {
                 $status = 'booked';
             } elseif ($room->status !== 'available') {
@@ -290,10 +319,15 @@ class ManualBookingController extends Controller
                 $status = 'available';
             }
 
+            $slug = strtolower($room->room_type);
+
             return [
                 'id' => $room->room_number, // this will now be room_number for AJAX
                 'room_number' => $room->room_number,
                 'room_type' => $room->room_type,
+                'type_name' => $typeNames[$slug] ?? ucfirst($room->room_type),
+                'capacity' => (int) ($typeCapacities[$slug] ?? $legacyCapacities[$slug] ?? 1),
+                'wing' => $room->wing,
                 'price' => $room->price,
                 'status' => $status,
             ];

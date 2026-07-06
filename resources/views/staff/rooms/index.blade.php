@@ -30,6 +30,7 @@
         'base_price' => (float) $t->base_price,
         'capacity' => (int) $t->capacity,
         'room_count' => $t->rooms_count,
+        'available_now' => $availableNowByType[$t->slug] ?? 0,
     ])->values());
 @endphp
 
@@ -121,12 +122,23 @@
         </div>
 
         @forelse($orderedWings as $wing)
-            @php $group = $roomsByWing[$wing]; @endphp
+            @php
+                $group = $roomsByWing[$wing];
+                $wingOpen = $group->where('status', 'available')->count();
+            @endphp
             <div class="wing-group mb-7 last:mb-0" data-wing-group>
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2.5 uppercase">{{ $wingLabel($wing) }} Wing · <span data-wing-count>{{ $group->count() }}</span> room{{ $group->count() === 1 ? '' : 's' }}</p>
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                    <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">{{ $wingLabel($wing) }} Wing · <span data-wing-count>{{ $group->count() }}</span> room{{ $group->count() === 1 ? '' : 's' }}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-semibold text-stone-400"><span data-wing-open class="text-clsu-700 font-bold">{{ $wingOpen }}</span> available</span>
+                        <div class="h-1.5 w-20 rounded-full bg-stone-200/70 overflow-hidden">
+                            <div data-wing-bar class="h-full rounded-full bg-clsu-400 transition-all duration-300" style="width: {{ $group->count() ? round($wingOpen / $group->count() * 100) : 0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     @foreach($group as $room)
-                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" />
+                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :stay="$stayContext[trim($room->room_number)] ?? null" />
                     @endforeach
                 </div>
             </div>
@@ -372,6 +384,9 @@ $(function () {
                         '<p class="text-xs font-bold text-stone-800 tracking-wide uppercase truncate">' + t.name + '</p>' +
                         '<p class="text-clsu-700 font-bold text-sm mt-1 font-data tabnum">' + peso(t.base_price) + '</p>' +
                         '<p class="text-[10px] text-stone-400 mt-1">Sleeps ' + t.capacity + ' · ' + t.room_count + (t.room_count === 1 ? ' room' : ' rooms') + '</p>' +
+                        (t.room_count > 0
+                            ? '<p class="text-[10px] font-bold mt-1 ' + (t.available_now > 0 ? 'text-clsu-600' : 'text-ember-500') + '">' + (t.available_now > 0 ? t.available_now + ' open today' : 'None open today') + '</p>'
+                            : '<p class="text-[10px] font-semibold text-stone-300 mt-1">No rooms yet</p>') +
                     '</div>' +
                 '</div>'
             );
@@ -457,6 +472,7 @@ $(function () {
                     id: rt.id, slug: rt.slug, name: rt.name,
                     base_price: parseFloat(rt.base_price), capacity: parseInt(rt.capacity, 10),
                     room_count: rt.rooms_count ?? (typeBySlug(rt.slug)?.room_count ?? 0),
+                    available_now: typeBySlug(rt.slug)?.available_now ?? 0,
                 };
                 const idx = roomTypes.findIndex(t => t.id === normalized.id);
                 if (idx >= 0) roomTypes[idx] = normalized; else roomTypes.push(normalized);
@@ -698,11 +714,22 @@ $(function () {
 
         let wingsInUse = 0;
         $('[data-wing-group]').each(function () {
-            if ($(this).find('.room-card').length > 0) wingsInUse++;
+            const wingCards = $(this).find('.room-card');
+            if (wingCards.length > 0) wingsInUse++;
+            const open = wingCards.filter('[data-status="available"]').length;
+            $(this).find('[data-wing-open]').text(open);
+            $(this).find('[data-wing-bar]').css('width', (wingCards.length ? Math.round(open / wingCards.length * 100) : 0) + '%');
         });
         $('#statWingsNum').text(wingsInUse);
         $('#statTotalFoot').text('Across ' + wingsInUse + ' wings');
         $('#allRoomsSubtitle').text(total + ' rooms across ' + wingsInUse + ' wings');
+
+        // Bookable-today counts per type: housekeeping-available and not
+        // held by a stay spanning today (data-held set server-side).
+        roomTypes.forEach(function (t) {
+            t.available_now = $('.room-card[data-type="' + t.slug + '"][data-status="available"]').not('[data-held]').length;
+        });
+        renderTypeTiles();
     }
 
     /* ------------------- SEARCH + STATUS + WING + TYPE FILTER ------------------- */

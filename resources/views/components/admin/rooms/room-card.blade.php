@@ -1,6 +1,7 @@
 @props([
     'room',
     'statusMeta',
+    'stay' => null, // ['current' => ['guest','until'], 'next' => ['guest','from']] from RoomController::index
 ])
 
 {{--
@@ -14,10 +15,12 @@
 
 @php
     $meta = $statusMeta[$room->status] ?? $statusMeta['available'];
+    $current = $stay['current'] ?? null;
+    $next = $stay['next'] ?? null;
 @endphp
 
 <div {{ $attributes->merge(['class' => 'room-card group/card relative bg-white rounded-2xl border border-stone-200/70 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 transition-all duration-200 cursor-pointer']) }}
-     data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}">
+     data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}" @if($current) data-held="1" @endif>
     <div class="status-bar h-1 rounded-t-2xl {{ $meta['bar'] }}"></div>
 
     <div class="absolute top-3 right-2.5 flex items-center gap-1 z-10">
@@ -55,6 +58,22 @@
             <span class="room-status-dot w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
             <span class="room-status-text">{{ $meta['label'] }}</span>
         </span>
+        @if($current)
+            <p class="flex items-center gap-1 text-[10px] font-semibold text-clsu-700" title="{{ $current['guest'] }} · until {{ $current['until'] }}">
+                <x-admin.icon name="clock" class="w-3 h-3 shrink-0" stroke-width="2" />
+                In use · until {{ $current['until'] }}
+            </p>
+        @elseif($next)
+            <p class="flex items-center gap-1 text-[10px] font-semibold text-palay-700" title="{{ $next['guest'] }} arrives {{ $next['from'] }}">
+                <x-admin.icon name="arrival" class="w-3 h-3 shrink-0" stroke-width="2" />
+                Next stay · {{ $next['from'] }}
+            </p>
+        @else
+            <p class="flex items-center gap-1 text-[10px] font-medium text-stone-400">
+                <x-admin.icon name="check" class="w-3 h-3 shrink-0" stroke-width="2" />
+                No upcoming stays
+            </p>
+        @endif
         @if($room->notes)
             <p class="flex items-center gap-1 text-[10px] text-stone-400 italic mt-0.5 max-w-full" title="{{ $room->notes }}">
                 <x-admin.icon name="note" class="w-3 h-3 shrink-0" />
