@@ -313,6 +313,20 @@ body.theme-boutique {
     to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Staggered 3D character flip — used with x-booking.ui.flip-text */
+.flip-text-wrapper { perspective: 1000px; }
+@keyframes flip-char {
+    0%        { transform: rotateX(0); }
+    45%, 100% { transform: rotateX(-360deg); }
+}
+.flip-char {
+    transform-style: preserve-3d;
+    animation: flip-char var(--flip-duration, 2.2s) cubic-bezier(0.22, 1, 0.36, 1) var(--flip-delay, 0s) var(--flip-iteration, infinite) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .flip-char { animation: none; }
+}
+
 /* Interactive room-number tiles on the checkout availability picker */
 .room-tiles {
     display: grid;

@@ -16,7 +16,7 @@
             <p class="text-[11px] font-semibold uppercase tracking-[0.5em] text-gold animate-[fade-in-up_0.8s_ease-out_both]">A Premium Stay on Campus · Est. 1998</p>
             <div aria-hidden="true" class="mx-auto mt-6 hairline-gold w-24"></div>
             <h1 class="text-balance mt-6 font-display leading-[1.05] animate-[fade-in-up_1s_ease-out_0.2s_both]" style="font-size:clamp(2.5rem, 8vw, 6.5rem)">
-                Welcome to<br><span class="italic text-gold">Farmers</span> Hostel
+                Welcome to<br><x-booking.ui.flip-text text="Farmers" :duration="2.6" class="italic text-gold" /> Hostel
             </h1>
             <p class="text-pretty mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/85 sm:text-lg animate-[fade-in-up_1s_ease-out_0.4s_both]">
                 Unparalleled comfort and convenience inside the Central Luzon State University agricultural research campus — a two-minute walk to the lab, the field, and a proper Filipino breakfast.
