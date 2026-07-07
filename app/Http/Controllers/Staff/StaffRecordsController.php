@@ -18,10 +18,19 @@ class StaffRecordsController extends Controller
         $sort = $request->input('sort', 'latest'); // newest first by default
         $perPage = 10;
 
+        $stats = [
+            'total'     => Staff::count(),
+            'active'    => Staff::where('is_suspended', false)->count(),
+            'suspended' => Staff::where('is_suspended', true)->count(),
+            'admins'    => Staff::whereIn('role', ['admin', 'master_admin'])->count(),
+        ];
+
         $staffs = Staff::query()
             ->when($search, function($q) use ($search) {
-                $q->where('username', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%");
+                $q->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('email', 'like', "%$search%");
+                });
             })
             ->orderBy(
                 'created_at',
@@ -30,7 +39,7 @@ class StaffRecordsController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('staff.staffrecords.index', compact('staffs', 'search', 'sort'));
+        return view('staff.staffrecords.index', compact('staffs', 'search', 'sort', 'stats'));
     }
 
     // Handle signup post

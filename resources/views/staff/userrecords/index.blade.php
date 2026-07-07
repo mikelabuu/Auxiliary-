@@ -1,6 +1,8 @@
 @extends('layouts.admin')
 @section('title', 'Admin - User Hub')
 @section('page-title', 'User Hub')
+@section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
 /* SweetAlert2 override for this page */
 .swal2-container {
@@ -16,117 +18,187 @@
     max-width: 450px !important;
 }
 </style>
-@section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
+@php
+    $statusTabs = [
+        'all'       => ['label' => 'All users',  'count' => $stats['total']],
+        'active'    => ['label' => 'Active',     'count' => $stats['active']],
+        'suspended' => ['label' => 'Suspended',  'count' => $stats['suspended']],
+    ];
+@endphp
+
+<div class="space-y-6 max-w-[1680px] mx-auto">
+
+    <x-admin.page-header subtitle="Every guest account on the platform — activity, verification, and standing.">
+        User <span class="font-display italic font-medium text-clsu-800">Hub</span>
+        <x-slot:actions>
+            <a href="{{ route('reports.users.all') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+                <x-admin.icon name="download" class="w-4 h-4" />
+                All
+            </a>
+            <a href="{{ route('reports.users.active') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+                <x-admin.icon name="download" class="w-4 h-4" />
+                Active
+            </a>
+            <a href="{{ route('reports.users.suspended') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+                <x-admin.icon name="download" class="w-4 h-4" />
+                Suspended
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
+
+    <!-- Account stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <x-admin.stat-card icon="users" badge="ALL TIME" label="Registered Users" :delay="40" dark>
+            {{ number_format($stats['total']) }}
+            <x-slot:footnote><p class="text-xs text-clsu-300">{{ $stats['new_this_month'] }} joined this month</p></x-slot:footnote>
+        </x-admin.stat-card>
+
+        <x-admin.stat-card icon="check-circle" badge="IN GOOD STANDING" label="Active Accounts" :delay="80">
+            {{ number_format($stats['active']) }}
+            <x-slot:footnote><p class="text-xs text-stone-400">Able to book and log in</p></x-slot:footnote>
+        </x-admin.stat-card>
+
+        <x-admin.stat-card icon="check" color="palay" badge="EMAIL" label="Verified Emails" :delay="120">
+            {{ number_format($stats['verified']) }}
+            <x-slot:footnote><p class="text-xs text-stone-400">{{ $stats['total'] - $stats['verified'] }} still unverified</p></x-slot:footnote>
+        </x-admin.stat-card>
+
+        <x-admin.stat-card icon="block" color="ember" badge="RESTRICTED" label="Suspended" :delay="160">
+            {{ number_format($stats['suspended']) }}
+            <x-slot:footnote><p class="text-xs text-stone-400">Blocked from booking</p></x-slot:footnote>
+        </x-admin.stat-card>
+    </div>
+
+    <x-admin.section-card icon="users" title="User Directory" :subtitle="$users->total() . ' record' . ($users->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+
+        <!-- Status tabs -->
+        <div class="flex flex-wrap gap-2 mb-5">
+            @foreach ($statusTabs as $key => $meta)
+                <a href="{{ route('staff.userrecords.index', array_filter(['status' => $key, 'search' => $search, 'sort' => $sort])) }}"
+                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-gradient-to-b from-clsu-600 to-clsu-800 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                    {{ $meta['label'] }}
+                    <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $meta['count'] }}</span>
+                </a>
+            @endforeach
+        </div>
+
+        <!-- Search + sort -->
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
+            <input type="hidden" name="status" value="{{ $status }}">
+            <div class="relative flex-1 max-w-xs">
+                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Username, email, or phone…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+            </div>
+            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                <option value="latest" @selected($sort === 'latest')>Newest first</option>
+                <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
+            </select>
+            <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Apply</button>
+            @if($search || $status !== 'all' || $sort !== 'latest')
+                <a href="{{ route('staff.userrecords.index') }}" class="self-center text-xs font-semibold text-stone-500 hover:text-clsu-700 px-2 transition-colors !no-underline">Clear</a>
+            @endif
+        </form>
+
+        @if($users->isEmpty())
+            <x-admin.empty-state icon="users" title="No users match this view." />
+        @else
+            <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-stone-50/70 border-b border-stone-100">
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">User</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Phone</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Email Status</th>
+                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Stays</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Standing</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Last Login</th>
+                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Joined</th>
+                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($users as $user)
+                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
+                                <td class="px-6 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold {{ $user->is_suspended ? 'bg-ember-100 text-ember-700' : 'bg-clsu-100 text-clsu-700' }}">
+                                            {{ strtoupper(mb_substr($user->username, 0, 1)) }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-stone-800 truncate">{{ $user->username }}</p>
+                                            <p class="text-xs text-stone-400 truncate">{{ $user->email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-3 text-stone-600 font-data tabnum whitespace-nowrap">{{ $user->phone ?? '—' }}</td>
+                                <td class="px-6 py-3">
+                                    @if($user->email_verified_at)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">
+                                            <x-admin.icon name="check" class="w-3 h-3" stroke-width="2.5" />
+                                            Verified
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-stone-100 text-stone-500 border-stone-200">
+                                            <x-admin.icon name="clock" class="w-3 h-3" stroke-width="2.5" />
+                                            Unverified
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-3 text-right text-stone-800 font-semibold font-data tabnum">{{ $user->completed_bookings_count }}</td>
+                                <td class="px-6 py-3">
+                                    @if($user->is_suspended)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-ember-50 text-ember-700 border-ember-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-ember-500"></span>
+                                            Suspended
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>
+                                            Active
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">
+                                    {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : '—' }}
+                                </td>
+                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">{{ $user->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
+                                <td class="px-6 py-3 text-right">
+                                    @if(!$user->is_suspended)
+                                        <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
+                                                data-action="suspend"
+                                                data-user-id="{{ $user->id }}">
+                                            Suspend
+                                        </button>
+                                    @else
+                                        <button class="password-verify-btn text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer"
+                                                data-action="unsuspend"
+                                                data-user-id="{{ $user->id }}">
+                                            Unsuspend
+                                        </button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6">
+                {{ $users->links() }}
+            </div>
+        @endif
+    </x-admin.section-card>
+</div>
+@endsection
+
+@push('scripts')
 <script>
 $.ajaxSetup({
     headers: {
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
 });
-</script>
-<div class="p-6 space-y-6">
 
-    <h1 class="text-2xl font-bold mb-4">User Records</h1>
-    <div class="flex justify-end mb-4 space-x-2">
-        <a href="{{ route('reports.users.all') }}" class="btn btn-primary">Export All Users</a>
-        <a href="{{ route('reports.users.active') }}" class="btn btn-success">Export Active Users</a>
-        <a href="{{ route('reports.users.suspended') }}" class="btn btn-warning">Export Suspended Users</a>
-    </div>
-
-    {{-- Search & Sort --}}
-    <form method="GET" action="{{ route('staff.userrecords.index') }}" class="flex flex-wrap items-center gap-3 mb-4">
-        <input type="text" name="search" value="{{ $search }}" placeholder="Search by username, email, or phone"
-               class="border rounded-lg px-3 py-2 w-64">
-
-        <select name="sort" class="border rounded-lg px-3 py-2">
-            <option value="latest" {{ $sort == 'latest' ? 'selected' : '' }}>Newest First</option>
-            <option value="oldest" {{ $sort == 'oldest' ? 'selected' : '' }}>Oldest First</option>
-        </select>
-
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Apply</button>
-    </form>
-
-    {{-- Table --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full text-sm text-left">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-4 py-2">ID</th>
-                    <th class="px-4 py-2">Username</th>
-                    <th class="px-4 py-2">Email</th>
-                    <th class="px-4 py-2">Phone</th>
-                    <th class="px-4 py-2">Verified</th>
-                    <th class="px-4 py-2">Last Login</th>
-                    <th class="px-4 py-2">Created At</th>
-                    <th class="px-4 py-2">Completed Bookings</th>
-                    <th class="px-4 py-2">Status</th>
-                    <th class="px-4 py-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($users as $user)
-                    <tr class="border-t {{ $user->is_suspended ? 'bg-red-50' : '' }}">
-                        <td class="px-4 py-2 font-medium">{{ $user->id }}</td>
-                        <td class="px-4 py-2">{{ $user->username }}</td>
-                        <td class="px-4 py-2">{{ $user->email }}</td>
-                        <td class="px-4 py-2">{{ $user->phone ?? 'N/A' }}</td>
-                        <td class="px-4 py-2">
-                            @if($user->email_verified_at)
-                                <span class="text-green-600 font-semibold">Verified</span>
-                            @else
-                                <span class="text-red-600 font-semibold">Not Verified</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2">
-                            {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->format('M d, Y g:i A') : 'N/A' }}
-                        </td>
-                        <td class="px-4 py-2">{{ $user->created_at->format('M d, Y g:i A') }}</td>
-                        <td class="px-4 py-2">{{ $user->completed_bookings_count }}</td>
-                        <td class="px-4 py-2">
-                            @if($user->is_suspended)
-                                <span class="text-red-600 font-semibold">Suspended</span>
-                            @else
-                                <span class="text-green-600 font-semibold">Active</span>
-                            @endif
-                        </td>   
-                        <td class="px-4 py-2 space-x-2">
-                            @if(!$user->is_suspended)
-                                <button 
-                                    class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition password-verify-btn"
-                                    data-action="suspend"
-                                    data-user-id="{{ $user->id }}">
-                                    Suspend
-                                </button>
-                            @else
-                                <button 
-                                    class="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition password-verify-btn"
-                                    data-action="unsuspend"
-                                    data-user-id="{{ $user->id }}">
-                                    Unsuspend
-                                </button>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="10" class="px-4 py-4 text-center text-gray-500">No users found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Pagination --}}
-    <div class="mt-4">
-        {{ $users->links() }}
-    </div>
-
-</div>
-@endsection
-
-@push('scripts')
-<script>
 $(document).on('click', '.password-verify-btn', function(e) {
     e.preventDefault();
     const userId = $(this).data('user-id');
@@ -173,6 +245,5 @@ $(document).on('click', '.password-verify-btn', function(e) {
         }
     });
 });
-
 </script>
 @endpush
