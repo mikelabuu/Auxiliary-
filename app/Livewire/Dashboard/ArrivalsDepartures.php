@@ -225,6 +225,7 @@ class ArrivalsDepartures extends Component
 
         $this->dispatch('alert', type: 'success', message: 'Check-in successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
+        $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
     }
 
 
@@ -268,6 +269,7 @@ class ArrivalsDepartures extends Component
 
         $this->dispatch('alert', type: 'success', message: 'Check-out successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
+        $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
     }
 
     public function confirmNoShow($bookingId)
@@ -320,5 +322,6 @@ class ArrivalsDepartures extends Component
         );
 
         $this->dispatch('alert', type: 'success', message: 'No Show successful!');
+        $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
     }
 }

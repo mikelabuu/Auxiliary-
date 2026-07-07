@@ -50,8 +50,14 @@
         </x-slot:actions>
     </x-admin.page-header>
 
+    <x-admin.section-nav :items="[
+        ['id' => 'rooms-overview', 'label' => 'Overview', 'icon' => 'grid'],
+        ['id' => 'room-types', 'label' => 'Types & Pricing', 'icon' => 'tag'],
+        ['id' => 'all-rooms', 'label' => 'All Rooms', 'icon' => 'bed'],
+    ]" />
+
     <!-- Primary stat cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div id="rooms-overview" class="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <x-admin.stat-card icon="bed" badge="ALL WINGS" label="Total Rooms" :delay="40" value-id="statTotalNum">
             {{ $totalRooms }}
             <x-slot:footnote><p id="statTotalFoot" class="text-xs text-stone-400">Across {{ $roomsByWing->count() }} wings</p></x-slot:footnote>
@@ -81,7 +87,7 @@
     </div>
 
     <!-- Room Types & Pricing -->
-    <x-admin.section-card icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category — click a type to filter rooms below" :delay="240">
+    <x-admin.section-card id="room-types" class="scroll-mt-32" icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category — click a type to filter rooms below" :delay="240">
         <x-slot:actions>
             <button type="button" id="clearTypeFilterBtn" class="hidden shrink-0 items-center gap-1.5 text-xs font-semibold text-clsu-700 bg-clsu-50 hover:bg-clsu-100 rounded-full px-3 py-1.5 transition-colors cursor-pointer">
                 <x-admin.icon name="x" class="w-3 h-3" stroke-width="2.5" />
@@ -92,7 +98,7 @@
     </x-admin.section-card>
 
     <!-- All Rooms -->
-    <x-admin.section-card icon="grid" title="All Rooms" :subtitle="$totalRooms . ' rooms across ' . $roomsByWing->count() . ' wings'" subtitle-id="allRoomsSubtitle" :delay="280">
+    <x-admin.section-card id="all-rooms" class="scroll-mt-32" icon="grid" title="All Rooms" :subtitle="$totalRooms . ' rooms across ' . $roomsByWing->count() . ' wings'" subtitle-id="allRoomsSubtitle" :delay="280">
         <x-slot:actions>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span id="legendAvailable">{{ $availableRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · <span id="legendOccupied">{{ $occupiedRooms }}</span></span>
@@ -290,7 +296,7 @@
 </x-admin.modal>
 
 <!-- ==================== Room Occupancy Modal ==================== -->
-<x-admin.modal id="occupancyModal" icon="eye" title="Current Occupancy">
+<x-admin.modal id="occupancyModal" icon="eye" title="Room Occupancy">
     <div class="px-6 py-5 space-y-2.5 max-h-[60vh] overflow-y-auto" id="occupancyModalBody">
         <p class="text-center text-stone-400 text-sm py-6">Loading…</p>
     </div>
@@ -517,27 +523,60 @@ $(function () {
                     modalBody.html('<p class="text-center text-ember-600 text-sm py-6">Could not load bookings.</p>');
                     return;
                 }
-                if (!res.bookings.length) {
-                    modalBody.html('<p class="text-center text-stone-400 text-sm py-6">No active bookings for this room.</p>');
-                    return;
-                }
-                modalBody.html(res.bookings.map(b => `
-                    <div class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-100 bg-stone-50/60">
-                        <div class="w-9 h-9 rounded-full bg-clsu-100 text-clsu-700 flex items-center justify-center shrink-0 font-bold text-xs">
-                            ${(b.guest_name || '?').substring(0, 2).toUpperCase()}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="text-sm font-semibold text-stone-800 truncate">${b.guest_name}</p>
-                            <p class="text-xs text-stone-500 mt-0.5">${b.check_in_formatted} → ${b.check_out_formatted}</p>
-                        </div>
-                        <span class="text-[10px] font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 shrink-0 whitespace-nowrap">${b.status}</span>
-                    </div>
-                `).join('<div class="h-2.5"></div>'));
+                renderOccupancy(res);
             })
             .fail(function () {
                 modalBody.html('<p class="text-center text-ember-600 text-sm py-6">Error fetching booking info.</p>');
             });
     });
+
+    function occupancyRow(b) {
+        const isCurrent = b.timeline === 'current';
+        const badge = isCurrent
+            ? 'text-clsu-700 bg-clsu-50 border-clsu-200'
+            : 'text-palay-800 bg-palay-100 border-palay-200';
+        return `
+            <div class="flex items-start gap-3 p-3.5 rounded-xl border border-stone-100 bg-stone-50/60">
+                <div class="w-9 h-9 rounded-full ${isCurrent ? 'bg-clsu-100 text-clsu-700' : 'bg-palay-100 text-palay-800'} flex items-center justify-center shrink-0 font-bold text-xs">
+                    ${(b.guest_name || '?').substring(0, 2).toUpperCase()}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-stone-800 truncate">${b.guest_name || 'Guest'}</p>
+                    <p class="text-xs text-stone-500 mt-0.5">#${b.id} · ${b.check_in_formatted} → ${b.check_out_formatted} · ${b.nights} night${b.nights === 1 ? '' : 's'}</p>
+                </div>
+                <span class="text-[10px] font-bold rounded-full px-2.5 py-1 border shrink-0 whitespace-nowrap ${badge}">${b.status}</span>
+            </div>`;
+    }
+
+    function renderOccupancy(res) {
+        const modalBody = $('#occupancyModalBody');
+        const bookings = res.bookings || [];
+
+        if (!bookings.length) {
+            const label = STATUS_META[res.room_status]?.label || 'Available';
+            modalBody.html(
+                '<div class="text-center py-8">' +
+                    '<p class="text-sm text-stone-500">No current or upcoming reservations for this room.</p>' +
+                    '<p class="text-xs text-stone-400 mt-1.5">Room ' + res.room_number + ' is currently marked <span class="font-semibold">' + label + '</span>.</p>' +
+                '</div>'
+            );
+            return;
+        }
+
+        const current = bookings.filter(b => b.timeline === 'current');
+        const upcoming = bookings.filter(b => b.timeline === 'upcoming');
+        let html = '<p class="text-xs text-stone-400 mb-3">Room ' + res.room_number + ' · ' + bookings.length + ' reservation' + (bookings.length === 1 ? '' : 's') + '</p>';
+
+        if (current.length) {
+            html += '<p class="text-[10px] font-bold uppercase tracking-widest text-clsu-600 mb-2">Staying now</p>';
+            html += current.map(occupancyRow).join('<div class="h-2.5"></div>');
+        }
+        if (upcoming.length) {
+            html += '<p class="text-[10px] font-bold uppercase tracking-widest text-palay-700 mb-2 ' + (current.length ? 'mt-4' : '') + '">Upcoming</p>';
+            html += upcoming.map(occupancyRow).join('<div class="h-2.5"></div>');
+        }
+        modalBody.html(html);
+    }
 
     /* ------------------- ROOM EDIT ------------------- */
     $(document).on('click', '.room-edit-btn', function (e) {
@@ -737,23 +776,35 @@ $(function () {
         const term = ($('#roomSearch').val() || '').toString().trim().toLowerCase();
         const status = $('#roomStatusFilter').val();
         const wing = $('#wingFilterSelect').val();
-
-        $('.room-card').each(function () {
-            const el = $(this);
-            const haystack = (el.data('room-number') + ' ' + typeName(el.data('type')) + ' ' + el.data('wing')).toString().toLowerCase();
-            const matchesTerm = !term || haystack.includes(term);
-            const matchesStatus = status === 'all' || el.attr('data-status') === status;
-            const matchesWing = wing === 'all' || el.data('wing').toString() === wing;
-            const matchesType = !activeTypeFilter || el.data('type').toString() === activeTypeFilter;
-            el.toggle(matchesTerm && matchesStatus && matchesWing && matchesType);
-        });
-
         let anyVisible = false;
+
+        // Count matches per wing directly rather than reading `.room-card:visible`
+        // — a card inside a wing group that's still display:none reports itself as
+        // not visible, which used to leave cleared searches showing nothing.
         $('[data-wing-group]').each(function () {
-            if ($(this).hasClass('hidden')) return; // emptied by a delete, stays hidden regardless of filters
-            const visibleCount = $(this).find('.room-card:visible').length;
-            $(this).toggle(visibleCount > 0);
-            if (visibleCount > 0) anyVisible = true;
+            const group = $(this);
+            const cards = group.find('.room-card');
+
+            // A wing emptied by deletion has no cards; keep it hidden.
+            if (cards.length === 0) { group.hide(); return; }
+
+            let matchesInWing = 0;
+            cards.each(function () {
+                const el = $(this);
+                const haystack = ((el.attr('data-room-number') || '') + ' ' +
+                                  typeName(el.attr('data-type')) + ' ' +
+                                  (el.attr('data-wing') || '')).toLowerCase();
+                const matchesTerm = !term || haystack.includes(term);
+                const matchesStatus = status === 'all' || el.attr('data-status') === status;
+                const matchesWing = wing === 'all' || el.attr('data-wing') === wing;
+                const matchesType = !activeTypeFilter || el.attr('data-type') === activeTypeFilter;
+                const show = matchesTerm && matchesStatus && matchesWing && matchesType;
+                el.toggle(show);
+                if (show) matchesInWing++;
+            });
+
+            group.toggle(matchesInWing > 0);
+            if (matchesInWing > 0) anyVisible = true;
         });
 
         const hasFilters = term || status !== 'all' || wing !== 'all' || activeTypeFilter;
@@ -773,6 +824,78 @@ $(function () {
         renderTypeTiles();
         applyFilters();
     });
+
+    /* ------------------- LIVE STATUS POLLER -------------------
+       Periodically refreshes each room's status + stay line from the server so
+       the board reflects check-ins/check-outs/cleaning done elsewhere without a
+       manual reload. Only touches cards whose state actually changed. */
+    const STAY_ICON_PATHS = {
+        current: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+        next: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>',
+        none: '<polyline points="20 6 9 17 4 12"/>',
+    };
+    const STAY_LINE_CLASS = {
+        current: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-clsu-700',
+        next: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
+        none: 'room-stay-line flex items-center gap-1 text-[10px] font-medium text-stone-400',
+    };
+
+    function applyStayToCard(card, stay, held) {
+        const line = card.find('.room-stay-line');
+        if (line.attr('data-kind') !== stay.kind) {
+            line.attr('data-kind', stay.kind);
+            line.attr('class', STAY_LINE_CLASS[stay.kind] || STAY_LINE_CLASS.none);
+            line.find('svg.icon').html(STAY_ICON_PATHS[stay.kind] || STAY_ICON_PATHS.none);
+        }
+        line.find('.room-stay-text').text(stay.label);
+        if (stay.title) line.attr('title', stay.title); else line.removeAttr('title');
+        if (held) card.attr('data-held', '1'); else card.removeAttr('data-held');
+    }
+
+    let livePollInFlight = false;
+    function pollRoomStatus() {
+        // Don't fight the user: skip while a menu/modal is open or the tab is hidden.
+        if (livePollInFlight || document.hidden) return;
+        if ($('[data-kebab-panel]:not(.hidden)').length) return;
+        if ($('#roomEditModal, #occupancyModal, #typeModal, #addRoomModal').filter('.flex').length) return;
+
+        livePollInFlight = true;
+        $.get(`${base}/status-feed`)
+            .done(function (res) {
+                if (!res || !res.success) return;
+                let changed = false;
+
+                res.rooms.forEach(function (r) {
+                    const card = $('.room-card[data-room-id="' + r.id + '"]');
+                    if (!card.length) return;
+
+                    if (card.attr('data-status') !== r.status) {
+                        applyStatusToCard(card, r.status);
+                        changed = true;
+                    }
+
+                    const line = card.find('.room-stay-line');
+                    const heldNow = card.attr('data-held') === '1';
+                    if (line.attr('data-kind') !== r.stay.kind
+                        || line.find('.room-stay-text').text() !== r.stay.label
+                        || heldNow !== r.held) {
+                        applyStayToCard(card, r.stay, r.held);
+                        changed = true;
+                    }
+                });
+
+                if (changed) {
+                    recomputeAggregates();
+                    applyFilters();
+                }
+            })
+            .always(function () { livePollInFlight = false; });
+    }
+    setInterval(pollRoomStatus, 10000);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) pollRoomStatus();
+    });
+    $(window).on('focus', pollRoomStatus);
 });
 </script>
 @endpush

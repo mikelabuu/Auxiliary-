@@ -101,6 +101,7 @@ class BookingsTable extends Component
                 "Booking #{$booking->id} was cancelled by {$staff->name}"
             );
             session()->flash('success', "Booking #{$booking->id} cancelled.");
+            $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         }
     }
 
@@ -141,6 +142,7 @@ class BookingsTable extends Component
         });
 
         session()->flash('success', "Booking #{$booking->id} checked out.");
+        $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
     }
 
     public function render()

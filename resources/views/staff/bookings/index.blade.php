@@ -24,10 +24,22 @@ $.ajaxSetup({
         </x-slot:actions>
     </x-admin.page-header>
 
-    <livewire:dashboard.arrivals-departures />
+    <x-admin.section-nav :items="[
+        ['id' => 'arrivals', 'label' => 'Arrivals & Departures', 'icon' => 'arrival'],
+        ['id' => 'active-stays', 'label' => 'Active Stays', 'icon' => 'log-in'],
+        ['id' => 'all-bookings', 'label' => 'All Bookings', 'icon' => 'clipboard'],
+    ]" />
 
-    <livewire:active-bookings />
+    <div id="arrivals" class="scroll-mt-32">
+        <livewire:dashboard.arrivals-departures />
+    </div>
 
-    <livewire:bookings-table />
+    <div id="active-stays" class="scroll-mt-32">
+        <livewire:active-bookings />
+    </div>
+
+    <div id="all-bookings" class="scroll-mt-32">
+        <livewire:bookings-table />
+    </div>
 </div>
 @endsection

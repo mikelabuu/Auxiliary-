@@ -52,6 +52,54 @@ document.addEventListener('DOMContentLoaded', function () {
     return document.querySelectorAll('[data-room-card]');
   }
 
+  function roomItems() {
+    return document.querySelectorAll('[data-room-item]');
+  }
+
+  // Constrain the room grid to types that can seat the requested party size.
+  // Delegates to the shared RoomFilter (room-filters.js) so the browse pills
+  // and this guest floor combine instead of overwriting each other's .hidden.
+  // Falls back to a standalone toggle if that script isn't present.
+  function applyGuestFilter(guests) {
+    const party = Math.max(1, parseInt(guests || guestsInput?.value || '1', 10));
+
+    // Keep the live-availability banner's guest count in sync when the party
+    // size is changed after a search has already painted results.
+    const data = window.LAST_AVAILABILITY;
+    if (data && banner && bannerText && !banner.classList.contains('hidden')) {
+      const nightsTxt = data.nights + ' night' + (data.nights > 1 ? 's' : '');
+      bannerText.textContent = 'Live availability · ' + fmtDate(data.check_in) + ' → ' + fmtDate(data.check_out) + ' · ' + nightsTxt + ' · ' + party + ' guest' + (party > 1 ? 's' : '');
+    }
+
+    if (window.RoomFilter && typeof window.RoomFilter.setGuestFloor === 'function') {
+      window.RoomFilter.setGuestFloor(party);
+      return;
+    }
+
+    const items = roomItems();
+    if (!items.length) return;
+    let anyVisible = false;
+    items.forEach(item => {
+      const beds = parseInt(item.getAttribute('data-beds') || '0', 10);
+      const fits = beds >= party;
+      item.classList.toggle('hidden', !fits);
+      if (fits) anyVisible = true;
+    });
+    const empty = document.getElementById('roomFilterEmpty');
+    if (empty) empty.classList.toggle('hidden', anyVisible);
+  }
+  window.__applyGuestFilter = applyGuestFilter;
+
+  function clearGuestFilter() {
+    if (window.RoomFilter && typeof window.RoomFilter.setGuestFloor === 'function') {
+      window.RoomFilter.setGuestFloor(0);
+      return;
+    }
+    roomItems().forEach(item => item.classList.remove('hidden'));
+    const empty = document.getElementById('roomFilterEmpty');
+    if (empty) empty.classList.add('hidden');
+  }
+
   function scrollToRooms() {
     document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' });
   }
@@ -89,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
       setPill(card, '');
       setCardFull(card, false);
     });
+    clearGuestFilter();
     banner && banner.classList.add('hidden');
     window.LAST_AVAILABILITY = null;
   }
@@ -157,8 +206,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
+      // Only show room types that can seat the requested party size.
+      const guests = parseInt(guestsInput?.value || '1', 10);
+      applyGuestFilter(guests);
+
       if (banner && bannerText) {
-        const guests = parseInt(guestsInput?.value || '1', 10);
         const nightsTxt = data.nights + ' night' + (data.nights > 1 ? 's' : '');
         bannerText.textContent = 'Live availability · ' + fmtDate(data.check_in) + ' → ' + fmtDate(data.check_out) + ' · ' + nightsTxt + ' · ' + guests + ' guest' + (guests > 1 ? 's' : '');
         banner.classList.remove('hidden');

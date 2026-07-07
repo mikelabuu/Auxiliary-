@@ -133,6 +133,7 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
     // Room Management
     Route::get('/staff/rooms', [RoomController::class, 'index'])->name('staff.rooms');
+    Route::get('/staff/rooms/status-feed', [RoomController::class, 'statusFeed'])->name('staff.rooms.statusFeed');
     Route::post('/staff/rooms/store', [RoomController::class, 'store'])->name('staff.rooms.store');
 
     // Verify staff password before delete (AJAX)

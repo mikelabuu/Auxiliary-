@@ -528,6 +528,8 @@
                 const prev = parseInt(hiddenInput.value) || 1;
                 hiddenInput.value = val;
                 plural && plural.classList.toggle('hidden', val === 1);
+                // If results are already on screen, re-filter room types live.
+                if (window.LAST_AVAILABILITY && window.__applyGuestFilter) window.__applyGuestFilter(val);
                 if (val === prev) return;
 
                 const current = display.querySelector('span:not(.is-leaving)');

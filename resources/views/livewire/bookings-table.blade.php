@@ -1,4 +1,4 @@
-<x-admin.section-card icon="clipboard" title="All Bookings" subtitle="Every booking that hasn't been checked out yet.">
+<x-admin.section-card wire:poll.15s icon="clipboard" title="All Bookings" subtitle="Every booking that hasn't been checked out yet.">
     <x-slot:actions>
         <a href="{{ route('reports.bookings.full') }}" class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
             <x-admin.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />

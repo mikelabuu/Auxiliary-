@@ -1,4 +1,4 @@
-<div wire:poll.60s data-component="arrivals-departures" class="bg-white rounded-2xl border border-stone-200/70 shadow-card hover:shadow-card-lg transition-shadow duration-200 p-0 flex flex-col h-full overflow-hidden">
+<div wire:poll.15s data-component="arrivals-departures" class="bg-white rounded-2xl border border-stone-200/70 shadow-card hover:shadow-card-lg transition-shadow duration-200 p-0 flex flex-col h-full overflow-hidden">
     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 p-5 border-b border-stone-100 bg-stone-50/50">
         <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-lg bg-clsu-100 text-clsu-700 flex items-center justify-center shrink-0">

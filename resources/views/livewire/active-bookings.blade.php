@@ -1,4 +1,4 @@
-<x-admin.section-card icon="log-in" title="Active Stays" subtitle="Guests currently checked in.">
+<x-admin.section-card wire:poll.15s="loadActiveBookings" icon="log-in" title="Active Stays" subtitle="Guests currently checked in.">
     @if($activeBookings->isEmpty())
         <x-admin.empty-state icon="log-in" title="No active bookings at the moment." />
     @else

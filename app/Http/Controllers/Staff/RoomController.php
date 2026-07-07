@@ -26,33 +26,7 @@ class RoomController extends Controller
                   ->whereDate('check_out', '>=', $today);
         }])->get();
 
-        // Stay context per room number: the stay spanning today ("current")
-        // and the soonest upcoming arrival ("next"), from blocking bookings.
-        $stays = Reservation::query()
-            ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
-            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->whereDate('bookings.check_out', '>=', $today)
-            ->orderBy('bookings.check_in')
-            ->get(['reservations.room_number', 'bookings.guest_name', 'bookings.check_in', 'bookings.check_out']);
-
-        $stayContext = [];
-        foreach ($stays as $stay) {
-            $roomNumber = trim($stay->room_number);
-            $checkIn  = Carbon::parse($stay->check_in);
-            $checkOut = Carbon::parse($stay->check_out);
-
-            if ($checkIn->lte($today) && $checkOut->gte($today)) {
-                $stayContext[$roomNumber]['current'] ??= [
-                    'guest' => $stay->guest_name,
-                    'until' => $checkOut->format('M d'),
-                ];
-            } elseif (!isset($stayContext[$roomNumber]['next']) && $checkIn->gt($today)) {
-                $stayContext[$roomNumber]['next'] = [
-                    'guest' => $stay->guest_name,
-                    'from'  => $checkIn->format('M d'),
-                ];
-            }
-        }
+        $stayContext = $this->buildStayContext($today);
 
         $totalRooms = $rooms->count();
         $occupiedRooms = $rooms->where('status', 'occupied')->count();
@@ -80,6 +54,75 @@ class RoomController extends Controller
         ));
     }
 
+    /**
+     * Stay context per room number: the stay spanning today ("current")
+     * and the soonest upcoming arrival ("next"), from blocking bookings.
+     * Shared by index() and statusFeed().
+     */
+    private function buildStayContext(Carbon $today): array
+    {
+        $stays = Reservation::query()
+            ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
+            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+            ->whereDate('bookings.check_out', '>=', $today)
+            ->orderBy('bookings.check_in')
+            ->get(['reservations.room_number', 'bookings.guest_name', 'bookings.check_in', 'bookings.check_out']);
+
+        $stayContext = [];
+        foreach ($stays as $stay) {
+            $roomNumber = trim($stay->room_number);
+            $checkIn  = Carbon::parse($stay->check_in);
+            $checkOut = Carbon::parse($stay->check_out);
+
+            if ($checkIn->lte($today) && $checkOut->gte($today)) {
+                $stayContext[$roomNumber]['current'] ??= [
+                    'guest' => $stay->guest_name,
+                    'until' => $checkOut->format('M d'),
+                ];
+            } elseif (!isset($stayContext[$roomNumber]['next']) && $checkIn->gt($today)) {
+                $stayContext[$roomNumber]['next'] = [
+                    'guest' => $stay->guest_name,
+                    'from'  => $checkIn->format('M d'),
+                ];
+            }
+        }
+
+        return $stayContext;
+    }
+
+    /**
+     * Lightweight JSON snapshot of every room's live state, polled by the
+     * Room Management page to keep cards/stats fresh without a reload.
+     */
+    public function statusFeed()
+    {
+        $today = Carbon::today();
+        $stayContext = $this->buildStayContext($today);
+
+        $rooms = Room::all(['id', 'room_number', 'status'])->map(function ($room) use ($stayContext) {
+            $ctx = $stayContext[trim($room->room_number)] ?? [];
+            $current = $ctx['current'] ?? null;
+            $next = $ctx['next'] ?? null;
+
+            if ($current) {
+                $stay = ['kind' => 'current', 'label' => 'In use · until ' . $current['until'], 'title' => $current['guest'] . ' · until ' . $current['until']];
+            } elseif ($next) {
+                $stay = ['kind' => 'next', 'label' => 'Next stay · ' . $next['from'], 'title' => $next['guest'] . ' arrives ' . $next['from']];
+            } else {
+                $stay = ['kind' => 'none', 'label' => 'No upcoming stays', 'title' => null];
+            }
+
+            return [
+                'id'     => $room->id,
+                'status' => $room->status,
+                'held'   => (bool) $current,
+                'stay'   => $stay,
+            ];
+        });
+
+        return response()->json(['success' => true, 'rooms' => $rooms]);
+    }
+
 public function occupancyForRoom(Room $room)
 {
     $today = now()->toDateString();
@@ -95,26 +138,34 @@ public function occupancyForRoom(Room $room)
         )
         ->join('reservations', 'reservations.booking_id', '=', 'bookings.id')
         ->where('reservations.room_number', $room->room_number)
-        ->whereDate('bookings.check_in', '<=', $today)
+        ->whereIn('bookings.status', \App\Models\Booking::BLOCKING_STATUSES)
         ->whereDate('bookings.check_out', '>=', $today)
-        ->where('bookings.status', 'active')
+        ->orderBy('bookings.check_in')
         ->distinct()
         ->get();
 
-    $bookings = $bookings->map(function ($b) {
+    $bookings = $bookings->map(function ($b) use ($today) {
+        $checkIn  = \Carbon\Carbon::parse($b->check_in);
+        $checkOut = \Carbon\Carbon::parse($b->check_out);
+        $isCurrent = $checkIn->lte($today) && $checkOut->gte($today);
+
         return [
             'id' => $b->booking_id,
             'user_id' => $b->user_id,
             'guest_name' => $b->guest_name,
-            'status' => ucfirst($b->status),
-            'check_in_formatted' => \Carbon\Carbon::parse($b->check_in)->format('M d, Y'),
-            'check_out_formatted' => \Carbon\Carbon::parse($b->check_out)->format('M d, Y'),
+            'status' => ucwords(str_replace('_', ' ', $b->status)),
+            'timeline' => $isCurrent ? 'current' : 'upcoming',
+            'nights' => max(1, $checkIn->diffInDays($checkOut)),
+            'check_in_formatted' => $checkIn->format('M d, Y'),
+            'check_out_formatted' => $checkOut->format('M d, Y'),
         ];
     });
 
     return response()->json([
-        'success' => true,
-        'bookings' => $bookings,
+        'success'     => true,
+        'room_number' => $room->room_number,
+        'room_status' => $room->status,
+        'bookings'    => $bookings,
     ]);
 }
 
