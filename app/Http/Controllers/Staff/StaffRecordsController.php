@@ -16,6 +16,7 @@ class StaffRecordsController extends Controller
     {
         $search = $request->input('search');
         $sort = $request->input('sort', 'latest'); // newest first by default
+        $role = $request->input('role', 'all');
         $perPage = 10;
 
         $stats = [
@@ -32,6 +33,7 @@ class StaffRecordsController extends Controller
                       ->orWhere('email', 'like', "%$search%");
                 });
             })
+            ->when($role !== 'all', fn($q) => $q->where('role', $role))
             ->orderBy(
                 'created_at',
                 $sort === 'oldest' ? 'asc' : 'desc'
@@ -39,7 +41,7 @@ class StaffRecordsController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('staff.staffrecords.index', compact('staffs', 'search', 'sort', 'stats'));
+        return view('staff.staffrecords.index', compact('staffs', 'search', 'sort', 'role', 'stats'));
     }
 
     // Handle signup post
@@ -140,6 +142,26 @@ class StaffRecordsController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function activity(Staff $staff)
+    {
+        $logs = \App\Models\AuditLog::where('staff_id', $staff->id)
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(fn($log) => [
+                'action'      => ucwords(str_replace('_', ' ', $log->action)),
+                'description' => $log->description,
+                'target'      => $log->target_type ? $log->target_type . ($log->target_id ? " #{$log->target_id}" : '') : null,
+                'when'        => $log->created_at->timezone('Asia/Manila')->format('M d, Y · h:i A'),
+            ]);
+
+        return response()->json([
+            'name'       => $staff->name,
+            'last_login' => $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : null,
+            'logs'       => $logs,
+        ]);
     }
 
     public function suspend(Staff $staff)

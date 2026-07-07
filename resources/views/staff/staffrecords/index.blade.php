@@ -19,7 +19,8 @@
 }
 </style>
 @php
-    $isMaster = Auth::guard('staff')->user()->role === 'master_admin';
+    $me = Auth::guard('staff')->user();
+    $isMaster = $me->role === 'master_admin';
     $roleMeta = [
         'master_admin' => ['badge' => 'bg-stone-900 text-white border-stone-900',        'label' => 'Master Admin'],
         'admin'        => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200',        'label' => 'Admin'],
@@ -28,12 +29,24 @@
     ];
     $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors';
     $labelClasses = 'block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1.5';
+
+    // Which form (if any) triggered the validation errors, so old() values are
+    // routed back to the right modal/card and the modal reopens on load.
+    $errorForm = $errors->any() ? old('_form') : null;
 @endphp
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.page-header subtitle="Administrative and staff accounts, their roles, and access standing.">
         Staff <span class="font-display italic font-medium text-clsu-800">Center</span>
+        @if ($isMaster)
+            <x-slot:actions>
+                <button type="button" id="openCreateStaffBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all shadow-card cursor-pointer">
+                    <x-admin.icon name="plus" class="w-4 h-4" />
+                    New Staff Account
+                </button>
+            </x-slot:actions>
+        @endif
     </x-admin.page-header>
 
     {{-- Flash messages --}}
@@ -78,18 +91,25 @@
 
     <x-admin.section-card icon="users" title="Staff Accounts" :subtitle="$staffs->total() . ' record' . ($staffs->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
 
-        <!-- Search + sort -->
+        <!-- Search + filters -->
         <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
             <div class="relative flex-1 max-w-xs">
                 <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
                 <input type="text" name="search" value="{{ $search }}" placeholder="Name or email…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
             </div>
+            <select name="role" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                <option value="all" @selected($role === 'all')>All roles</option>
+                <option value="master_admin" @selected($role === 'master_admin')>Master Admin</option>
+                <option value="admin" @selected($role === 'admin')>Admin</option>
+                <option value="frontdesk" @selected($role === 'frontdesk')>Front Desk</option>
+                <option value="housekeeping" @selected($role === 'housekeeping')>Housekeeping</option>
+            </select>
             <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
             </select>
             <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Apply</button>
-            @if($search || $sort !== 'latest')
+            @if($search || $role !== 'all' || $sort !== 'latest')
                 <a href="{{ route('staff.staffrecords.index') }}" class="self-center text-xs font-semibold text-stone-500 hover:text-clsu-700 px-2 transition-colors !no-underline">Clear</a>
             @endif
         </form>
@@ -106,14 +126,12 @@
                             <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Standing</th>
                             <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Last Login</th>
                             <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Created</th>
-                            @if ($isMaster)
-                                <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Action</th>
-                            @endif
+                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($staffs as $staff)
-                            @php $role = $roleMeta[$staff->role] ?? ['badge' => 'bg-stone-100 text-stone-600 border-stone-200', 'label' => ucfirst($staff->role)]; @endphp
+                            @php $staffRole = $roleMeta[$staff->role] ?? ['badge' => 'bg-stone-100 text-stone-600 border-stone-200', 'label' => ucfirst($staff->role)]; @endphp
                             <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
                                 <td class="px-6 py-3">
                                     <div class="flex items-center gap-3">
@@ -127,7 +145,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-3">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $role['badge'] }}">{{ $role['label'] }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $staffRole['badge'] }}">{{ $staffRole['label'] }}</span>
                                 </td>
                                 <td class="px-6 py-3">
                                     @if($staff->is_suspended)
@@ -151,9 +169,23 @@
                                     {{ $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : '—' }}
                                 </td>
                                 <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">{{ $staff->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
-                                @if ($isMaster)
-                                    <td class="px-6 py-3 text-right">
-                                        @if ($staff->role !== 'master_admin')
+                                <td class="px-6 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button class="activity-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                                data-staff-id="{{ $staff->id }}"
+                                                data-name="{{ $staff->name }}"
+                                                title="View activity" aria-label="View activity">
+                                            <x-admin.icon name="clock" class="w-4 h-4" />
+                                        </button>
+                                        @if ($isMaster && $staff->role !== 'master_admin')
+                                            <button class="edit-staff-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                                    data-staff-id="{{ $staff->id }}"
+                                                    data-name="{{ $staff->name }}"
+                                                    data-email="{{ $staff->email }}"
+                                                    data-role="{{ $staff->role }}"
+                                                    title="Edit account" aria-label="Edit account">
+                                                <x-admin.icon name="edit" class="w-4 h-4" />
+                                            </button>
                                             @if(!$staff->is_suspended)
                                                 <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
                                                         data-action="suspend"
@@ -168,8 +200,8 @@
                                                 </button>
                                             @endif
                                         @endif
-                                    </td>
-                                @endif
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -182,144 +214,155 @@
         @endif
     </x-admin.section-card>
 
+    {{-- Own account (every staff role can edit their own details) --}}
+    <div class="max-w-xl">
+        <x-admin.section-card icon="user" title="Your Account" subtitle="Update your own details or password" :delay="240">
+            <form method="POST" action="{{ route('staff.update', $me->id) }}" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="_form" value="self-update">
+
+                <div>
+                    <label class="{{ $labelClasses }}">Name</label>
+                    <input type="text" name="name" value="{{ $errorForm === 'self-update' ? old('name') : $me->name }}" class="{{ $inputClasses }}" required>
+                </div>
+                <div>
+                    <label class="{{ $labelClasses }}">Email</label>
+                    <input type="email" name="email" value="{{ $errorForm === 'self-update' ? old('email') : $me->email }}" class="{{ $inputClasses }}" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
+                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
+                    </div>
+                    <div>
+                        <label class="{{ $labelClasses }}">Confirm New Password</label>
+                        <input type="password" name="password_confirmation" placeholder="Confirm new password" class="{{ $inputClasses }}">
+                    </div>
+                </div>
+
+                <hr class="border-stone-100 my-4">
+
+                <div>
+                    <label class="{{ $labelClasses }}">Current Password <span class="normal-case font-medium text-stone-400">(required to save changes)</span></label>
+                    <input type="password" name="current_password" placeholder="Enter current password" class="{{ $inputClasses }}" required>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.99] transition-all shadow-card cursor-pointer">
+                        <x-admin.icon name="check" class="w-4 h-4" />
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </x-admin.section-card>
+    </div>
+
     @if ($isMaster)
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
-            <x-admin.section-card icon="plus" title="Create Staff Account" subtitle="Provision a new team member" :delay="240">
-                <form method="POST" action="{{ route('staff.create-staff') }}" class="space-y-4">
-                    @csrf
+        {{-- Create staff modal --}}
+        <x-admin.modal id="createStaffModal" icon="plus" title="New Staff Account" max-width="lg" scroll-body>
+            <form method="POST" action="{{ route('staff.create-staff') }}" class="p-6 space-y-4">
+                @csrf
+                <input type="hidden" name="_form" value="create-staff">
 
+                <div>
+                    <label class="{{ $labelClasses }}">Name</label>
+                    <input type="text" name="name" value="{{ $errorForm === 'create-staff' ? old('name') : '' }}" placeholder="Full name" class="{{ $inputClasses }}" required>
+                </div>
+                <div>
+                    <label class="{{ $labelClasses }}">Email</label>
+                    <input type="email" name="email" value="{{ $errorForm === 'create-staff' ? old('email') : '' }}" placeholder="Email address" class="{{ $inputClasses }}" required>
+                </div>
+                <div>
+                    <label class="{{ $labelClasses }}">Role</label>
+                    <select name="role" class="{{ $inputClasses }} cursor-pointer" required>
+                        <option value="">Select role</option>
+                        <option value="admin" @selected($errorForm === 'create-staff' && old('role') === 'admin')>Admin</option>
+                        <option value="frontdesk" @selected($errorForm === 'create-staff' && old('role') === 'frontdesk')>Front Desk</option>
+                        <option value="housekeeping" @selected($errorForm === 'create-staff' && old('role') === 'housekeeping')>Housekeeping</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="{{ $labelClasses }}">Name</label>
-                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Full name" class="{{ $inputClasses }}" required>
+                        <label class="{{ $labelClasses }}">Password</label>
+                        <input type="password" name="password" placeholder="Enter password" class="{{ $inputClasses }}" required>
                     </div>
                     <div>
-                        <label class="{{ $labelClasses }}">Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" placeholder="Email address" class="{{ $inputClasses }}" required>
+                        <label class="{{ $labelClasses }}">Confirm Password</label>
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" required>
                     </div>
-                    <div>
-                        <label class="{{ $labelClasses }}">Role</label>
-                        <select name="role" class="{{ $inputClasses }} cursor-pointer" required>
-                            <option value="">Select role</option>
-                            <option value="admin" @selected(old('role') === 'admin')>Admin</option>
-                            <option value="frontdesk" @selected(old('role') === 'frontdesk')>Front Desk</option>
-                            <option value="housekeeping" @selected(old('role') === 'housekeeping')>Housekeeping</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="{{ $labelClasses }}">Password</label>
-                            <input type="password" name="password" placeholder="Enter password" class="{{ $inputClasses }}" required>
-                        </div>
-                        <div>
-                            <label class="{{ $labelClasses }}">Confirm Password</label>
-                            <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" required>
-                        </div>
-                    </div>
+                </div>
 
-                    <div class="pt-2">
-                        <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.99] transition-all shadow-card cursor-pointer">
-                            <x-admin.icon name="plus" class="w-4 h-4" />
-                            Create Staff
-                        </button>
-                    </div>
-                </form>
-            </x-admin.section-card>
+                <div class="flex gap-2.5 justify-end pt-2">
+                    <x-admin.modal-footer close-target="createStaffModal" submit-label="Create Staff" />
+                </div>
+            </form>
+        </x-admin.modal>
 
-            <x-admin.section-card icon="edit" title="Edit Staff Account" subtitle="Update details, role, or password" :delay="280">
-                <form method="POST" action="{{ route('staff.master-update') }}" class="space-y-4">
-                    @csrf
-                    @method('PUT')
+        {{-- Edit staff modal --}}
+        <x-admin.modal id="editStaffModal" icon="edit" title="Edit Staff Account" max-width="lg" scroll-body>
+            <form method="POST" action="{{ route('staff.master-update') }}" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="_form" value="edit-staff">
+                <input type="hidden" name="staff_id" id="esStaffId" value="{{ $errorForm === 'edit-staff' ? old('staff_id') : '' }}">
 
-                    <div>
-                        <label class="{{ $labelClasses }}">Select Staff</label>
-                        <select name="staff_id" class="{{ $inputClasses }} cursor-pointer" required>
-                            <option value="">Select staff</option>
-                            @foreach ($staffs as $staff)
-                                <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $roleMeta[$staff->role]['label'] ?? ucfirst($staff->role) }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="{{ $labelClasses }}">Name</label>
-                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Full name" class="{{ $inputClasses }}">
-                    </div>
-                    <div>
-                        <label class="{{ $labelClasses }}">Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" placeholder="Email address" class="{{ $inputClasses }}">
-                    </div>
-                    <div>
-                        <label class="{{ $labelClasses }}">Role</label>
-                        <select name="role" class="{{ $inputClasses }} cursor-pointer" required>
-                            <option value="">Select role</option>
-                            <option value="admin">Admin</option>
-                            <option value="frontdesk">Front Desk</option>
-                            <option value="housekeeping">Housekeeping</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
-                            <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClasses }}">Confirm Password</label>
-                            <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}">
-                        </div>
-                    </div>
+                <div class="flex items-center gap-2.5 rounded-xl border border-stone-200/70 bg-stone-50/70 px-4 py-2.5 text-sm">
+                    <x-admin.icon name="user" class="w-4 h-4 text-stone-400 shrink-0" />
+                    <span class="text-stone-500">Editing:</span>
+                    <span id="esTarget" class="font-semibold text-stone-800 truncate">{{ $errorForm === 'edit-staff' ? (old('name') ?: 'Staff #' . old('staff_id')) : '' }}</span>
+                </div>
 
-                    <div class="pt-2">
-                        <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.99] transition-all shadow-card cursor-pointer">
-                            <x-admin.icon name="check" class="w-4 h-4" />
-                            Update Staff
-                        </button>
-                    </div>
-                </form>
-            </x-admin.section-card>
-        </div>
-    @else
-        {{-- Logged-in staff can edit their own account --}}
-        <div class="max-w-xl">
-            <x-admin.section-card icon="user" title="Your Account" subtitle="Update your own details or password" :delay="240">
-                <form id="edit-account-form" method="POST" action="{{ route('staff.update', auth()->guard('staff')->user()->id) }}" class="space-y-4">
-                    @csrf
-                    @method('PUT')
-
+                <div>
+                    <label class="{{ $labelClasses }}">Name</label>
+                    <input type="text" name="name" id="esName" value="{{ $errorForm === 'edit-staff' ? old('name') : '' }}" placeholder="Full name" class="{{ $inputClasses }}" required>
+                </div>
+                <div>
+                    <label class="{{ $labelClasses }}">Email</label>
+                    <input type="email" name="email" id="esEmail" value="{{ $errorForm === 'edit-staff' ? old('email') : '' }}" placeholder="Email address" class="{{ $inputClasses }}" required>
+                </div>
+                <div>
+                    <label class="{{ $labelClasses }}">Role</label>
+                    <select name="role" id="esRole" class="{{ $inputClasses }} cursor-pointer" required>
+                        <option value="">Select role</option>
+                        <option value="admin" @selected($errorForm === 'edit-staff' && old('role') === 'admin')>Admin</option>
+                        <option value="frontdesk" @selected($errorForm === 'edit-staff' && old('role') === 'frontdesk')>Front Desk</option>
+                        <option value="housekeeping" @selected($errorForm === 'edit-staff' && old('role') === 'housekeeping')>Housekeeping</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="{{ $labelClasses }}">Name</label>
-                        <input type="text" name="name" value="{{ old('name', auth()->guard('staff')->user()->name) }}" class="{{ $inputClasses }}" required>
+                        <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
+                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
                     </div>
                     <div>
-                        <label class="{{ $labelClasses }}">Email</label>
-                        <input type="email" name="email" value="{{ old('email', auth()->guard('staff')->user()->email) }}" class="{{ $inputClasses }}" required>
+                        <label class="{{ $labelClasses }}">Confirm Password</label>
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
-                            <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClasses }}">Confirm New Password</label>
-                            <input type="password" name="password_confirmation" placeholder="Confirm new password" class="{{ $inputClasses }}">
-                        </div>
-                    </div>
+                </div>
 
-                    <hr class="border-stone-100 my-4">
-
-                    <div>
-                        <label class="{{ $labelClasses }}">Current Password <span class="normal-case font-medium text-stone-400">(required to save changes)</span></label>
-                        <input type="password" name="current_password" placeholder="Enter current password" class="{{ $inputClasses }}" required>
-                    </div>
-
-                    <div class="pt-2">
-                        <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.99] transition-all shadow-card cursor-pointer">
-                            <x-admin.icon name="check" class="w-4 h-4" />
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </x-admin.section-card>
-        </div>
+                <div class="flex gap-2.5 justify-end pt-2">
+                    <x-admin.modal-footer close-target="editStaffModal" submit-label="Save Changes" />
+                </div>
+            </form>
+        </x-admin.modal>
     @endif
+
+    {{-- Activity modal (populated via AJAX) --}}
+    <x-admin.modal id="staffActivityModal" icon="clock" title="Recent Activity" max-width="lg" scroll-body>
+        <div class="p-6">
+            <div id="saLoading" class="py-8 text-center text-sm text-stone-400">Loading activity…</div>
+            <div id="saBody" class="hidden space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p id="saName" class="font-semibold text-stone-800"></p>
+                    <p id="saLastLogin" class="text-xs text-stone-400 font-data tabnum"></p>
+                </div>
+                <div id="saLogs" class="divide-y divide-stone-100 rounded-xl border border-stone-200/70 overflow-hidden"></div>
+                <p id="saEmpty" class="hidden text-sm text-stone-400 text-center py-4">No recorded activity yet.</p>
+                <p class="text-[11px] text-stone-400">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="text-clsu-700 font-semibold hover:underline">Audit Logs</a>.</p>
+            </div>
+        </div>
+    </x-admin.modal>
 </div>
 @endsection
 
@@ -331,6 +374,80 @@ $.ajaxSetup({
     }
 });
 
+// ── Modal helpers (same pattern as the rooms page) ──────────────────────────
+function openModal(id) {
+    $('#' + id).removeClass('hidden').addClass('flex');
+}
+function closeModal(id) {
+    $('#' + id).removeClass('flex').addClass('hidden');
+}
+$(document).on('click', '[data-modal-close]', function () {
+    closeModal($(this).data('modal-close'));
+});
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') {
+        ['createStaffModal', 'editStaffModal', 'staffActivityModal'].forEach(closeModal);
+    }
+});
+
+$('#openCreateStaffBtn').on('click', () => openModal('createStaffModal'));
+
+// ── Edit staff modal (prefilled from the row's data attributes) ─────────────
+$(document).on('click', '.edit-staff-btn', function () {
+    const $btn = $(this);
+    $('#esStaffId').val($btn.data('staff-id'));
+    $('#esTarget').text($btn.data('name'));
+    $('#esName').val($btn.data('name'));
+    $('#esEmail').val($btn.data('email'));
+    $('#esRole').val(String($btn.data('role')));
+    openModal('editStaffModal');
+});
+
+// ── Activity modal ───────────────────────────────────────────────────────────
+$(document).on('click', '.activity-btn', function () {
+    const staffId = $(this).data('staff-id');
+    $('#saLoading').removeClass('hidden');
+    $('#saBody').addClass('hidden');
+    openModal('staffActivityModal');
+
+    $.get(`/staff/staff-records/${staffId}/activity`)
+        .done(function (data) {
+            $('#saName').text(data.name);
+            $('#saLastLogin').text(data.last_login ? 'Last login: ' + data.last_login : 'Never logged in');
+
+            const $logs = $('#saLogs').empty();
+            $('#saEmpty').toggleClass('hidden', data.logs.length > 0);
+            $logs.toggleClass('hidden', data.logs.length === 0);
+
+            data.logs.forEach(log => {
+                const $row = $('<div class="px-4 py-3 bg-white"></div>');
+                const $top = $('<div class="flex items-center justify-between gap-3"></div>');
+                $top.append($('<span class="text-xs font-bold text-stone-800"></span>').text(log.action + (log.target ? ' · ' + log.target : '')));
+                $top.append($('<span class="text-[11px] text-stone-400 font-data tabnum whitespace-nowrap shrink-0"></span>').text(log.when));
+                $row.append($top);
+                if (log.description) {
+                    $row.append($('<p class="text-xs text-stone-500 mt-1"></p>').text(log.description));
+                }
+                $logs.append($row);
+            });
+
+            $('#saLoading').addClass('hidden');
+            $('#saBody').removeClass('hidden');
+        })
+        .fail(function () {
+            closeModal('staffActivityModal');
+            Swal.fire('Error', 'Could not load activity.', 'error');
+        });
+});
+
+// Reopen the modal that failed validation so old input + errors are visible
+@if($errorForm === 'create-staff')
+    openModal('createStaffModal');
+@elseif($errorForm === 'edit-staff')
+    openModal('editStaffModal');
+@endif
+
+// ── Suspend / unsuspend (password-verified) ──────────────────────────────────
 $(document).on('click', '.password-verify-btn', function(e) {
     e.preventDefault();
     const staffId = $(this).data('staff-id');

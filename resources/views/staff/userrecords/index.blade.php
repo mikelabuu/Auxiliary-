@@ -92,6 +92,7 @@
             <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
+                <option value="stays" @selected($sort === 'stays')>Most stays</option>
             </select>
             <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Apply</button>
             @if($search || $status !== 'all' || $sort !== 'latest')
@@ -163,19 +164,26 @@
                                 </td>
                                 <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">{{ $user->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
                                 <td class="px-6 py-3 text-right">
-                                    @if(!$user->is_suspended)
-                                        <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
-                                                data-action="suspend"
-                                                data-user-id="{{ $user->id }}">
-                                            Suspend
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button class="view-user-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                                data-user-id="{{ $user->id }}"
+                                                title="View details" aria-label="View details">
+                                            <x-admin.icon name="eye" class="w-4 h-4" />
                                         </button>
-                                    @else
-                                        <button class="password-verify-btn text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer"
-                                                data-action="unsuspend"
-                                                data-user-id="{{ $user->id }}">
-                                            Unsuspend
-                                        </button>
-                                    @endif
+                                        @if(!$user->is_suspended)
+                                            <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
+                                                    data-action="suspend"
+                                                    data-user-id="{{ $user->id }}">
+                                                Suspend
+                                            </button>
+                                        @else
+                                            <button class="password-verify-btn text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer"
+                                                    data-action="unsuspend"
+                                                    data-user-id="{{ $user->id }}">
+                                                Unsuspend
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -188,6 +196,86 @@
             </div>
         @endif
     </x-admin.section-card>
+
+    {{-- User detail modal (populated via AJAX) --}}
+    <x-admin.modal id="userDetailModal" icon="user" title="User Details" max-width="xl" scroll-body>
+        <div id="udLoading" class="p-10 text-center text-sm text-stone-400">Loading user details…</div>
+
+        <div id="udBody" class="hidden">
+            <div class="p-6 space-y-5">
+                {{-- Identity row --}}
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div id="udAvatar" class="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-base font-bold bg-clsu-100 text-clsu-700"></div>
+                        <div class="min-w-0">
+                            <p id="udName" class="font-bold text-stone-900 truncate"></p>
+                            <p id="udEmail" class="text-xs text-stone-400 truncate"></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1.5">
+                        <span id="udStanding" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"></span>
+                        <span id="udVerifiedPill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"></span>
+                    </div>
+                </div>
+
+                {{-- Booking stats --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="rounded-xl border border-stone-200/70 bg-stone-50/50 p-3 text-center">
+                        <p id="udStatTotal" class="text-lg font-bold font-data tabnum text-stone-900"></p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Bookings</p>
+                    </div>
+                    <div class="rounded-xl border border-stone-200/70 bg-stone-50/50 p-3 text-center">
+                        <p id="udStatCompleted" class="text-lg font-bold font-data tabnum text-clsu-700"></p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Stays</p>
+                    </div>
+                    <div class="rounded-xl border border-stone-200/70 bg-stone-50/50 p-3 text-center">
+                        <p id="udStatCancelled" class="text-lg font-bold font-data tabnum text-ember-700"></p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Cancelled</p>
+                    </div>
+                    <div class="rounded-xl border border-stone-200/70 bg-stone-50/50 p-3 text-center">
+                        <p id="udStatSpend" class="text-lg font-bold font-data tabnum text-stone-900"></p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Spent</p>
+                    </div>
+                </div>
+
+                {{-- Profile facts --}}
+                <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Phone</p>
+                        <p id="udPhone" class="text-stone-700 font-data tabnum mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Joined</p>
+                        <p id="udJoined" class="text-stone-700 font-data tabnum mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Last Login</p>
+                        <p id="udLastLogin" class="text-stone-700 font-data tabnum mt-0.5"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Last Cancellation</p>
+                        <p id="udLastCancelled" class="text-stone-700 font-data tabnum mt-0.5"></p>
+                    </div>
+                </div>
+
+                {{-- Recent bookings --}}
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Recent Bookings</p>
+                    <div id="udBookings" class="divide-y divide-stone-100 rounded-xl border border-stone-200/70 overflow-hidden"></div>
+                    <p id="udNoBookings" class="hidden text-sm text-stone-400 text-center py-4">No bookings yet.</p>
+                </div>
+            </div>
+
+            {{-- Footer actions --}}
+            <div class="flex flex-wrap items-center justify-end gap-2.5 border-t border-stone-100 bg-stone-50/50 px-6 py-4">
+                <button type="button" id="udVerifyBtn" class="hidden text-xs font-semibold text-palay-800 border border-palay-200 bg-palay-50 rounded-lg px-3 py-2 hover:bg-palay-100 transition-colors cursor-pointer">
+                    Mark Email Verified
+                </button>
+                <button type="button" id="udSuspendBtn" class="password-verify-btn text-xs font-semibold border bg-white rounded-lg px-3 py-2 transition-colors cursor-pointer"></button>
+                <button type="button" data-modal-close="userDetailModal" class="text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-2 hover:bg-stone-50 transition-colors cursor-pointer">Close</button>
+            </div>
+        </div>
+    </x-admin.modal>
 </div>
 @endsection
 
@@ -197,6 +285,131 @@ $.ajaxSetup({
     headers: {
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
+});
+
+// ── Modal helpers (same pattern as the rooms page) ──────────────────────────
+function openModal(id) {
+    $('#' + id).removeClass('hidden').addClass('flex');
+}
+function closeModal(id) {
+    $('#' + id).removeClass('flex').addClass('hidden');
+}
+$(document).on('click', '[data-modal-close]', function () {
+    closeModal($(this).data('modal-close'));
+});
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') closeModal('userDetailModal');
+});
+
+// ── User detail modal ────────────────────────────────────────────────────────
+const bookingStatusStyles = {
+    paid:             'bg-clsu-50 text-clsu-700 border-clsu-200',
+    completed:        'bg-clsu-50 text-clsu-700 border-clsu-200',
+    checked_in:       'bg-sky-50 text-sky-700 border-sky-200',
+    active:           'bg-sky-50 text-sky-700 border-sky-200',
+    confirmed:        'bg-sky-50 text-sky-700 border-sky-200',
+    pending_payment:  'bg-palay-100 text-palay-800 border-palay-200',
+    pending_discount: 'bg-palay-100 text-palay-800 border-palay-200',
+    cancelled:        'bg-ember-50 text-ember-700 border-ember-200',
+    failed:           'bg-ember-50 text-ember-700 border-ember-200',
+};
+
+let currentUserId = null;
+
+$(document).on('click', '.view-user-btn', function () {
+    currentUserId = $(this).data('user-id');
+    $('#udLoading').removeClass('hidden');
+    $('#udBody').addClass('hidden');
+    openModal('userDetailModal');
+
+    $.get(`/staff/user-records/${currentUserId}/details`)
+        .done(renderUserDetails)
+        .fail(() => {
+            closeModal('userDetailModal');
+            Swal.fire('Error', 'Could not load user details.', 'error');
+        });
+});
+
+function renderUserDetails(u) {
+    $('#udAvatar')
+        .text((u.username || '?').charAt(0).toUpperCase())
+        .toggleClass('bg-clsu-100 text-clsu-700', !u.is_suspended)
+        .toggleClass('bg-ember-100 text-ember-700', u.is_suspended);
+    $('#udName').text(`${u.username} · #${u.id}`);
+    $('#udEmail').text(u.email);
+
+    $('#udStanding')
+        .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ' +
+            (u.is_suspended ? 'bg-ember-50 text-ember-700 border-ember-200' : 'bg-clsu-50 text-clsu-700 border-clsu-200'))
+        .text(u.is_suspended ? 'Suspended' : 'Active');
+    $('#udVerifiedPill')
+        .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ' +
+            (u.verified ? 'bg-clsu-50 text-clsu-700 border-clsu-200' : 'bg-stone-100 text-stone-500 border-stone-200'))
+        .text(u.verified ? (u.verified_at ? `Verified ${u.verified_at}` : 'Verified') : 'Unverified');
+
+    $('#udStatTotal').text(u.stats.total);
+    $('#udStatCompleted').text(u.stats.completed);
+    $('#udStatCancelled').text(u.stats.cancelled);
+    $('#udStatSpend').text('₱' + u.stats.spend);
+
+    $('#udPhone').text(u.phone || '—');
+    $('#udJoined').text(u.joined);
+    $('#udLastLogin').text(u.last_login || '—');
+    $('#udLastCancelled').text(u.last_cancelled || '—');
+
+    const $list = $('#udBookings').empty();
+    $('#udNoBookings').toggleClass('hidden', u.recent_bookings.length > 0);
+    $list.toggleClass('hidden', u.recent_bookings.length === 0);
+    u.recent_bookings.forEach(b => {
+        const pill = bookingStatusStyles[b.status] || 'bg-stone-100 text-stone-600 border-stone-200';
+        const label = (b.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const $row = $('<div class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm bg-white"></div>');
+        $row.append($('<span class="font-data tabnum text-stone-500 shrink-0"></span>').text('#' + b.id));
+        $row.append($('<span class="text-stone-700 truncate flex-1"></span>').text(`Room ${b.rooms} · ${b.dates}`));
+        $row.append($(`<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${pill}"></span>`).text(label));
+        $row.append($('<span class="font-data tabnum font-semibold text-stone-800 shrink-0"></span>').text('₱' + b.amount));
+        $list.append($row);
+    });
+
+    $('#udVerifyBtn').toggleClass('hidden', u.verified);
+
+    $('#udSuspendBtn')
+        .data('user-id', u.id)
+        .data('action', u.is_suspended ? 'unsuspend' : 'suspend')
+        .attr('class', 'password-verify-btn text-xs font-semibold border bg-white rounded-lg px-3 py-2 transition-colors cursor-pointer ' +
+            (u.is_suspended
+                ? 'text-clsu-700 border-clsu-200 hover:bg-clsu-50 hover:border-clsu-300'
+                : 'text-ember-700 border-ember-200 hover:bg-ember-50 hover:border-ember-300'))
+        .text(u.is_suspended ? 'Unsuspend Account' : 'Suspend Account');
+
+    $('#udLoading').addClass('hidden');
+    $('#udBody').removeClass('hidden');
+}
+
+$('#udVerifyBtn').on('click', function () {
+    if (!currentUserId) return;
+
+    Swal.fire({
+        target: 'body',
+        title: 'Mark email as verified?',
+        text: 'Use this only when the guest has confirmed ownership of the email through another channel.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Verify Email',
+        scrollbarPadding: false,
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.post(`/staff/user-records/${currentUserId}/verify-email`, {
+            _token: $('meta[name="csrf-token"]').attr('content')
+        }).done(data => {
+            Swal.fire({
+                icon: data.success ? 'success' : 'info',
+                title: data.message,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => location.reload());
+        }).fail(() => Swal.fire('Error', 'Action failed. Please try again.', 'error'));
+    });
 });
 
 $(document).on('click', '.password-verify-btn', function(e) {

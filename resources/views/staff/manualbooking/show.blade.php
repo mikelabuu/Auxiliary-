@@ -18,7 +18,7 @@
     $color = $statusColorMap[$booking->status] ?? 'stone';
     $badgeClass = $badgeClassMap[$color] ?? 'bg-stone-100 text-stone-600 border-stone-200';
     $nights = max(1, \Carbon\Carbon::parse($booking->check_in)->diffInDays(\Carbon\Carbon::parse($booking->check_out)));
-    $payment = $booking->payments->sortByDesc('id')->first();
+    $payment = $booking->payments;
 @endphp
 
 <div class="space-y-6 max-w-[1680px] mx-auto">

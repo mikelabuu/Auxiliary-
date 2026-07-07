@@ -173,6 +173,10 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
         Route::post('/user-records/{user}/suspend', [UserRecordsController::class, 'suspend'])->name('staff.userrecords.suspend');
         Route::post('/user-records/{user}/unsuspend', [UserRecordsController::class, 'unsuspend'])->name('staff.userrecords.unsuspend');
 
+        // User detail modal (JSON) + manual email verification
+        Route::get('/user-records/{user}/details', [UserRecordsController::class, 'show'])->name('staff.userrecords.show');
+        Route::post('/user-records/{user}/verify-email', [UserRecordsController::class, 'verifyEmail'])->name('staff.userrecords.verify-email');
+
         Route::get('/staff-records', [StaffRecordsController::class, 'index'])->name('staff.staffrecords.index');
         Route::post('/staff/create', [StaffRecordsController::class, 'createStaff'])->name('staff.create-staff');
         Route::put('/staff/{staff}/update', [StaffRecordsController::class, 'update'])->name('staff.update');
@@ -182,6 +186,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
         // Perform suspend/unsuspend action (only called after password verified)
         Route::post('/staff-records/{staff}/suspend', [StaffRecordsController::class, 'suspend'])->name('staff.staffrecords.suspend');
         Route::post('/staff-records/{staff}/unsuspend', [StaffRecordsController::class, 'unsuspend'])->name('staff.staffrecords.unsuspend');
+
+        // Staff activity modal (JSON)
+        Route::get('/staff-records/{staff}/activity', [StaffRecordsController::class, 'activity'])->name('staff.staffrecords.activity');
         Route::put('/staff/master-update', [StaffRecordsController::class, 'updateByMasterAdmin'])->name('staff.master-update');
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('staff.audit.index');
