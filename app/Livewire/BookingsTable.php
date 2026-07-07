@@ -23,6 +23,12 @@ class BookingsTable extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    // Allow deep links like /bookings?search=123 (used by the topbar global search)
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'statusFilter' => ['except' => '', 'as' => 'status'],
+    ];
+
     protected $listeners = [
         'refreshBookingsTable' => '$refresh',
         'openBookingModal' => 'selectBooking',

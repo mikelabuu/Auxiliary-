@@ -11,12 +11,6 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    // Show login page
-    public function showLoginForm()
-    {
-        return view('auth.login');
-    }
-
     // Handle login post
     public function loginUser(Request $request)
     {
@@ -47,12 +41,6 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'Invalid email or password',
         ])->onlyInput('email');
-    }
-
-    // Show signup page
-    public function showSignupForm()
-    {
-        return view('auth.signup');
     }
 
     // Handle signup post

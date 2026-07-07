@@ -71,8 +71,8 @@ $.ajaxSetup({
                         <x-admin.icon :name="$revenuePercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
                         {{ $revenuePercentChange >= 0 ? '+' : '' }}{{ number_format($revenuePercentChange, 1) }}% vs last month
                     </p>
-                    <svg width="70" height="24" viewBox="0 0 70 24" class="text-palay-300/80">
-                        <polyline points="0,18 12,15 24,17 36,9 48,11 60,3 70,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg width="70" height="24" viewBox="0 0 70 24" class="text-palay-300/80" aria-label="Monthly revenue trend">
+                        <polyline points="{{ $revenueSparkline }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </x-slot:footnote>
@@ -80,9 +80,12 @@ $.ajaxSetup({
     </div>
 
     <!-- Secondary metrics strip -->
-    <div class="animate-in grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6" style="animation-delay:180ms">
+    <div class="animate-in grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style="animation-delay:180ms">
         <x-admin.mini-stat icon="arrival" label="Check-ins this week">{{ $checkinsThisWeek }}</x-admin.mini-stat>
         <x-admin.mini-stat icon="departure" label="Check-outs this week">{{ $checkoutsThisWeek }}</x-admin.mini-stat>
+        <a href="{{ route('staff.discounts.index') }}" class="!no-underline">
+            <x-admin.mini-stat icon="tag" color="palay" label="Pending discount requests" class="h-full hover:shadow-card-lg transition-shadow">{{ $pendingDiscounts }}</x-admin.mini-stat>
+        </a>
         <x-admin.mini-stat icon="wrench" color="ember" label="Rooms under maintenance">{{ $roomsUnderMaintenance }}</x-admin.mini-stat>
     </div>
 
@@ -130,7 +133,7 @@ $.ajaxSetup({
                                 <div class="flex-1 group relative flex justify-center h-full items-end">
                                     @if($val > 0)
                                         <div class="rounded-t-md w-full {{ $barColor }} transition-colors" style="height:{{ $heightPercent }}%"></div>
-                                        <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity {{ $isPeak ? 'text-palay-700 bg-palay-50' : 'text-clsu-700 bg-clsu-50' }} rounded-full px-1.5 py-0.5 tracking-wide whitespace-nowrap">{{ $val }}</span>
+                                        <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity {{ $isPeak ? 'text-palay-700 bg-palay-50' : 'text-clsu-700 bg-clsu-50' }} rounded-full px-1.5 py-0.5 tracking-wide whitespace-nowrap">{{ $val }} · ₱{{ number_format($revenueValues[$index]) }}</span>
                                     @else
                                         <div class="rounded-t-md w-full bg-stone-100 h-0"></div>
                                     @endif
@@ -279,6 +282,9 @@ $.ajaxSetup({
     const prevBtn = document.getElementById("prev");
     const nextBtn = document.getElementById("next");
 
+    // Dates (YYYY-MM-DD) with at least one active/upcoming stay
+    const bookedDates = new Set(@json($bookedDates));
+
     let date = new Date();
 
     const renderCalendar = () => {
@@ -313,7 +319,10 @@ $.ajaxSetup({
             ? "w-7 h-7 rounded-full bg-gradient-to-br from-clsu-600 to-clsu-800 text-white font-bold flex items-center justify-center ring-4 ring-clsu-100"
             : "w-7 h-7 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-full cursor-pointer transition";
 
-        daysHTML += `<div class="flex flex-col items-center gap-0.5"><span class="${cellClass}">${i}</span><span class="w-1 h-1 rounded-full bg-transparent"></span></div>`;
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const dotClass = bookedDates.has(dateStr) ? "bg-palay-400" : "bg-transparent";
+
+        daysHTML += `<div class="flex flex-col items-center gap-0.5"><span class="${cellClass}">${i}</span><span class="w-1 h-1 rounded-full ${dotClass}"></span></div>`;
       }
 
       const totalCells = firstDay + lastDate;

@@ -22,6 +22,7 @@ use App\Http\Controllers\Staff\PaymentLogsController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
+use App\Http\Controllers\Staff\GlobalSearchController;
 
 use App\Http\Controllers\Staff\ManualBookingController;
 
@@ -41,9 +42,6 @@ use App\Http\Controllers\Staff\frontdesk\BookingsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Payments\SandboxGatewayController;
 use App\Http\Middleware\VerifyCsrfToken;
-//test receipts
-use App\Models\Booking;
-use App\Models\Payments;
 use App\Http\Controllers\ReceiptController;
 /*
 |--------------------------------------------------------------------------
@@ -130,6 +128,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     // Home and Dashboard
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
 
+    // Topbar global search (JSON)
+    Route::get('/staff/search', GlobalSearchController::class)->name('staff.search');
+
     // Room Management
     Route::get('/staff/rooms', [RoomController::class, 'index'])->name('staff.rooms');
     Route::post('/staff/rooms/store', [RoomController::class, 'store'])->name('staff.rooms.store');
@@ -150,9 +151,6 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
     //Booking Hub
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
-    
-
-    // Route::get('/staff/balance', [AdminBalanceController::class, 'index'])->name('staff.balance');
 
     Route::prefix('staff')->group(function () {
         Route::get('/completed-bookings', [CompletedBookingsController::class, 'index'])
@@ -245,26 +243,6 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
         Route::get('/view', [MainReportsController::class, 'index'])->name('staff.reports.index');
         Route::post('/generate', [MainReportsController::class, 'generate'])->name('reports.generate');
         Route::post('/export', [MainReportsController::class, 'export'])->name('reports.export');
-
-
-        // // Central Hub
-        // Route::get('central', [CentralHubController::class, 'index'])->name('reports.central');
-
-        // // Central Hub Exports
-        // Route::get('central/bookings', [CentralHubController::class, 'exportBookings'])->name('reports.central.bookings');
-        // Route::get('central/revenue', [CentralHubController::class, 'exportRevenue'])->name('reports.central.revenue');
-        // Route::get('central/occupancy', [CentralHubController::class, 'exportOccupancy'])->name('reports.central.occupancy');
-        // Route::get('central/payments', [CentralHubController::class, 'exportPayments'])->name('reports.central.payments');
-        // Route::get('central/discounts', [CentralHubController::class, 'exportDiscounts'])->name('reports.central.discounts');
-
-    });
-
-    //testing route for receipt
-    Route::get('/test-receipt/{id}', function ($id) {
-        $booking = Booking::findOrFail($id);
-        $payments = $booking->payments;
-
-        return view('pdf.receipt', compact('booking', 'payments'));
     });
 });
 

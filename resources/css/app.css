@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Hide Alpine-controlled elements until Alpine boots (prevents flash of hidden content) */
+[x-cloak] {
+    display: none !important;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../../config/adminui.php';

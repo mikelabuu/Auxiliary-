@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Booking;
+use App\Models\Discount;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -28,23 +29,47 @@ class StaffDashboardController extends Controller
         ->get()
         ->keyBy('month');
 
+        // Monthly revenue (successful payments) for the same year
+        $revenuePerMonth = Payment::select(
+            DB::raw('MONTH(created_at) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+        ->where('status', 'success')
+        ->whereYear('created_at', $year)
+        ->groupBy(DB::raw('MONTH(created_at)'))
+        ->orderBy('month')
+        ->get()
+        ->keyBy('month');
+
         // format for chart
         $labels = [];
         $values = [];
+        $revenueValues = [];
         $peakMonthName = 'None';
         $peakMonthCount = 0;
-        
+
         for ($i = 1; $i <= 12; $i++) {
             $monthName = date('M', mktime(0, 0, 0, $i, 1));
             $count = $bookingsPerMonth[$i]->total ?? 0;
             $labels[] = $monthName;
             $values[] = $count;
-            
+            $revenueValues[] = (float) ($revenuePerMonth[$i]->total ?? 0);
+
             if ($count > $peakMonthCount) {
                 $peakMonthCount = $count;
                 $peakMonthName = date('F', mktime(0, 0, 0, $i, 1));
             }
         }
+
+        // Sparkline for the revenue stat card (Jan → current month, 70x24 viewBox)
+        $spark = array_slice($revenueValues, 0, max(now()->month, 2));
+        $sparkMax = max(max($spark), 1);
+        $sparkCount = count($spark);
+        $revenueSparkline = collect($spark)->map(function ($v, $i) use ($sparkMax, $sparkCount) {
+            $x = $sparkCount > 1 ? round($i * (70 / ($sparkCount - 1)), 1) : 0;
+            $y = round(21 - ($v / $sparkMax) * 18, 1);
+            return "{$x},{$y}";
+        })->implode(' ');
 
         $totalRooms = Room::count();
         $totalUsers = User::count();
@@ -86,6 +111,27 @@ class StaffDashboardController extends Controller
         $checkinsThisWeek = DB::table('checkins')->where('checked_in_at', '>=', Carbon::now()->subDays(7))->count();
         $checkoutsThisWeek = DB::table('checkouts')->where('checked_out_at', '>=', Carbon::now()->subDays(7))->count();
         $roomsUnderMaintenance = Room::where('status', 'maintenance')->count();
+        $pendingDiscounts = Discount::where('status', 'pending')->count();
+
+        // Dates with at least one active/upcoming stay, for the calendar's
+        // "has bookings" dots (window: 2 months back to 10 months ahead).
+        $calendarStart = Carbon::now()->startOfMonth()->subMonths(2);
+        $calendarEnd = Carbon::now()->startOfMonth()->addMonths(10);
+        $bookedDates = Booking::whereIn('status', array_merge(Booking::BLOCKING_STATUSES, ['completed']))
+            ->where('check_in', '<', $calendarEnd)
+            ->where('check_out', '>', $calendarStart)
+            ->get(['check_in', 'check_out'])
+            ->flatMap(function ($b) use ($calendarStart, $calendarEnd) {
+                $start = $b->check_in->max($calendarStart);
+                $end = $b->check_out->min($calendarEnd);
+                $dates = [];
+                for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                    $dates[] = $d->toDateString();
+                }
+                return $dates;
+            })
+            ->unique()
+            ->values();
 
         // Room Status Map Data
         $reservedRoomIds = DB::table('booking_room')
@@ -202,6 +248,8 @@ class StaffDashboardController extends Controller
             'totalBookings',
             'labels',
             'values',
+            'revenueValues',
+            'revenueSparkline',
             'totalRevenue',
             'peakMonthName',
             'peakMonthCount',
@@ -213,6 +261,8 @@ class StaffDashboardController extends Controller
             'checkinsThisWeek',
             'checkoutsThisWeek',
             'roomsUnderMaintenance',
+            'pendingDiscounts',
+            'bookedDates',
             
             // Room Status Map variables
             'dormBeds',
