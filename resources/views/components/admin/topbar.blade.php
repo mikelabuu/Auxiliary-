@@ -1,4 +1,4 @@
-<header id="topheader" class="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white/85 backdrop-blur-md border-b border-stone-200/70 flex items-center gap-3 sm:gap-4 px-4 sm:px-8 z-10 transition-[left] duration-200">
+<header id="topheader" class="fixed top-0 left-0 lg:left-64 right-0 h-20 bg-white shadow-[0_10px_30px_-15px_rgba(8,36,20,0.12)] border-b border-stone-200/60 flex items-center gap-3 sm:gap-4 px-4 sm:px-8 z-10 transition-[left] duration-200">
 
   <!-- Mobile Menu Toggle -->
   <button id="mobileMenuToggle" aria-label="Open menu" aria-expanded="false"

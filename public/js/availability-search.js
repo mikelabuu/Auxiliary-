@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function () {
       dateFormat: 'Y-m-d',
       minDate: new Date(Date.now() + 86400000),
       disableMobile: true,
+      onChange: function (dates) {
+        if (inEl.value && outEl.value) {
+          runSearch({ silent: true });
+        }
+      }
     });
 
     fpIn = flatpickr(inEl, {
@@ -36,9 +41,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dates[0]) return;
         const nextDay = new Date(dates[0].getTime() + 86400000);
         fpOut.set('minDate', nextDay);
-        if (outEl.value && new Date(outEl.value) < nextDay) fpOut.clear();
+        if (outEl.value && new Date(outEl.value) < nextDay) {
+          fpOut.clear();
+        }
         // Natural flow: picking check-in slides straight into check-out
-        if (!outEl.value) setTimeout(() => fpOut.open(), 120);
+        if (!outEl.value) {
+          setTimeout(() => fpOut.open(), 120);
+        } else {
+          runSearch({ silent: true });
+        }
       },
     });
   }
@@ -155,16 +166,31 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ---------- Search ---------- */
   let searching = false;
 
+  // Guest's chosen dates, or a sensible default (tonight → tomorrow) so the room
+  // cards can show availability before anyone touches the date picker.
+  function effectiveDates() {
+    if (inEl.value && outEl.value) {
+      return { checkIn: inEl.value, checkOut: outEl.value, explicit: true };
+    }
+    const pad = n => String(n).padStart(2, '0');
+    const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    const today = new Date();
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    return { checkIn: iso(today), checkOut: iso(tomorrow), explicit: false };
+  }
+
   async function runSearch(opts = {}) {
-    // `silent` = a real-time refresh (Reverb push): re-check availability in the
-    // background without the scroll-to, skeleton pills, or button spinner.
+    // `silent` = a background refresh (initial page load or a Reverb push): no
+    // scroll-to, skeleton pills, or button spinner.
     const silent = opts.silent === true;
     if (searching) return;
-    const checkIn = inEl.value;
-    const checkOut = outEl.value;
 
-    if (!checkIn || !checkOut) {
-      if (!silent) shakeWidget();
+    const { checkIn, checkOut, explicit } = effectiveDates();
+
+    // A manual click needs real dates from the widget; a silent/default refresh
+    // falls back to tonight so the cards always show something.
+    if (!explicit && !silent) {
+      shakeWidget();
       return;
     }
 
@@ -201,21 +227,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (row.available <= 0) {
           setPill(card, '<span class="avail-pill avail-pill--full"><span class="material-icons text-[13px]">event_busy</span>Fully booked</span>');
-          setCardFull(card, true);
         } else if (row.available <= 2) {
           setPill(card, '<span class="avail-pill avail-pill--low"><span class="material-icons text-[13px]">local_fire_department</span>Only ' + row.available + ' left</span>');
-          setCardFull(card, false);
         } else {
           setPill(card, '<span class="avail-pill avail-pill--open"><span class="material-icons text-[13px]">check_circle</span>' + row.available + ' rooms open</span>');
-          setCardFull(card, false);
         }
+        // Fully booked → lock the Book button. If the guest wants different
+        // dates, picking them re-runs the search and re-enables the card.
+        setCardFull(card, row.available <= 0);
       });
 
       // Only show room types that can seat the requested party size.
       const guests = parseInt(guestsInput?.value || '1', 10);
       applyGuestFilter(guests);
 
-      if (banner && bannerText) {
+      // The "Live availability · dates" banner only makes sense once the guest
+      // has actually searched — a default (tonight) paint stays quiet.
+      if (explicit && banner && bannerText) {
         const nightsTxt = data.nights + ' night' + (data.nights > 1 ? 's' : '');
         bannerText.textContent = 'Live availability · ' + fmtDate(data.check_in) + ' → ' + fmtDate(data.check_out) + ' · ' + nightsTxt + ' · ' + guests + ' guest' + (guests > 1 ? 's' : '');
         banner.classList.remove('hidden');
@@ -258,4 +286,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.Echo.channel('rooms').listen('.RoomStatusChanged', refreshLive);
     window.Echo.channel('bookings').listen('.BookingChanged', refreshLive);
   }
+
+  // Paint availability on the cards immediately (default: tonight), so guests
+  // see "Fully booked" / "Only N left" without touching the date picker. This
+  // also primes LAST_AVAILABILITY so the real-time refresh above starts working.
+  runSearch({ silent: true });
 });

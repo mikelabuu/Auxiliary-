@@ -194,5 +194,5 @@
     window.INITIAL_GUESTS = "{{ $guests ?? 1 }}";
     window.ROOM_TYPES_CONFIG = @json($roomTypes);
 </script>
-<script src="{{ asset('js/booking.js') }}"></script>
+<script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
 @endpush

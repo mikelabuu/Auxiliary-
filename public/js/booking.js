@@ -612,6 +612,23 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.type-card[data-type-value="' + row.room_type + '"]').forEach(card => {
           card.dataset.full = isFull ? '1' : '0';
           card.classList.toggle('opacity-60', isFull);
+
+          // Auto-deselect if it's currently selected and has become fully booked
+          if (isFull && card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            const check = card.querySelector('.type-card-check');
+            if (check) { check.classList.add('hidden'); check.classList.remove('grid'); }
+
+            const block = card.closest('.reservation-block');
+            if (block) {
+              const roomTypeSelect = block.querySelector('.room-type-select');
+              if (roomTypeSelect && roomTypeSelect.value === row.room_type) {
+                roomTypeSelect.value = '';
+                roomTypeSelect.dispatchEvent(new Event('change'));
+              }
+            }
+          }
+
           const badge = card.querySelector('[data-type-avail]');
           if (!badge) return;
           if (badgeText) {
@@ -764,11 +781,52 @@ document.addEventListener('DOMContentLoaded', function () {
   setTimeout(() => {
     // initialize flatpickr
     if (typeof flatpickr !== 'undefined') {
-      flatpickr('.flatpickr-date', {
-        dateFormat: 'Y-m-d',
-        minDate: 'today',
-        disableMobile: true
-      });
+      const inEl = document.getElementById('check_in');
+      const outEl = document.getElementById('check_out');
+      if (inEl && outEl) {
+        const fpOut = flatpickr(outEl, {
+          dateFormat: 'Y-m-d',
+          minDate: 'today',
+          disableMobile: true,
+          onChange: function() {
+            outEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+
+        const fpIn = flatpickr(inEl, {
+          dateFormat: 'Y-m-d',
+          minDate: 'today',
+          disableMobile: true,
+          onChange: function(dates) {
+            if (!dates[0]) return;
+            const nextDay = new Date(dates[0].getTime() + 86400000);
+            fpOut.set('minDate', nextDay);
+            if (outEl.value && new Date(outEl.value) < nextDay) {
+              fpOut.clear();
+              outEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            inEl.dispatchEvent(new Event('change', { bubbles: true }));
+            if (!outEl.value) {
+              setTimeout(() => fpOut.open(), 120);
+            }
+          }
+        });
+
+        // Set initial minDate for check-out if check-in has a value on page load
+        if (inEl.value) {
+          const checkInDate = new Date(inEl.value);
+          if (!isNaN(checkInDate.getTime())) {
+            const nextDay = new Date(checkInDate.getTime() + 86400000);
+            fpOut.set('minDate', nextDay);
+          }
+        }
+      } else {
+        flatpickr('.flatpickr-date', {
+          dateFormat: 'Y-m-d',
+          minDate: 'today',
+          disableMobile: true
+        });
+      }
     }
     
     syncDates();

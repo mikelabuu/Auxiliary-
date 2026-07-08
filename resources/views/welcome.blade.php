@@ -337,9 +337,20 @@
                     this.isOpen = false;
                     document.body.style.overflow = '';
                 },
+                isFullyBooked() {
+                    if (!this.room) return false;
+                    const data = window.LAST_AVAILABILITY;
+                    if (!data || !data.summary) return false;
+                    const typeSummary = data.summary.find(s => s.room_type === this.room.id);
+                    return typeSummary ? typeSummary.available <= 0 : false;
+                },
                 bookThis() {
                     const roomId = this.room ? this.room.id : null;
                     if (!roomId) return;
+                    if (this.isFullyBooked()) {
+                        alert('This room type is fully booked for the selected dates.');
+                        return;
+                    }
                     const checkIn = document.getElementById('widget_check_in').value;
                     const checkOut = document.getElementById('widget_check_out').value;
                     const guests = document.getElementById('widget_guests').value;
@@ -482,9 +493,9 @@
                 <!-- Sticky footer CTAs -->
                 <div class="sticky bottom-0 z-20 flex gap-3 border-t border-emerald-deep/10 bg-cream-warm/95 px-6 py-5 backdrop-blur-xl">
                     <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-emerald-deep/15 bg-cream px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 transition-all hover:bg-cream-warm cursor-pointer">Close</button>
-                    <button type="button" @click="bookThis()" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
+                    <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
                         <x-booking.ui.icon name="calendar" class="h-4 w-4" />
-                        Book this room
+                        <span x-text="isFullyBooked() ? 'Fully Booked' : 'Book this room'">Book this room</span>
                     </button>
                 </div>
             </div>
@@ -493,15 +504,22 @@
 
     <!-- jQuery for booking script fallback and script inclusion -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="{{ asset('js/booking.js') }}"></script>
-    <script src="{{ asset('js/availability-search.js') }}"></script>
-    <script src="{{ asset('js/room-filters.js') }}"></script>
+    <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
+    <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}"></script>
+    <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
     <script src="{{ asset('js/noise-grain.js') }}" defer></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
     <script>
         function bookRoomDirect(roomId) {
             if (!roomId) return;
+            if (window.LAST_AVAILABILITY && window.LAST_AVAILABILITY.summary) {
+                const row = window.LAST_AVAILABILITY.summary.find(s => s.room_type === roomId);
+                if (row && row.available <= 0) {
+                    alert('This room type is fully booked for the selected dates.');
+                    return;
+                }
+            }
             const checkIn = document.getElementById('widget_check_in').value;
             const checkOut = document.getElementById('widget_check_out').value;
             const guests = document.getElementById('widget_guests').value;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@yield('title', 'Hotel Booking Admin')</title>
+  <title>@yield('title', 'Farmers Hostel · Operations Hub')</title>
 
   <!-- Tailwind CSS via Vite -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -31,7 +31,7 @@
     <x-admin.topbar />
 
     <!-- Main content wrapper matching farmersnew.html -->
-    <main id="mainContent" class="lg:ml-64 pt-16 min-h-screen relative transition-[margin] duration-200">
+    <main id="mainContent" class="lg:ml-64 pt-20 min-h-screen relative transition-[margin] duration-200">
       <div aria-hidden="true" class="absolute inset-x-0 top-0 h-[440px] overflow-hidden -z-10 pointer-events-none">
         <div class="absolute -top-24 left-[18%] w-[420px] h-[420px] bg-clsu-200/40 rounded-full blur-3xl"></div>
         <div class="absolute -top-28 right-[8%] w-[360px] h-[360px] bg-palay-200/30 rounded-full blur-3xl"></div>
