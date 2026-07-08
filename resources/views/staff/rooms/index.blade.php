@@ -896,6 +896,16 @@ $(function () {
         if (!document.hidden) pollRoomStatus();
     });
     $(window).on('focus', pollRoomStatus);
+
+    // Real-time push: when any room's status changes anywhere (another staff
+    // member, a guest booking online, a check-in/out), Reverb pushes here and
+    // we refetch immediately instead of waiting for the 10s poll. The interval
+    // above stays as a safety net if the socket drops.
+    if (window.Echo) {
+        window.Echo.channel('rooms').listen('.RoomStatusChanged', function () {
+            pollRoomStatus();
+        });
+    }
 });
 </script>
 @endpush

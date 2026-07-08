@@ -220,6 +220,17 @@ class BookingController extends Controller
                 if (!empty($overlappingRooms)) {
                     throw new \Exception('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
                 }
+
+                // Authoritative status guard: a room the front desk just set to
+                // maintenance/cleaning/occupied must not be bookable, even if the
+                // guest's page still shows it as open (stale tab, no JS, etc.).
+                // The real-time UI is only a convenience — this is the guarantee.
+                $unavailableRooms = $lockedRooms->filter(fn($room) => $room->status !== 'available')
+                    ->pluck('room_number')->toArray();
+
+                if (!empty($unavailableRooms)) {
+                    throw new \Exception('The following rooms are no longer available: ' . implode(', ', $unavailableRooms));
+                }
                 
                 //Begin Booking 
 
@@ -287,6 +298,9 @@ class BookingController extends Controller
         if (!empty($roomIds)) {
             $booking->rooms()->attach($roomIds);
         }
+
+        \App\Support\Realtime::emit(new \App\Events\BookingChanged());
+        \App\Support\Realtime::emit(new \App\Events\RoomStatusChanged());
 
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Booking submitted! Review your Booking.');

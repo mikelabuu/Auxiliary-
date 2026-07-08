@@ -9,6 +9,9 @@ use App\Models\Checkout;
 use App\Models\CancellationLog;
 use Carbon\Carbon;
 use App\Services\AuditLogger;
+use App\Events\RoomStatusChanged;
+use App\Events\BookingChanged;
+use App\Support\Realtime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -102,6 +105,8 @@ class BookingsTable extends Component
             );
             session()->flash('success', "Booking #{$booking->id} cancelled.");
             $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
+            Realtime::emit(new RoomStatusChanged());
+            Realtime::emit(new BookingChanged());
         }
     }
 
@@ -143,6 +148,8 @@ class BookingsTable extends Component
 
         session()->flash('success', "Booking #{$booking->id} checked out.");
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
+        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged());
     }
 
     public function render()

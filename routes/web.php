@@ -127,6 +127,7 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
     // Home and Dashboard
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+    Route::get('/staff/dashboard/room-map-feed', [StaffDashboardController::class, 'roomMapFeed'])->name('staff.dashboard.roomMapFeed');
 
     // Topbar global search (JSON)
     Route::get('/staff/search', GlobalSearchController::class)->name('staff.search');

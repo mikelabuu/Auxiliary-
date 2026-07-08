@@ -163,10 +163,10 @@ $.ajaxSetup({
     <!-- Room Status Map (signature feature) -->
     <x-admin.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20" :delay="300">
         <x-slot:actions>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · {{ $availableCount }}</span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · {{ $occupiedCount }}</span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Reserved · {{ $reservedCount }}</span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · {{ $maintenanceCount }}</span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Reserved · <span data-map-count="reserved">{{ $reservedCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span data-map-count="maintenance">{{ $maintenanceCount }}</span></span>
         </x-slot:actions>
 
         <div class="space-y-5">
@@ -180,7 +180,7 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -194,7 +194,7 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -208,7 +208,7 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -349,3 +349,70 @@ $.ajaxSetup({
     renderCalendar();
   </script>
 @endsection
+
+@push('scripts')
+<script>
+// ── Real-time Room Status Map ────────────────────────────────────────────────
+// The map is server-rendered on load; here we keep it live. Room status changes
+// AND booking changes both matter ('reserved' = a future paid/confirmed booking),
+// so we listen to both broadcast channels, patch only the buttons that changed,
+// and refresh the legend counts. A slow poll is the fallback if the socket drops.
+document.addEventListener('DOMContentLoaded', function () {
+    if (!document.querySelector('.room-map-btn')) return; // map not on this page
+
+    const MAP_BASE = 'room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400';
+    const MAP_VARIANT = {
+        available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
+        occupied:    'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950',
+        reserved:    'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200',
+        maintenance: 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
+    };
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+    function patchButton(btn, status) {
+        if (btn.dataset.displayStatus === status) return;
+        btn.dataset.displayStatus = status;
+        btn.className = MAP_BASE + ' ' + (MAP_VARIANT[status] || MAP_VARIANT.available);
+        btn.title = btn.textContent.trim() + ' · ' + cap(status);
+    }
+
+    function applyFeed(data) {
+        if (!data || !data.success) return;
+        (data.rooms || []).forEach(r => {
+            const btn = document.querySelector('.room-map-btn[data-room-btn="' + r.id + '"]');
+            if (btn) patchButton(btn, r.display_status);
+        });
+        if (data.counts) {
+            Object.keys(data.counts).forEach(k => {
+                const el = document.querySelector('[data-map-count="' + k + '"]');
+                if (el) el.textContent = data.counts[k];
+            });
+        }
+    }
+
+    let inFlight = false;
+    function fetchMap() {
+        if (inFlight || document.hidden) return;
+        inFlight = true;
+        fetch("{{ route('staff.dashboard.roomMapFeed') }}", { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(applyFeed)
+            .catch(() => {})
+            .finally(() => { inFlight = false; });
+    }
+
+    // Push: debounced so a burst of changes triggers one refresh.
+    let mapTimer = null;
+    function scheduleFetch() { clearTimeout(mapTimer); mapTimer = setTimeout(fetchMap, 400); }
+    if (window.Echo) {
+        window.Echo.channel('rooms').listen('.RoomStatusChanged', scheduleFetch);
+        window.Echo.channel('bookings').listen('.BookingChanged', scheduleFetch);
+    }
+
+    // Fallback poll + refresh on returning to the tab.
+    setInterval(fetchMap, 20000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) fetchMap(); });
+    window.addEventListener('focus', fetchMap);
+});
+</script>
+@endpush

@@ -457,10 +457,14 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>`;
     }
 
-    function fetchAvailableRooms() {
+    function fetchAvailableRooms(silent = false) {
         if (!checkInInput.value || !checkOutInput.value) return;
-        setAvailabilityStatus('loading');
-        renderBoardSkeleton();
+        // A silent refresh (real-time push) keeps the current board on screen
+        // instead of flashing the skeleton while staff are mid-booking.
+        if (!silent) {
+            setAvailabilityStatus('loading');
+            renderBoardSkeleton();
+        }
 
         fetch("{{ route('staff.manualbooking.available') }}", {
             method: 'POST',
@@ -864,6 +868,21 @@ document.addEventListener('DOMContentLoaded', function () {
             </svg>
             Creating booking…`;
     });
+
+    /* ───────────────────── Real-time availability (Reverb) ─────────────────────
+       The admin room board broadcasts RoomStatusChanged whenever any room's
+       status changes (maintenance, cleaning, a new booking, a check-in). We
+       silently re-fetch the board so a room another staffer just closed drops
+       off here immediately; fetchAvailableRooms → pruneUnavailableSelections()
+       removes it from the current picks and toasts a heads-up. Debounced so a
+       burst of changes triggers one refresh. */
+    if (window.Echo) {
+        let realtimeTimer = null;
+        window.Echo.channel('rooms').listen('.RoomStatusChanged', () => {
+            clearTimeout(realtimeTimer);
+            realtimeTimer = setTimeout(() => fetchAvailableRooms(true), 400);
+        });
+    }
 
     /* ───────────────────── Boot ───────────────────── */
     syncAssignmentUI();

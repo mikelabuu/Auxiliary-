@@ -177,6 +177,20 @@ class ManualBookingController extends Controller
             ])->withInput();
         }
 
+        // Authoritative status guard: reject rooms the front desk just closed
+        // (maintenance/cleaning/occupied) even if this page still showed them as
+        // open. The live board is a convenience; this is the guarantee.
+        $unavailableRooms = Room::whereIn('room_number', $allRoomNumbers)
+            ->where('status', '!=', 'available')
+            ->pluck('room_number')
+            ->toArray();
+
+        if (!empty($unavailableRooms)) {
+            return back()->withErrors([
+                'reservations' => 'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
+            ])->withInput();
+        }
+
         $status = 'paid';
 
         DB::beginTransaction();
@@ -265,6 +279,9 @@ class ManualBookingController extends Controller
             \Log::error('Walk-in booking failed: '.$e->getMessage());
             return back()->with('error', 'Failed to create booking: ' . $e->getMessage())->withInput();
         }
+
+        \App\Support\Realtime::emit(new \App\Events\BookingChanged());
+        \App\Support\Realtime::emit(new \App\Events\RoomStatusChanged());
 
         return redirect()->route('staff.manualbooking.show', $booking->id)
                         ->with('success', "Walk-in booking created successfully. Status: {$status}");

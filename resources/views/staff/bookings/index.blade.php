@@ -43,3 +43,20 @@ $.ajaxSetup({
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Real-time push: refresh the booking panels the instant a booking changes
+// anywhere (check-in/out, no-show, cancellation, new booking). The panels also
+// wire:poll as a fallback if the socket is unavailable.
+document.addEventListener('DOMContentLoaded', function () {
+    if (!window.Echo) return;
+    window.Echo.channel('bookings').listen('.BookingChanged', function () {
+        if (window.Livewire) {
+            Livewire.dispatch('refreshBookingsTable');
+            Livewire.dispatch('refreshActiveBookings');
+        }
+    });
+});
+</script>
+@endpush

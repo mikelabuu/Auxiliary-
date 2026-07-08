@@ -133,33 +133,8 @@ class StaffDashboardController extends Controller
             ->unique()
             ->values();
 
-        // Room Status Map Data
-        $reservedRoomIds = DB::table('booking_room')
-            ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
-            ->whereIn('bookings.status', ['paid', 'confirmed'])
-            ->where('bookings.check_in', '>', Carbon::now())
-            ->pluck('booking_room.room_id')
-            ->toArray();
-
-        $rooms = Room::all()->map(function ($room) use ($reservedRoomIds) {
-            if ($room->status === 'maintenance') {
-                $displayStatus = 'maintenance';
-            } elseif ($room->status === 'occupied') {
-                $displayStatus = 'occupied';
-            } elseif (in_array($room->id, $reservedRoomIds)) {
-                $displayStatus = 'reserved';
-            } else {
-                $displayStatus = 'available';
-            }
-
-            return [
-                'id' => $room->id,
-                'room_number' => $room->room_number,
-                'room_type' => $room->room_type,
-                'status' => $room->status,
-                'display_status' => $displayStatus,
-            ];
-        });
+        // Room Status Map Data — shared with the real-time roomMapFeed() endpoint.
+        $rooms = $this->roomMapState();
 
         // Group rooms for the room map layout
         $dormBeds = $rooms->filter(function($r) {
@@ -289,5 +264,60 @@ class StaffDashboardController extends Controller
             // Recent activity
             'recentActivities'
         ));
+    }
+
+    /**
+     * Per-room display status for the dashboard Room Status Map. Extracted so
+     * the initial page render and the real-time roomMapFeed() endpoint stay in
+     * lock-step. 'reserved' = a paid/confirmed booking with a future check-in.
+     */
+    private function roomMapState()
+    {
+        $reservedRoomIds = DB::table('booking_room')
+            ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
+            ->whereIn('bookings.status', ['paid', 'confirmed'])
+            ->where('bookings.check_in', '>', Carbon::now())
+            ->pluck('booking_room.room_id')
+            ->toArray();
+
+        return Room::all()->map(function ($room) use ($reservedRoomIds) {
+            if ($room->status === 'maintenance') {
+                $displayStatus = 'maintenance';
+            } elseif ($room->status === 'occupied') {
+                $displayStatus = 'occupied';
+            } elseif (in_array($room->id, $reservedRoomIds)) {
+                $displayStatus = 'reserved';
+            } else {
+                $displayStatus = 'available';
+            }
+
+            return [
+                'id' => $room->id,
+                'room_number' => $room->room_number,
+                'room_type' => $room->room_type,
+                'status' => $room->status,
+                'display_status' => $displayStatus,
+            ];
+        });
+    }
+
+    /**
+     * Lightweight JSON snapshot of the Room Status Map, pushed/polled to keep
+     * the dashboard map live without a full page reload.
+     */
+    public function roomMapFeed()
+    {
+        $rooms = $this->roomMapState();
+
+        return response()->json([
+            'success' => true,
+            'rooms'   => $rooms->map(fn ($r) => ['id' => $r['id'], 'display_status' => $r['display_status']])->values(),
+            'counts'  => [
+                'available'   => $rooms->where('display_status', 'available')->count(),
+                'occupied'    => $rooms->where('display_status', 'occupied')->count(),
+                'reserved'    => $rooms->where('display_status', 'reserved')->count(),
+                'maintenance' => $rooms->where('display_status', 'maintenance')->count(),
+            ],
+        ]);
     }
 }

@@ -155,25 +155,30 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ---------- Search ---------- */
   let searching = false;
 
-  async function runSearch() {
+  async function runSearch(opts = {}) {
+    // `silent` = a real-time refresh (Reverb push): re-check availability in the
+    // background without the scroll-to, skeleton pills, or button spinner.
+    const silent = opts.silent === true;
     if (searching) return;
     const checkIn = inEl.value;
     const checkOut = outEl.value;
 
     if (!checkIn || !checkOut) {
-      shakeWidget();
+      if (!silent) shakeWidget();
       return;
     }
 
     searching = true;
-    scrollToRooms();
+    if (!silent) scrollToRooms();
 
-    // Skeleton pills while loading
-    cards().forEach(card => {
-      setPill(card, '<span class="avail-pill avail-pill--loading"><span class="avail-shimmer"></span>Checking…</span>');
-    });
+    // Skeleton pills while loading (interactive search only)
+    if (!silent) {
+      cards().forEach(card => {
+        setPill(card, '<span class="avail-pill avail-pill--loading"><span class="avail-shimmer"></span>Checking…</span>');
+      });
+    }
 
-    const labelHost = document.getElementById('btnSearchRoomsLabel');
+    const labelHost = silent ? null : document.getElementById('btnSearchRoomsLabel');
     const originalLabel = labelHost ? labelHost.innerHTML : '';
     if (labelHost) {
       labelHost.innerHTML = '<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Searching…';
@@ -217,10 +222,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (err) {
       console.error(err);
-      cards().forEach(card => setPill(card, ''));
-      if (banner && bannerText) {
-        bannerText.textContent = 'Could not check availability right now — please try again.';
-        banner.classList.remove('hidden');
+      if (!silent) {
+        cards().forEach(card => setPill(card, ''));
+        if (banner && bannerText) {
+          bannerText.textContent = 'Could not check availability right now — please try again.';
+          banner.classList.remove('hidden');
+        }
       }
     } finally {
       searching = false;
@@ -235,4 +242,20 @@ document.addEventListener('DOMContentLoaded', function () {
     fpOut ? fpOut.clear() : (outEl.value = '');
     clearResults();
   });
+
+  // ── Real-time availability (Reverb) ──────────────────────────────────────
+  // Once a guest has searched, keep the per-type pills ("Fully booked" / "N
+  // left") fresh as rooms are closed or booked elsewhere — re-run the summary
+  // silently on the same broadcasts the admin panel emits. Only fires when a
+  // search is active (dates chosen), and is debounced against bursts.
+  let liveTimer = null;
+  function refreshLive() {
+    if (!window.LAST_AVAILABILITY && !(inEl.value && outEl.value)) return;
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(function () { runSearch({ silent: true }); }, 400);
+  }
+  if (window.Echo) {
+    window.Echo.channel('rooms').listen('.RoomStatusChanged', refreshLive);
+    window.Echo.channel('bookings').listen('.BookingChanged', refreshLive);
+  }
 });

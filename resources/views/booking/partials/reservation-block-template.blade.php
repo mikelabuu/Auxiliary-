@@ -26,12 +26,14 @@
 
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
-                <button type="button" data-type-value="{{ $type['id'] }}"
+                <button type="button" data-type-value="{{ $type['id'] }}" data-type-title="{{ $type['title'] }}"
                         class="type-card group relative cursor-pointer overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-[0_8px_22px_-18px_rgba(6,40,30,0.4)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold hover:shadow-[0_14px_30px_-18px_rgba(6,40,30,0.5)]">
                     <span class="block h-20 w-full overflow-hidden sm:h-24">
                         <img src="{{ asset($type['image']) }}" alt="{{ $type['title'] }}" loading="lazy"
                              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                     </span>
+                    {{-- Per-type availability badge for the chosen dates; filled by booking.js --}}
+                    <span data-type-avail class="type-card-avail hidden"></span>
                     <span class="type-card-check absolute right-2 top-2 hidden h-6 w-6 place-items-center rounded-full bg-emerald-deep text-cream shadow-md ring-2 ring-cream">
                         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>

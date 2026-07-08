@@ -13,6 +13,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use App\Services\AuditLogger;
+use App\Events\RoomStatusChanged;
+use App\Events\BookingChanged;
+use App\Support\Realtime;
 
 class ArrivalsDepartures extends Component
 {
@@ -226,6 +229,8 @@ class ArrivalsDepartures extends Component
         $this->dispatch('alert', type: 'success', message: 'Check-in successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
+        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged());
     }
 
 
@@ -270,6 +275,8 @@ class ArrivalsDepartures extends Component
         $this->dispatch('alert', type: 'success', message: 'Check-out successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
+        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged());
     }
 
     public function confirmNoShow($bookingId)
@@ -323,5 +330,7 @@ class ArrivalsDepartures extends Component
 
         $this->dispatch('alert', type: 'success', message: 'No Show successful!');
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
+        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged());
     }
 }

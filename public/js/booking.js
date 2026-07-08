@@ -167,6 +167,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     typeCards.forEach(card => {
       card.addEventListener('click', () => {
+        // Don't let the guest pick a room style that's fully booked for the dates.
+        if (card.dataset.full === '1') {
+          showFormError('All ' + (card.dataset.typeTitle || 'rooms of this type') + ' are booked or unavailable for these dates. Try other dates or another room style.');
+          return;
+        }
         if (roomTypeSelect.value === card.dataset.typeValue) return;
         roomTypeSelect.value = card.dataset.typeValue;
         roomTypeSelect.dispatchEvent(new Event('change'));
@@ -315,15 +320,29 @@ document.addEventListener('DOMContentLoaded', function () {
     return block;
   };
 
+  // Returns { lostSelection } — the room number the guest had picked that is no
+  // longer bookable after this render (or null). Callers use it to warn the guest.
   function renderRoomTilesForBlock(index, rooms, blockEl) {
     const tilesWrap = blockEl.querySelector('.room-tiles-wrapper');
+    const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
+    const priorSelection = hiddenInput.value; // the guest's current pick, if any
     tilesWrap.innerHTML = '';
     if (!rooms.length) {
       tilesWrap.innerHTML = '<div class="text-sm font-semibold text-stone-500 py-4">No rooms available</div>';
-      return;
+      // Nothing open at all — drop any existing pick for this block.
+      if (priorSelection) {
+        hiddenInput.value = '';
+        selectedRoomNumbersSet.delete(priorSelection);
+        updateAggregateHiddenInputs();
+        generateBookingSummary();
+        return { lostSelection: priorSelection };
+      }
+      return { lostSelection: null };
     }
     const container = document.createElement('div');
     container.className = 'room-tiles';
+
+    let priorStillAvailable = false;
 
     rooms.forEach((r, i) => {
       const tile = document.createElement('div');
@@ -334,6 +353,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (r.status === 'available') {
         tile.classList.add('available');
+
+        // Re-apply the guest's existing selection so it survives a re-render
+        // (manual "Refresh" or a real-time availability re-check).
+        if (priorSelection && r.room_number === priorSelection) {
+          priorStillAvailable = true;
+          tile.classList.add('selected');
+          const checkSpan = document.createElement('span');
+          checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white material-icons';
+          checkSpan.innerText = 'check';
+          tile.appendChild(checkSpan);
+        }
+
         tile.addEventListener('click', () => {
           const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
           const prev = hiddenInput.value;
@@ -373,6 +404,17 @@ document.addEventListener('DOMContentLoaded', function () {
       container.appendChild(tile);
     });
     tilesWrap.appendChild(container);
+
+    // The guest's pick disappeared from the open list (now booked/cleaning/
+    // maintenance, or removed) — drop it and report it so the caller can warn.
+    if (priorSelection && !priorStillAvailable) {
+      hiddenInput.value = '';
+      selectedRoomNumbersSet.delete(priorSelection);
+      updateAggregateHiddenInputs();
+      generateBookingSummary();
+      return { lostSelection: priorSelection };
+    }
+    return { lostSelection: null };
   }
 
   function updateAggregateHiddenInputs() {
@@ -381,6 +423,53 @@ document.addEventListener('DOMContentLoaded', function () {
     let totalSeniors = 0;
     document.querySelectorAll('.res-num-seniors').forEach(inp => { totalSeniors += parseInt(inp.value) || 0; });
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
+  }
+
+  // ── Real-time availability (Reverb) ──────────────────────────────────────
+  // The admin panel broadcasts `RoomStatusChanged` on the public `rooms`
+  // channel whenever any room's status changes (maintenance, cleaning, a new
+  // booking, a check-in). We listen for it and silently re-check every block's
+  // open rooms, so a guest never sits on a room that was just closed.
+
+  // Re-fetch one block's availability WITHOUT the loading spinner. Returns the
+  // room number that got dropped (if the guest's pick is no longer bookable).
+  async function recheckBlockAvailability(block) {
+    const roomType = block.querySelector('.room-type-select')?.value;
+    if (!roomType || !check_in.value || !check_out.value) return null;
+    try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const resp = await fetch('/rooms/available', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+        body: JSON.stringify({ room_type: roomType, check_in: check_in.value, check_out: check_out.value })
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const result = renderRoomTilesForBlock(block.dataset.index, data.rooms || [], block);
+      return result && result.lostSelection ? result.lostSelection : null;
+    } catch (e) { console.error(e); return null; }
+  }
+
+  // Debounced so a burst of admin changes collapses into a single refresh.
+  let recheckTimer = null;
+  function recheckAllBlocksAvailability() {
+    clearTimeout(recheckTimer);
+    recheckTimer = setTimeout(async () => {
+      updateTypeAvailability(); // refresh the per-type "Fully booked" badges too
+      const dropped = [];
+      for (const block of document.querySelectorAll('.reservation-block')) {
+        const lost = await recheckBlockAvailability(block);
+        if (lost) dropped.push(lost);
+      }
+      if (dropped.length) {
+        showFormError('Room ' + dropped.join(', ') + ' was just closed by the front desk and removed from your selection. Please choose another.');
+      }
+    }, 400);
+  }
+
+  // Subscribe once. Guarded because Echo only exists if the Reverb assets loaded.
+  if (window.Echo) {
+    window.Echo.channel('rooms').listen('.RoomStatusChanged', recheckAllBlocksAvailability);
   }
 
   // ── Progress rail (checkout header) ──────────────────────────────
@@ -493,6 +582,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function autoCheckAllBlocks() {
     if (!check_in || !check_out || !check_in.value || !check_out.value) return;
+    updateTypeAvailability();
     document.querySelectorAll('.reservation-block').forEach(block => {
       const select = block.querySelector('.room-type-select');
       if (select && select.value) {
@@ -500,6 +590,41 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btn) setTimeout(() => btn.click(), 80);
       }
     });
+  }
+
+  // Per-room-type availability for the chosen dates. Badges each type card so a
+  // guest can see at a glance that, say, every Double Room is taken — before
+  // they pick it. Uses the same /rooms/availability-summary the landing page does.
+  async function updateTypeAvailability() {
+    if (!check_in?.value || !check_out?.value) return;
+    try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const resp = await fetch('/rooms/availability-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+        body: JSON.stringify({ check_in: check_in.value, check_out: check_out.value })
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      (data.summary || []).forEach(row => {
+        const isFull = row.available <= 0;
+        const badgeText = isFull ? 'Fully booked' : (row.available <= 2 ? ('Only ' + row.available + ' left') : '');
+        document.querySelectorAll('.type-card[data-type-value="' + row.room_type + '"]').forEach(card => {
+          card.dataset.full = isFull ? '1' : '0';
+          card.classList.toggle('opacity-60', isFull);
+          const badge = card.querySelector('[data-type-avail]');
+          if (!badge) return;
+          if (badgeText) {
+            badge.textContent = badgeText;
+            badge.className = 'type-card-avail absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm ' +
+              (isFull ? 'bg-ember-600 text-white' : 'bg-gold text-ink');
+          } else {
+            badge.textContent = '';
+            badge.className = 'type-card-avail hidden';
+          }
+        });
+      });
+    } catch (e) { console.error(e); }
   }
 
   function fmtShortDate(iso) {
@@ -658,6 +783,10 @@ document.addEventListener('DOMContentLoaded', function () {
     } else if (reservationContainer.querySelectorAll('.reservation-block').length === 0) {
       addReservationBlock({});
     }
+
+    // If dates are already set (e.g. deep-linked from the landing search),
+    // badge the room-type cards immediately.
+    if (check_in?.value && check_out?.value) updateTypeAvailability();
   }, 100);
 
 });

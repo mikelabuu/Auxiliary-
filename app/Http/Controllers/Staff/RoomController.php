@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
+use App\Events\RoomStatusChanged;
+use App\Support\Realtime;
 
 class RoomController extends Controller
 {
@@ -200,6 +202,8 @@ public function occupancyForRoom(Room $room)
             "Room {$room->room_number} was added by {$staff->name}" // Optional description
         );
 
+        Realtime::emit(new RoomStatusChanged());
+
         return redirect()->back()->with('success', 'Room added successfully!');
     }
 
@@ -244,6 +248,8 @@ public function occupancyForRoom(Room $room)
             "Room {$room->room_number} was updated by {$staff->name}"
         );
 
+        Realtime::emit(new RoomStatusChanged());
+
         return response()->json([
             'success' => true,
             'room' => $room
@@ -272,6 +278,8 @@ public function occupancyForRoom(Room $room)
             $room->fresh()->toArray(),
             "Room {$room->room_number} status set to {$validated['status']} by {$staff->name}"
         );
+
+        Realtime::emit(new RoomStatusChanged());
 
         return response()->json([
             'success' => true,
@@ -302,6 +310,8 @@ public function occupancyForRoom(Room $room)
         );
 
         $room->delete();
+
+        Realtime::emit(new RoomStatusChanged());
 
         return response()->json([
             'success' => true,
