@@ -9,10 +9,10 @@
 
   <!-- Title & Status Badge -->
   <div class="flex items-center gap-2.5 shrink-0">
-    <h1 class="text-[15px] font-bold tracking-wide text-stone-900 hidden sm:block">
+    <h1 class="text-lg font-extrabold tracking-wide text-stone-900 hidden sm:block">
       @yield('page-title', 'DASHBOARD')
     </h1>
-    <span class="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-clsu-700 bg-clsu-50 rounded-full pl-1.5 pr-2.5 py-1 tracking-wide">
+    <span class="hidden sm:flex items-center gap-1.5 text-[11px] font-bold text-clsu-700 bg-clsu-50 rounded-full pl-1.5 pr-2.5 py-1 tracking-wide">
       <span class="relative flex w-1.5 h-1.5">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-clsu-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-clsu-500"></span>
@@ -147,7 +147,7 @@
 
   <!-- Clock & Dropdowns -->
   <div class="ml-auto flex items-center gap-1.5 sm:gap-3">
-    <div id="liveClock" class="hidden md:flex items-center gap-1.5 text-xs font-medium text-stone-500 bg-stone-50 rounded-full px-3 py-1.5 tabnum font-data" aria-live="off"></div>
+    <div id="liveClock" class="hidden md:flex items-center gap-1.5 text-sm font-semibold text-stone-600 bg-stone-50 rounded-full px-3.5 py-1.5 tabnum font-data" aria-live="off"></div>
 
     <!-- Notifications Dropdown -->
     <div class="relative"
@@ -207,8 +207,8 @@
           {{ strtoupper(substr(Auth::guard('staff')->user()->name, 0, 2)) }}
         </div>
         <div class="text-left leading-tight hidden sm:block">
-          <p class="text-sm font-semibold text-stone-900">{{ Auth::guard('staff')->user()->name }}</p>
-          <p class="text-[10px] font-semibold text-clsu-600 tracking-wide uppercase">{{ Auth::guard('staff')->user()->role }}</p>
+          <p class="text-[15px] font-bold text-stone-900 leading-tight">{{ Auth::guard('staff')->user()->name }}</p>
+          <p class="text-[11px] font-bold text-clsu-600 tracking-wide uppercase mt-0.5">{{ Auth::guard('staff')->user()->role }}</p>
         </div>
         <svg class="icon w-3.5 h-3.5 text-stone-400 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>

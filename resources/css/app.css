@@ -148,26 +148,20 @@
 
 /* Field-row texture — updated to solid premium green to match design image */
 .field-rows {
-    background-color: #1c6110 !important;
-    /* Custom sidebar green */
+    background-color: #0a421b !important; /* Premium CLSU dark green */
     background-image: none !important;
 }
 
 /* Collapsed sidebar transitions and overrides */
 @media (min-width: 1024px) {
-    #shell[data-collapsed="true"] #sidebar .brand-logo-full {
-        display: none !important;
+    #shell[data-collapsed="true"] #sidebar .brand-logo {
+        width: 3.25rem !important; /* h-13 */
+        height: 3.25rem !important; /* w-13 */
     }
-
-    #shell[data-collapsed="true"] #sidebar .brand-logo-collapsed {
-        display: block !important;
-    }
-
     #shell[data-collapsed="true"] #sidebar .brand-header {
         padding-top: 1rem !important;
         padding-bottom: 1rem !important;
     }
-
     #shell[data-collapsed="true"] #sidebar .brand-header #collapseToggle {
         right: auto !important;
         left: 50% !important;
