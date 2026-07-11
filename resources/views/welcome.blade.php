@@ -6,14 +6,14 @@
     <!-- ====== HERO ====== -->
     <header id="firstsection" class="vignette-emerald relative isolate flex min-h-[92dvh] flex-col justify-end overflow-hidden bg-emerald-deep">
         <!-- Ken-burns backdrop -->
-        <div class="absolute inset-0 z-0 will-change-transform">
+        <div class="absolute inset-0 z-0 will-change-transform prlx-hero-bg">
             <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior, nestled inside the CLSU campus" fetchpriority="high" class="h-full w-full animate-ken-burns object-cover">
             <div class="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/45 to-ink/85"></div>
             <canvas id="heroNoise" aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full" style="image-rendering: pixelated"></canvas>
         </div>
 
         <!-- Headline -->
-        <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-36 pb-14 text-center text-cream sm:pt-44">
+        <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-36 pb-14 text-center text-cream sm:pt-44 prlx-hero-content">
             <p class="text-[11px] font-semibold uppercase tracking-[0.5em] text-gold animate-[fade-in-up_0.8s_ease-out_both]">A Premium Stay on Campus · Est. 1998</p>
             <div aria-hidden="true" class="mx-auto mt-6 hairline-gold w-24"></div>
             <h1 class="text-balance hero-text-glow mt-6 font-display leading-[1.05] animate-[fade-in-up_1s_ease-out_0.2s_both]" style="font-size:clamp(2.5rem, 8vw, 6.5rem)">
@@ -29,21 +29,26 @@
         </div>
 
         <!-- Booking capsule -->
-        <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pb-14 sm:px-6 animate-[fade-in-up_1s_ease-out_0.5s_both]">
-            <div id="bookingCapsule" class="rounded-3xl border border-gold/25 bg-cream-warm/85 p-4 backdrop-blur-xl shadow-capsule md:p-3">
+        <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pb-14 sm:px-6">
+            <!-- Ambient glow aura behind the capsule for depth layering -->
+            <div class="pointer-events-none absolute -inset-4 -z-10 rounded-[2.5rem] bg-linear-to-tr from-gold/15 via-emerald/5 to-gold/15 opacity-75 blur-2xl transition-opacity duration-1000"
+                 data-prlx-y="0.1" data-prlx-mouse="-12" data-prlx-origin="top" data-prlx-ease="0.06"></div>
+
+            <div id="bookingCapsule" class="rounded-3xl border border-gold/25 bg-cream-warm/85 p-4 backdrop-blur-xl shadow-capsule md:p-3"
+                 data-prlx-y="-0.25" data-prlx-mouse="8" data-prlx-origin="top" data-prlx-ease="0.06">
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center md:gap-2">
                     <div class="px-4 py-3 text-left md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald">Check in</p>
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="-0.03" data-prlx-mouse="-2" data-prlx-ease="0.08">Check in</p>
                         <input type="text" id="widget_check_in" aria-label="Check in date" placeholder="Select date"
                                class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40">
                     </div>
                     <div class="px-4 py-3 text-left md:border-l md:border-emerald-deep/10 md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald">Check out</p>
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="-0.01" data-prlx-mouse="-0.5" data-prlx-ease="0.08">Check out</p>
                         <input type="text" id="widget_check_out" aria-label="Check out date" placeholder="Select date"
                                class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40">
                     </div>
                     <div class="px-4 py-3 text-left md:border-l md:border-emerald-deep/10 md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald">Guests</p>
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="0.01" data-prlx-mouse="1" data-prlx-ease="0.08">Guests</p>
                         <div class="flex min-h-11 items-center justify-between">
                             <span class="text-sm font-medium text-ink"><span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span></span>
                             <input type="hidden" id="widget_guests" value="1">
@@ -58,20 +63,23 @@
                         </div>
                     </div>
                     <button type="button" id="btnSearchRooms"
-                            class="focus-ring press cta-shine group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]">
+                            class="focus-ring press cta-shine group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]"
+                            data-prlx-y="0.04" data-prlx-mouse="5" data-prlx-scale="0.02" data-prlx-ease="0.08">
                         <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100" style="box-shadow:inset 0 0 24px color-mix(in oklch, var(--color-gold) 35%, transparent)"></span>
                         <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
                     </button>
                 </div>
-                <div class="mt-3 flex items-center justify-center gap-2 border-t border-emerald-deep/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald">
+                <div class="mt-3 flex items-center justify-center gap-2 border-t border-emerald-deep/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald"
+                     data-prlx-y="0.02" data-prlx-origin="top" data-prlx-ease="0.07">
                     <span class="h-1 w-1 rounded-full bg-gold"></span>
                     Best rate guarantee · Direct booking only
                     <span class="h-1 w-1 rounded-full bg-gold"></span>
                 </div>
             </div>
 
+
             <!-- Trust chips -->
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-y-3 divide-x divide-cream/20 text-[11px] font-medium uppercase tracking-[0.22em] text-cream/90">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-y-3 divide-x divide-cream/20 text-[11px] font-medium uppercase tracking-[0.22em] text-cream/90" data-prlx-y="-0.12" data-prlx-origin="top" data-prlx-ease="0.04">
                 <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="map-pin" class="h-4 w-4 text-gold" /> CLSU Campus</span>
                 <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="badge-check" class="h-4 w-4 text-gold" /> No prepayment</span>
                 <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="clock" class="h-4 w-4 text-gold" /> 24/7 front desk</span>
@@ -83,7 +91,7 @@
 
     <!-- ====== STATS BAND (overlapping hero) ====== -->
     <section class="relative -mt-6 px-4 sm:px-6">
-        <div class="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-emerald-deep text-cream shadow-boutique-card" data-aos="fade-up">
+        <div class="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-emerald-deep text-cream shadow-boutique-card" data-aos="fade-up" data-prlx-y="0.1" data-prlx-scale="0.04">
             <div class="grid grid-cols-2 divide-x divide-cream/10 md:grid-cols-4">
                 <x-booking.cards.stat :value="count($roomTypes)" label="Room Types" />
                 <x-booking.cards.stat value="24/7" label="Campus Security" />
@@ -98,22 +106,22 @@
         <div class="grid gap-8 md:grid-cols-3">
             <x-booking.cards.feature icon="leaf" title="Heart of Campus"
                 description="Located directly inside CLSU, offering unparalleled convenience for visiting researchers, alumni, and university guests."
-                data-aos="fade-up" data-aos-delay="100" />
+                data-aos="fade-up" data-aos-delay="100" data-prlx-y="0.08" data-prlx-x="-0.03" data-prlx-scale="0.03" />
             <x-booking.cards.feature icon="shield" title="24/7 Security"
                 description="Peace of mind with round-the-clock campus security and dedicated hostel staff on duty from dawn to well past dusk."
-                data-aos="fade-up" data-aos-delay="200" />
+                data-aos="fade-up" data-aos-delay="200" data-prlx-y="0.16" data-prlx-scale="0.04" />
             <x-booking.cards.feature icon="wifi" title="Modern Amenities"
                 description="Stay connected and comfortable — high-speed Wi-Fi, air-conditioned rooms, and inclusive guest kits in every stay."
-                data-aos="fade-up" data-aos-delay="300" />
+                data-aos="fade-up" data-aos-delay="300" data-prlx-y="0.08" data-prlx-x="0.03" data-prlx-scale="0.03" />
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="I" label="The Experience" />
+    <x-booking.sections.ornament numeral="I" label="The Experience" class="prlx-float" />
 
     <!-- ====== THREE CHAPTERS ====== -->
     <section class="relative bg-cream-warm py-24 md:py-32">
         <div class="mx-auto max-w-7xl px-6">
-            <x-booking.sections.heading eyebrow="The experience" class="mb-16" data-aos="fade-up">
+            <x-booking.sections.heading eyebrow="The experience" class="mb-16" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
                 A stay written in <span class="italic text-gold">three chapters</span>
             </x-booking.sections.heading>
 
@@ -136,14 +144,14 @@
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="II" label="The Living Quarters" />
+    <x-booking.sections.ornament numeral="II" label="The Living Quarters" class="prlx-float" />
 
     <!-- ====== LIVING QUARTERS (ROOMS) ====== -->
     <section id="rooms" class="mx-auto max-w-7xl scroll-mt-28 px-6 pt-8 pb-24">
         <x-booking.sections.heading
             eyebrow="Accommodations"
             description="{{ count($roomTypes) }} fully-serviced rooms, ideal for short stays, transient guests, and university researchers. Filter by capacity or explore each option in detail — you can book in a single click."
-            class="mb-10" data-aos="fade-up">
+            class="mb-10" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
             Reserve a <span class="italic text-gold">room</span> now
         </x-booking.sections.heading>
 
@@ -180,7 +188,7 @@
         </div>
 
         <!-- Room Grid -->
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3" data-aos="fade-up" data-aos-delay="150">
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3" data-aos="fade-up" data-aos-delay="150" data-prlx-y="0.06" data-prlx-scale="0.02">
             @foreach ($roomTypes as $type)
                 <div data-room-item
                      data-beds="{{ $type['beds'] }}"
@@ -211,12 +219,12 @@
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="III" label="In Their Words" />
+    <x-booking.sections.ornament numeral="III" label="In Their Words" class="prlx-float" />
 
     <!-- ====== TESTIMONIALS ====== -->
     <section class="relative overflow-hidden bg-cream-warm py-24 md:py-28">
         <div class="mx-auto max-w-5xl px-6">
-            <div class="grid grid-cols-1 items-end gap-8 md:grid-cols-[minmax(0,1fr)_auto]" data-aos="fade-up">
+            <div class="grid grid-cols-1 items-end gap-8 md:grid-cols-[minmax(0,1fr)_auto]" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
                 <x-booking.sections.heading eyebrow="Guest experiences" class="max-w-xl">
                     Loved by <span class="italic text-gold">academics</span> and travelers alike.
                 </x-booking.sections.heading>
@@ -230,7 +238,7 @@
                 </div>
             </div>
 
-            <div class="swiper testimonials-swiper mt-12" data-aos="fade-up" data-aos-delay="150">
+            <div class="swiper testimonials-swiper mt-12" data-aos="fade-up" data-aos-delay="150" data-prlx-y="0.1" data-prlx-scale="0.03">
                 <div class="swiper-wrapper">
                     @foreach ([
                         ['quote' => 'Perfect location for my research week at CLSU. The rooms are spotless, the Wi-Fi is reliable, and being right on campus saved me hours of commute.', 'name' => 'Dr. Reyes', 'role' => 'Visiting Professor', 'initials' => 'DR'],
@@ -252,30 +260,30 @@
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="IV" label="Visual Tour" />
+    <x-booking.sections.ornament numeral="IV" label="Visual Tour" class="prlx-float" />
 
     <!-- ====== GALLERY (BENTO) ====== -->
     <section id="gallery" class="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
         <x-booking.sections.heading
             eyebrow="Visual tour"
             description="A quiet walk through our rooms, common spaces, dining hall, and campus greenery."
-            align="center" class="mb-12" data-aos="fade-up">
+            align="center" class="mb-12" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
             Our <span class="italic text-gold">gallery</span>
         </x-booking.sections.heading>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:h-[560px] lg:grid-cols-4 lg:grid-rows-6" data-aos="fade-up" data-aos-delay="100">
             @php
                 $bento = [
-                    ['img' => 'image/gallery/1.jpg', 'span' => 'lg:col-span-2 lg:row-span-4 aspect-[4/3] sm:aspect-square lg:aspect-auto'],
-                    ['img' => 'image/gallery/2.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto'],
-                    ['img' => 'image/gallery/3.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto'],
-                    ['img' => 'image/gallery/4.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto'],
-                    ['img' => 'image/gallery/5.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto'],
-                    ['img' => 'image/gallery/6.jpg', 'span' => 'sm:col-span-2 lg:col-span-2 lg:row-span-2 aspect-[4/3] lg:aspect-auto'],
+                    ['img' => 'image/gallery/1.jpg', 'span' => 'lg:col-span-2 lg:row-span-4 aspect-[4/3] sm:aspect-square lg:aspect-auto', 'prlx' => '0.06'],
+                    ['img' => 'image/gallery/2.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.1'],
+                    ['img' => 'image/gallery/3.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.14'],
+                    ['img' => 'image/gallery/4.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.08'],
+                    ['img' => 'image/gallery/5.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.12'],
+                    ['img' => 'image/gallery/6.jpg', 'span' => 'sm:col-span-2 lg:col-span-2 lg:row-span-2 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.05'],
                 ];
             @endphp
             @foreach ($bento as $tile)
-                <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl {{ $tile['span'] }}">
+                <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
                     <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel — visual tour" loading="lazy" class="h-full w-full object-cover grayscale-[35%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0">
                 </a>
             @endforeach
@@ -285,7 +293,7 @@
             @endfor
         </div>
 
-        <div class="mt-10 flex justify-center" data-aos="fade-up">
+        <div class="mt-10 flex justify-center" data-aos="fade-up" data-prlx-y="0.08" data-prlx-scale="0.04">
             <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press inline-flex items-center gap-3 rounded-full border border-emerald-deep/20 bg-cream-warm px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:bg-cream cursor-pointer">
                 <x-booking.ui.icon name="sparkles" class="h-4 w-4 text-gold" />
                 Explore the full gallery
@@ -295,7 +303,7 @@
 
     <!-- ====== FINAL CTA ====== -->
     <section class="px-6 pb-24">
-        <div class="mx-auto max-w-4xl text-center" data-aos="fade-up">
+        <div class="mx-auto max-w-4xl text-center" data-aos="fade-up" data-prlx-y="0.14" data-prlx-scale="0.05" data-prlx-opacity>
             <span aria-hidden="true" class="mx-auto block h-px w-12 bg-gold/70"></span>
             <h2 class="text-balance mt-6 font-display text-4xl leading-tight text-ink md:text-5xl">Ready to book your <span class="italic text-gold">campus stay?</span></h2>
             <p class="mx-auto mt-4 max-w-md text-base text-ink/60">Pick your dates, choose a room, and confirm. No prepayment required.</p>
@@ -508,6 +516,7 @@
     <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}"></script>
     <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
     <script src="{{ asset('js/noise-grain.js') }}" defer></script>
+    <script src="{{ asset('js/parallax.js') }}" defer></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
     <script>
