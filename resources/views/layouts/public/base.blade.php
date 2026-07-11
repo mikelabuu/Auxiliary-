@@ -8,40 +8,49 @@
 
     <title>@yield('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')</title>
 
+    <!-- Gates the scroll-reveal hidden state (see reveal.js) so content is
+         never invisible if JS doesn't run. Must execute before first paint. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
     <!-- Tailwind & Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Google Fonts — Lora (editorial serif) + Nunito Sans (body) -->
+    <!-- Early connections for every CDN origin used below -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
+    <!-- Google Fonts — Lora (editorial serif) + Nunito Sans (body, upright only) -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Material Icons (used by booking flow internals) -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- SweetAlert -->
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <!-- SweetAlert (deferred — only called from user-event handlers) -->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js" defer></script>
 
-    <!-- LightBox for Gallery -->
+    <!-- LightBox for Gallery (deferred — activates on gallery clicks) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js" defer></script>
 
-    <!-- Flatpickr Datepicker -->
+    <!-- Flatpickr Datepicker (deferred — initialised on DOMContentLoaded) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
 
-    <!-- AOS Animation -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
-    <!-- Swiper.js -->
+    <!-- Swiper.js (deferred — initialised on DOMContentLoaded) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
 
     @livewireStyles
     @stack('styles')
 </head>
 @php $navDark = trim($__env->yieldContent('nav_dark')) !== ''; @endphp
 <body class="theme-boutique antialiased font-sans bg-canvas text-ink flex flex-col min-h-screen selection:bg-gold-soft selection:text-ink">
+
+    <!-- Reading-progress hairline (driven by --scroll-progress from parallax.js) -->
+    <div class="scroll-progress" aria-hidden="true"></div>
 
     <!-- Floating Pill Nav (dark glass over hero, cream after scroll) -->
     <div class="fixed inset-x-0 top-4 z-50 px-4 sm:top-6 sm:px-6">
@@ -306,17 +315,7 @@
         });
     </script>
 
-    <!-- AOS Init -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            AOS.init({
-                once: true,
-                offset: 60,
-                duration: 700,
-                easing: 'ease-out-cubic',
-            });
-        });
-    </script>
+    <!-- Scroll reveal (local AOS replacement — see public/js/reveal.js) -->
+    <script src="{{ asset('js/reveal.js') }}?v={{ filemtime(public_path('js/reveal.js')) }}" defer></script>
 </body>
 </html>

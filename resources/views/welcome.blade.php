@@ -7,7 +7,7 @@
     <header id="firstsection" class="vignette-emerald relative isolate flex min-h-[92dvh] flex-col justify-end overflow-hidden bg-emerald-deep">
         <!-- Ken-burns backdrop -->
         <div class="absolute inset-0 z-0 will-change-transform prlx-hero-bg">
-            <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior, nestled inside the CLSU campus" fetchpriority="high" class="h-full w-full animate-ken-burns object-cover">
+            <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior, nestled inside the CLSU campus" fetchpriority="high" decoding="async" class="h-full w-full animate-ken-burns object-cover">
             <div class="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/45 to-ink/85"></div>
             <canvas id="heroNoise" aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full" style="image-rendering: pixelated"></canvas>
         </div>
@@ -187,8 +187,8 @@
             </div>
         </div>
 
-        <!-- Room Grid -->
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3" data-aos="fade-up" data-aos-delay="150" data-prlx-y="0.06" data-prlx-scale="0.02">
+        <!-- Room Grid (cards reveal individually with a stagger — see x-booking.cards.room) -->
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3" data-prlx-y="0.06" data-prlx-scale="0.02">
             @foreach ($roomTypes as $type)
                 <div data-room-item
                      data-beds="{{ $type['beds'] }}"
@@ -284,7 +284,7 @@
             @endphp
             @foreach ($bento as $tile)
                 <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
-                    <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel — visual tour" loading="lazy" class="h-full w-full object-cover grayscale-[35%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0">
+                    <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel — visual tour" loading="lazy" decoding="async" class="h-full w-full object-cover grayscale-[35%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0">
                 </a>
             @endforeach
             {{-- Remaining shots stay in the same lightbox chain --}}
@@ -510,13 +510,13 @@
         </div>
     </div>
 
-    <!-- jQuery for booking script fallback and script inclusion -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {{-- No jQuery needed: booking.js / availability-search.js / room-filters.js
+         are vanilla, and lightbox2 ships with its own bundled copy. --}}
     <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
     <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}"></script>
     <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
-    <script src="{{ asset('js/noise-grain.js') }}" defer></script>
-    <script src="{{ asset('js/parallax.js') }}" defer></script>
+    <script src="{{ asset('js/noise-grain.js') }}?v={{ filemtime(public_path('js/noise-grain.js')) }}" defer></script>
+    <script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
     <script>

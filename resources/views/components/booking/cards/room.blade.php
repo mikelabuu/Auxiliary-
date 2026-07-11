@@ -15,12 +15,14 @@
 @php
     $formattedPrice = number_format($price);
     $indexLabel = str_pad($index, 2, '0', STR_PAD_LEFT);
+    // Column-based stagger so each grid row cascades left-to-right on reveal
+    $revealDelay = (($index - 1) % 3) * 110;
 @endphp
 
-<article data-room-card="{{ $typeId }}" class="group flex h-full flex-col">
+<article data-room-card="{{ $typeId }}" class="group flex h-full flex-col" data-aos="fade-up" data-aos-delay="{{ $revealDelay }}">
     <!-- Portrait image -->
     <div class="hover-lift-premium relative aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep sm:aspect-[4/5]">
-        <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy"
+        <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy" decoding="async"
              class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/45 via-transparent to-transparent"></div>
 

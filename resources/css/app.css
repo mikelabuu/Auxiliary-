@@ -646,6 +646,51 @@ body.theme-boutique {
     text-shadow: 0 1px 3px rgba(9, 20, 16, 0.45), 0 10px 40px rgba(9, 20, 16, 0.6);
 }
 
+/* ── Scroll reveal (local AOS replacement) ───────────────────────
+   reveal.js observes [data-aos] and adds .aos-animate on entry.
+   Gated behind .js-reveal on <html> (set by an inline head snippet)
+   so content is never hidden when JS is unavailable. parallax.js
+   keys off the same .aos-animate class for its entrance handoff. */
+.js-reveal [data-aos] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+        opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.js-reveal [data-aos].aos-animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js-reveal [data-aos] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* ── Reading-progress hairline ───────────────────────────────────
+   Driven by the --scroll-progress custom property that parallax.js
+   writes each frame; costs nothing extra. Sits above the pill nav.
+   Stays at scaleX(0) — invisible — under reduced motion or when
+   parallax.js isn't loaded, since the variable never updates. */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 60;
+    pointer-events: none;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-gold-soft));
+    box-shadow: 0 0 8px color-mix(in oklch, var(--color-gold) 55%, transparent);
+    transform-origin: 0 50%;
+    transform: scaleX(var(--scroll-progress, 0));
+}
+
 /* Interactive room-number tiles on the checkout availability picker */
 .room-tiles {
     display: grid;

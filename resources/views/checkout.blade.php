@@ -187,7 +187,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+{{-- booking.js is vanilla JS — no jQuery dependency --}}
 <script>
     // Make PHP variables available to JS
     window.INITIAL_ROOM_TYPE = "{{ $selectedRoomType ? $selectedRoomType['id'] : '' }}";
