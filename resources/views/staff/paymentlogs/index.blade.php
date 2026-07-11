@@ -18,54 +18,54 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.page-header subtitle="Every peso that moved through the system — online, sandbox, and manual payments.">
-        Payment <span class="font-display italic font-medium text-clsu-800">Hub</span>
+    <x-admin.ui.page-header subtitle="Every peso that moved through the system — online, sandbox, and manual payments.">
+        Payment <span class="text-clsu-700">Hub</span>
         <x-slot:actions>
             <a href="{{ route('reports.payments.all') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 All
             </a>
             <a href="{{ route('reports.payments.cash') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Cash
             </a>
             <a href="{{ route('reports.payments.sandbox') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Sandbox
             </a>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     <!-- Ledger stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.stat-card icon="credit-card" badge="ALL TIME" label="Total Collected" :delay="40" dark>
+        <x-admin.ui.stat-card icon="credit-card" badge="ALL TIME" label="Total Collected" :delay="40" dark>
             ₱{{ number_format($stats['collected'], 2) }}
             <x-slot:footnote><p class="text-xs text-clsu-300">Across {{ $stats['success'] }} successful payments</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="check-circle" badge="TODAY" label="Collected Today" :delay="80">
+        <x-admin.ui.stat-card icon="check-circle" badge="TODAY" label="Collected Today" :delay="80">
             ₱{{ number_format($stats['collected_today'], 2) }}
             <x-slot:footnote><p class="text-xs text-stone-400">{{ now('Asia/Manila')->format('M d, Y') }}</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="clock" color="palay" badge="AWAITING" label="Pending" :delay="120">
+        <x-admin.ui.stat-card icon="clock" color="palay" badge="AWAITING" label="Pending" :delay="120">
             {{ $stats['pending'] }}
             <x-slot:footnote><p class="text-xs text-stone-400">Started but not settled</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="block" color="ember" badge="DECLINED" label="Failed" :delay="160">
+        <x-admin.ui.stat-card icon="block" color="ember" badge="DECLINED" label="Failed" :delay="160">
             {{ $stats['failed'] }}
             <x-slot:footnote><p class="text-xs text-stone-400">Rejected or errored attempts</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
     </div>
 
-    <x-admin.section-card icon="receipt" title="Payment Ledger" :subtitle="$payments->total() . ' record' . ($payments->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+    <x-admin.ui.section-card icon="receipt" title="Payment Ledger" :subtitle="$payments->total() . ' record' . ($payments->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
 
         <!-- Status tabs -->
         <div class="flex flex-wrap gap-2 mb-5">
             @foreach ($statusTabs as $key => $meta)
                 <a href="{{ route('staff.paymentlogs.index', array_filter(['status' => $key, 'search' => $search, 'sort' => $sort])) }}"
-                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-gradient-to-b from-clsu-600 to-clsu-800 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-clsu-700 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
                     {{ $meta['label'] }}
                     <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $meta['count'] }}</span>
                 </a>
@@ -76,10 +76,10 @@
         <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
             <input type="hidden" name="status" value="{{ $status }}">
             <div class="relative flex-1 max-w-xs">
-                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Payment ID, booking, or reference…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Payment ID, booking, or reference…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
-            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
             </select>
@@ -90,7 +90,7 @@
         </form>
 
         @if($payments->isEmpty())
-            <x-admin.empty-state icon="credit-card" title="No payments match this view." />
+            <x-admin.ui.empty-state icon="credit-card" title="No payments match this view." />
         @else
             <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
                 <table class="w-full text-sm">
@@ -133,6 +133,6 @@
                 {{ $payments->links() }}
             </div>
         @endif
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 </div>
 @endsection

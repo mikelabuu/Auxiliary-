@@ -13,21 +13,21 @@
         ];
     @endphp
 
-    <x-admin.section-card icon="tag" title="Verification Queue" :subtitle="$discounts->total() . ' request' . ($discounts->total() === 1 ? '' : 's') . ' · refreshes automatically'" :delay="40">
+    <x-admin.ui.section-card icon="tag" title="Verification Queue" :subtitle="$discounts->total() . ' request' . ($discounts->total() === 1 ? '' : 's') . ' · refreshes automatically'" :delay="40">
 
         <!-- Status pills + sort -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div class="flex flex-wrap gap-2">
                 @foreach ($tabs as $key => $label)
                     <button type="button" wire:click="$set('status', '{{ $key }}')"
-                            class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer {{ $status === $key ? 'bg-gradient-to-b from-clsu-600 to-clsu-800 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                            class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer {{ $status === $key ? 'bg-clsu-700 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
                         {{ $label }}
                         <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $counts[$key] ?? 0 }}</span>
                     </button>
                 @endforeach
             </div>
 
-            <select wire:model.live="sort" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select wire:model.live="sort" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="checkin">Soonest check-in</option>
@@ -35,7 +35,7 @@
         </div>
 
         @if($discounts->isEmpty())
-            <x-admin.empty-state icon="tag" title="No discount requests in this view." />
+            <x-admin.ui.empty-state icon="tag" title="No discount requests in this view." />
         @else
             <div class="-mx-6 border-t border-stone-100 overflow-x-auto">
                 <table class="w-full text-sm">
@@ -71,7 +71,7 @@
                                     <a href="{{ route('staff.discounts.show', $discount->id) }}"
                                        class="review-discount inline-flex items-center gap-1.5 rounded-xl border border-clsu-200 bg-white px-3.5 py-2 text-xs font-semibold text-clsu-700 transition-colors hover:bg-clsu-50 hover:border-clsu-300 !no-underline"
                                        data-discount-id="{{ $discount->id }}">
-                                        <x-admin.icon name="eye" class="w-3.5 h-3.5" />
+                                        <x-admin.ui.icon name="eye" class="w-3.5 h-3.5" />
                                         Review
                                     </a>
                                 </td>
@@ -86,5 +86,5 @@
                 <p class="text-xs text-stone-400">Showing {{ $discounts->firstItem() }}–{{ $discounts->lastItem() }} of {{ $discounts->total() }} requests</p>
             </div>
         @endif
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 </div>

@@ -6,18 +6,18 @@
 @section('content')
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.page-header subtitle="Generate, filter, and export booking and payment data.">
-        Analytics <span class="font-display italic font-medium text-clsu-800">&amp; Reporting</span>
+    <x-admin.ui.page-header subtitle="Generate, filter, and export booking and payment data.">
+        Analytics <span class="text-clsu-700">&amp; Reporting</span>
         <x-slot:actions>
             <button type="button" id="exportBtn" disabled class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:active:scale-100 cursor-pointer">
-                <x-admin.icon name="download" class="w-4 h-4" stroke-width="2" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" stroke-width="2" />
                 Export Excel
             </button>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     <!-- Filters -->
-    <x-admin.section-card icon="filter" title="Report Filters" subtitle="Choose a category and timeframe, refine with status filters, then generate." :delay="40">
+    <x-admin.ui.section-card icon="filter" title="Report Filters" subtitle="Choose a category and timeframe, refine with status filters, then generate." :delay="40">
         <div class="space-y-5">
             <!-- Report category -->
             <div>
@@ -38,12 +38,12 @@
                     <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="range">Custom Range</button>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <input type="month" id="date_month" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
-                    <select id="date_year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors"></select>
+                    <input type="month" id="date_month" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                    <select id="date_year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors"></select>
                     <div id="dateRangeInputs" class="hidden flex-wrap items-center gap-2">
-                        <input type="date" id="date_from" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                        <input type="date" id="date_from" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                         <span class="text-xs text-stone-400 font-medium">to</span>
-                        <input type="date" id="date_to" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                        <input type="date" id="date_to" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                     </div>
                 </div>
             </div>
@@ -87,28 +87,28 @@
                 <div id="reportSummary" class="hidden flex-wrap items-center gap-1.5"></div>
                 <div class="flex items-center gap-2.5 sm:ml-auto">
                     <button type="button" id="resetBtn" class="text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors cursor-pointer">Reset</button>
-                    <button type="button" id="generateBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all cursor-pointer">
-                        <x-admin.icon name="refresh" class="w-4 h-4" stroke-width="2" />
+                    <button type="button" id="generateBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all cursor-pointer">
+                        <x-admin.ui.icon name="refresh" class="w-4 h-4" stroke-width="2" />
                         Update Results
                     </button>
                 </div>
             </div>
         </div>
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 
     <!-- Results -->
-    <x-admin.section-card icon="chart-bar" title="Report Results" subtitle="Results are paginated, 10 rows per page." :delay="80">
+    <x-admin.ui.section-card icon="chart-bar" title="Report Results" subtitle="Results are paginated, 10 rows per page." :delay="80">
         <div id="reportTableContainer" class="-mx-6 -mb-6 border-t border-stone-100">
             <div id="reportTable">
                 <div class="flex flex-col items-center text-center py-14 px-6">
                     <div class="w-10 h-10 rounded-full bg-clsu-50 text-clsu-700 flex items-center justify-center mb-3">
-                        <x-admin.icon name="filter" class="w-3.5 h-3.5" stroke-width="2" />
+                        <x-admin.ui.icon name="filter" class="w-3.5 h-3.5" stroke-width="2" />
                     </div>
                     <p class="text-sm font-semibold text-stone-700">Select your criteria above and click Update Results.</p>
                 </div>
             </div>
         </div>
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 </div>
 @endsection
 
@@ -124,7 +124,7 @@ $(function () {
     function setToggleActive(el, markerClass, active) {
         const base = markerClass + ' text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer';
         const appearance = active
-            ? 'bg-gradient-to-b from-clsu-600 to-clsu-800 border-clsu-800 text-white shadow-card'
+            ? 'bg-clsu-700 border-clsu-800 text-white shadow-card'
             : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50';
         el.attr('class', base + ' ' + appearance);
     }

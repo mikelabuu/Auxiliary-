@@ -15,16 +15,16 @@
 @endphp
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.page-header subtitle="A history of every check-in, check-out, no-show, expiry, and cancellation.">
-        Booking <span class="font-display italic font-medium text-clsu-800">Logs</span>
-    </x-admin.page-header>
+    <x-admin.ui.page-header subtitle="A history of every check-in, check-out, no-show, expiry, and cancellation.">
+        Booking <span class="text-clsu-700">Logs</span>
+    </x-admin.ui.page-header>
 
-    <x-admin.section-card icon="clock" title="Activity Log" :subtitle="$tabs[$tab]['label'] . ' · ' . $logs->total() . ' records'" :delay="40">
+    <x-admin.ui.section-card icon="clock" title="Activity Log" :subtitle="$tabs[$tab]['label'] . ' · ' . $logs->total() . ' records'" :delay="40">
         <div class="flex flex-wrap gap-2 mb-5">
             @foreach ($tabs as $key => $meta)
                 <a href="{{ route('staff.bookinglogs.index', ['tab' => $key, 'search' => $search]) }}"
-                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $tab === $key ? 'bg-gradient-to-b from-clsu-600 to-clsu-800 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
-                    <x-admin.icon :name="$meta['icon']" class="w-4 h-4" stroke-width="2" />
+                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $tab === $key ? 'bg-clsu-700 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                    <x-admin.ui.icon :name="$meta['icon']" class="w-4 h-4" stroke-width="2" />
                     {{ $meta['label'] }}
                 </a>
             @endforeach
@@ -33,14 +33,14 @@
         <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
             <input type="hidden" name="tab" value="{{ $tab }}">
             <div class="relative flex-1 max-w-xs">
-                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID or guest name…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID or guest name…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
             <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Search</button>
         </form>
 
         @if($logs->isEmpty())
-            <x-admin.empty-state icon="clock" title="No logs found for this tab." />
+            <x-admin.ui.empty-state icon="clock" title="No logs found for this tab." />
         @else
             <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
                 <table class="w-full text-sm">
@@ -106,6 +106,6 @@
                 {{ $logs->appends(['tab' => $tab, 'search' => $search])->links() }}
             </div>
         @endif
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 </div>
 @endsection

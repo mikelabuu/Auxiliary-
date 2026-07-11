@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Real data for the admin topbar notification dropdown.
-        View::composer('components.admin.topbar', function ($view) {
+        View::composer('components.admin.layout.topbar', function ($view) {
             $notifications = collect();
 
             Discount::with('booking')

@@ -1,6 +1,6 @@
-<x-admin.section-card wire:poll.15s="loadActiveBookings" icon="log-in" title="Active Stays" subtitle="Guests currently checked in.">
+<x-admin.ui.section-card wire:poll.15s="loadActiveBookings" icon="log-in" title="Active Stays" subtitle="Guests currently checked in.">
     @if($activeBookings->isEmpty())
-        <x-admin.empty-state icon="log-in" title="No active bookings at the moment." />
+        <x-admin.ui.empty-state icon="log-in" title="No active bookings at the moment." />
     @else
         <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
             <table class="w-full text-sm">
@@ -31,4 +31,4 @@
             </table>
         </div>
     @endif
-</x-admin.section-card>
+</x-admin.ui.section-card>

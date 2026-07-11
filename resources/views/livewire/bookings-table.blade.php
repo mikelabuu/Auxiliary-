@@ -1,15 +1,15 @@
-<x-admin.section-card wire:poll.15s icon="clipboard" title="All Bookings" subtitle="Every booking that hasn't been checked out yet.">
+<x-admin.ui.section-card wire:poll.15s icon="clipboard" title="All Bookings" subtitle="Every booking that hasn't been checked out yet.">
     <x-slot:actions>
         <a href="{{ route('reports.bookings.full') }}" class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
-            <x-admin.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
+            <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             All
         </a>
         <a href="{{ route('reports.bookings.paid') }}" class="flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-3 py-1.5 hover:bg-palay-50 transition-colors !no-underline">
-            <x-admin.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
+            <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Paid
         </a>
         <a href="{{ route('reports.bookings.completed') }}" class="flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors !no-underline">
-            <x-admin.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
+            <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Completed
         </a>
     </x-slot:actions>
@@ -17,31 +17,31 @@
     @if (session()->has('success'))
         <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
              class="flex items-center gap-2 text-sm font-medium text-clsu-800 bg-clsu-50 border border-clsu-200 rounded-xl px-4 py-2.5 mb-4" wire:ignore.self>
-            <x-admin.icon name="check-circle" class="w-4 h-4 shrink-0" />
+            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
             {{ session('success') }}
         </div>
     @endif
     @if (session()->has('error'))
         <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
              class="flex items-center gap-2 text-sm font-medium text-ember-700 bg-ember-50 border border-ember-200 rounded-xl px-4 py-2.5 mb-4" wire:ignore.self>
-            <x-admin.icon name="block" class="w-4 h-4 shrink-0" />
+            <x-admin.ui.icon name="block" class="w-4 h-4 shrink-0" />
             {{ session('error') }}
         </div>
     @endif
 
     <div class="flex flex-col sm:flex-row gap-3 mb-6">
         <div class="relative flex-1 max-w-xs">
-            <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-            <input type="text" wire:model.live.debounce.400ms="search" placeholder="Search guest, ID, or room…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+            <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+            <input type="text" wire:model.live.debounce.400ms="search" placeholder="Search guest, ID, or room…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
         </div>
-        <select wire:model.live="dateFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+        <select wire:model.live="dateFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
             <option value="">All Dates</option>
             <option value="today_checkin">Check-in Today</option>
             <option value="tomorrow_checkin">Check-in Tomorrow</option>
             <option value="today_checkout">Check-out Today</option>
             <option value="tomorrow_checkout">Check-out Tomorrow</option>
         </select>
-        <select wire:model.live="statusFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+        <select wire:model.live="statusFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
             <option value="">All Status</option>
             <option value="pending_payment">Pending Payment</option>
             <option value="pending_discount">Pending Discount</option>
@@ -54,7 +54,7 @@
     </div>
 
     @if($bookings->isEmpty())
-        <x-admin.empty-state icon="clipboard" title="No bookings found." />
+        <x-admin.ui.empty-state icon="clipboard" title="No bookings found." />
     @else
         <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
             <table class="w-full text-sm">
@@ -98,18 +98,18 @@
                             <td class="px-6 py-3">
                                 <div class="flex items-center gap-1.5">
                                     <button type="button" class="password-verify flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-2.5 py-1.5 hover:bg-clsu-50 transition-colors cursor-pointer" data-action="view" data-id="{{ $booking->id }}">
-                                        <x-admin.icon name="eye" class="w-3.5 h-3.5" />
+                                        <x-admin.ui.icon name="eye" class="w-3.5 h-3.5" />
                                         View
                                     </button>
                                     @if($booking->status === 'pending_payment')
                                         <button type="button" class="password-verify flex items-center gap-1.5 text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-2.5 py-1.5 hover:bg-ember-50 transition-colors cursor-pointer" data-action="cancel" data-id="{{ $booking->id }}">
-                                            <x-admin.icon name="x" class="w-3.5 h-3.5" stroke-width="2" />
+                                            <x-admin.ui.icon name="x" class="w-3.5 h-3.5" stroke-width="2" />
                                             Cancel
                                         </button>
                                     @endif
                                     @if($booking->status === 'active')
                                         <button type="button" class="password-verify flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-2.5 py-1.5 hover:bg-palay-50 transition-colors cursor-pointer" data-action="checkout" data-id="{{ $booking->id }}">
-                                            <x-admin.icon name="log-out" class="w-3.5 h-3.5" />
+                                            <x-admin.ui.icon name="log-out" class="w-3.5 h-3.5" />
                                             Checkout
                                         </button>
                                     @endif
@@ -127,11 +127,11 @@
     @endif
 
     @if($selectedBooking)
-        <x-admin.modal id="bookingDetailModal" icon="clipboard" :title="'Booking #' . $selectedBooking->id" max-width="lg" always-visible close-action="closeModal">
+        <x-admin.ui.modal id="bookingDetailModal" icon="clipboard" :title="'Booking #' . $selectedBooking->id" max-width="lg" always-visible close-action="closeModal">
             @include('staff.partials.booking-detail-body', ['booking' => $selectedBooking])
-        </x-admin.modal>
+        </x-admin.ui.modal>
     @endif
-</x-admin.section-card>
+</x-admin.ui.section-card>
 
 @push('scripts')
 <script>

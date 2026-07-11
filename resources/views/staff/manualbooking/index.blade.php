@@ -5,28 +5,28 @@
 
 @section('content')
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.page-header subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel.">
-        Manual <span class="font-display italic font-medium text-clsu-800">Booking</span>
+    <x-admin.ui.page-header subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel.">
+        Manual <span class="text-clsu-700">Booking</span>
         <x-slot:actions>
             <a href="{{ route('staff.bookings.index') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="receipt" class="w-4 h-4" />
+                <x-admin.ui.icon name="receipt" class="w-4 h-4" />
                 Booking Hub
             </a>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     <!-- Boutique stats band — mirrors the landing page's emerald band -->
-    <div class="animate-in relative overflow-hidden rounded-3xl bg-emerald-deep text-cream shadow-boutique-card" style="animation-delay:40ms">
-        <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gold/40"></div>
-        <div aria-hidden="true" class="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-gold/10 blur-3xl"></div>
+    <div class="animate-in relative overflow-hidden rounded-xl bg-emerald-deep text-cream shadow-card-lg" style="animation-delay:40ms">
+        <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20"></div>
+        <div aria-hidden="true" class="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
         <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] md:divide-x md:divide-cream/10">
             <div class="px-7 py-6 md:pr-12">
-                <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-gold">Right now</p>
-                <p class="mt-2 font-display text-5xl leading-none tabnum">{{ $totalAvailableRooms }}</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-clsu-300">Right now</p>
+                <p class="mt-2 text-4xl font-bold font-data leading-none tabnum">{{ $totalAvailableRooms }}</p>
                 <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cream/60">Available rooms</p>
             </div>
             <div class="px-7 py-6 border-t border-cream/10 md:border-t-0">
-                <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.32em] text-gold">Upcoming reservations</p>
+                <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.32em] text-clsu-300">Upcoming reservations</p>
                 @if($upcomingBookings->isEmpty())
                     <p class="text-sm text-cream/60">No upcoming paid or pending-payment bookings.</p>
                 @else
@@ -34,7 +34,7 @@
                         @foreach($upcomingBookings as $booking)
                             @foreach($booking->reservations as $res)
                                 <span class="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/10 px-3 py-1.5 text-xs font-medium text-cream/85">
-                                    <span class="h-1 w-1 rounded-full bg-gold"></span>
+                                    <span class="h-1 w-1 rounded-full bg-clsu-300"></span>
                                     Room {{ $res->room_number }} · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}–{{ \Carbon\Carbon::parse($booking->check_out)->format('M d') }}
                                 </span>
                             @endforeach
@@ -47,7 +47,7 @@
 
     @if(session('success'))
         <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.icon name="check-circle" class="w-4 h-4 shrink-0" />
+            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
             {{ session('success') }}
         </div>
     @endif
@@ -55,7 +55,7 @@
         <div class="animate-in rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3.5 text-sm text-ember-700">
             <ul class="space-y-1">
                 @foreach($errors->all() as $error)
-                    <li class="flex items-start gap-1.5"><x-admin.icon name="block" class="w-3.5 h-3.5 shrink-0 mt-0.5" /> {{ $error }}</li>
+                    <li class="flex items-start gap-1.5"><x-admin.ui.icon name="block" class="w-3.5 h-3.5 shrink-0 mt-0.5" /> {{ $error }}</li>
                 @endforeach
             </ul>
         </div>
@@ -68,54 +68,54 @@
         <div class="space-y-6 lg:col-span-8">
 
             <!-- STEP 1 · STAY DATES -->
-            <div class="animate-in rounded-3xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:80ms">
+            <div class="animate-in rounded-xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:80ms">
                 <div class="mb-5 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                            <x-admin.icon name="calendar" class="w-4 h-4" />
+                            <x-admin.ui.icon name="calendar" class="w-4 h-4" />
                         </span>
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-[0.2em] leading-none text-stone-400">Step 1 of 3</span>
-                            <h4 class="mt-1 font-display text-lg leading-none text-ink">Stay Dates</h4>
+                            <h4 class="mt-1 text-lg font-semibold leading-none text-ink">Stay Dates</h4>
                         </div>
                     </div>
-                    <span id="nights-badge" class="hidden animate-pop whitespace-nowrap rounded-full border border-gold/40 bg-gold-soft/40 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink/80"></span>
+                    <span id="nights-badge" class="hidden animate-pop whitespace-nowrap rounded-full border border-clsu-200 bg-clsu-50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink/80"></span>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Check-In</label>
                         <input type="date" name="check_in" id="check_in" value="{{ old('check_in', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none cursor-pointer" required>
+                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none cursor-pointer" required>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Check-Out</label>
                         <input type="date" name="check_out" id="check_out" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none cursor-pointer" required>
+                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none cursor-pointer" required>
                     </div>
                 </div>
 
                 <!-- Quick stay presets -->
                 <div class="mt-4 flex flex-wrap items-center gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Quick pick</span>
-                    <button type="button" data-preset="tonight" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-gold hover:bg-gold-soft/30">Tonight</button>
-                    <button type="button" data-preset="two" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-gold hover:bg-gold-soft/30">2 nights</button>
-                    <button type="button" data-preset="three" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-gold hover:bg-gold-soft/30">3 nights</button>
-                    <button type="button" data-preset="weekend" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-gold hover:bg-gold-soft/30">Weekend</button>
+                    <button type="button" data-preset="tonight" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-clsu-400 hover:bg-clsu-50">Tonight</button>
+                    <button type="button" data-preset="two" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-clsu-400 hover:bg-clsu-50">2 nights</button>
+                    <button type="button" data-preset="three" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-clsu-400 hover:bg-clsu-50">3 nights</button>
+                    <button type="button" data-preset="weekend" class="stay-preset press cursor-pointer rounded-full border border-emerald-deep/15 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-deep transition-colors hover:border-clsu-400 hover:bg-clsu-50">Weekend</button>
                 </div>
 
                 <div id="availability-status" class="mt-4 flex min-h-[1.25rem] items-center gap-2 text-xs font-medium text-stone-500"></div>
             </div>
 
             <!-- STEP 2 · GUEST DETAILS -->
-            <div class="animate-in rounded-3xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:120ms">
+            <div class="animate-in rounded-xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:120ms">
                 <div class="mb-5 flex items-center gap-3">
                     <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                        <x-admin.icon name="user" class="w-4 h-4" />
+                        <x-admin.ui.icon name="user" class="w-4 h-4" />
                     </span>
                     <div>
                         <span class="block text-[9px] font-black uppercase tracking-[0.2em] leading-none text-stone-400">Step 2 of 3</span>
-                        <h4 class="mt-1 font-display text-lg leading-none text-ink">Guest Details</h4>
+                        <h4 class="mt-1 text-lg font-semibold leading-none text-ink">Guest Details</h4>
                     </div>
                 </div>
 
@@ -123,12 +123,12 @@
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Guest Name</label>
                         <input type="text" name="guest_name" value="{{ old('guest_name') }}" placeholder="Full name"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-stone-400 transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none" required>
+                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-stone-400 transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none" required>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Guest Phone</label>
                         <input type="text" name="guest_phone" value="{{ old('guest_phone') }}" placeholder="09xx xxx xxxx"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-stone-400 transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none" required>
+                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm text-ink placeholder:text-stone-400 transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none" required>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Guest Address</label>
@@ -137,13 +137,13 @@
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald" for="expected_guests">Expected Guests</label>
                         <div class="mb-stepper flex items-center gap-2">
-                            <button type="button" data-step="-1" class="mb-step press grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="Fewer guests">
-                                <x-admin.icon name="minus" class="w-4 h-4" stroke-width="2" />
+                            <button type="button" data-step="-1" class="mb-step press grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="Fewer guests">
+                                <x-admin.ui.icon name="minus" class="w-4 h-4" stroke-width="2" />
                             </button>
                             <input type="number" name="expected_guests" id="expected_guests" value="{{ old('expected_guests', 1) }}" min="1" max="60"
-                                   class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-center text-sm font-bold text-ink transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" required>
-                            <button type="button" data-step="1" class="mb-step press grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="More guests">
-                                <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
+                                   class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-center text-sm font-bold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" required>
+                            <button type="button" data-step="1" class="mb-step press grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="More guests">
+                                <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                             </button>
                         </div>
                     </div>
@@ -151,15 +151,15 @@
             </div>
 
             <!-- STEP 3 · ROOM BOARD -->
-            <div class="animate-in rounded-3xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:160ms">
+            <div class="animate-in rounded-xl bg-cream-warm p-6 ring-1 ring-emerald-deep/10 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sm:p-7" style="animation-delay:160ms">
                 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                            <x-admin.icon name="bed" class="w-4 h-4" />
+                            <x-admin.ui.icon name="bed" class="w-4 h-4" />
                         </span>
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-[0.2em] leading-none text-stone-400">Step 3 of 3</span>
-                            <h4 class="mt-1 font-display text-lg leading-none text-ink">Pick Rooms</h4>
+                            <h4 class="mt-1 text-lg font-semibold leading-none text-ink">Pick Rooms</h4>
                         </div>
                     </div>
                     <div class="min-w-[190px]">
@@ -194,11 +194,11 @@
                 <div class="mt-6 border-t border-emerald-deep/10 pt-5">
                     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <h5 class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-deep">
-                            <x-admin.icon name="users" class="w-4 h-4" />
+                            <x-admin.ui.icon name="users" class="w-4 h-4" />
                             Guest Assignment
                         </h5>
                         <button type="button" id="auto-assign" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-emerald-deep/20 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream">
-                            <x-admin.icon name="zap" class="w-3.5 h-3.5" />
+                            <x-admin.ui.icon name="zap" class="w-3.5 h-3.5" />
                             Auto-distribute guests
                         </button>
                     </div>
@@ -214,19 +214,19 @@
 
         <!-- ══════════ Right column — live booking summary ══════════ -->
         <div class="animate-in lg:sticky lg:top-24 lg:col-span-4" style="animation-delay:200ms">
-            <div class="relative overflow-hidden rounded-3xl bg-emerald-deep p-6 text-cream shadow-boutique-card sm:p-7">
-                <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gold/40"></div>
-                <div aria-hidden="true" class="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-gold/10 blur-3xl"></div>
+            <div class="relative overflow-hidden rounded-xl bg-emerald-deep p-6 text-cream shadow-card-lg sm:p-7">
+                <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20"></div>
+                <div aria-hidden="true" class="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-white/5 blur-3xl"></div>
 
-                <h3 class="flex items-center gap-2.5 border-b border-cream/10 pb-4 font-display text-xl">
-                    <x-admin.icon name="receipt" class="w-5 h-5 text-gold" />
-                    Booking <span class="-ml-1 italic text-gold">Summary</span>
+                <h3 class="flex items-center gap-2.5 border-b border-cream/10 pb-4 text-lg font-semibold">
+                    <x-admin.ui.icon name="receipt" class="w-5 h-5 text-clsu-300" />
+                    Booking <span class="-ml-1 text-clsu-300">Summary</span>
                 </h3>
 
                 <!-- Dates -->
                 <div class="mt-4 flex items-center justify-between gap-3 text-sm">
                     <span id="summary-dates" class="font-medium text-cream/85">—</span>
-                    <span id="summary-nights" class="hidden whitespace-nowrap rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-gold"></span>
+                    <span id="summary-nights" class="hidden whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white"></span>
                 </div>
 
                 <!-- Guests line -->
@@ -245,31 +245,31 @@
 
                 <!-- Senior / PWD flag -->
                 <label for="has_senior_pwd" class="mt-4 flex cursor-pointer items-center gap-2.5 text-sm text-cream/85">
-                    <input type="checkbox" name="has_senior_pwd" id="has_senior_pwd" class="h-4 w-4 rounded border-cream/40 bg-transparent text-gold focus:ring-gold/50">
+                    <input type="checkbox" name="has_senior_pwd" id="has_senior_pwd" class="h-4 w-4 rounded border-cream/40 bg-transparent text-clsu-500 focus:ring-white/40">
                     Senior / PWD guest present
                 </label>
 
                 <!-- Discount -->
                 <div class="mt-3">
-                    <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-gold">Discount (₱)</label>
+                    <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-clsu-300">Discount (₱)</label>
                     <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="1"
-                           class="w-full rounded-xl border border-cream/15 bg-cream/10 px-4 py-2.5 text-sm text-cream placeholder:text-cream/40 transition-colors focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none tabnum">
-                    <p id="discount-hint" class="mt-1.5 hidden text-[11px] font-semibold text-gold/90"></p>
+                           class="w-full rounded-xl border border-cream/15 bg-cream/10 px-4 py-2.5 text-sm text-cream placeholder:text-cream/40 transition-colors focus:border-white/60 focus:ring-2 focus:ring-white/25 focus:outline-none tabnum">
+                    <p id="discount-hint" class="mt-1.5 hidden text-[11px] font-semibold text-clsu-200"></p>
                 </div>
 
                 <!-- Total -->
-                <div aria-hidden="true" class="mt-5 h-px w-full bg-gold/40"></div>
+                <div aria-hidden="true" class="mt-5 h-px w-full bg-white/20"></div>
                 <div class="mt-4 flex items-end justify-between">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-cream/60">Total payable</p>
-                        <p class="mt-1 font-display text-3xl leading-none">
+                        <p class="mt-1 text-2xl font-bold font-data leading-none">
                             <span id="summary-total" class="anim-number tabnum"><span>₱0</span></span>
                         </p>
                     </div>
                 </div>
 
-                <button type="submit" id="submit-booking" class="press focus-ring mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-gold px-6 py-3.5 text-[12px] font-bold uppercase tracking-[0.2em] text-ink transition-all hover:bg-gold-soft hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:pointer-events-none disabled:opacity-70">
-                    <x-admin.icon name="check-circle" class="w-4 h-4" />
+                <button type="submit" id="submit-booking" class="press focus-ring mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[12px] font-bold uppercase tracking-[0.2em] text-clsu-900 transition-all hover:bg-clsu-50 hover:shadow-[0_0_0_4px_rgba(255,255,255,0.15)] disabled:pointer-events-none disabled:opacity-70">
+                    <x-admin.ui.icon name="check-circle" class="w-4 h-4" />
                     Create Booking
                 </button>
                 <p class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-cream/50">Recorded as paid · Manual payment</p>
@@ -297,12 +297,12 @@
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-emerald">Guests in room</label>
                 <div class="mb-stepper flex items-center gap-1.5">
-                    <button type="button" data-step="-1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="Fewer guests in room">
+                    <button type="button" data-step="-1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="Fewer guests in room">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                     <input type="number" data-slot="guests" min="1" value="1"
-                           class="w-full rounded-xl border border-emerald-deep/15 bg-white px-2 py-2 text-center text-sm font-bold text-ink transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" required>
-                    <button type="button" data-step="1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="More guests in room">
+                           class="w-full rounded-xl border border-emerald-deep/15 bg-white px-2 py-2 text-center text-sm font-bold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" required>
+                    <button type="button" data-step="1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="More guests in room">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                 </div>
@@ -311,12 +311,12 @@
             <div>
                 <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-emerald">Seniors / PWD</label>
                 <div class="mb-stepper flex items-center gap-1.5">
-                    <button type="button" data-step="-1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="Fewer seniors">
+                    <button type="button" data-step="-1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="Fewer seniors">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                     <input type="number" data-slot="seniors" min="0" value="0"
-                           class="w-full rounded-xl border border-emerald-deep/15 bg-white px-2 py-2 text-center text-sm font-bold text-ink transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
-                    <button type="button" data-step="1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-gold hover:text-emerald-deep" aria-label="More seniors">
+                           class="w-full rounded-xl border border-emerald-deep/15 bg-white px-2 py-2 text-center text-sm font-bold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+                    <button type="button" data-step="1" class="mb-step press grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-emerald-deep/15 bg-white text-stone-500 transition-colors hover:border-clsu-500 hover:text-emerald-deep" aria-label="More seniors">
                         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                 </div>
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function pillHtml(slug, label, openCount) {
         const active = state.activeType === slug;
-        return `<button type="button" data-type-pill="${slug}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-emerald-deep hover:border-gold hover:bg-gold-soft/30'}">
+        return `<button type="button" data-type-pill="${slug}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-emerald-deep hover:border-clsu-400 hover:bg-clsu-50'}">
             ${label}
             <span class="rounded-full px-1.5 py-0.5 font-data text-[9px] leading-none ${active ? 'bg-cream/15 text-cream' : 'bg-clsu-50 text-clsu-700'}">${openCount}</span>
         </button>`;
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ? `<span class="mt-0.5 text-[8px] font-black uppercase tracking-[0.14em]">${TILE_TAGS[room.status]}</span>`
             : `<span class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide ${isSelected ? 'text-cream/70' : 'text-stone-400'}">${wingLabel(room.wing) || '&nbsp;'}</span>`;
         const check = isSelected
-            ? '<span class="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-gold text-emerald-deep"><svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
+            ? '<span class="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-emerald-deep"><svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
             : '';
         const anim = room.status === 'available' || isSelected ? `style="animation:popIn .28s cubic-bezier(.16,1,.3,1) both;animation-delay:${Math.min(i, 20) * 18}ms"` : '';
         return `<button type="button" data-room-tile="${room.room_number}" ${anim} class="${TILE_BASE} ${cls}" ${room.status !== 'available' ? 'disabled' : ''} aria-pressed="${isSelected}">
@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const { guests, seniors } = assignedTotals();
         summaryGuestsEl.innerHTML = state.selected.size
             ? `${guests} of ${expected} guest${expected === 1 ? '' : 's'} assigned${seniors ? ` · ${seniors} senior/PWD` : ''}` +
-              (guests !== expected ? ' <span class="font-bold text-gold">· mismatch</span>' : '')
+              (guests !== expected ? ' <span class="font-bold text-clsu-200">· mismatch</span>' : '')
             : `${expected} guest${expected === 1 ? '' : 's'} expected`;
 
         let subtotal = 0;

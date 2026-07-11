@@ -5,7 +5,7 @@
 
 {{--
     Central icon registry for the admin panel's feather-style SVG icon set.
-    Usage: <x-admin.icon name="plus" class="w-4 h-4" />
+    Usage: <x-admin.ui.icon name="plus" class="w-4 h-4" />
 
     To add a new icon: drop one entry in $paths below and use its key as `name`
     everywhere else. No more copy-pasting raw <svg> markup into every page.

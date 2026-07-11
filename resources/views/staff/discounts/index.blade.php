@@ -7,27 +7,27 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.page-header subtitle="Review Senior Citizen / PWD verification documents and approve the 20% discount.">
-        Discount <span class="font-display italic font-medium text-clsu-800">Requests</span>
+    <x-admin.ui.page-header subtitle="Review Senior Citizen / PWD verification documents and approve the 20% discount.">
+        Discount <span class="text-clsu-700">Requests</span>
         <x-slot:actions>
             <a href="{{ route('reports.discounts.all') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 All
             </a>
             <a href="{{ route('reports.discounts.pending') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Pending
             </a>
             <a href="{{ route('reports.discounts.approved') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Approved
             </a>
             <a href="{{ route('reports.discounts.rejected') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="download" class="w-4 h-4" />
+                <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Rejected
             </a>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     @livewire('staff.discounts.discount-list')
 </div>

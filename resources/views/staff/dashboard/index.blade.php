@@ -14,61 +14,61 @@ $.ajaxSetup({
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.page-header subtitle="Here's what's happening at Farmers Hostel today.">
-        Welcome back, <span class="font-display italic font-medium text-clsu-800">{{ explode(' ', Auth::guard('staff')->user()->name)[0] }}</span>
+    <x-admin.ui.page-header subtitle="Here's what's happening at Farmers Hostel today.">
+        Welcome back, <span class="text-clsu-700">{{ explode(' ', Auth::guard('staff')->user()->name)[0] }}</span>
         <x-slot:actions>
             <a href="{{ route('staff.reports.index') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="calendar" class="w-4 h-4" />
+                <x-admin.ui.icon name="calendar" class="w-4 h-4" />
                 View Reports
             </a>
-            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all !no-underline">
-                <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
+            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all !no-underline">
+                <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                 New Booking
             </a>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     <!-- Quick Actions Grid -->
     <div class="animate-in grid grid-cols-2 lg:grid-cols-4 gap-3" style="animation-delay:20ms">
-        <x-admin.quick-action icon="log-in" title="Check-in Guest" subtitle="Mark an arrival" :href="route('staff.manualbooking')" />
-        <x-admin.quick-action icon="block" title="Block a Room" subtitle="Mark unavailable" :href="route('staff.rooms')" />
-        <x-admin.quick-action icon="credit-card" title="Log a Payment" subtitle="Record a receipt" :href="route('staff.paymentlogs.index')" />
-        <x-admin.quick-action icon="wrench" title="Maintenance Note" subtitle="Flag an issue" :href="route('staff.audit.index')" />
+        <x-admin.ui.quick-action icon="log-in" title="Check-in Guest" subtitle="Mark an arrival" :href="route('staff.manualbooking')" />
+        <x-admin.ui.quick-action icon="block" title="Block a Room" subtitle="Mark unavailable" :href="route('staff.rooms')" />
+        <x-admin.ui.quick-action icon="credit-card" title="Log a Payment" subtitle="Record a receipt" :href="route('staff.paymentlogs.index')" />
+        <x-admin.ui.quick-action icon="wrench" title="Maintenance Note" subtitle="Flag an issue" :href="route('staff.audit.index')" />
     </div>
 
     <!-- Stat cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.stat-card icon="bed" badge="ALL ACTIVE" label="Total Rooms" :delay="40">
+        <x-admin.ui.stat-card icon="bed" badge="ALL ACTIVE" label="Total Rooms" :delay="40">
             {{ $totalRooms }}
             <x-slot:footnote><p class="text-xs text-stone-400">{{ $roomsUnderMaintenance }} under maintenance</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="clipboard" badge="ALL-TIME" label="Total Bookings" :delay="80">
+        <x-admin.ui.stat-card icon="clipboard" badge="ALL-TIME" label="Total Bookings" :delay="80">
             {{ $totalBookings }}
             <x-slot:footnote>
                 <p class="text-xs font-semibold {{ $bookingPercentChange >= 0 ? 'text-clsu-600' : 'text-red-500' }} flex items-center gap-1">
-                    <x-admin.icon :name="$bookingPercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
+                    <x-admin.ui.icon :name="$bookingPercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
                     {{ $bookingPercentChange >= 0 ? '+' : '' }}{{ number_format($bookingPercentChange, 1) }}% vs last month
                 </p>
             </x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="users" badge="REGISTERED" label="Users" :delay="120">
+        <x-admin.ui.stat-card icon="users" badge="REGISTERED" label="Users" :delay="120">
             {{ $totalUsers }}
             <x-slot:footnote>
                 <p class="text-xs font-semibold text-clsu-600 flex items-center gap-1">
-                    <x-admin.icon name="trend-up" class="w-3 h-3" stroke-width="2.5" />
+                    <x-admin.ui.icon name="trend-up" class="w-3 h-3" stroke-width="2.5" />
                     +{{ $newUsersThisWeek }} new this week
                 </p>
             </x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="receipt" badge="GROSS" label="Revenue" :delay="160" dark>
+        <x-admin.ui.stat-card icon="receipt" badge="GROSS" label="Revenue" :delay="160" dark>
             ₱{{ number_format($totalRevenue, 2) }}
             <x-slot:footnote>
                 <div class="flex items-center justify-between">
                     <p class="text-xs font-semibold text-palay-300 flex items-center gap-1">
-                        <x-admin.icon :name="$revenuePercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
+                        <x-admin.ui.icon :name="$revenuePercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
                         {{ $revenuePercentChange >= 0 ? '+' : '' }}{{ number_format($revenuePercentChange, 1) }}% vs last month
                     </p>
                     <svg width="70" height="24" viewBox="0 0 70 24" class="text-palay-300/80" aria-label="Monthly revenue trend">
@@ -76,23 +76,23 @@ $.ajaxSetup({
                     </svg>
                 </div>
             </x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
     </div>
 
     <!-- Secondary metrics strip -->
     <div class="animate-in grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style="animation-delay:180ms">
-        <x-admin.mini-stat icon="arrival" label="Check-ins this week">{{ $checkinsThisWeek }}</x-admin.mini-stat>
-        <x-admin.mini-stat icon="departure" label="Check-outs this week">{{ $checkoutsThisWeek }}</x-admin.mini-stat>
+        <x-admin.ui.mini-stat icon="arrival" label="Check-ins this week">{{ $checkinsThisWeek }}</x-admin.ui.mini-stat>
+        <x-admin.ui.mini-stat icon="departure" label="Check-outs this week">{{ $checkoutsThisWeek }}</x-admin.ui.mini-stat>
         <a href="{{ route('staff.discounts.index') }}" class="!no-underline">
-            <x-admin.mini-stat icon="tag" color="palay" label="Pending discount requests" class="h-full hover:shadow-card-lg transition-shadow">{{ $pendingDiscounts }}</x-admin.mini-stat>
+            <x-admin.ui.mini-stat icon="tag" color="palay" label="Pending discount requests" class="h-full hover:shadow-card-lg transition-shadow">{{ $pendingDiscounts }}</x-admin.ui.mini-stat>
         </a>
-        <x-admin.mini-stat icon="wrench" color="ember" label="Rooms under maintenance">{{ $roomsUnderMaintenance }}</x-admin.mini-stat>
+        <x-admin.ui.mini-stat icon="wrench" color="ember" label="Rooms under maintenance">{{ $roomsUnderMaintenance }}</x-admin.ui.mini-stat>
     </div>
 
     <!-- Charts row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <!-- Bookings insights -->
-        <x-admin.section-card icon="chart-bar" title="Bookings Insights" class="lg:col-span-2" :delay="200">
+        <x-admin.ui.section-card icon="chart-bar" title="Bookings Insights" class="lg:col-span-2" :delay="200">
             <x-slot:actions>
                 <span class="text-xs font-medium text-stone-500 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">{{ date('Y') }}</span>
             </x-slot:actions>
@@ -154,14 +154,14 @@ $.ajaxSetup({
                     </div>
                 </div>
             </div>
-        </x-admin.section-card>
+        </x-admin.ui.section-card>
 
         <!-- Occupancy Snapshot component -->
         <livewire:dashboard.occupancy-snapshot />
     </div>
 
     <!-- Room Status Map (signature feature) -->
-    <x-admin.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20" :delay="300">
+    <x-admin.ui.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20" :delay="300">
         <x-slot:actions>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
@@ -180,7 +180,7 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -194,7 +194,7 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -208,12 +208,12 @@ $.ajaxSetup({
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
         </div>
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 
     <!-- Bottom row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -225,14 +225,14 @@ $.ajaxSetup({
         <!-- Right Side: Calendar & Recent Activity -->
         <div class="space-y-6">
             <!-- Calendar snapshot (bespoke dark header, not a section-card) -->
-            <div class="animate-in bg-white rounded-2xl border border-stone-200/70 shadow-card hover:shadow-card-lg transition-shadow duration-200 overflow-hidden" style="animation-delay:380ms">
+            <div class="animate-in bg-white rounded-2xl border border-stone-200 shadow-card hover:shadow-card-lg transition-shadow duration-200 overflow-hidden" style="animation-delay:380ms">
                 <div class="flex items-center justify-between bg-gradient-to-r from-clsu-900 to-clsu-950 text-white px-4 py-3.5">
-                    <button id="prev" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400/60 cursor-pointer">
-                        <x-admin.icon name="chevron-left" class="w-3.5 h-3.5" stroke-width="2.5" />
+                    <button id="prev" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/50 cursor-pointer">
+                        <x-admin.ui.icon name="chevron-left" class="w-3.5 h-3.5" stroke-width="2.5" />
                     </button>
                     <p id="monthYear" class="text-xs font-bold tracking-widest tabnum uppercase"></p>
-                    <button id="next" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400/60 cursor-pointer">
-                        <x-admin.icon name="chevron-right" class="w-3.5 h-3.5" stroke-width="2.5" />
+                    <button id="next" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/50 cursor-pointer">
+                        <x-admin.ui.icon name="chevron-right" class="w-3.5 h-3.5" stroke-width="2.5" />
                     </button>
                 </div>
                 <div class="p-4">
@@ -256,7 +256,7 @@ $.ajaxSetup({
             </div>
 
             <!-- Recent Activity -->
-            <x-admin.section-card icon="clock" title="Recent Activity" :delay="420">
+            <x-admin.ui.section-card icon="clock" title="Recent Activity" :delay="420">
                 <div class="space-y-5">
                     @foreach($recentActivities as $activity)
                         <div class="timeline-item flex gap-3.5">
@@ -270,7 +270,7 @@ $.ajaxSetup({
                         </div>
                     @endforeach
                 </div>
-            </x-admin.section-card>
+            </x-admin.ui.section-card>
         </div>
     </div>
 </div>
@@ -316,7 +316,7 @@ $.ajaxSetup({
           year === today.getFullYear();
 
         const cellClass = isToday
-            ? "w-7 h-7 rounded-full bg-gradient-to-br from-clsu-600 to-clsu-800 text-white font-bold flex items-center justify-center ring-4 ring-clsu-100"
+            ? "w-7 h-7 rounded-full bg-clsu-700 text-white font-bold flex items-center justify-center ring-4 ring-clsu-100"
             : "w-7 h-7 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-full cursor-pointer transition";
 
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -360,7 +360,7 @@ $.ajaxSetup({
 document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.room-map-btn')) return; // map not on this page
 
-    const MAP_BASE = 'room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400';
+    const MAP_BASE = 'room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40';
     const MAP_VARIANT = {
         available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
         occupied:    'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950',

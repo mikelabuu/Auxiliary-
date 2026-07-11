@@ -56,15 +56,15 @@
 
     <div>
         <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest mb-2.5">
-            <x-admin.icon name="receipt" class="w-3.5 h-3.5" />
+            <x-admin.ui.icon name="receipt" class="w-3.5 h-3.5" />
             Pricing Summary
         </p>
         <div class="grid grid-cols-3 gap-3">
-            <div class="rounded-xl border border-stone-200/70 p-3">
+            <div class="rounded-xl border border-stone-200 p-3">
                 <p class="text-[10px] text-stone-400 uppercase tracking-wide">Total Price</p>
                 <p class="text-sm font-bold text-stone-800 font-data tabnum mt-0.5">₱{{ number_format($booking->total_price, 2) }}</p>
             </div>
-            <div class="rounded-xl border border-stone-200/70 p-3">
+            <div class="rounded-xl border border-stone-200 p-3">
                 <p class="text-[10px] text-stone-400 uppercase tracking-wide">Discount</p>
                 <p class="text-sm font-bold text-stone-800 font-data tabnum mt-0.5">₱{{ number_format($booking->discount, 2) }}</p>
             </div>
@@ -77,12 +77,12 @@
 
     <div>
         <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest mb-2.5">
-            <x-admin.icon name="bed" class="w-3.5 h-3.5" />
+            <x-admin.ui.icon name="bed" class="w-3.5 h-3.5" />
             Room Details
         </p>
         <div class="space-y-2">
             @foreach ($booking->reservations as $res)
-                <div class="rounded-xl border border-stone-200/70 p-3.5">
+                <div class="rounded-xl border border-stone-200 p-3.5">
                     <p class="text-sm font-semibold text-stone-800">Room {{ $res->room_number }} <span class="text-stone-400 font-normal">({{ $res->room->room_type ?? '—' }})</span></p>
                     <div class="grid grid-cols-3 gap-2 mt-1.5 text-xs text-stone-500">
                         <p>Guests: <span class="font-semibold text-stone-700">{{ $res->num_guests }}</span></p>
@@ -97,10 +97,10 @@
     @if ($payment)
         <div>
             <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest mb-2.5">
-                <x-admin.icon name="credit-card" class="w-3.5 h-3.5" />
+                <x-admin.ui.icon name="credit-card" class="w-3.5 h-3.5" />
                 Payment Details
             </p>
-            <div class="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-stone-200/70 p-3.5 text-sm">
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-stone-200 p-3.5 text-sm">
                 <p class="text-stone-500">Reference # <span class="block text-stone-800 font-semibold font-data">{{ $payment->reference_no ?? 'N/A' }}</span></p>
                 <p class="text-stone-500">Amount Paid <span class="block text-stone-800 font-semibold font-data tabnum">₱{{ number_format($payment->amount, 2) }}</span></p>
                 <p class="text-stone-500">Status

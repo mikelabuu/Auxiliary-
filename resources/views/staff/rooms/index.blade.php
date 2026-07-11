@@ -36,21 +36,21 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.page-header subtitle="Manage availability, wings, and pricing across all rooms.">
-        Room <span class="font-display italic font-medium text-clsu-800">Management</span>
+    <x-admin.ui.page-header subtitle="Manage availability, wings, and pricing across all rooms.">
+        Room <span class="text-clsu-700">Management</span>
         <x-slot:actions>
             <a href="{{ route('staff.dashboard') }}#room-map" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
-                <x-admin.icon name="grid" class="w-4 h-4" />
+                <x-admin.ui.icon name="grid" class="w-4 h-4" />
                 Status Map
             </a>
-            <button type="button" id="openAddRoomBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all cursor-pointer">
-                <x-admin.icon name="plus" class="w-4 h-4" stroke-width="2" />
+            <button type="button" id="openAddRoomBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all cursor-pointer">
+                <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                 Add Room
             </button>
         </x-slot:actions>
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
-    <x-admin.section-nav :items="[
+    <x-admin.ui.section-nav :items="[
         ['id' => 'rooms-overview', 'label' => 'Overview', 'icon' => 'grid'],
         ['id' => 'room-types', 'label' => 'Types & Pricing', 'icon' => 'tag'],
         ['id' => 'all-rooms', 'label' => 'All Rooms', 'icon' => 'bed'],
@@ -58,47 +58,47 @@
 
     <!-- Primary stat cards -->
     <div id="rooms-overview" class="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.stat-card icon="bed" badge="ALL WINGS" label="Total Rooms" :delay="40" value-id="statTotalNum">
+        <x-admin.ui.stat-card icon="bed" badge="ALL WINGS" label="Total Rooms" :delay="40" value-id="statTotalNum">
             {{ $totalRooms }}
             <x-slot:footnote><p id="statTotalFoot" class="text-xs text-stone-400">Across {{ $roomsByWing->count() }} wings</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="check-circle" badge="READY" label="Available" :delay="80" value-id="statAvailableNum">
+        <x-admin.ui.stat-card icon="check-circle" badge="READY" label="Available" :delay="80" value-id="statAvailableNum">
             {{ $availableRooms }}
             <x-slot:footnote><p class="text-xs text-stone-400">Ready for check-in</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="users" badge="IN USE" label="Occupied" :delay="120" value-id="statOccupiedNum" dark>
+        <x-admin.ui.stat-card icon="users" badge="IN USE" label="Occupied" :delay="120" value-id="statOccupiedNum" dark>
             {{ $occupiedRooms }}
             <x-slot:footnote><p class="text-xs text-clsu-300">Currently hosting guests</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="wrench" color="ember" badge="NEEDS ATTENTION" label="Maintenance" :delay="160" value-id="statMaintenanceNum">
+        <x-admin.ui.stat-card icon="wrench" color="ember" badge="NEEDS ATTENTION" label="Maintenance" :delay="160" value-id="statMaintenanceNum">
             {{ $maintenanceRooms }}
             <x-slot:footnote><p class="text-xs text-stone-400">Out of rotation</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
     </div>
 
     <!-- Secondary metrics strip -->
     <div class="animate-in grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6" style="animation-delay:200ms">
-        <x-admin.mini-stat icon="droplet" color="palay" label="Rooms being cleaned" value-id="statCleaningNum">{{ $cleaningRooms }}</x-admin.mini-stat>
-        <x-admin.mini-stat icon="grid" label="Wings in use" value-id="statWingsNum">{{ $roomsByWing->count() }}</x-admin.mini-stat>
-        <x-admin.mini-stat icon="tag" label="Room types offered" value-id="statTypesNum">{{ $roomTypes->count() }}</x-admin.mini-stat>
+        <x-admin.ui.mini-stat icon="droplet" color="palay" label="Rooms being cleaned" value-id="statCleaningNum">{{ $cleaningRooms }}</x-admin.ui.mini-stat>
+        <x-admin.ui.mini-stat icon="grid" label="Wings in use" value-id="statWingsNum">{{ $roomsByWing->count() }}</x-admin.ui.mini-stat>
+        <x-admin.ui.mini-stat icon="tag" label="Room types offered" value-id="statTypesNum">{{ $roomTypes->count() }}</x-admin.ui.mini-stat>
     </div>
 
     <!-- Room Types & Pricing -->
-    <x-admin.section-card id="room-types" class="scroll-mt-32" icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category — click a type to filter rooms below" :delay="240">
+    <x-admin.ui.section-card id="room-types" class="scroll-mt-32" icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category — click a type to filter rooms below" :delay="240">
         <x-slot:actions>
             <button type="button" id="clearTypeFilterBtn" class="hidden shrink-0 items-center gap-1.5 text-xs font-semibold text-clsu-700 bg-clsu-50 hover:bg-clsu-100 rounded-full px-3 py-1.5 transition-colors cursor-pointer">
-                <x-admin.icon name="x" class="w-3 h-3" stroke-width="2.5" />
+                <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" />
                 <span id="clearTypeFilterLabel">Showing: All</span>
             </button>
         </x-slot:actions>
         <div id="typesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 
     <!-- All Rooms -->
-    <x-admin.section-card id="all-rooms" class="scroll-mt-32" icon="grid" title="All Rooms" :subtitle="$totalRooms . ' rooms across ' . $roomsByWing->count() . ' wings'" subtitle-id="allRoomsSubtitle" :delay="280">
+    <x-admin.ui.section-card id="all-rooms" class="scroll-mt-32" icon="grid" title="All Rooms" :subtitle="$totalRooms . ' rooms across ' . $roomsByWing->count() . ' wings'" subtitle-id="allRoomsSubtitle" :delay="280">
         <x-slot:actions>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span id="legendAvailable">{{ $availableRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · <span id="legendOccupied">{{ $occupiedRooms }}</span></span>
@@ -109,16 +109,16 @@
         <!-- Controls -->
         <div class="flex flex-col sm:flex-row gap-3 mb-6">
             <div class="relative flex-1 max-w-xs">
-                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input id="roomSearch" type="text" placeholder="Search room, type, or wing…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input id="roomSearch" type="text" placeholder="Search room, type, or wing…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
-            <select id="roomStatusFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select id="roomStatusFilter" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="all">All statuses</option>
                 @foreach($statusMeta as $statusKey => $sm)
                     <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
                 @endforeach
             </select>
-            <select id="wingFilterSelect" class="w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select id="wingFilterSelect" class="w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="all">All wings</option>
                 @foreach($orderedWings as $wing)
                     <option value="{{ $wing }}">{{ $wingLabel($wing) }}</option>
@@ -149,32 +149,32 @@
                 </div>
             </div>
         @empty
-            <x-admin.empty-state icon="grid" title="No rooms yet. Add your first room to get started." />
+            <x-admin.ui.empty-state icon="grid" title="No rooms yet. Add your first room to get started." />
         @endforelse
 
-        <x-admin.empty-state id="noRoomsMatch" icon="search" title="No rooms match your search or filters." class="hidden" />
-    </x-admin.section-card>
+        <x-admin.ui.empty-state id="noRoomsMatch" icon="search" title="No rooms match your search or filters." class="hidden" />
+    </x-admin.ui.section-card>
 </div>
 
 <!-- ==================== Add Room Modal ==================== -->
-<x-admin.modal id="addRoomModal" icon="plus" title="Add New Room" scroll-body>
+<x-admin.ui.modal id="addRoomModal" icon="plus" title="Add New Room" scroll-body>
     <form action="{{ route('staff.rooms.store') }}" method="POST" class="px-6 py-5 space-y-4">
         @csrf
         <div>
             <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>
-            <input type="text" name="room_number" value="{{ old('room_number') }}" placeholder="e.g. A-101" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_number') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
+            <input type="text" name="room_number" value="{{ old('room_number') }}" placeholder="e.g. A-101" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_number') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
             @error('room_number')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Type</label>
-                <select name="room_type" id="room-type" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_type') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"></select>
+                <select name="room_type" id="room-type" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_type') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"></select>
                 @error('room_type')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
-                <select name="wing" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('wing') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors">
+                <select name="wing" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('wing') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors">
                     <option value="" disabled {{ old('wing') ? '' : 'selected' }} hidden>Select wing</option>
                     @foreach($wingOrder as $w)
                         <option value="{{ $w }}" @selected(old('wing') === $w)>{{ $wingLabel($w) }}</option>
@@ -187,12 +187,12 @@
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Price (₱)</label>
-                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('price') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
+                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('price') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
                 @error('price')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
-                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                     @foreach($statusMeta as $statusKey => $sm)
                         <option value="{{ $statusKey }}" @selected(old('status', 'available') === $statusKey)>{{ $sm['label'] }}</option>
                     @endforeach
@@ -202,18 +202,18 @@
 
         <div>
             <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Notes <span class="text-stone-400 font-normal normal-case">(optional)</span></label>
-            <textarea name="notes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('notes') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-palay-300 focus:border-palay-300' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors resize-none">{{ old('notes') }}</textarea>
+            <textarea name="notes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('notes') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors resize-none">{{ old('notes') }}</textarea>
             @error('notes')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex gap-2.5 justify-end pt-2">
-            <x-admin.modal-footer close-target="addRoomModal" submit-label="Add Room" />
+            <x-admin.ui.modal-footer close-target="addRoomModal" submit-label="Add Room" />
         </div>
     </form>
-</x-admin.modal>
+</x-admin.ui.modal>
 
 <!-- ==================== Edit Room Modal ==================== -->
-<x-admin.modal id="roomEditModal" icon="edit" title="Edit Room" scroll-body>
+<x-admin.ui.modal id="roomEditModal" icon="edit" title="Edit Room" scroll-body>
     <form id="roomEditForm">
         <div class="px-6 py-5 space-y-4">
             <input type="hidden" id="editRoomId">
@@ -221,17 +221,17 @@
 
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>
-                <input type="text" id="editRoomNumber" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors" required>
+                <input type="text" id="editRoomNumber" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors" required>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Type</label>
-                    <select id="editRoomType" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors" required></select>
+                    <select id="editRoomType" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors" required></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
-                    <select id="editWing" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors" required>
+                    <select id="editWing" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors" required>
                         <option value="" disabled hidden>Select wing</option>
                         @foreach($wingOrder as $w)
                             <option value="{{ $w }}">{{ $wingLabel($w) }}</option>
@@ -243,11 +243,11 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Price (₱)</label>
-                    <input type="number" step="0.01" id="editPrice" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors" required>
+                    <input type="number" step="0.01" id="editPrice" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors" required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
-                    <select id="editStatus" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+                    <select id="editStatus" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                         @foreach($statusMeta as $statusKey => $sm)
                             <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
                         @endforeach
@@ -257,17 +257,17 @@
 
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Notes <span class="text-stone-400 font-normal normal-case">(optional)</span></label>
-                <textarea id="editNotes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors resize-none"></textarea>
+                <textarea id="editNotes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors resize-none"></textarea>
             </div>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
-            <x-admin.modal-footer close-target="roomEditModal" submit-label="Save changes" />
+            <x-admin.ui.modal-footer close-target="roomEditModal" submit-label="Save changes" />
         </div>
     </form>
-</x-admin.modal>
+</x-admin.ui.modal>
 
 <!-- ==================== Add / Edit Room Type Modal ==================== -->
-<x-admin.modal id="typeModal" icon="tag" color="palay" title="Add Room Type" title-id="typeModalTitleText" max-width="sm">
+<x-admin.ui.modal id="typeModal" icon="tag" color="palay" title="Add Room Type" title-id="typeModalTitleText" max-width="sm">
     <form id="typeForm">
         <div class="px-6 py-5 space-y-4">
             <input type="hidden" id="typeFormId">
@@ -275,32 +275,32 @@
 
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Type Name</label>
-                <input type="text" id="typeFormName" placeholder="e.g. Family Suite" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <input type="text" id="typeFormName" placeholder="e.g. Family Suite" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Base Price (₱)</label>
-                    <input type="number" step="0.01" min="0" id="typeFormPrice" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                    <input type="number" step="0.01" min="0" id="typeFormPrice" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Sleeps</label>
-                    <input type="number" min="1" step="1" id="typeFormCapacity" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                    <input type="number" min="1" step="1" id="typeFormCapacity" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                 </div>
             </div>
             <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms — existing rooms keep their current price.</p>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
-            <x-admin.modal-footer close-target="typeModal" submit-label="Save Type" />
+            <x-admin.ui.modal-footer close-target="typeModal" submit-label="Save Type" />
         </div>
     </form>
-</x-admin.modal>
+</x-admin.ui.modal>
 
 <!-- ==================== Room Occupancy Modal ==================== -->
-<x-admin.modal id="occupancyModal" icon="eye" title="Room Occupancy">
+<x-admin.ui.modal id="occupancyModal" icon="eye" title="Room Occupancy">
     <div class="px-6 py-5 space-y-2.5 max-h-[60vh] overflow-y-auto" id="occupancyModalBody">
         <p class="text-center text-stone-400 text-sm py-6">Loading…</p>
     </div>
-</x-admin.modal>
+</x-admin.ui.modal>
 
 @push('scripts')
 <script>
@@ -379,7 +379,7 @@ $(function () {
         const tiles = roomTypes.map(t => {
             const isActive = activeTypeFilter === t.slug;
             return (
-                '<div class="type-tile relative bg-white rounded-xl border ' + (isActive ? 'border-clsu-400 ring-1 ring-clsu-200' : 'border-stone-200/70') + ' shadow-subtle hover:shadow-card transition-all duration-200 overflow-hidden cursor-pointer" data-type-tile="' + t.slug + '">' +
+                '<div class="type-tile relative bg-white rounded-xl border ' + (isActive ? 'border-clsu-400 ring-1 ring-clsu-200' : 'border-stone-200') + ' shadow-subtle hover:shadow-card transition-all duration-200 overflow-hidden cursor-pointer" data-type-tile="' + t.slug + '">' +
                     '<button type="button" class="type-edit-btn absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/95 border border-stone-200 text-stone-400 hover:text-clsu-700 hover:border-clsu-300 flex items-center justify-center transition-colors" data-edit-type="' + t.id + '" aria-label="Edit ' + t.name + '">' +
                         '<svg class="icon w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
                     '</button>' +

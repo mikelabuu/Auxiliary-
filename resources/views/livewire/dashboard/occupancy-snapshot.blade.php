@@ -1,4 +1,4 @@
-<div class="animate-in bg-white rounded-2xl border border-stone-200/70 shadow-card hover:shadow-card-lg transition-shadow duration-200 p-6 flex flex-col" style="animation-delay:240ms">
+<div class="animate-in bg-white rounded-2xl border border-stone-200 shadow-card hover:shadow-card-lg transition-shadow duration-200 p-6 flex flex-col" style="animation-delay:240ms">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-lg bg-clsu-100 text-clsu-700 flex items-center justify-center">
@@ -6,7 +6,7 @@
       </div>
       <p class="font-semibold text-stone-900 text-sm">Occupancy</p>
     </div>
-    <button wire:click="recalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-palay-400 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
+    <button wire:click="recalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
       <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
   </div>
@@ -30,7 +30,7 @@
         <circle cx="70" cy="70" r="58" fill="none" stroke="url(#occGrad)" stroke-width="14" stroke-dasharray="{{ $dashArray }} {{ $circumference }}" stroke-linecap="round" transform="rotate(-90 70 70)" />
       </svg>
       <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <p class="text-2xl font-display font-semibold text-stone-900">{{ round($percent) }}%</p>
+        <p class="text-2xl font-bold font-data tabnum text-stone-900">{{ round($percent) }}%</p>
         <p class="text-[10px] font-semibold text-stone-400 tracking-wide">OCCUPIED</p>
       </div>
     </div>

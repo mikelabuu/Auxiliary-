@@ -27,7 +27,7 @@
         'frontdesk'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200',    'label' => 'Front Desk'],
         'housekeeping' => ['badge' => 'bg-sky-50 text-sky-700 border-sky-200',           'label' => 'Housekeeping'],
     ];
-    $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors';
+    $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors';
     $labelClasses = 'block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1.5';
 
     // Which form (if any) triggered the validation errors, so old() values are
@@ -37,22 +37,22 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.page-header subtitle="Administrative and staff accounts, their roles, and access standing.">
-        Staff <span class="font-display italic font-medium text-clsu-800">Center</span>
+    <x-admin.ui.page-header subtitle="Administrative and staff accounts, their roles, and access standing.">
+        Staff <span class="text-clsu-700">Center</span>
         @if ($isMaster)
             <x-slot:actions>
-                <button type="button" id="openCreateStaffBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.98] transition-all shadow-card cursor-pointer">
-                    <x-admin.icon name="plus" class="w-4 h-4" />
+                <button type="button" id="openCreateStaffBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 border border-clsu-800 rounded-xl px-4 py-2.5 hover:bg-clsu-800 active:scale-[0.98] transition-all shadow-card cursor-pointer">
+                    <x-admin.ui.icon name="plus" class="w-4 h-4" />
                     New Staff Account
                 </button>
             </x-slot:actions>
         @endif
-    </x-admin.page-header>
+    </x-admin.ui.page-header>
 
     {{-- Flash messages --}}
     @if(session('success'))
         <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.icon name="check-circle" class="w-4 h-4 shrink-0" />
+            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
             {{ session('success') }}
         </div>
     @endif
@@ -60,7 +60,7 @@
         <div class="animate-in rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3.5 text-sm text-ember-700">
             <ul class="space-y-1">
                 @foreach($errors->all() as $error)
-                    <li class="flex items-start gap-1.5"><x-admin.icon name="block" class="w-3.5 h-3.5 shrink-0 mt-0.5" /> {{ $error }}</li>
+                    <li class="flex items-start gap-1.5"><x-admin.ui.icon name="block" class="w-3.5 h-3.5 shrink-0 mt-0.5" /> {{ $error }}</li>
                 @endforeach
             </ul>
         </div>
@@ -68,43 +68,43 @@
 
     <!-- Team stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.stat-card icon="users" badge="WHOLE TEAM" label="Staff Accounts" :delay="40" dark>
+        <x-admin.ui.stat-card icon="users" badge="WHOLE TEAM" label="Staff Accounts" :delay="40" dark>
             {{ number_format($stats['total']) }}
             <x-slot:footnote><p class="text-xs text-clsu-300">Across all roles</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="check-circle" badge="ENABLED" label="Active Accounts" :delay="80">
+        <x-admin.ui.stat-card icon="check-circle" badge="ENABLED" label="Active Accounts" :delay="80">
             {{ number_format($stats['active']) }}
             <x-slot:footnote><p class="text-xs text-stone-400">Able to sign in</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="settings" color="palay" badge="ELEVATED" label="Admin Accounts" :delay="120">
+        <x-admin.ui.stat-card icon="settings" color="palay" badge="ELEVATED" label="Admin Accounts" :delay="120">
             {{ number_format($stats['admins']) }}
             <x-slot:footnote><p class="text-xs text-stone-400">Master admin and admins</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
 
-        <x-admin.stat-card icon="block" color="ember" badge="RESTRICTED" label="Suspended" :delay="160">
+        <x-admin.ui.stat-card icon="block" color="ember" badge="RESTRICTED" label="Suspended" :delay="160">
             {{ number_format($stats['suspended']) }}
             <x-slot:footnote><p class="text-xs text-stone-400">Sign-in disabled</p></x-slot:footnote>
-        </x-admin.stat-card>
+        </x-admin.ui.stat-card>
     </div>
 
-    <x-admin.section-card icon="users" title="Staff Accounts" :subtitle="$staffs->total() . ' record' . ($staffs->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+    <x-admin.ui.section-card icon="users" title="Staff Accounts" :subtitle="$staffs->total() . ' record' . ($staffs->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
 
         <!-- Search + filters -->
         <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
             <div class="relative flex-1 max-w-xs">
-                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Name or email…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Name or email…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
-            <select name="role" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select name="role" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="all" @selected($role === 'all')>All roles</option>
                 <option value="master_admin" @selected($role === 'master_admin')>Master Admin</option>
                 <option value="admin" @selected($role === 'admin')>Admin</option>
                 <option value="frontdesk" @selected($role === 'frontdesk')>Front Desk</option>
                 <option value="housekeeping" @selected($role === 'housekeeping')>Housekeeping</option>
             </select>
-            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
             </select>
@@ -115,7 +115,7 @@
         </form>
 
         @if($staffs->isEmpty())
-            <x-admin.empty-state icon="users" title="No staff records match this view." />
+            <x-admin.ui.empty-state icon="users" title="No staff records match this view." />
         @else
             <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
                 <table class="w-full text-sm">
@@ -175,7 +175,7 @@
                                                 data-staff-id="{{ $staff->id }}"
                                                 data-name="{{ $staff->name }}"
                                                 title="View activity" aria-label="View activity">
-                                            <x-admin.icon name="clock" class="w-4 h-4" />
+                                            <x-admin.ui.icon name="clock" class="w-4 h-4" />
                                         </button>
                                         @if ($isMaster && $staff->role !== 'master_admin')
                                             <button class="edit-staff-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
@@ -184,7 +184,7 @@
                                                     data-email="{{ $staff->email }}"
                                                     data-role="{{ $staff->role }}"
                                                     title="Edit account" aria-label="Edit account">
-                                                <x-admin.icon name="edit" class="w-4 h-4" />
+                                                <x-admin.ui.icon name="edit" class="w-4 h-4" />
                                             </button>
                                             @if(!$staff->is_suspended)
                                                 <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
@@ -212,11 +212,11 @@
                 {{ $staffs->links() }}
             </div>
         @endif
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 
     {{-- Own account (every staff role can edit their own details) --}}
     <div class="max-w-xl">
-        <x-admin.section-card icon="user" title="Your Account" subtitle="Update your own details or password" :delay="240">
+        <x-admin.ui.section-card icon="user" title="Your Account" subtitle="Update your own details or password" :delay="240">
             <form method="POST" action="{{ route('staff.update', $me->id) }}" class="space-y-4">
                 @csrf
                 @method('PUT')
@@ -249,18 +249,18 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-b from-clsu-600 to-clsu-800 border border-clsu-800 rounded-xl px-4 py-2.5 hover:from-clsu-700 hover:to-clsu-900 active:scale-[0.99] transition-all shadow-card cursor-pointer">
-                        <x-admin.icon name="check" class="w-4 h-4" />
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-700 border border-clsu-800 rounded-xl px-4 py-2.5 hover:bg-clsu-800 active:scale-[0.99] transition-all shadow-card cursor-pointer">
+                        <x-admin.ui.icon name="check" class="w-4 h-4" />
                         Save Changes
                     </button>
                 </div>
             </form>
-        </x-admin.section-card>
+        </x-admin.ui.section-card>
     </div>
 
     @if ($isMaster)
         {{-- Create staff modal --}}
-        <x-admin.modal id="createStaffModal" icon="plus" title="New Staff Account" max-width="lg" scroll-body>
+        <x-admin.ui.modal id="createStaffModal" icon="plus" title="New Staff Account" max-width="lg" scroll-body>
             <form method="POST" action="{{ route('staff.create-staff') }}" class="p-6 space-y-4">
                 @csrf
                 <input type="hidden" name="_form" value="create-staff">
@@ -294,21 +294,21 @@
                 </div>
 
                 <div class="flex gap-2.5 justify-end pt-2">
-                    <x-admin.modal-footer close-target="createStaffModal" submit-label="Create Staff" />
+                    <x-admin.ui.modal-footer close-target="createStaffModal" submit-label="Create Staff" />
                 </div>
             </form>
-        </x-admin.modal>
+        </x-admin.ui.modal>
 
         {{-- Edit staff modal --}}
-        <x-admin.modal id="editStaffModal" icon="edit" title="Edit Staff Account" max-width="lg" scroll-body>
+        <x-admin.ui.modal id="editStaffModal" icon="edit" title="Edit Staff Account" max-width="lg" scroll-body>
             <form method="POST" action="{{ route('staff.master-update') }}" class="p-6 space-y-4">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="_form" value="edit-staff">
                 <input type="hidden" name="staff_id" id="esStaffId" value="{{ $errorForm === 'edit-staff' ? old('staff_id') : '' }}">
 
-                <div class="flex items-center gap-2.5 rounded-xl border border-stone-200/70 bg-stone-50/70 px-4 py-2.5 text-sm">
-                    <x-admin.icon name="user" class="w-4 h-4 text-stone-400 shrink-0" />
+                <div class="flex items-center gap-2.5 rounded-xl border border-stone-200 bg-stone-50/70 px-4 py-2.5 text-sm">
+                    <x-admin.ui.icon name="user" class="w-4 h-4 text-stone-400 shrink-0" />
                     <span class="text-stone-500">Editing:</span>
                     <span id="esTarget" class="font-semibold text-stone-800 truncate">{{ $errorForm === 'edit-staff' ? (old('name') ?: 'Staff #' . old('staff_id')) : '' }}</span>
                 </div>
@@ -342,14 +342,14 @@
                 </div>
 
                 <div class="flex gap-2.5 justify-end pt-2">
-                    <x-admin.modal-footer close-target="editStaffModal" submit-label="Save Changes" />
+                    <x-admin.ui.modal-footer close-target="editStaffModal" submit-label="Save Changes" />
                 </div>
             </form>
-        </x-admin.modal>
+        </x-admin.ui.modal>
     @endif
 
     {{-- Activity modal (populated via AJAX) --}}
-    <x-admin.modal id="staffActivityModal" icon="clock" title="Recent Activity" max-width="lg" scroll-body>
+    <x-admin.ui.modal id="staffActivityModal" icon="clock" title="Recent Activity" max-width="lg" scroll-body>
         <div class="p-6">
             <div id="saLoading" class="py-8 text-center text-sm text-stone-400">Loading activity…</div>
             <div id="saBody" class="hidden space-y-4">
@@ -357,12 +357,12 @@
                     <p id="saName" class="font-semibold text-stone-800"></p>
                     <p id="saLastLogin" class="text-xs text-stone-400 font-data tabnum"></p>
                 </div>
-                <div id="saLogs" class="divide-y divide-stone-100 rounded-xl border border-stone-200/70 overflow-hidden"></div>
+                <div id="saLogs" class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden"></div>
                 <p id="saEmpty" class="hidden text-sm text-stone-400 text-center py-4">No recorded activity yet.</p>
                 <p class="text-[11px] text-stone-400">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="text-clsu-700 font-semibold hover:underline">Audit Logs</a>.</p>
             </div>
         </div>
-    </x-admin.modal>
+    </x-admin.ui.modal>
 </div>
 @endsection
 

@@ -10,6 +10,6 @@
     booking modal — one source of truth for what a booking's details look
     like, instead of two independently hand-maintained copies.
 --}}
-<x-admin.modal id="bookingModal" icon="clipboard" :title="'Booking #' . $booking->id" max-width="lg">
+<x-admin.ui.modal id="bookingModal" icon="clipboard" :title="'Booking #' . $booking->id" max-width="lg">
     @include('staff.partials.booking-detail-body', ['booking' => $booking])
-</x-admin.modal>
+</x-admin.ui.modal>

@@ -7,17 +7,17 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.page-header subtitle="Bookings that have been checked out.">
-        Completed <span class="font-display italic font-medium text-clsu-800">Bookings</span>
-    </x-admin.page-header>
+    <x-admin.ui.page-header subtitle="Bookings that have been checked out.">
+        Completed <span class="text-clsu-700">Bookings</span>
+    </x-admin.ui.page-header>
 
-    <x-admin.section-card icon="check-circle" title="Completed Bookings" :subtitle="$bookings->total() . ' total'" :delay="40">
+    <x-admin.ui.section-card icon="check-circle" title="Completed Bookings" :subtitle="$bookings->total() . ' total'" :delay="40">
         <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
             <div class="relative flex-1 max-w-xs">
-                <x-admin.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-palay-300 focus:border-palay-300 transition-colors">
+                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
             </div>
-            <select name="sort" onchange="this.form.submit()" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-palay-300 focus:border-palay-300 cursor-pointer transition-colors">
+            <select name="sort" onchange="this.form.submit()" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                 <option value="latest" @selected($sort === 'latest')>Sort: Latest</option>
                 <option value="oldest" @selected($sort === 'oldest')>Sort: Oldest</option>
             </select>
@@ -25,7 +25,7 @@
         </form>
 
         @if($bookings->isEmpty())
-            <x-admin.empty-state icon="check-circle" title="No completed bookings found." />
+            <x-admin.ui.empty-state icon="check-circle" title="No completed bookings found." />
         @else
             <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
                 <table class="w-full text-sm">
@@ -51,7 +51,7 @@
                                 </td>
                                 <td class="px-6 py-3">
                                     <button type="button" class="password-verify flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors cursor-pointer" data-id="{{ $booking->id }}">
-                                        <x-admin.icon name="eye" class="w-3.5 h-3.5" />
+                                        <x-admin.ui.icon name="eye" class="w-3.5 h-3.5" />
                                         View
                                     </button>
                                 </td>
@@ -65,7 +65,7 @@
                 {{ $bookings->links() }}
             </div>
         @endif
-    </x-admin.section-card>
+    </x-admin.ui.section-card>
 </div>
 
 {{-- Filled via AJAX with staff.partials.booking-details --}}
