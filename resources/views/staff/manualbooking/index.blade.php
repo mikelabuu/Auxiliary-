@@ -5,45 +5,47 @@
 
 @section('content')
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.ui.page-header subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel.">
-        Manual <span class="text-clsu-700">Booking</span>
-        <x-slot:actions>
-            <x-admin.ui.button variant="secondary" :href="route('staff.bookings.index')">
+    @php
+        $upcomingReservationCount = $upcomingBookings->sum(fn ($b) => $b->reservations->count());
+    @endphp
+
+    <x-admin.ui.ops-header eyebrow="Front Desk · Manual Booking"
+        subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel. Payment is recorded as paid.">
+        Manual <span class="accent">Booking</span>
+        <x-slot:pills>
+            <span class="ops-pill"><span class="ops-pill-dot"></span><span class="ops-pill-num">{{ $totalAvailableRooms }}</span> rooms available now</span>
+            <span class="ops-pill"><span class="ops-pill-dot info"></span><span class="ops-pill-num">{{ $upcomingReservationCount }}</span> upcoming reservation{{ $upcomingReservationCount === 1 ? '' : 's' }}</span>
+        </x-slot:pills>
+        <x-slot:aside>
+            <p class="ops-aside-label">Recorded as</p>
+            <p class="ops-aside-value">Paid</p>
+            <p class="ops-aside-meta">Manual payment channel</p>
+            <div class="ops-aside-divider"></div>
+            <a href="{{ route('staff.bookings.index') }}" class="btn btn-center !no-underline" style="width:100%;background:#fff;color:var(--color-g-800);box-shadow:0 2px 8px rgba(5,46,28,.18);">
                 <x-admin.ui.icon name="receipt" class="w-4 h-4" />
                 Booking Hub
-            </x-admin.ui.button>
-        </x-slot:actions>
-    </x-admin.ui.page-header>
+            </a>
+        </x-slot:aside>
+    </x-admin.ui.ops-header>
 
-    <!-- Boutique stats band — mirrors the landing page's emerald band -->
-    <div class="animate-in relative overflow-hidden rounded-xl bg-emerald-deep text-cream shadow-card-lg" style="animation-delay:40ms">
-        <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20"></div>
-        <div aria-hidden="true" class="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] md:divide-x md:divide-cream/10">
-            <div class="px-7 py-6 md:pr-12">
-                <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-clsu-300">Right now</p>
-                <p class="mt-2 text-4xl font-bold font-data leading-none tabnum">{{ $totalAvailableRooms }}</p>
-                <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cream/60">Available rooms</p>
-            </div>
-            <div class="px-7 py-6 border-t border-cream/10 md:border-t-0">
-                <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.32em] text-clsu-300">Upcoming reservations</p>
-                @if($upcomingBookings->isEmpty())
-                    <p class="text-sm text-cream/60">No upcoming paid or pending-payment bookings.</p>
-                @else
-                    <div class="custom-scrollbar flex max-h-24 flex-wrap gap-2 overflow-y-auto pr-1">
-                        @foreach($upcomingBookings as $booking)
-                            @foreach($booking->reservations as $res)
-                                <span class="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/10 px-3 py-1.5 text-xs font-medium text-cream/85">
-                                    <span class="h-1 w-1 rounded-full bg-clsu-300"></span>
-                                    Room {{ $res->room_number }} · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}–{{ \Carbon\Carbon::parse($booking->check_out)->format('M d') }}
-                                </span>
-                            @endforeach
+    {{-- Upcoming reservations — light strip --}}
+    @if($upcomingBookings->isNotEmpty())
+        <div class="card animate-in" style="animation-delay:40ms">
+            <div class="card-body" style="padding:14px 20px;">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="filter-row-label" style="margin-right:4px;">Upcoming this week</span>
+                    @foreach($upcomingBookings as $booking)
+                        @foreach($booking->reservations as $res)
+                            <span class="cell-tag" style="gap:6px;">
+                                <span style="width:6px;height:6px;border-radius:50%;background:var(--color-g-500);"></span>
+                                Room {{ $res->room_number }} · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}–{{ \Carbon\Carbon::parse($booking->check_out)->format('M d') }}
+                            </span>
                         @endforeach
-                    </div>
-                @endif
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
     @if(session('success'))
         <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
@@ -85,13 +87,19 @@
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Check-In</label>
-                        <input type="date" name="check_in" id="check_in" value="{{ old('check_in', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none cursor-pointer" required>
+                        <div class="relative">
+                            <x-admin.ui.icon name="calendar" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald" />
+                            <input type="text" name="check_in" id="check_in" value="{{ old('check_in', date('Y-m-d')) }}" placeholder="Select date" readonly
+                                   class="flatpickr-date w-full cursor-pointer rounded-xl border border-emerald-deep/15 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none" required>
+                        </div>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Check-Out</label>
-                        <input type="date" name="check_out" id="check_out" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                               class="w-full rounded-xl border border-emerald-deep/15 bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none cursor-pointer" required>
+                        <div class="relative">
+                            <x-admin.ui.icon name="calendar" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald" />
+                            <input type="text" name="check_out" id="check_out" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}" placeholder="Select date" readonly
+                                   class="flatpickr-date w-full cursor-pointer rounded-xl border border-emerald-deep/15 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-ink transition-colors focus:border-clsu-500 focus:ring-2 focus:ring-clsu-500/25 focus:outline-none" required>
+                        </div>
                     </div>
                 </div>
 
@@ -132,7 +140,9 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald">Guest Address</label>
-                        <livewire:address-selector />
+                        <div class="mb-selects">
+                            <livewire:address-selector />
+                        </div>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-emerald" for="expected_guests">Expected Guests</label>
@@ -214,65 +224,67 @@
 
         <!-- ══════════ Right column — live booking summary ══════════ -->
         <div class="animate-in lg:sticky lg:top-24 lg:col-span-4" style="animation-delay:200ms">
-            <div class="relative overflow-hidden rounded-xl bg-emerald-deep p-6 text-cream shadow-card-lg sm:p-7">
-                <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20"></div>
-                <div aria-hidden="true" class="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-white/5 blur-3xl"></div>
-
-                <h3 class="flex items-center gap-2.5 border-b border-cream/10 pb-4 text-lg font-semibold">
-                    <x-admin.ui.icon name="receipt" class="w-5 h-5 text-clsu-300" />
-                    Booking <span class="-ml-1 text-clsu-300">Summary</span>
-                </h3>
-
-                <!-- Dates -->
-                <div class="mt-4 flex items-center justify-between gap-3 text-sm">
-                    <span id="summary-dates" class="font-medium text-cream/85">—</span>
-                    <span id="summary-nights" class="hidden whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white"></span>
+            <div class="card card-accent card-overflow-hidden">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <x-admin.ui.icon name="receipt" class="w-[18px] h-[18px]" />
+                        Booking Summary
+                    </h3>
+                    <span id="summary-nights" class="hidden chip chip-green"></span>
                 </div>
 
-                <!-- Guests line -->
-                <div id="summary-guests" class="mt-2 text-xs font-medium text-cream/55">—</div>
-
-                <!-- Room lines -->
-                <div id="summary-rooms" class="mt-4 space-y-2.5 border-t border-cream/10 pt-4 text-sm">
-                    <p class="text-cream/50">Pick rooms on the board to build the summary.</p>
-                </div>
-
-                <!-- Subtotal -->
-                <div class="mt-4 flex items-center justify-between border-t border-cream/10 pt-4 text-sm">
-                    <span class="text-cream/60">Subtotal</span>
-                    <span id="summary-subtotal" class="font-semibold tabnum">₱0</span>
-                </div>
-
-                <!-- Senior / PWD flag -->
-                <label for="has_senior_pwd" class="mt-4 flex cursor-pointer items-center gap-2.5 text-sm text-cream/85">
-                    <input type="checkbox" name="has_senior_pwd" id="has_senior_pwd" class="h-4 w-4 rounded border-cream/40 bg-transparent text-clsu-500 focus:ring-white/40">
-                    Senior / PWD guest present
-                </label>
-
-                <!-- Discount -->
-                <div class="mt-3">
-                    <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.24em] text-clsu-300">Discount (₱)</label>
-                    <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="1"
-                           class="w-full rounded-xl border border-cream/15 bg-cream/10 px-4 py-2.5 text-sm text-cream placeholder:text-cream/40 transition-colors focus:border-white/60 focus:ring-2 focus:ring-white/25 focus:outline-none tabnum">
-                    <p id="discount-hint" class="mt-1.5 hidden text-[11px] font-semibold text-clsu-200"></p>
-                </div>
-
-                <!-- Total -->
-                <div aria-hidden="true" class="mt-5 h-px w-full bg-white/20"></div>
-                <div class="mt-4 flex items-end justify-between">
+                <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+                    {{-- Dates + guests --}}
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-cream/60">Total payable</p>
-                        <p class="mt-1 text-2xl font-bold font-data leading-none">
-                            <span id="summary-total" class="anim-number tabnum"><span>₱0</span></span>
-                        </p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="kv-label" style="margin:0;">Stay dates</span>
+                            <span id="summary-dates" class="text-sm font-semibold text-ink">—</span>
+                        </div>
+                        <div id="summary-guests" class="mt-1.5 text-xs font-medium text-muted text-right">—</div>
+                    </div>
+
+                    {{-- Room lines --}}
+                    <div id="summary-rooms" class="space-y-2.5 border-t border-[color:var(--color-border)] pt-4 text-sm">
+                        <p class="text-faint">Pick rooms on the board to build the summary.</p>
+                    </div>
+
+                    {{-- Subtotal --}}
+                    <div class="flex items-center justify-between border-t border-[color:var(--color-border)] pt-4 text-sm">
+                        <span class="text-muted">Subtotal</span>
+                        <span id="summary-subtotal" class="font-semibold tabnum text-ink">₱0</span>
+                    </div>
+
+                    {{-- Senior / PWD flag --}}
+                    <label for="has_senior_pwd" class="flex cursor-pointer items-center gap-2.5 text-sm text-ink">
+                        <input type="checkbox" name="has_senior_pwd" id="has_senior_pwd" class="row-check">
+                        Senior / PWD guest present
+                    </label>
+
+                    {{-- Discount --}}
+                    <div class="form-group">
+                        <label class="form-label" for="discount_amount">Discount (₱)</label>
+                        <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="1" class="form-input tabnum">
+                        <p id="discount-hint" class="hidden text-[11px] font-semibold" style="color:var(--color-au-700);"></p>
                     </div>
                 </div>
 
-                <button type="submit" id="submit-booking" class="press focus-ring mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-[12px] font-bold uppercase tracking-[0.2em] text-clsu-900 transition-all hover:bg-clsu-50 hover:shadow-[0_0_0_4px_rgba(255,255,255,0.15)] disabled:pointer-events-none disabled:opacity-70">
-                    <x-admin.ui.icon name="check-circle" class="w-4 h-4" />
-                    Create Booking
-                </button>
-                <p class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-cream/50">Recorded as paid · Manual payment</p>
+                {{-- Total payable — emerald accent footer --}}
+                <div style="padding:22px 26px;background:radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.16) 0%, transparent 50%), linear-gradient(135deg,#10a45c 0%, var(--color-g-700) 100%);color:#fff;">
+                    <div class="flex items-end justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.24em]" style="color:rgba(255,255,255,.72);">Total payable</p>
+                            <p class="mt-1.5 font-display text-3xl font-extrabold leading-none">
+                                <span id="summary-total" class="anim-number tabnum" style="display:inline-block;overflow:hidden;"><span>₱0</span></span>
+                            </p>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.16em]" style="color:rgba(255,255,255,.7);">Manual · Paid</span>
+                    </div>
+
+                    <button type="submit" id="submit-booking" class="btn btn-center mt-5" style="width:100%;background:#fff;color:var(--color-g-800);font-weight:700;">
+                        <x-admin.ui.icon name="check-circle" class="w-4 h-4" />
+                        Create Booking
+                    </button>
+                </div>
             </div>
         </div>
     </form>
@@ -328,7 +340,12 @@
 </template>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -356,6 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const progressBar = document.getElementById('assign-progress-bar');
     const progressText = document.getElementById('assign-progress-text');
     const submitBtn = document.getElementById('submit-booking');
+    let fpIn = null, fpOut = null; // flatpickr instances (assigned in Boot)
 
     const peso = n => '₱' + Number(n).toLocaleString('en-PH', { maximumFractionDigits: 2 });
     const wingLabel = w => (w || '').toString().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -405,8 +423,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     break;
                 }
             }
-            checkInInput.value = fmtDate(inD);
-            checkOutInput.value = fmtDate(outD);
+            if (fpIn) fpIn.setDate(inD, false); else checkInInput.value = fmtDate(inD);
+            if (fpOut) { fpOut.set('minDate', new Date(inD.getTime() + 86400000)); fpOut.setDate(outD, false); }
+            else checkOutInput.value = fmtDate(outD);
             onDatesChanged();
         });
     });
@@ -415,8 +434,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (checkInInput.value) {
             const minOut = new Date(checkInInput.value);
             minOut.setDate(minOut.getDate() + 1);
-            checkOutInput.min = fmtDate(minOut);
-            if (checkOutInput.value && checkOutInput.value < checkOutInput.min) checkOutInput.value = checkOutInput.min;
+            if (fpOut) {
+                fpOut.set('minDate', minOut);
+                if (fpOut.selectedDates[0] && fpOut.selectedDates[0] < minOut) fpOut.setDate(minOut, false);
+            } else {
+                checkOutInput.min = fmtDate(minOut);
+                if (checkOutInput.value && checkOutInput.value < checkOutInput.min) checkOutInput.value = checkOutInput.min;
+            }
         }
         updateSummary();
         fetchAvailableRooms();
@@ -804,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const { guests, seniors } = assignedTotals();
         summaryGuestsEl.innerHTML = state.selected.size
             ? `${guests} of ${expected} guest${expected === 1 ? '' : 's'} assigned${seniors ? ` · ${seniors} senior/PWD` : ''}` +
-              (guests !== expected ? ' <span class="font-bold text-clsu-200">· mismatch</span>' : '')
+              (guests !== expected ? ' <span class="font-bold text-palay-700">· mismatch</span>' : '')
             : `${expected} guest${expected === 1 ? '' : 's'} expected`;
 
         let subtotal = 0;
@@ -820,14 +844,14 @@ document.addEventListener('DOMContentLoaded', function () {
             lines += `
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="font-semibold text-cream">Room ${room.room_number} <span class="font-normal capitalize text-cream/60">· ${room.type_name || room.room_type}</span></p>
-                        <p class="text-xs text-cream/50">${peso(price)} × ${nights} night${nights === 1 ? '' : 's'} · ${g} guest${g === 1 ? '' : 's'}</p>
+                        <p class="font-semibold text-ink">Room ${room.room_number} <span class="font-normal capitalize text-muted">· ${room.type_name || room.room_type}</span></p>
+                        <p class="text-xs text-faint">${peso(price)} × ${nights} night${nights === 1 ? '' : 's'} · ${g} guest${g === 1 ? '' : 's'}</p>
                     </div>
-                    <span class="whitespace-nowrap font-semibold tabnum">${peso(lineTotal)}</span>
+                    <span class="whitespace-nowrap font-semibold tabnum text-ink">${peso(lineTotal)}</span>
                 </div>`;
         });
 
-        summaryRoomsEl.innerHTML = lines || '<p class="text-cream/50">Pick rooms on the board to build the summary.</p>';
+        summaryRoomsEl.innerHTML = lines || '<p class="text-faint">Pick rooms on the board to build the summary.</p>';
         summarySubtotalEl.textContent = peso(subtotal);
 
         let discount = Math.max(0, parseFloat(discountInput.value) || 0);
@@ -885,6 +909,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ───────────────────── Boot ───────────────────── */
+    // Flatpickr calendars — same picker as the public checkout, themed light emerald.
+    if (typeof flatpickr !== 'undefined') {
+        const initialOutMin = checkInInput.value
+            ? new Date(new Date(checkInInput.value).getTime() + 86400000)
+            : 'today';
+        fpOut = flatpickr(checkOutInput, {
+            dateFormat: 'Y-m-d', minDate: initialOutMin, disableMobile: true,
+            defaultDate: checkOutInput.value || null,
+            onChange: () => checkOutInput.dispatchEvent(new Event('change', { bubbles: true })),
+        });
+        fpIn = flatpickr(checkInInput, {
+            dateFormat: 'Y-m-d', minDate: 'today', disableMobile: true,
+            defaultDate: checkInInput.value || 'today',
+            onChange: () => checkInInput.dispatchEvent(new Event('change', { bubbles: true })),
+        });
+    } else {
+        // Fallback if the flatpickr library fails to load: native date inputs.
+        [checkInInput, checkOutInput].forEach(el => { el.type = 'date'; el.readOnly = false; });
+        checkInInput.min = fmtDate(new Date());
+    }
+
     syncAssignmentUI();
     updateSummary();
     fetchAvailableRooms();

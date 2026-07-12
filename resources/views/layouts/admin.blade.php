@@ -14,6 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   @vite(['resources/css/admin.css', 'resources/js/app.js'])
   @livewireStyles
+  @stack('styles')
 </head>
 <body class="shell-root bg-surface text-ink antialiased"
       x-data="{
@@ -118,6 +119,27 @@
         window.addEventListener('scroll', onScroll, { passive: true });
         btt.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
       }
+
+      // Copy reference codes to clipboard (any .copy-ref[data-copy] in the console)
+      document.addEventListener('click', function (e) {
+        const btn = e.target.closest && e.target.closest('.copy-ref');
+        if (!btn) return;
+        const value = btn.getAttribute('data-copy');
+        if (!value) return;
+        const done = function () {
+          const original = btn.innerHTML;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+          setTimeout(function () { btn.innerHTML = original; }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(value).then(done).catch(function () {});
+        } else {
+          const t = document.createElement('textarea');
+          t.value = value; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); done(); } catch (err) {}
+          document.body.removeChild(t);
+        }
+      });
     })();
   </script>
   @livewireScripts

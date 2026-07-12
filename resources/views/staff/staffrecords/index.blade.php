@@ -91,94 +91,88 @@
 
     <x-admin.ui.section-card icon="users" title="Staff Accounts" :subtitle="$staffs->total() . ' record' . ($staffs->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
 
-        <!-- Search + filters -->
-        <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
-            <div class="relative flex-1 max-w-xs">
-                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Name or email…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+        {{-- Search + filters --}}
+        <form method="GET" class="filter-toolbar">
+            <div class="filter-search">
+                <x-admin.ui.icon name="search" class="w-4 h-4" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Name or email…" aria-label="Search staff">
             </div>
-            <select name="role" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
+            <select name="role" class="filter-select" aria-label="Filter by role">
                 <option value="all" @selected($role === 'all')>All roles</option>
                 <option value="master_admin" @selected($role === 'master_admin')>Master Admin</option>
                 <option value="admin" @selected($role === 'admin')>Admin</option>
                 <option value="frontdesk" @selected($role === 'frontdesk')>Front Desk</option>
                 <option value="housekeeping" @selected($role === 'housekeeping')>Housekeeping</option>
             </select>
-            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
+            <select name="sort" class="filter-select" aria-label="Sort order">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
             </select>
-            <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Apply</button>
+            <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+            <div class="filter-toolbar-spacer"></div>
             @if($search || $role !== 'all' || $sort !== 'latest')
-                <a href="{{ route('staff.staffrecords.index') }}" class="self-center text-xs font-semibold text-stone-500 hover:text-clsu-700 px-2 transition-colors !no-underline">Clear</a>
+                <a href="{{ route('staff.staffrecords.index') }}" class="filter-clear" style="text-decoration:none;">
+                    <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
+                </a>
             @endif
         </form>
 
         @if($staffs->isEmpty())
             <x-admin.ui.empty-state icon="users" title="No staff records match this view." />
         @else
-            <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
-                <table class="w-full text-sm">
+            <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-stone-50/70 border-b border-stone-100">
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Staff Member</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Role</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Standing</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Last Login</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Created</th>
-                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Action</th>
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Role</th>
+                            <th>Standing</th>
+                            <th>Last Login</th>
+                            <th>Created</th>
+                            <th class="text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($staffs as $staff)
                             @php $staffRole = $roleMeta[$staff->role] ?? ['badge' => 'bg-stone-100 text-stone-600 border-stone-200', 'label' => ucfirst($staff->role)]; @endphp
-                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
-                                <td class="px-6 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold {{ $staff->is_suspended ? 'bg-ember-100 text-ember-700' : ($staff->role === 'master_admin' ? 'bg-stone-900 text-white' : 'bg-clsu-100 text-clsu-700') }}">
-                                            {{ strtoupper(mb_substr($staff->name, 0, 1)) }}
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="font-semibold text-stone-800 truncate">{{ $staff->name }}</p>
-                                            <p class="text-xs text-stone-400 truncate">{{ $staff->email }}</p>
+                            <tr>
+                                <td>
+                                    <div class="cell-name">
+                                        <span class="avatar-initials"
+                                            @if($staff->is_suspended) style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c;border-color:#fca5a5;"
+                                            @elseif($staff->role === 'master_admin') style="background:linear-gradient(135deg,#3b0764,#6b21a8);color:#fff;border-color:#7e22ce;" @endif>{{ strtoupper(mb_substr($staff->name, 0, 1)) }}</span>
+                                        <div class="cell-name-text">
+                                            <p class="cell-name-primary truncate">{{ $staff->name }}</p>
+                                            <p class="cell-name-secondary truncate">{{ $staff->email }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td>
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $staffRole['badge'] }}">{{ $staffRole['label'] }}</span>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td>
                                     @if($staff->is_suspended)
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-ember-50 text-ember-700 border-ember-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-ember-500"></span>
-                                            Suspended
-                                        </span>
+                                        <span class="status status-cancelled">Suspended</span>
                                     @elseif($staff->role === 'master_admin')
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-purple-50 text-purple-700 border-purple-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                                            Master Account
-                                        </span>
+                                        <span class="status" style="color:#6b21a8;border-color:#e9d5ff;background:#faf5ff;"><span style="width:6px;height:6px;border-radius:50%;background:#a855f7;"></span>Master Account</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>
-                                            Active
-                                        </span>
+                                        <span class="status status-active">Active</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">
                                     {{ $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : '—' }}
                                 </td>
-                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">{{ $staff->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button class="activity-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">{{ $staff->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
+                                <td class="text-right">
+                                    <div class="table-actions justify-end">
+                                        <button class="activity-btn btn btn-ghost btn-sm btn-icon cursor-pointer"
                                                 data-staff-id="{{ $staff->id }}"
                                                 data-name="{{ $staff->name }}"
                                                 title="View activity" aria-label="View activity">
                                             <x-admin.ui.icon name="clock" class="w-4 h-4" />
                                         </button>
                                         @if ($isMaster && $staff->role !== 'master_admin')
-                                            <button class="edit-staff-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                            <button class="edit-staff-btn btn btn-ghost btn-sm btn-icon cursor-pointer"
                                                     data-staff-id="{{ $staff->id }}"
                                                     data-name="{{ $staff->name }}"
                                                     data-email="{{ $staff->email }}"
@@ -187,13 +181,13 @@
                                                 <x-admin.ui.icon name="edit" class="w-4 h-4" />
                                             </button>
                                             @if(!$staff->is_suspended)
-                                                <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
+                                                <button class="password-verify-btn btn btn-danger btn-sm cursor-pointer"
                                                         data-action="suspend"
                                                         data-staff-id="{{ $staff->id }}">
                                                     Suspend
                                                 </button>
                                             @else
-                                                <button class="password-verify-btn text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer"
+                                                <button class="password-verify-btn btn btn-outline btn-sm cursor-pointer"
                                                         data-action="unsuspend"
                                                         data-staff-id="{{ $staff->id }}">
                                                     Unsuspend

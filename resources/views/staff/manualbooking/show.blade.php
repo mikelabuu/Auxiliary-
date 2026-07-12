@@ -128,25 +128,25 @@
     </div>
 
     <x-admin.ui.section-card icon="bed" title="Room Reservations" :subtitle="$booking->reservations->count() . ' room(s)'" :delay="160">
-        <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
-            <table class="w-full text-sm">
+        <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
+            <table class="data-table">
                 <thead>
-                    <tr class="bg-stone-50/70 border-b border-stone-100">
-                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Room Number</th>
-                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Room Type</th>
-                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Guests</th>
-                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Seniors/PWD</th>
-                        <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Price/Night</th>
+                    <tr>
+                        <th>Room Number</th>
+                        <th>Room Type</th>
+                        <th>Guests</th>
+                        <th>Seniors/PWD</th>
+                        <th class="text-right">Price/Night</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($booking->reservations as $res)
-                        <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
-                            <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $res->room_number }}</td>
-                            <td class="px-6 py-3 text-stone-500 text-[11px] font-bold uppercase tracking-wide">{{ ucfirst($res->room_type) }}</td>
-                            <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $res->num_guests }}</td>
-                            <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $res->num_seniors }}</td>
-                            <td class="px-6 py-3 text-stone-800 font-semibold font-data tabnum">&#8369;{{ number_format($res->price, 2) }}</td>
+                        <tr>
+                            <td><span class="cell-tag font-data">{{ $res->room_number }}</span></td>
+                            <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ ucfirst($res->room_type) }}</td>
+                            <td class="font-data tabnum">{{ $res->num_guests }}</td>
+                            <td class="font-data tabnum">{{ $res->num_seniors }}</td>
+                            <td class="text-right font-data tabnum font-semibold">&#8369;{{ number_format($res->price, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

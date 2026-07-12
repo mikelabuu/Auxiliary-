@@ -71,113 +71,103 @@
 
     <x-admin.ui.section-card icon="users" title="User Directory" :subtitle="$users->total() . ' record' . ($users->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
 
-        <!-- Status tabs -->
-        <div class="flex flex-wrap gap-2 mb-5">
+        {{-- Status filters --}}
+        <div class="filter-row mb-4">
+            <span class="filter-row-label">Standing</span>
             @foreach ($statusTabs as $key => $meta)
                 <a href="{{ route('staff.userrecords.index', array_filter(['status' => $key, 'search' => $search, 'sort' => $sort])) }}"
-                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-clsu-600 border-clsu-700 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                   @class(['filter-tab', 'selected' => $status === $key]) style="text-decoration:none;">
                     {{ $meta['label'] }}
-                    <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $meta['count'] }}</span>
+                    <span class="ft-count">{{ $meta['count'] }}</span>
                 </a>
             @endforeach
         </div>
 
-        <!-- Search + sort -->
-        <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
+        {{-- Search + sort --}}
+        <form method="GET" class="filter-toolbar">
             <input type="hidden" name="status" value="{{ $status }}">
-            <div class="relative flex-1 max-w-xs">
-                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Username, email, or phone…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+            <div class="filter-search">
+                <x-admin.ui.icon name="search" class="w-4 h-4" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Username, email, or phone…" aria-label="Search users">
             </div>
-            <select name="sort" class="w-full sm:w-44 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
+            <select name="sort" class="filter-select" aria-label="Sort order">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
                 <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
                 <option value="stays" @selected($sort === 'stays')>Most stays</option>
             </select>
-            <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Apply</button>
+            <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+            <div class="filter-toolbar-spacer"></div>
             @if($search || $status !== 'all' || $sort !== 'latest')
-                <a href="{{ route('staff.userrecords.index') }}" class="self-center text-xs font-semibold text-stone-500 hover:text-clsu-700 px-2 transition-colors !no-underline">Clear</a>
+                <a href="{{ route('staff.userrecords.index') }}" class="filter-clear" style="text-decoration:none;">
+                    <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
+                </a>
             @endif
         </form>
 
         @if($users->isEmpty())
             <x-admin.ui.empty-state icon="users" title="No users match this view." />
         @else
-            <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
-                <table class="w-full text-sm">
+            <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-stone-50/70 border-b border-stone-100">
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">User</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Phone</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Email Status</th>
-                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Stays</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Standing</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Last Login</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Joined</th>
-                            <th class="text-right font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Action</th>
+                        <tr>
+                            <th>User</th>
+                            <th>Phone</th>
+                            <th>Email Status</th>
+                            <th class="text-right">Stays</th>
+                            <th>Standing</th>
+                            <th>Last Login</th>
+                            <th>Joined</th>
+                            <th class="text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($users as $user)
-                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
-                                <td class="px-6 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold {{ $user->is_suspended ? 'bg-ember-100 text-ember-700' : 'bg-clsu-100 text-clsu-700' }}">
-                                            {{ strtoupper(mb_substr($user->username, 0, 1)) }}
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="font-semibold text-stone-800 truncate">{{ $user->username }}</p>
-                                            <p class="text-xs text-stone-400 truncate">{{ $user->email }}</p>
+                            <tr>
+                                <td>
+                                    <div class="cell-name">
+                                        <span class="avatar-initials" @if($user->is_suspended) style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c;border-color:#fca5a5;" @endif>{{ strtoupper(mb_substr($user->username, 0, 1)) }}</span>
+                                        <div class="cell-name-text">
+                                            <p class="cell-name-primary truncate">{{ $user->username }}</p>
+                                            <p class="cell-name-secondary truncate">{{ $user->email }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3 text-stone-600 font-data tabnum whitespace-nowrap">{{ $user->phone ?? '—' }}</td>
-                                <td class="px-6 py-3">
+                                <td class="font-data tabnum whitespace-nowrap text-muted">{{ $user->phone ?? '—' }}</td>
+                                <td>
                                     @if($user->email_verified_at)
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">
-                                            <x-admin.ui.icon name="check" class="w-3 h-3" stroke-width="2.5" />
-                                            Verified
-                                        </span>
+                                        <span class="status status-success">Verified</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-stone-100 text-stone-500 border-stone-200">
-                                            <x-admin.ui.icon name="clock" class="w-3 h-3" stroke-width="2.5" />
-                                            Unverified
-                                        </span>
+                                        <span class="status status-neutral">Unverified</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-3 text-right text-stone-800 font-semibold font-data tabnum">{{ $user->completed_bookings_count }}</td>
-                                <td class="px-6 py-3">
+                                <td class="text-right font-data tabnum font-semibold">{{ $user->completed_bookings_count }}</td>
+                                <td>
                                     @if($user->is_suspended)
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-ember-50 text-ember-700 border-ember-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-ember-500"></span>
-                                            Suspended
-                                        </span>
+                                        <span class="status status-cancelled">Suspended</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-clsu-50 text-clsu-700 border-clsu-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>
-                                            Active
-                                        </span>
+                                        <span class="status status-active">Active</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">
                                     {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : '—' }}
                                 </td>
-                                <td class="px-6 py-3 text-stone-500 font-data tabnum text-xs whitespace-nowrap">{{ $user->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
-                                <td class="px-6 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button class="view-user-btn w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-clsu-700 hover:bg-clsu-50 transition-colors cursor-pointer"
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">{{ $user->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
+                                <td class="text-right">
+                                    <div class="table-actions justify-end">
+                                        <button class="view-user-btn btn btn-ghost btn-sm btn-icon cursor-pointer"
                                                 data-user-id="{{ $user->id }}"
                                                 title="View details" aria-label="View details">
                                             <x-admin.ui.icon name="eye" class="w-4 h-4" />
                                         </button>
                                         @if(!$user->is_suspended)
-                                            <button class="password-verify-btn text-xs font-semibold text-ember-700 border border-ember-200 bg-white rounded-lg px-3 py-1.5 hover:bg-ember-50 hover:border-ember-300 transition-colors cursor-pointer"
+                                            <button class="password-verify-btn btn btn-danger btn-sm cursor-pointer"
                                                     data-action="suspend"
                                                     data-user-id="{{ $user->id }}">
                                                 Suspend
                                             </button>
                                         @else
-                                            <button class="password-verify-btn text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer"
+                                            <button class="password-verify-btn btn btn-outline btn-sm cursor-pointer"
                                                     data-action="unsuspend"
                                                     data-user-id="{{ $user->id }}">
                                                 Unsuspend

@@ -39,6 +39,13 @@ class BookingsTable extends Component
         'checkoutBookingConfirmed' => 'checkoutBooking',
     ];
 
+    // Clear every active filter at once (toolbar "Clear filters" button)
+    public function resetFilters()
+    {
+        $this->reset(['search', 'statusFilter', 'dateFilter']);
+        $this->resetPage();
+    }
+
     // Reset pagination whenever filters or search change
     public function updatingSearch()
     {

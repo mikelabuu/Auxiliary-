@@ -316,14 +316,14 @@ $(function () {
         toggleExport(true);
         const columns = Object.keys(rows[0]);
 
-        let html = '<table class="w-full text-sm"><thead><tr class="bg-stone-50/70 border-b border-stone-100">';
+        let html = '<div class="scroll-x"><table class="data-table"><thead><tr>';
         columns.forEach(col => {
-            html += `<th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">${humanize(col)}</th>`;
+            html += `<th>${humanize(col)}</th>`;
         });
         html += '</tr></thead><tbody>';
 
         rows.forEach(row => {
-            html += '<tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">';
+            html += '<tr>';
             columns.forEach(col => {
                 let val = row[col] ?? '—';
                 const key = String(val).toLowerCase().trim();
@@ -331,11 +331,11 @@ $(function () {
                     const color = STATUS_COLOR[key];
                     val = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${BADGE_CLASS[color]}">${humanize(key)}</span>`;
                 }
-                html += `<td class="px-6 py-3 text-stone-700 font-data tabnum">${val}</td>`;
+                html += `<td class="font-data tabnum">${val}</td>`;
             });
             html += '</tr>';
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
 
         html += `
             <div id="reportPagination" class="flex items-center justify-between px-6 py-4 border-t border-stone-100">

@@ -1813,6 +1813,244 @@ body.density-compact .data-table { min-width: 800px; }
 }
 
 /* ============================================================
+   V3.3 OPERATIONS HEADER + LOG TABLE
+   Green hero banner with stat pills + active-filter box, and the
+   richer log-table treatment (ref cell w/ copy, avatar initials,
+   status-dot pills, filter rows). Inspired by an AAIS reference but
+   recolored to the Fresh Meadow emerald system.
+   ============================================================ */
+
+/* ── Ops hero banner ── */
+.ops-header {
+    position: relative; overflow: hidden;
+    border-radius: var(--radius-xl);
+    padding: 30px 34px;
+    background:
+        radial-gradient(120% 130% at 100% 0%, rgba(255,255,255,.20) 0%, transparent 46%),
+        radial-gradient(90% 120% at 0% 100%, rgba(5,46,28,.30) 0%, transparent 55%),
+        linear-gradient(135deg, #10a45c 0%, var(--color-g-700) 60%, var(--color-g-800) 100%);
+    color: #fff;
+    box-shadow: 0 12px 34px -12px rgba(8,116,67,.5), inset 0 1px 0 rgba(255,255,255,.22);
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+}
+.ops-header::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(120% 100% at 80% 0%, #000 20%, transparent 75%);
+    mask-image: radial-gradient(120% 100% at 80% 0%, #000 20%, transparent 75%);
+}
+.ops-header-main { position: relative; z-index: 1; min-width: 0; }
+.ops-header-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(255,255,255,.72);
+}
+.ops-header-title {
+    font-family: var(--font-display);
+    font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.08;
+    margin-top: 8px; color: #fff;
+}
+.ops-header-title .accent { color: var(--color-au-300); }
+.ops-header-sub {
+    margin-top: 10px; font-size: 14px; line-height: 1.55; max-width: 62ch;
+    color: rgba(255,255,255,.82);
+}
+.ops-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.ops-pill {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 8px 15px; border-radius: 999px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.9);
+    white-space: nowrap;
+    transition: background var(--transition), transform var(--transition);
+}
+.ops-pill:hover { background: rgba(255,255,255,.18); transform: translateY(-1px); }
+.ops-pill .ops-pill-num {
+    font-family: var(--font-display); font-size: 14.5px; font-weight: 800; color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+.ops-pill .ops-pill-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-g-300); }
+.ops-pill-dot.warn { background: var(--color-au-300); }
+.ops-pill-dot.info { background: #93c5fd; }
+
+/* Right-side active-filter glass box */
+.ops-aside {
+    position: relative; z-index: 1; flex-shrink: 0;
+    min-width: 190px;
+    padding: 16px 18px; border-radius: var(--radius-lg);
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.ops-aside-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(255,255,255,.7);
+}
+.ops-aside-value {
+    font-family: var(--font-display);
+    font-size: 21px; font-weight: 800; color: #fff; margin-top: 5px; line-height: 1;
+}
+.ops-aside-meta { font-size: 11.5px; color: rgba(255,255,255,.72); margin-top: 6px; }
+.ops-aside-divider { height: 1px; background: rgba(255,255,255,.16); margin: 12px 0; }
+.ops-aside-foot {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,.6); display: inline-flex; align-items: center; gap: 6px;
+}
+.ops-aside-foot .live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--color-g-300);
+    box-shadow: 0 0 0 0 rgba(115,226,163,.6); animation: livePulse 2s ease-out infinite;
+}
+@keyframes livePulse {
+    0% { box-shadow: 0 0 0 0 rgba(115,226,163,.55); }
+    70% { box-shadow: 0 0 0 7px rgba(115,226,163,0); }
+    100% { box-shadow: 0 0 0 0 rgba(115,226,163,0); }
+}
+
+/* ── Filter rows (STATUS pills + QUICK FILTERS) ── */
+.filter-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.filter-row + .filter-row { margin-top: 12px; }
+.filter-row-label {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--color-faint); margin-right: 4px;
+}
+.filter-tab .ft-count {
+    margin-left: 2px; font-size: 10px; font-weight: 800; padding: 1px 6px;
+    border-radius: 999px; background: var(--color-stone-100); color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+}
+.filter-tab.selected .ft-count { background: rgba(255,255,255,.22); color: #fff; }
+
+/* ── Log-table cells: ref-code w/ copy, avatar initials ── */
+.ref-cell { display: inline-flex; flex-direction: column; gap: 3px; }
+.ref-cell-top { display: inline-flex; align-items: center; gap: 7px; }
+.copy-ref {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; color: var(--color-faint);
+    background: transparent; border: 0; cursor: pointer; padding: 0;
+    transition: color var(--transition);
+}
+.copy-ref:hover { color: var(--color-g-700); }
+.copy-ref svg { width: 11px; height: 11px; }
+.ref-cell-sub {
+    font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--color-faint);
+}
+.cell-name { display: inline-flex; align-items: center; gap: 11px; }
+.avatar-initials {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .02em;
+    background: linear-gradient(135deg, var(--color-g-100), var(--color-g-200));
+    color: var(--color-g-800); border: 1px solid rgba(22,179,100,.2);
+}
+.cell-name-text { min-width: 0; }
+.cell-name-primary { font-weight: 650; color: var(--color-ink); }
+.cell-name-secondary { font-size: 11.5px; color: var(--color-faint); margin-top: 1px; }
+
+/* Small tag pill for type/category cells */
+.cell-tag {
+    display: inline-flex; align-items: center; padding: 4px 11px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-muted);
+}
+
+/* Compact table action buttons */
+.table-actions { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ============================================================
+   V3.4 SELECTS + FLATPICKR CALENDAR
+   Custom-chevron native selects, and a light "Fresh Meadow"
+   flatpickr theme so the admin date picker matches the public
+   checkout calendar (recolored to emerald).
+   ============================================================ */
+
+/* ── Native selects: swap the OS arrow for a consistent chevron ── */
+.form-select,
+.mb-selects select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238ba295' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    padding-right: 40px;
+}
+.form-select:focus,
+.mb-selects select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23099250' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+/* Manual-booking address dropdowns keep their rounded field look but
+   gain the same chevron + emerald focus as the rest of the console. */
+.mb-selects select {
+    background-position: right 12px center;
+    padding-right: 36px;
+    transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+}
+.mb-selects select:hover { border-color: var(--color-g-300); }
+
+/* ── Flatpickr — light emerald theme ── */
+.flatpickr-calendar {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-xl);
+    font-family: var(--font-sans);
+    overflow: hidden;
+    animation: menuPop 220ms var(--ease-spring);
+}
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after { border-bottom-color: #fff; }
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after { border-top-color: #fff; }
+.flatpickr-months {
+    padding: 6px 4px 2px;
+    background: linear-gradient(180deg, var(--color-g-50), #fff);
+    border-bottom: 1px solid var(--color-border);
+}
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month,
+.flatpickr-current-month input.cur-year { color: var(--color-ink); font-weight: 700; }
+.flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 700; }
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month { fill: var(--color-muted); }
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg { fill: var(--color-g-600); }
+.flatpickr-weekdays { background: #fff; }
+span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size: 11px; }
+.flatpickr-day {
+    color: var(--color-ink); border-radius: 9px; font-weight: 500;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.flatpickr-day:hover,
+.flatpickr-day:focus { background: var(--color-g-50); border-color: var(--color-g-100); }
+.flatpickr-day.today { border-color: var(--color-g-400); }
+.flatpickr-day.today:hover { background: var(--color-g-50); color: var(--color-g-800); }
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: var(--color-g-600);
+    border-color: var(--color-g-600);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(9,146,80,.30);
+}
+.flatpickr-day.inRange {
+    background: var(--color-g-100);
+    border-color: var(--color-g-100);
+    color: var(--color-g-900);
+    box-shadow: -5px 0 0 var(--color-g-100), 5px 0 0 var(--color-g-100);
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay { color: var(--color-faint); opacity: .5; }
+.flatpickr-day.flatpickr-disabled { text-decoration: line-through; opacity: .35; }
+
+/* ============================================================
    SWEETALERT2 OVERRIDES
    ============================================================ */
 .swal2-container.swal2-backdrop-show {

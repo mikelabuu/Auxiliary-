@@ -25,7 +25,7 @@
     </div>
 
     <div class="overflow-x-auto flex-1 p-5">
-        <div class="rounded-xl overflow-hidden border border-stone-200">
+        <div class="scroll-x rounded-xl border border-stone-200">
             @if($arrivalsDepartures->isEmpty())
                 <div class="grid grid-cols-6 bg-stone-50 text-[10px] font-bold text-clsu-700 tracking-wide px-4 py-2.5 uppercase border-b border-stone-200">
                     <span>ID</span><span>Guest</span><span>Check-in</span><span>Check-out</span><span>Type</span><span>Status</span>
@@ -39,81 +39,53 @@
                   <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-600 rounded-lg px-3.5 py-2 hover:bg-clsu-700 active:scale-[0.98] transition-all !no-underline shadow-sm">Create manual booking</a>
                 </div>
             @else
-                <table class="w-full text-left border-collapse">
+                <table class="data-table" style="min-width:640px;">
                     <thead>
-                        <tr class="bg-stone-50 text-[10px] font-bold text-clsu-700 tracking-wide uppercase border-b border-stone-200">
-                            <th wire:click="sortBy('guest_name')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
-                                Guest
-                                @if ($sortField === 'guest_name')
-                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </th>
-                            <th wire:click="sortBy('check_in')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
-                                Check-in
-                                @if ($sortField === 'check_in')
-                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </th>
-                            <th wire:click="sortBy('check_out')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
-                                Check-out
-                                @if ($sortField === 'check_out')
-                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </th>
-                            <th class="px-4 py-2.5 font-bold">Type</th>
-                            <th class="px-4 py-2.5 font-bold">Status</th>
-                            <th class="px-4 py-2.5 font-bold text-right">Actions</th>
+                        <tr>
+                            <th wire:click="sortBy('guest_name')" @class(['sortable', 'sort-asc' => $sortField === 'guest_name' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'guest_name' && $sortDirection === 'desc'])>Guest</th>
+                            <th wire:click="sortBy('check_in')" @class(['sortable', 'sort-asc' => $sortField === 'check_in' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'check_in' && $sortDirection === 'desc'])>Check-in</th>
+                            <th wire:click="sortBy('check_out')" @class(['sortable', 'sort-asc' => $sortField === 'check_out' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'check_out' && $sortDirection === 'desc'])>Check-out</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-stone-100 text-xs">
+                    <tbody>
                         @foreach ($arrivalsDepartures as $item)
-                            <tr class="hover:bg-clsu-50/30 transition-colors">
-                                <td class="px-4 py-3">
-                                    <p class="font-semibold text-stone-850">{{ $item->guest_name }}</p>
-                                    <p class="text-[10px] text-stone-400 font-mono">#{{ $item->id }}</p>
+                            @php
+                                $initials = collect(explode(' ', trim($item->guest_name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
+                                $initials = strtoupper($initials ?: 'G');
+                                $sClass = $item->status === 'paid' ? 'status-paid' : ($item->status === 'active' ? 'status-active' : 'status-pending');
+                            @endphp
+                            <tr>
+                                <td>
+                                    <div class="cell-name">
+                                        <span class="avatar-initials">{{ $initials }}</span>
+                                        <div class="cell-name-text">
+                                            <p class="cell-name-primary">{{ $item->guest_name }}</p>
+                                            <p class="cell-name-secondary">#{{ $item->id }}</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 text-stone-600 font-data tabnum">{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}</td>
-                                <td class="px-4 py-3 text-stone-600 font-data tabnum">{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
-                                        {{ $item->type === 'arrival' ? 'bg-clsu-50 text-clsu-700' : 'bg-palay-50 text-palay-700' }}">
-                                        {{ $item->type }}
-                                    </span>
+                                <td class="font-data tabnum">{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}</td>
+                                <td class="font-data tabnum">{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}</td>
+                                <td>
+                                    <span class="cell-tag" style="{{ $item->type === 'arrival' ? 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);' : 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;' }}">{{ ucfirst($item->type) }}</span>
                                 </td>
-                                <td class="px-4 py-3">
-                                    <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
-                                        {{ $item->status === 'paid' ? 'bg-clsu-50 text-clsu-700' : 'bg-palay-100 text-palay-800' }}">
-                                        {{ $item->status }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-right">
+                                <td><span class="status {{ $sClass }}">{{ ucfirst($item->status) }}</span></td>
+                                <td class="text-right">
                                     @if($item->status === 'paid')
-                                        <div class="flex justify-end gap-1.5">
-                                            <button 
-                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-600 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-700 transition-colors cursor-pointer shadow-sm" 
-                                                data-action="checkin" 
-                                                data-id="{{ $item->id }}">
-                                                Check In
-                                            </button>
-                                            <button 
-                                                class="password-verify-arrivals px-3 py-1.5 bg-white border border-stone-200 text-stone-600 text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-stone-50 hover:text-stone-800 transition-colors cursor-pointer shadow-sm" 
-                                                data-action="noshow" 
-                                                data-id="{{ $item->id }}">
-                                                No Show
-                                            </button>
+                                        <div class="table-actions justify-end">
+                                            <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkin" data-id="{{ $item->id }}">Check In</button>
+                                            <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer" data-action="noshow" data-id="{{ $item->id }}">No Show</button>
                                         </div>
                                     @elseif($item->status === 'active')
-                                        <div class="flex justify-end gap-1.5">
-                                            <button 
-                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-600 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-700 transition-colors cursor-pointer shadow-sm" 
-                                                data-action="checkout" 
-                                                data-id="{{ $item->id }}">
-                                                Check Out
-                                            </button>
+                                        <div class="table-actions justify-end">
+                                            <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $item->id }}">Check Out</button>
                                         </div>
                                     @else
-                                        <span class="text-xs text-stone-400 italic font-medium">None</span>
+                                        <span class="text-faint text-xs italic">None</span>
                                     @endif
                                 </td>
                             </tr>

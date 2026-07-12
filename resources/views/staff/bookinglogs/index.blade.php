@@ -20,82 +20,91 @@
     </x-admin.ui.page-header>
 
     <x-admin.ui.section-card icon="clock" title="Activity Log" :subtitle="$tabs[$tab]['label'] . ' · ' . $logs->total() . ' records'" :delay="40">
-        <div class="flex flex-wrap gap-2 mb-5">
+        {{-- View tabs --}}
+        <div class="filter-row mb-4">
+            <span class="filter-row-label">View</span>
             @foreach ($tabs as $key => $meta)
                 <a href="{{ route('staff.bookinglogs.index', ['tab' => $key, 'search' => $search]) }}"
-                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $tab === $key ? 'bg-clsu-600 border-clsu-700 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                   @class(['filter-tab', 'selected' => $tab === $key]) style="text-decoration:none;">
                     <x-admin.ui.icon :name="$meta['icon']" class="w-4 h-4" stroke-width="2" />
                     {{ $meta['label'] }}
                 </a>
             @endforeach
         </div>
 
-        <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
+        {{-- Search --}}
+        <form method="GET" class="filter-toolbar">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <div class="relative flex-1 max-w-xs">
-                <x-admin.ui.icon name="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" stroke-width="2" />
-                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID or guest name…" class="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+            <div class="filter-search">
+                <x-admin.ui.icon name="search" class="w-4 h-4" stroke-width="2" />
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search booking ID or guest name…" aria-label="Search logs">
             </div>
-            <x-admin.ui.button variant="secondary" type="submit">Search</x-admin.ui.button>
+            <button type="submit" class="btn btn-outline btn-sm">Search</button>
+            <div class="filter-toolbar-spacer"></div>
+            @if($search)
+                <a href="{{ route('staff.bookinglogs.index', ['tab' => $tab]) }}" class="filter-clear" style="text-decoration:none;">
+                    <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
+                </a>
+            @endif
         </form>
 
         @if($logs->isEmpty())
             <x-admin.ui.empty-state icon="clock" title="No logs found for this tab." />
         @else
-            <div class="-mx-6 -mb-6 border-t border-stone-100 overflow-x-auto">
-                <table class="w-full text-sm">
+            <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-stone-50/70 border-b border-stone-100">
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Booking ID</th>
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Guest</th>
+                        <tr>
+                            <th>Booking</th>
+                            <th>Guest</th>
 
                             @if($tab === 'checkins')
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Checked In At</th>
+                                <th>Checked In At</th>
                             @elseif($tab === 'checkouts')
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Checked Out At</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Method</th>
+                                <th>Checked Out At</th>
+                                <th>Method</th>
                             @elseif($tab === 'noshow' || $tab === 'expiry')
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Previous Status</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">New Status</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Reason</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">{{ $tab === 'noshow' ? 'Marked At' : 'Expired At' }}</th>
+                                <th>Previous Status</th>
+                                <th>New Status</th>
+                                <th>Reason</th>
+                                <th>{{ $tab === 'noshow' ? 'Marked At' : 'Expired At' }}</th>
                             @elseif($tab === 'cancellations')
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Cancelled By</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Reason</th>
-                                <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Cancelled At</th>
+                                <th>Cancelled By</th>
+                                <th>Reason</th>
+                                <th>Cancelled At</th>
                             @endif
 
-                            <th class="text-left font-bold text-[10px] text-stone-500 tracking-widest uppercase px-6 py-3">Processed By</th>
+                            <th>Processed By</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($logs as $log)
-                            <tr class="border-b border-stone-100 hover:bg-clsu-50/40 transition-colors">
-                                <td class="px-6 py-3 text-stone-700 font-data tabnum">#{{ $log->booking->id ?? 'N/A' }}</td>
-                                <td class="px-6 py-3 text-stone-800 font-medium">{{ $log->booking->guest_name ?? 'Unknown' }}</td>
+                            <tr>
+                                <td><span class="ref-code">BK-{{ $log->booking ? str_pad($log->booking->id, 4, '0', STR_PAD_LEFT) : 'N/A' }}</span></td>
+                                <td class="cell-strong">{{ $log->booking->guest_name ?? 'Unknown' }}</td>
 
                                 @if($tab === 'checkins')
-                                    <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $log->checked_in_at }}</td>
+                                    <td class="font-data tabnum text-muted">{{ $log->checked_in_at }}</td>
                                 @elseif($tab === 'checkouts')
-                                    <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $log->checked_out_at }}</td>
-                                    <td class="px-6 py-3 text-stone-500 text-[11px] font-bold uppercase tracking-wide">{{ ucfirst($log->method ?? '-') }}</td>
+                                    <td class="font-data tabnum text-muted">{{ $log->checked_out_at }}</td>
+                                    <td><span class="cell-tag">{{ ucfirst($log->method ?? '-') }}</span></td>
                                 @elseif($tab === 'noshow' || $tab === 'expiry')
-                                    <td class="px-6 py-3 text-stone-600 capitalize">{{ str_replace('_', ' ', $log->previous_status) }}</td>
-                                    <td class="px-6 py-3 text-stone-600 capitalize">{{ str_replace('_', ' ', $log->new_status) }}</td>
-                                    <td class="px-6 py-3 text-stone-500">{{ $log->reason ?? 'N/A' }}</td>
-                                    <td class="px-6 py-3 text-stone-700 font-data tabnum">
+                                    <td class="capitalize text-muted">{{ str_replace('_', ' ', $log->previous_status) }}</td>
+                                    <td class="capitalize text-muted">{{ str_replace('_', ' ', $log->new_status) }}</td>
+                                    <td class="text-faint">{{ $log->reason ?? 'N/A' }}</td>
+                                    <td class="font-data tabnum text-muted">
                                         {{ $tab === 'noshow'
                                             ? ($log->marked_at ?? 'N/A')
                                             : ($log->expired_at ?? 'N/A')
                                         }}
                                     </td>
                                 @elseif($tab === 'cancellations')
-                                    <td class="px-6 py-3 text-stone-600">{{ ucfirst($log->cancelled_by) }}</td>
-                                    <td class="px-6 py-3 text-stone-500">{{ $log->reason ?? 'N/A' }}</td>
-                                    <td class="px-6 py-3 text-stone-700 font-data tabnum">{{ $log->cancelled_at ?? 'N/A' }}</td>
+                                    <td class="text-muted">{{ ucfirst($log->cancelled_by) }}</td>
+                                    <td class="text-faint">{{ $log->reason ?? 'N/A' }}</td>
+                                    <td class="font-data tabnum text-muted">{{ $log->cancelled_at ?? 'N/A' }}</td>
                                 @endif
 
-                                <td class="px-6 py-3 text-stone-500 text-[11px] font-bold uppercase tracking-wide">{{ $log->staff->name ?? 'System' }}</td>
+                                <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ $log->staff->name ?? 'System' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
