@@ -1,158 +1,149 @@
 @extends('layouts.public.base')
 @section('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')
 @section('nav_dark', '1')
+@section('theme_night', '1')
 @section('content')
 
+    <!-- Site-wide film grain: fixed, non-interactive, breaks digital flatness.
+         Sits above content but below the nav (z-50) and overlays. -->
+    <div class="film-grain pointer-events-none fixed inset-0 z-[45]" aria-hidden="true"></div>
+
     <!-- ====== HERO ====== -->
-    <header id="firstsection" class="vignette-emerald relative isolate flex min-h-[92dvh] flex-col justify-end overflow-hidden bg-emerald-deep">
-        <!-- Ken-burns backdrop -->
+    <header id="firstsection" class="vignette-emerald relative isolate flex min-h-[100dvh] flex-col justify-end overflow-hidden bg-night">
+        <!-- Ken-burns backdrop, graded down so the bone type carries the frame -->
         <div class="absolute inset-0 z-0 will-change-transform prlx-hero-bg">
-            <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior, nestled inside the CLSU campus" fetchpriority="high" decoding="async" class="h-full w-full animate-ken-burns object-cover">
-            <div class="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/45 to-ink/85"></div>
-            <canvas id="heroNoise" aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full" style="image-rendering: pixelated"></canvas>
+            <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior at dusk, nestled inside the CLSU campus" fetchpriority="high" decoding="async" class="img-night-grade h-full w-full animate-ken-burns object-cover">
+            <div class="absolute inset-0 bg-linear-to-b from-night/70 via-night/25 to-night/70"></div>
+            <!-- The hero melts into the page instead of ending at an edge -->
+            <div class="absolute inset-x-0 bottom-0 h-72 bg-linear-to-b from-transparent to-night"></div>
         </div>
 
-        <!-- Headline -->
-        <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-36 pb-14 text-center text-cream sm:pt-44 prlx-hero-content">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.5em] text-gold animate-[fade-in-up_0.8s_ease-out_both]">A Premium Stay on Campus · Est. 1998</p>
-            <div aria-hidden="true" class="mx-auto mt-6 hairline-gold w-24"></div>
-            <h1 class="text-balance hero-text-glow mt-6 font-display leading-[1.05] animate-[fade-in-up_1s_ease-out_0.2s_both]" style="font-size:clamp(2.5rem, 8vw, 6.5rem)">
-                Welcome to<br><x-booking.ui.flip-fade-text text="Farmers" :duration="4.5" class="italic text-gold" /> Hostel
+        <!-- Headline (left-aligned, lines rise out of clipped masks) -->
+        <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-24 pb-10 text-left text-bone prlx-hero-content">
+            <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s">A premium stay on campus · Est. 1998</span></p>
+            <h1 class="hero-text-glow mt-5 font-display leading-[1.06] text-bone" style="font-size:clamp(2.5rem, 5.5vw, 4.75rem)">
+                <span class="reveal-line"><span style="--rise-delay:.28s">Welcome to</span></span>
+                <span class="reveal-line"><span style="--rise-delay:.46s"><x-booking.ui.flip-fade-text text="Farmers" :duration="4.5" class="italic text-gold" /> Hostel</span></span>
             </h1>
-            <p class="text-pretty mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/85 sm:text-lg animate-[fade-in-up_1s_ease-out_0.4s_both]">
-                Unparalleled comfort and convenience inside the Central Luzon State University agricultural research campus — a two-minute walk to the lab, the field, and a proper Filipino breakfast.
+            <p class="text-pretty mt-5 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg animate-[fade-in-up_1s_ease-out_0.85s_both]">
+                Quiet rooms in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.
             </p>
-            <div class="pointer-events-none mt-12 flex flex-col items-center gap-2 text-cream/70 animate-[fade-in-up_1s_ease-out_0.7s_both]">
-                <span class="text-[10px] font-semibold uppercase tracking-[0.4em] text-gold/80">Scroll</span>
-                <span aria-hidden="true" class="scroll-cue block h-8 w-px bg-gold/60"></span>
-            </div>
         </div>
 
-        <!-- Booking capsule -->
-        <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pb-14 sm:px-6">
-            <!-- Ambient glow aura behind the capsule for depth layering -->
-            <div class="pointer-events-none absolute -inset-4 -z-10 rounded-[2.5rem] bg-linear-to-tr from-gold/15 via-emerald/5 to-gold/15 opacity-75 blur-2xl transition-opacity duration-1000"
-                 data-prlx-y="0.1" data-prlx-mouse="-12" data-prlx-origin="top" data-prlx-ease="0.06"></div>
-
-            <div id="bookingCapsule" class="rounded-3xl border border-gold/25 bg-cream-warm/85 p-4 backdrop-blur-xl shadow-capsule md:p-3"
-                 data-prlx-y="-0.25" data-prlx-mouse="8" data-prlx-origin="top" data-prlx-ease="0.06">
+        <!-- Booking capsule: dark glass with a refractive hairline edge -->
+        <div class="relative z-10 mx-auto w-full max-w-5xl px-4 pb-14 sm:px-6 animate-[fade-in-up_1.1s_ease-out_1.05s_both]">
+            <div id="bookingCapsule" class="glass-night rounded-3xl p-4 md:p-3"
+                 data-prlx-y="-0.22" data-prlx-mouse="7" data-prlx-origin="top" data-prlx-ease="0.06">
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center md:gap-2">
                     <div class="px-4 py-3 text-left md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="-0.03" data-prlx-mouse="-2" data-prlx-ease="0.08">Check in</p>
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Check in</p>
                         <input type="text" id="widget_check_in" aria-label="Check in date" placeholder="Select date"
-                               class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40">
+                               class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-bone outline-none placeholder:text-bone/35">
                     </div>
-                    <div class="px-4 py-3 text-left md:border-l md:border-emerald-deep/10 md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="-0.01" data-prlx-mouse="-0.5" data-prlx-ease="0.08">Check out</p>
+                    <div class="px-4 py-3 text-left md:border-l md:border-white/10 md:px-6 md:py-4">
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Check out</p>
                         <input type="text" id="widget_check_out" aria-label="Check out date" placeholder="Select date"
-                               class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40">
+                               class="focus-ring w-full min-h-11 cursor-pointer bg-transparent text-sm font-medium text-bone outline-none placeholder:text-bone/35">
                     </div>
-                    <div class="px-4 py-3 text-left md:border-l md:border-emerald-deep/10 md:px-6 md:py-4">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald" data-prlx-y="0.01" data-prlx-mouse="1" data-prlx-ease="0.08">Guests</p>
+                    <div class="px-4 py-3 text-left md:border-l md:border-white/10 md:px-6 md:py-4">
+                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Guests</p>
                         <div class="flex min-h-11 items-center justify-between">
-                            <span class="text-sm font-medium text-ink"><span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span></span>
+                            <span class="text-sm font-medium text-bone"><span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span></span>
                             <input type="hidden" id="widget_guests" value="1">
                             <div class="flex items-center gap-1">
-                                <button type="button" id="btn_minus_guests" aria-label="Decrease guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-cream text-ink ring-1 ring-emerald-deep/10 transition hover:ring-gold/60 cursor-pointer">
+                                <button type="button" id="btn_minus_guests" aria-label="Decrease guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-bone transition hover:border-gold/60 cursor-pointer">
                                     <x-booking.ui.icon name="minus" class="h-3 w-3" />
                                 </button>
-                                <button type="button" id="btn_plus_guests" aria-label="Increase guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full bg-cream text-ink ring-1 ring-emerald-deep/10 transition hover:ring-gold/60 cursor-pointer">
+                                <button type="button" id="btn_plus_guests" aria-label="Increase guests" class="focus-ring press grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-bone transition hover:border-gold/60 cursor-pointer">
                                     <x-booking.ui.icon name="plus" class="h-3 w-3" />
                                 </button>
                             </div>
                         </div>
                     </div>
                     <button type="button" id="btnSearchRooms"
-                            class="focus-ring press cta-shine group relative inline-flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-r from-emerald-deep to-emerald px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream shadow-[0_10px_30px_-14px_rgba(6,78,59,0.6)] transition-all cursor-pointer hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_28%,transparent),0_14px_36px_-14px_rgba(6,78,59,0.65)]"
+                            class="focus-ring press cta-shine group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full bg-bone px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]"
                             data-prlx-y="0.04" data-prlx-mouse="5" data-prlx-scale="0.02" data-prlx-ease="0.08">
-                        <span aria-hidden="true" class="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100" style="box-shadow:inset 0 0 24px color-mix(in oklch, var(--color-gold) 35%, transparent)"></span>
                         <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
                     </button>
                 </div>
-                <div class="mt-3 flex items-center justify-center gap-2 border-t border-emerald-deep/10 pt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald"
-                     data-prlx-y="0.02" data-prlx-origin="top" data-prlx-ease="0.07">
-                    <span class="h-1 w-1 rounded-full bg-gold"></span>
-                    Best rate guarantee · Direct booking only
-                    <span class="h-1 w-1 rounded-full bg-gold"></span>
-                </div>
-            </div>
-
-
-            <!-- Trust chips -->
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-y-3 divide-x divide-cream/20 text-[11px] font-medium uppercase tracking-[0.22em] text-cream/90" data-prlx-y="-0.12" data-prlx-origin="top" data-prlx-ease="0.04">
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="map-pin" class="h-4 w-4 text-gold" /> CLSU Campus</span>
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="badge-check" class="h-4 w-4 text-gold" /> No prepayment</span>
-                <span class="inline-flex items-center gap-2 px-5"><x-booking.ui.icon name="clock" class="h-4 w-4 text-gold" /> 24/7 front desk</span>
-                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.ui.icon name="wifi" class="h-4 w-4 text-gold" /> Free Wi-Fi</span>
-                <span class="hidden items-center gap-2 px-5 sm:inline-flex"><x-booking.ui.icon name="tag" class="h-4 w-4 text-gold" /> Senior / PWD 20%</span>
             </div>
         </div>
     </header>
 
-    <!-- ====== STATS BAND (overlapping hero) ====== -->
-    <section class="relative -mt-6 px-4 sm:px-6">
-        <div class="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-emerald-deep text-cream shadow-boutique-card" data-aos="fade-up" data-prlx-y="0.1" data-prlx-scale="0.04">
-            <div class="grid grid-cols-2 divide-x divide-cream/10 md:grid-cols-4">
-                <x-booking.cards.stat :value="count($roomTypes)" label="Room Types" />
-                <x-booking.cards.stat value="24/7" label="Campus Security" />
-                <x-booking.cards.stat value="100%" label="On Campus" />
-                <x-booking.cards.stat value="₱{{ number_format($minPrice ?? 1600) }}" label="From / Night" />
-            </div>
+    <!-- ====== STATS STRIP ====== -->
+    <section class="border-b border-white/10 px-6">
+        <div class="mx-auto grid max-w-6xl grid-cols-2 md:grid-cols-4 md:divide-x md:divide-white/10" data-aos="fade-up">
+            <x-booking.cards.stat :value="count($roomTypes)" label="Room Types" />
+            <x-booking.cards.stat value="24/7" label="Front Desk" />
+            <x-booking.cards.stat value="2 min" label="Walk to the Labs" />
+            <x-booking.cards.stat value="₱{{ number_format($minPrice ?? 1600) }}" label="From, Per Night" />
         </div>
     </section>
 
-    <!-- ====== FEATURES ====== -->
-    <section class="mx-auto max-w-7xl px-6 py-24 md:py-28">
-        <div class="grid gap-8 md:grid-cols-3">
-            <x-booking.cards.feature icon="leaf" title="Heart of Campus"
-                description="Located directly inside CLSU, offering unparalleled convenience for visiting researchers, alumni, and university guests."
-                data-aos="fade-up" data-aos-delay="100" data-prlx-y="0.08" data-prlx-x="-0.03" data-prlx-scale="0.03" />
-            <x-booking.cards.feature icon="shield" title="24/7 Security"
-                description="Peace of mind with round-the-clock campus security and dedicated hostel staff on duty from dawn to well past dusk."
-                data-aos="fade-up" data-aos-delay="200" data-prlx-y="0.16" data-prlx-scale="0.04" />
-            <x-booking.cards.feature icon="wifi" title="Modern Amenities"
-                description="Stay connected and comfortable — high-speed Wi-Fi, air-conditioned rooms, and inclusive guest kits in every stay."
-                data-aos="fade-up" data-aos-delay="300" data-prlx-y="0.08" data-prlx-x="0.03" data-prlx-scale="0.03" />
+    <!-- ====== MANIFESTO + FEATURES ====== -->
+    <section class="mx-auto max-w-7xl px-6 py-24 md:py-32">
+        <p class="text-balance max-w-3xl pb-1 font-display text-3xl leading-[1.3] text-ink sm:text-4xl md:text-[2.75rem]" data-aos="fade-up">
+            A working farmstead by day, a quiet <span class="italic text-gold">residence</span> by night. Six kinds of rooms, one long table, and the fields outside your window.
+        </p>
+        <div class="mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
+            <x-booking.cards.feature title="Heart of campus"
+                description="Directly inside CLSU, minutes from the laboratories, lecture halls, and research fields."
+                data-aos="fade-up" data-aos-delay="100" />
+            <x-booking.cards.feature title="Rest, guarded"
+                description="Round-the-clock campus security, with hostel staff on duty from dawn to well past dusk."
+                data-aos="fade-up" data-aos-delay="200" />
+            <x-booking.cards.feature title="Modern comforts"
+                description="High-speed Wi-Fi, air-conditioned rooms, and inclusive guest kits in every stay."
+                data-aos="fade-up" data-aos-delay="300" />
         </div>
     </section>
-
-    <x-booking.sections.ornament numeral="I" label="The Experience" class="prlx-float" />
 
     <!-- ====== THREE CHAPTERS ====== -->
-    <section class="relative bg-cream-warm py-24 md:py-32">
+    <section class="relative py-8 md:py-12">
         <div class="mx-auto max-w-7xl px-6">
-            <x-booking.sections.heading eyebrow="The experience" class="mb-16" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
+            <x-booking.sections.heading class="mb-20" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
                 A stay written in <span class="italic text-gold">three chapters</span>
             </x-booking.sections.heading>
 
             <div class="space-y-24 md:space-y-32">
-                <x-booking.cards.chapter index="01" label="The Setting" title="A quiet farmstead inside a working campus"
+                <x-booking.cards.chapter title="A quiet farmstead inside a working campus"
                     image="image/2.jpg" alt="The CLSU campus surrounding Farmers Hostel">
                     Wake to mist over the CLSU rice paddies. Walk two minutes to the research fields, the laboratories, or a proper Filipino breakfast. Every stay is grounded in place.
                 </x-booking.cards.chapter>
 
-                <x-booking.cards.chapter index="02" label="The Rooms" title="Considered spaces, made for rest"
+                <x-booking.cards.chapter title="Considered spaces, made for rest"
                     image="image/deluxe.jpg" alt="Deluxe room interior at Farmers Hostel" :flip="true">
-                    Rattan, walnut, brass, and crisp linen. Each of the six rooms is finished with the same restraint — a boutique lodge in the middle of the fields, never a dormitory pretending otherwise.
+                    Rattan, walnut, brass, and crisp linen. Every room is finished with the same restraint: a boutique lodge in the middle of the fields, never a dormitory.
                 </x-booking.cards.chapter>
+            </div>
+        </div>
 
-                <x-booking.cards.chapter index="03" label="The Table" title="Breakfast, on the house, every morning"
-                    image="image/4.jpg" alt="Filipino silog breakfast served at the hostel">
-                    Garlic rice, tapa, mango, and a cup of brewed barako — set at your table before you leave for the field. Simple, generous, unmistakably Filipino.
-                </x-booking.cards.chapter>
+        <!-- Chapter three breaks the split rhythm: full-bleed dining band -->
+        <div class="relative mt-24 overflow-hidden md:mt-32">
+            <img src="{{ asset('image/4.jpg') }}" alt="Filipino silog breakfast served at the hostel" loading="lazy" decoding="async"
+                 class="img-night-grade absolute inset-0 h-full w-full scale-110 object-cover" data-prlx-y="-0.08" data-prlx-ease="0.06">
+            <div class="absolute inset-0 bg-night/60"></div>
+            <div class="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-night to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-night to-transparent"></div>
+            <div class="relative mx-auto flex min-h-[70dvh] max-w-7xl items-center px-6">
+                <div class="max-w-xl py-28" data-aos="fade-up">
+                    <h3 class="text-balance pb-1 font-display text-3xl leading-[1.15] text-bone md:text-5xl">Breakfast, on the house, every morning</h3>
+                    <p class="text-pretty mt-6 text-base leading-relaxed text-bone/75">
+                        Garlic rice, tapa, mango, and a cup of brewed barako, set at your table before you leave for the field. Simple, generous, unmistakably Filipino.
+                    </p>
+                    <div class="mt-8 h-px w-16 bg-gold/70"></div>
+                </div>
             </div>
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="II" label="The Living Quarters" class="prlx-float" />
-
     <!-- ====== LIVING QUARTERS (ROOMS) ====== -->
-    <section id="rooms" class="mx-auto max-w-7xl scroll-mt-28 px-6 pt-8 pb-24">
+    <section id="rooms" class="mx-auto max-w-7xl scroll-mt-28 px-6 pt-24 pb-28 md:pt-32">
         <x-booking.sections.heading
             eyebrow="Accommodations"
-            description="{{ count($roomTypes) }} fully-serviced rooms, ideal for short stays, transient guests, and university researchers. Filter by capacity or explore each option in detail — you can book in a single click."
+            description="{{ count($roomTypes) }} fully-serviced room types for short stays, transient guests, and university researchers. Filter by capacity or open a room for the full picture. Booking takes one click."
             class="mb-10" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
-            Reserve a <span class="italic text-gold">room</span> now
+            Reserve a <span class="italic text-gold">room</span>
         </x-booking.sections.heading>
 
         <!-- Capacity filter pills -->
@@ -173,15 +164,15 @@
 
         <!-- Live Availability Results Banner (filled by availability-search.js) -->
         <div id="availabilityBanner" class="hidden mb-10">
-            <div class="animate-pop mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 rounded-full border border-gold/30 bg-cream-warm px-6 py-4 shadow-boutique-card sm:flex-row">
+            <div class="animate-pop glass-night mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 rounded-full px-6 py-4 sm:flex-row">
                 <div class="flex items-center gap-3">
                     <span class="relative flex h-2.5 w-2.5 shrink-0">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-60"></span>
-                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-deep"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-60"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold"></span>
                     </span>
                     <p class="text-sm font-semibold text-ink" id="availabilityBannerText">Live availability</p>
                 </div>
-                <button type="button" id="btnClearAvailability" class="gold-underline inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] text-ink/60 hover:text-ember-600 transition-colors cursor-pointer">
+                <button type="button" id="btnClearAvailability" class="gold-underline inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] text-ink/60 hover:text-ink transition-colors cursor-pointer">
                     Clear dates
                 </button>
             </div>
@@ -212,38 +203,36 @@
         </div>
 
         <!-- Filter empty state -->
-        <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-emerald-deep/20 bg-cream-warm px-8 py-16 text-center">
-            <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-emerald/40" />
+        <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-8 py-16 text-center">
+            <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-bone/30" />
             <p class="mt-4 font-display text-2xl text-ink">No rooms in this range</p>
-            <p class="mt-2 text-sm text-ink/55">Try a different capacity — or the dormitories for larger groups.</p>
+            <p class="mt-2 text-sm text-ink/55">Try a different capacity, or the dormitories for larger groups.</p>
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="III" label="In Their Words" class="prlx-float" />
-
     <!-- ====== TESTIMONIALS ====== -->
-    <section class="relative overflow-hidden bg-cream-warm py-24 md:py-28">
-        <div class="mx-auto max-w-5xl px-6">
-            <div class="grid grid-cols-1 items-end gap-8 md:grid-cols-[minmax(0,1fr)_auto]" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
-                <x-booking.sections.heading eyebrow="Guest experiences" class="max-w-xl">
+    <section class="relative overflow-hidden border-t border-white/10 py-24 md:py-28">
+        <div class="mx-auto max-w-4xl px-6">
+            <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
+                <h2 class="text-balance max-w-xl pb-1 font-display text-4xl leading-[1.12] text-ink md:text-5xl">
                     Loved by <span class="italic text-gold">academics</span> and travelers alike.
-                </x-booking.sections.heading>
+                </h2>
                 <div class="flex items-center gap-3">
-                    <button class="swiper-button-prev-custom focus-ring press grid h-11 w-11 place-items-center rounded-full bg-cream ring-1 ring-emerald-deep/10 transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Previous testimonial">
+                    <button class="swiper-button-prev-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 text-ink transition hover:bg-bone hover:text-night cursor-pointer" aria-label="Previous testimonial">
                         <x-booking.ui.icon name="chevron-left" class="h-4 w-4" />
                     </button>
-                    <button class="swiper-button-next-custom focus-ring press grid h-11 w-11 place-items-center rounded-full bg-cream ring-1 ring-emerald-deep/10 transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Next testimonial">
+                    <button class="swiper-button-next-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 text-ink transition hover:bg-bone hover:text-night cursor-pointer" aria-label="Next testimonial">
                         <x-booking.ui.icon name="chevron-right" class="h-4 w-4" />
                     </button>
                 </div>
             </div>
 
-            <div class="swiper testimonials-swiper mt-12" data-aos="fade-up" data-aos-delay="150" data-prlx-y="0.1" data-prlx-scale="0.03">
+            <div class="swiper testimonials-swiper mt-8" data-aos="fade-up" data-aos-delay="150">
                 <div class="swiper-wrapper">
                     @foreach ([
                         ['quote' => 'Perfect location for my research week at CLSU. The rooms are spotless, the Wi-Fi is reliable, and being right on campus saved me hours of commute.', 'name' => 'Dr. Reyes', 'role' => 'Visiting Professor', 'initials' => 'DR'],
                         ['quote' => 'The staff is exceptionally accommodating. We booked the dormitory for our student organization retreat and the facilities exceeded expectations.', 'name' => 'Maria C.', 'role' => 'Student Leader', 'initials' => 'MC'],
-                        ['quote' => 'A peaceful place surrounded by nature — a proper rest after a long day of meetings. The breakfast alone is worth the stay.', 'name' => 'Juan P.', 'role' => 'Government Official', 'initials' => 'JP'],
+                        ['quote' => 'A peaceful place surrounded by nature, and a proper rest after a long day of meetings. The breakfast alone is worth the stay.', 'name' => 'Juan P.', 'role' => 'Government Official', 'initials' => 'JP'],
                         ['quote' => 'The Deluxe Room felt genuinely premium, and the hot shower was perfect. I will be booking again next harvest season.', 'name' => 'Alumni Sy', 'role' => 'CLSU Alumni', 'initials' => 'AS'],
                     ] as $t)
                         <div class="swiper-slide h-auto">
@@ -260,15 +249,12 @@
         </div>
     </section>
 
-    <x-booking.sections.ornament numeral="IV" label="Visual Tour" class="prlx-float" />
-
     <!-- ====== GALLERY (BENTO) ====== -->
-    <section id="gallery" class="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
+    <section id="gallery" class="mx-auto max-w-7xl scroll-mt-28 px-6 py-24">
         <x-booking.sections.heading
-            eyebrow="Visual tour"
             description="A quiet walk through our rooms, common spaces, dining hall, and campus greenery."
             align="center" class="mb-12" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
-            Our <span class="italic text-gold">gallery</span>
+            A walk through the <span class="italic text-gold">grounds</span>
         </x-booking.sections.heading>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:h-[560px] lg:grid-cols-4 lg:grid-rows-6" data-aos="fade-up" data-aos-delay="100">
@@ -283,8 +269,8 @@
                 ];
             @endphp
             @foreach ($bento as $tile)
-                <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
-                    <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel — visual tour" loading="lazy" decoding="async" class="h-full w-full object-cover grayscale-[35%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0">
+                <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl ring-1 ring-white/10 {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
+                    <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel visual tour" loading="lazy" decoding="async" class="h-full w-full object-cover brightness-[0.82] saturate-[0.85] transition duration-700 group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100">
                 </a>
             @endforeach
             {{-- Remaining shots stay in the same lightbox chain --}}
@@ -293,37 +279,40 @@
             @endfor
         </div>
 
-        <div class="mt-10 flex justify-center" data-aos="fade-up" data-prlx-y="0.08" data-prlx-scale="0.04">
-            <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press inline-flex items-center gap-3 rounded-full border border-emerald-deep/20 bg-cream-warm px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:bg-cream cursor-pointer">
+        <div class="mt-10 flex justify-center" data-aos="fade-up">
+            <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press focus-ring inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:border-gold/60 cursor-pointer">
                 <x-booking.ui.icon name="sparkles" class="h-4 w-4 text-gold" />
                 Explore the full gallery
             </button>
         </div>
     </section>
 
-    <!-- ====== FINAL CTA ====== -->
-    <section class="px-6 pb-24">
-        <div class="mx-auto max-w-4xl text-center" data-aos="fade-up" data-prlx-y="0.14" data-prlx-scale="0.05" data-prlx-opacity>
-            <span aria-hidden="true" class="mx-auto block h-px w-12 bg-gold/70"></span>
-            <h2 class="text-balance mt-6 font-display text-4xl leading-tight text-ink md:text-5xl">Ready to book your <span class="italic text-gold">campus stay?</span></h2>
-            <p class="mx-auto mt-4 max-w-md text-base text-ink/60">Pick your dates, choose a room, and confirm. No prepayment required.</p>
-            <div class="mt-8">
-                <button type="button" onclick="document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });" class="press focus-ring inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
-                    <x-booking.ui.icon name="calendar" class="h-4 w-4" />
-                    Reserve your stay
-                </button>
-            </div>
+    <!-- ====== FINAL CTA (full-bleed evening band) ====== -->
+    <section class="relative mt-8 overflow-hidden">
+        <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior in the evening" loading="lazy" decoding="async"
+             class="img-night-grade absolute inset-0 h-full w-full scale-110 object-cover object-top" data-prlx-y="-0.08" data-prlx-ease="0.06">
+        <div class="absolute inset-0 bg-night/70"></div>
+        <div class="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-night to-transparent"></div>
+        <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-night to-transparent"></div>
+        <div class="relative mx-auto flex min-h-[60dvh] max-w-4xl flex-col items-center justify-center px-6 py-28 text-center" data-aos="fade-up">
+            <span aria-hidden="true" class="block h-px w-12 bg-gold/70"></span>
+            <h2 class="text-balance mt-6 pb-1 font-display text-4xl leading-[1.12] text-bone md:text-6xl">Ready for your <span class="italic text-gold">campus stay?</span></h2>
+            <p class="mx-auto mt-4 max-w-md text-base text-bone/70">Pick your dates, choose a room, and confirm. No prepayment, and Senior or PWD guests save 20%.</p>
+            <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press focus-ring mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-bone px-9 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]">
+                <x-booking.ui.icon name="calendar" class="h-4 w-4" />
+                Reserve your stay
+            </button>
         </div>
     </section>
 
-    <!-- ====== MOBILE STICKY BOOK NOW BAR ====== -->
-    <div id="mobileStickyBar" class="fixed bottom-0 left-0 right-0 z-40 flex translate-y-full items-center justify-between border-t border-gold/30 bg-cream-warm/95 p-4 backdrop-blur-md transition-transform duration-300 md:hidden shadow-[0_-12px_30px_rgba(6,40,30,0.12)]">
+    <!-- ====== MOBILE STICKY RESERVE BAR ====== -->
+    <div id="mobileStickyBar" class="fixed bottom-0 left-0 right-0 z-40 flex translate-y-full items-center justify-between border-t border-white/12 bg-night-2/90 p-4 backdrop-blur-xl transition-transform duration-500 md:hidden shadow-[0_-16px_40px_rgba(0,0,0,0.5)]">
         <div>
-            <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-emerald/70">Starting from</p>
+            <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-bone/50">Starting from</p>
             <p class="font-display text-lg text-ink">₱{{ number_format($minPrice ?? 1600) }} <span class="text-[10px] uppercase tracking-[0.2em] text-ink/50">/ night</span></p>
         </div>
-        <button type="button" onclick="document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });" class="press inline-flex min-h-11 items-center rounded-full bg-emerald-deep px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream cursor-pointer">
-            Book Now
+        <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press inline-flex min-h-11 items-center rounded-full bg-bone px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-night cursor-pointer">
+            Reserve
         </button>
     </div>
 
@@ -385,7 +374,7 @@
             x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-[998] bg-ink/70 backdrop-blur-sm"
+            class="fixed inset-0 z-[998] bg-black/70 backdrop-blur-sm"
             @click="close()"
             style="display:none;"
         ></div>
@@ -405,28 +394,28 @@
             <div
                 @click.stop
                 x-show="room"
-                class="relative flex max-h-screen w-full flex-col overflow-hidden border border-gold/20 bg-cream sm:max-h-[90vh] sm:max-w-3xl sm:rounded-[2rem]"
-                style="box-shadow: var(--shadow-boutique-modal)"
+                class="relative flex max-h-screen w-full flex-col overflow-hidden border border-white/10 bg-night-2 sm:max-h-[90vh] sm:max-w-3xl sm:rounded-[2rem]"
+                style="box-shadow: var(--shadow-night-float)"
             >
                 <!-- Hero Image -->
-                <div class="relative h-64 flex-shrink-0 overflow-hidden bg-canvas-deep sm:h-72">
-                    <img :src="room ? '{{ asset('/') }}' + room.image : ''" class="h-full w-full object-cover" :alt="room ? room.title : ''">
-                    <div class="absolute inset-0 bg-linear-to-t from-ink/85 via-ink/10 to-transparent"></div>
+                <div class="relative h-64 flex-shrink-0 overflow-hidden bg-night sm:h-72">
+                    <img :src="room ? '{{ asset('/') }}' + room.image : ''" class="h-full w-full object-cover brightness-[0.9]" :alt="room ? room.title : ''">
+                    <div class="absolute inset-0 bg-linear-to-t from-night-2 via-night/20 to-transparent"></div>
 
                     <template x-if="room && room.badge">
-                        <span class="absolute top-4 left-4 rounded-full bg-gold px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-ink shadow-lg" x-text="room.badge"></span>
+                        <span class="absolute top-4 left-4 rounded-full bg-gold px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-night shadow-lg" x-text="room.badge"></span>
                     </template>
 
-                    <button type="button" @click="close()" aria-label="Close room details" class="absolute top-4 right-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-ink/40 text-cream backdrop-blur-md transition-colors hover:bg-ink/60 cursor-pointer">
+                    <button type="button" @click="close()" aria-label="Close room details" class="absolute top-4 right-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-black/40 text-bone backdrop-blur-md transition-colors hover:bg-black/60 cursor-pointer">
                         <x-booking.ui.icon name="x" class="h-4 w-4" />
                     </button>
 
-                    <div class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-ink/70 to-transparent px-6 pb-5 pt-10">
+                    <div class="absolute bottom-0 left-0 right-0 px-6 pb-5 pt-10">
                         <p class="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold">
                             <x-booking.ui.icon name="map-pin" class="h-3.5 w-3.5" />
                             <span x-text="room ? room.floor : ''"></span>
                         </p>
-                        <h2 class="font-display text-3xl leading-tight text-cream" x-text="room ? room.title : ''"></h2>
+                        <h2 class="font-display text-3xl leading-tight text-bone" x-text="room ? room.title : ''"></h2>
                     </div>
                 </div>
 
@@ -436,14 +425,14 @@
                         <!-- Price + Capacity -->
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald/70">Room rate</p>
+                                <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Room rate</p>
                                 <p class="mt-1 font-display text-3xl leading-none text-ink">₱<span x-text="room ? Number(room.price).toLocaleString() : ''"></span></p>
-                                <p class="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink/50">per night</p>
+                                <p class="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink/45">per night</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald/70">Capacity</p>
+                                <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Capacity</p>
                                 <p class="mt-1 text-sm font-semibold text-ink" x-text="room ? room.capacity : ''"></p>
-                                <p class="mt-1 flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.22em] text-ink/50">
+                                <p class="mt-1 flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.22em] text-ink/45">
                                     <x-booking.ui.icon name="users" class="h-3 w-3" />
                                     <span x-text="room ? room.beds + ' pax max' : ''"></span>
                                 </p>
@@ -457,10 +446,10 @@
 
                         <!-- Amenities -->
                         <div x-show="room && room.amenities && room.amenities.length > 0">
-                            <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald/70">Room features</p>
+                            <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Room features</p>
                             <div class="flex flex-wrap gap-2">
                                 <template x-for="amenity in (room ? room.amenities : [])" :key="amenity.label">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-cream-warm px-3 py-1.5 text-[11px] font-medium text-ink ring-1 ring-emerald-deep/10">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-[11px] font-medium text-ink/85 ring-1 ring-white/10">
                                         <span class="h-1 w-1 rounded-full bg-gold"></span>
                                         <span x-text="amenity.label"></span>
                                     </span>
@@ -470,11 +459,11 @@
 
                         <!-- What's Included -->
                         <div x-show="room && room.includes && room.includes.length > 0">
-                            <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald/70">What's included</p>
+                            <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">What's included</p>
                             <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <template x-for="item in (room ? room.includes : [])" :key="item">
-                                    <li class="flex items-center gap-2 text-sm font-medium text-ink/75">
-                                        <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-deep/8 text-emerald-deep">
+                                    <li class="flex items-center gap-2 text-sm font-medium text-ink/80">
+                                        <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gold/15 text-gold">
                                             <x-booking.ui.icon name="check" class="h-3 w-3" />
                                         </span>
                                         <span x-text="item"></span>
@@ -484,12 +473,12 @@
                         </div>
 
                         <!-- Policies -->
-                        <div class="rounded-2xl border border-gold/30 bg-gold-soft/30 px-5 py-4">
-                            <p class="mb-2.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-ink/70">
+                        <div class="rounded-2xl border border-gold/25 bg-gold/10 px-5 py-4">
+                            <p class="mb-2.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-ink/75">
                                 <x-booking.ui.icon name="clock" class="h-3.5 w-3.5 text-gold" />
                                 Stay policies
                             </p>
-                            <div class="grid grid-cols-1 gap-y-1.5 text-xs font-medium text-ink/70 sm:grid-cols-2">
+                            <div class="grid grid-cols-1 gap-y-1.5 text-xs font-medium text-ink/75 sm:grid-cols-2">
                                 <span>Check-in · 2:00 PM</span>
                                 <span>Check-out · 12:00 NN</span>
                                 <span class="sm:col-span-2">Outside food is not allowed in the rooms</span>
@@ -499,9 +488,9 @@
                 </div>
 
                 <!-- Sticky footer CTAs -->
-                <div class="sticky bottom-0 z-20 flex gap-3 border-t border-emerald-deep/10 bg-cream-warm/95 px-6 py-5 backdrop-blur-xl">
-                    <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-emerald-deep/15 bg-cream px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 transition-all hover:bg-cream-warm cursor-pointer">Close</button>
-                    <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
+                <div class="sticky bottom-0 z-20 flex gap-3 border-t border-white/10 bg-night-2/95 px-6 py-5 backdrop-blur-xl">
+                    <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 transition-all hover:bg-white/10 cursor-pointer">Close</button>
+                    <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
                         <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                         <span x-text="isFullyBooked() ? 'Fully Booked' : 'Book this room'">Book this room</span>
                     </button>
@@ -515,7 +504,6 @@
     <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
     <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}"></script>
     <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
-    <script src="{{ asset('js/noise-grain.js') }}?v={{ filemtime(public_path('js/noise-grain.js')) }}" defer></script>
     <script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
 
     <!-- Widget, Swiper & Sticky-bar Logic -->
@@ -589,13 +577,14 @@
                 plusBtn.addEventListener('click', (e) => { e.stopPropagation(); setGuests((parseInt(hiddenInput.value) || 1) + 1); });
             }
 
-            // Testimonials Swiper — one editorial card at a time
+            // Testimonials Swiper — one editorial quote at a time, slow rotation
             new Swiper('.testimonials-swiper', {
                 slidesPerView: 1,
                 spaceBetween: 32,
                 autoHeight: true,
                 loop: true,
-                speed: 650,
+                speed: 750,
+                autoplay: reduceMotion ? false : { delay: 7000, pauseOnMouseEnter: true, disableOnInteraction: false },
                 navigation: {
                     nextEl: '.swiper-button-next-custom',
                     prevEl: '.swiper-button-prev-custom',

@@ -41,10 +41,10 @@
         Staff <span class="text-clsu-700">Center</span>
         @if ($isMaster)
             <x-slot:actions>
-                <button type="button" id="openCreateStaffBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 border border-clsu-800 rounded-xl px-4 py-2.5 hover:bg-clsu-800 active:scale-[0.98] transition-all shadow-card cursor-pointer">
+                <x-admin.ui.button variant="primary" type="button" id="openCreateStaffBtn">
                     <x-admin.ui.icon name="plus" class="w-4 h-4" />
                     New Staff Account
-                </button>
+                </x-admin.ui.button>
             </x-slot:actions>
         @endif
     </x-admin.ui.page-header>
@@ -249,7 +249,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-700 border border-clsu-800 rounded-xl px-4 py-2.5 hover:bg-clsu-800 active:scale-[0.99] transition-all shadow-card cursor-pointer">
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-600 border border-clsu-700 rounded-xl px-4 py-2.5 hover:bg-clsu-700 active:scale-[0.99] transition-all shadow-card cursor-pointer">
                         <x-admin.ui.icon name="check" class="w-4 h-4" />
                         Save Changes
                     </button>

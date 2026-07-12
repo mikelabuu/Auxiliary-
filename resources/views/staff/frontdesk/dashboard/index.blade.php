@@ -96,20 +96,9 @@ $.ajaxSetup({
               datasets: [{
                   label: 'Bookings',
                   data: @json($values),
-                  backgroundColor: [
-                      'rgba(54, 162, 235, 0.7)',
-                      'rgba(255, 99, 132, 0.7)',
-                      'rgba(255, 206, 86, 0.7)',
-                      'rgba(75, 192, 192, 0.7)',
-                      'rgba(153, 102, 255, 0.7)',
-                      'rgba(255, 159, 64, 0.7)',
-                      'rgba(199, 199, 199, 0.7)',
-                      'rgba(255, 99, 71, 0.7)',
-                      'rgba(100, 181, 246, 0.7)',
-                      'rgba(255, 138, 101, 0.7)',
-                      'rgba(174, 213, 129, 0.7)',
-                      'rgba(240, 98, 146, 0.7)',
-                  ],
+                  backgroundColor: 'rgba(22, 179, 100, 0.72)',
+                  hoverBackgroundColor: 'rgba(9, 146, 80, 0.9)',
+                  borderColor: '#099250',
                   borderRadius: 8,
                   borderWidth: 1
               }]

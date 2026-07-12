@@ -81,6 +81,21 @@
     --shadow-boutique-card: 0 18px 40px -22px oklch(15% 0.05 160 / 0.25);
     --shadow-boutique-modal: 0 40px 80px -30px oklch(10% 0.05 160 / 0.5);
 
+    /* ─────────────────────────────────────────────────────────────
+       Night Estate — dark evening tier of the Boutique Farmstead
+       palette. Evergreen near-black surfaces + bone type; gold stays
+       the single accent. Activated per-page via `body.theme-night`
+       (landing page only); the cream Boutique tokens stay untouched
+       for checkout / auth / account pages.
+       ───────────────────────────────────────────────────────────── */
+    --color-night: oklch(17.5% 0.02 165);
+    --color-night-2: oklch(20.5% 0.024 163);
+    --color-night-3: oklch(24.5% 0.027 162);
+    --color-bone: oklch(93.5% 0.014 90);
+
+    --shadow-night-card: 0 24px 60px -24px oklch(5% 0.02 165 / 0.8);
+    --shadow-night-float: 0 34px 90px -30px oklch(4% 0.02 165 / 0.9), 0 12px 30px -18px oklch(4% 0.02 165 / 0.7);
+
     /* Legacy alias tokens — the public views were authored against a
        palette that was never defined (nautical-teal, brand, accent,
        portrait-ink, white-canvas…). Mapping those names onto the real
@@ -288,6 +303,339 @@ body.theme-boutique {
     --color-canvas-deep: oklch(94.5% 0.025 90);
     --color-ink: oklch(22% 0.02 160);
     --ease-boutique: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Night Estate scope — dark landing page tier.
+   Re-points the shared canvas/ink tokens at the night ramp so every
+   `bg-canvas` / `text-ink` utility on the page flips together. The
+   cream Boutique pages (checkout, auth, account) never carry this
+   class and are unaffected.
+   ═══════════════════════════════════════════════════════════════ */
+body.theme-night {
+    --color-canvas: var(--color-night);
+    --color-canvas-deep: var(--color-night-2);
+    --color-ink: var(--color-bone);
+}
+
+body.theme-night ::selection {
+    background: var(--color-gold);
+    color: oklch(18% 0.02 163);
+}
+
+body.theme-night .focus-ring:focus-visible {
+    outline-color: var(--color-gold);
+}
+
+/* Cinematic photo grade for full-bleed imagery on the night canvas */
+.img-night-grade {
+    filter: saturate(0.82) brightness(0.72) contrast(1.05);
+}
+
+/* Dark-tuned lift: on a near-black page the "shadow" is a deep pool,
+   not a grey smudge. */
+body.theme-night .hover-lift-premium:hover {
+    box-shadow: var(--shadow-night-float);
+}
+
+body.theme-night .custom-scrollbar::-webkit-scrollbar-thumb,
+body.theme-night ::-webkit-scrollbar-thumb {
+    background: oklch(100% 0 0 / 0.14);
+}
+
+/* Availability pills injected by availability-search.js */
+body.theme-night .avail-pill--open {
+    background: oklch(28% 0.05 160 / 0.9);
+    color: oklch(88% 0.07 150);
+    border-color: oklch(60% 0.1 155 / 0.35);
+}
+
+body.theme-night .avail-pill--low {
+    background: oklch(30% 0.05 85 / 0.92);
+    color: oklch(87% 0.1 88);
+    border-color: oklch(70% 0.11 85 / 0.4);
+}
+
+body.theme-night .avail-pill--full {
+    background: oklch(27% 0.06 25 / 0.92);
+    color: oklch(83% 0.09 25);
+    border-color: oklch(55% 0.12 25 / 0.4);
+}
+
+body.theme-night .avail-pill--loading {
+    background: oklch(22% 0.02 163 / 0.9);
+    color: oklch(80% 0.01 90);
+    border-color: oklch(100% 0 0 / 0.12);
+}
+
+/* Capacity filter pills (markup lives in room-filters component) */
+body.theme-night .room-filter-pill.active {
+    background: var(--color-bone);
+    border-color: var(--color-bone);
+    color: oklch(20% 0.02 163);
+    box-shadow: 0 14px 34px -16px oklch(0% 0 0 / 0.8);
+}
+
+/* True dark glass — blur + 1px hairline + inner top highlight for a
+   physical refractive edge (booking capsule, sticky bars, modal chrome) */
+.glass-night {
+    background: color-mix(in oklch, oklch(21% 0.022 163) 62%, transparent);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    border: 1px solid oklch(100% 0 0 / 0.1);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.08), var(--shadow-night-card);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .glass-night {
+        background: var(--color-night-2);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+/* ── Floating pill nav skins ─────────────────────────────────────
+   The inline nav script swaps these two classes; the theme scope
+   decides what "solid" looks like, so the same JS serves both the
+   cream pages and the night landing. */
+#siteNav.nav-glass-dark {
+    border-color: transparent;
+    background: transparent;
+    color: var(--color-bone);
+}
+
+#siteNav.nav-glass-solid {
+    border-color: color-mix(in oklch, var(--color-emerald-deep) 10%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 85%, transparent);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    color: var(--color-ink);
+    box-shadow: 0 10px 40px -16px rgba(6, 40, 30, 0.25);
+}
+
+body.theme-night #siteNav.nav-glass-solid {
+    border-color: oklch(100% 0 0 / 0.09);
+    background: color-mix(in oklch, var(--color-night-2) 80%, transparent);
+    color: var(--color-bone);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.06), 0 18px 50px -20px oklch(0% 0 0 / 0.65);
+}
+
+/* Nav retreats while reading down, returns on the first upward scroll */
+#navWrap {
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#navWrap.nav-hidden {
+    transform: translateY(-140%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #navWrap {
+        transition: none;
+    }
+}
+
+/* ── Hero line-mask reveal ───────────────────────────────────────
+   Headline lines rise out of clipped wrappers on load; stagger via
+   --rise-delay per line. Pure CSS, plays once. */
+.reveal-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em; /* italic descender reserve */
+}
+
+.reveal-line>span {
+    display: block;
+    transform: translateY(118%);
+    animation: line-rise 1.15s cubic-bezier(0.19, 1, 0.22, 1) var(--rise-delay, 0s) both;
+}
+
+@keyframes line-rise {
+    to {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal-line>span {
+        animation: none;
+        transform: none;
+    }
+}
+
+/* ── Scroll-reveal variants (reveal.js adds .aos-animate) ────────
+   These extend the generic fade-up with softer, weightier entries.
+   `html.js-reveal` outranks the generic `.js-reveal [data-aos]`
+   rules that appear later in this file. */
+html.js-reveal [data-aos="zoom-soft"] {
+    opacity: 0;
+    transform: scale(1.045);
+    filter: blur(10px);
+    transition:
+        opacity 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 1.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.js-reveal [data-aos="zoom-soft"].aos-animate {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+}
+
+html.js-reveal [data-aos="fade-left"] {
+    opacity: 0;
+    transform: translateX(40px);
+}
+
+html.js-reveal [data-aos="fade-right"] {
+    opacity: 0;
+    transform: translateX(-40px);
+}
+
+html.js-reveal [data-aos="fade-left"].aos-animate,
+html.js-reveal [data-aos="fade-right"].aos-animate {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Single-column mobile: lateral entries collapse to a vertical rise so
+   pre-reveal transforms never widen the page */
+@media (max-width: 767px) {
+
+    html.js-reveal [data-aos="fade-left"],
+    html.js-reveal [data-aos="fade-right"] {
+        transform: translateY(26px);
+    }
+
+    html.js-reveal [data-aos="fade-left"].aos-animate,
+    html.js-reveal [data-aos="fade-right"].aos-animate {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html.js-reveal [data-aos="zoom-soft"],
+    html.js-reveal [data-aos="fade-left"],
+    html.js-reveal [data-aos="fade-right"] {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Night checkout — component states for the dark booking flow.
+   Markup-level styling lives inline in the checkout blades; these
+   rules cover shared widgets (address selector, JS-driven states)
+   that light pages also use.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Shared Livewire address selector: staff pages keep its stone skin;
+   the checkout wraps it in .night-fields to re-skin without forking */
+body.theme-night .night-fields label {
+    color: color-mix(in oklch, var(--color-bone) 60%, transparent);
+}
+
+body.theme-night .night-fields select {
+    background-color: oklch(100% 0 0 / 0.05);
+    border-color: oklch(100% 0 0 / 0.1);
+    color: var(--color-bone);
+}
+
+body.theme-night .night-fields select:focus {
+    background-color: oklch(100% 0 0 / 0.08);
+    border-color: color-mix(in oklch, var(--color-gold) 60%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-gold) 22%, transparent);
+}
+
+/* Native dropdown popups stay light; keep their options readable */
+body.theme-night .night-fields select option {
+    background: #ffffff;
+    color: #1c1917;
+}
+
+/* Progress rail: gold marks the completed steps on the dark flow */
+body.theme-night .checkout-step.done .step-dot {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: var(--color-night);
+}
+
+body.theme-night .checkout-step.done .step-bar {
+    background: var(--color-gold);
+}
+
+/* Room-type picker card in its chosen state */
+body.theme-night .type-card.selected {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 2px var(--color-gold), 0 18px 40px -20px oklch(0% 0 0 / 0.7);
+    transform: translateY(-2px);
+}
+
+/* Room-number tiles (booking.js populates these) */
+body.theme-night .room-tile {
+    background-color: oklch(100% 0 0 / 0.04);
+    border-color: oklch(100% 0 0 / 0.1);
+    color: color-mix(in oklch, var(--color-bone) 45%, transparent);
+}
+
+body.theme-night .room-tile:hover {
+    background-color: oklch(100% 0 0 / 0.08);
+    border-color: oklch(100% 0 0 / 0.2);
+}
+
+body.theme-night .room-tile.available {
+    background-color: color-mix(in oklch, var(--color-emerald) 16%, transparent);
+    border-color: color-mix(in oklch, var(--color-emerald) 45%, transparent);
+    color: oklch(82% 0.07 155);
+}
+
+body.theme-night .room-tile.available:hover {
+    background-color: color-mix(in oklch, var(--color-gold) 14%, transparent);
+    border-color: var(--color-gold);
+}
+
+body.theme-night .room-tile.selected {
+    background-color: var(--color-emerald) !important;
+    border-color: var(--color-emerald) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 20px -6px color-mix(in oklch, var(--color-emerald) 60%, transparent);
+}
+
+body.theme-night .room-tile.booked {
+    background-color: color-mix(in oklch, var(--color-ember-600) 16%, transparent);
+    border-color: color-mix(in oklch, var(--color-ember-600) 40%, transparent);
+    color: var(--color-ember-200);
+}
+
+body.theme-night .room-tile.cleaning {
+    background-color: color-mix(in oklch, var(--color-gold) 12%, transparent);
+    border-color: color-mix(in oklch, var(--color-gold) 40%, transparent);
+    color: var(--color-gold);
+}
+
+body.theme-night .room-tile.maintenance,
+body.theme-night .room-tile.unavailable {
+    background-color: oklch(100% 0 0 / 0.05);
+    border-color: oklch(100% 0 0 / 0.12);
+    color: oklch(100% 0 0 / 0.3);
+}
+
+/* ── Lenis inertia scroll (loaded on public pages, desktop only) ── */
+html.lenis,
+html.lenis body {
+    height: auto;
+}
+
+.lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+    overflow: hidden;
 }
 
 /* Signature boutique utilities (ported from the reference design) */

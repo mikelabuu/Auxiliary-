@@ -8,10 +8,10 @@
     <x-admin.ui.page-header subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel.">
         Manual <span class="text-clsu-700">Booking</span>
         <x-slot:actions>
-            <a href="{{ route('staff.bookings.index') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+            <x-admin.ui.button variant="secondary" :href="route('staff.bookings.index')">
                 <x-admin.ui.icon name="receipt" class="w-4 h-4" />
                 Booking Hub
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 

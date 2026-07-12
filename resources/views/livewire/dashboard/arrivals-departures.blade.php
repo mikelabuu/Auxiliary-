@@ -36,7 +36,7 @@
                   </div>
                   <p class="text-sm font-semibold text-stone-700">No arrivals or departures today</p>
                   <p class="text-xs text-stone-400 mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
-                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-700 rounded-lg px-3.5 py-2 hover:bg-clsu-800 active:scale-[0.98] transition-all !no-underline shadow-sm">Create manual booking</a>
+                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-600 rounded-lg px-3.5 py-2 hover:bg-clsu-700 active:scale-[0.98] transition-all !no-underline shadow-sm">Create manual booking</a>
                 </div>
             @else
                 <table class="w-full text-left border-collapse">
@@ -45,19 +45,19 @@
                             <th wire:click="sortBy('guest_name')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
                                 Guest
                                 @if ($sortField === 'guest_name')
-                                    <span class="text-[8px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
                                 @endif
                             </th>
                             <th wire:click="sortBy('check_in')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
                                 Check-in
                                 @if ($sortField === 'check_in')
-                                    <span class="text-[8px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
                                 @endif
                             </th>
                             <th wire:click="sortBy('check_out')" class="px-4 py-2.5 font-bold cursor-pointer hover:text-clsu-900 transition">
                                 Check-out
                                 @if ($sortField === 'check_out')
-                                    <span class="text-[8px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                                    <span class="text-[10px] ml-0.5">{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
                                 @endif
                             </th>
                             <th class="px-4 py-2.5 font-bold">Type</th>
@@ -91,7 +91,7 @@
                                     @if($item->status === 'paid')
                                         <div class="flex justify-end gap-1.5">
                                             <button 
-                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-700 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-800 transition-colors cursor-pointer shadow-sm" 
+                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-600 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-700 transition-colors cursor-pointer shadow-sm" 
                                                 data-action="checkin" 
                                                 data-id="{{ $item->id }}">
                                                 Check In
@@ -106,7 +106,7 @@
                                     @elseif($item->status === 'active')
                                         <div class="flex justify-end gap-1.5">
                                             <button 
-                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-700 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-800 transition-colors cursor-pointer shadow-sm" 
+                                                class="password-verify-arrivals px-3 py-1.5 bg-clsu-600 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg hover:bg-clsu-700 transition-colors cursor-pointer shadow-sm" 
                                                 data-action="checkout" 
                                                 data-id="{{ $item->id }}">
                                                 Check Out
@@ -130,7 +130,7 @@
                 <div class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden">
                     @foreach($upcomingBookings as $booking)
                         <div class="flex items-center gap-3 px-4 py-3 hover:bg-clsu-50/60 transition-colors">
-                            <div class="w-8 h-8 rounded-full bg-clsu-700 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-clsu-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                                 {{ $booking['initials'] }}
                             </div>
                             <div class="flex-1 min-w-0">

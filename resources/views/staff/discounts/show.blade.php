@@ -31,12 +31,18 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.ui.page-header :subtitle="'Submitted ' . $discount->created_at->format('M d, Y · h:i A') . ' · ' . $totalFiles . ' document' . ($totalFiles === 1 ? '' : 's')">
+        <x-slot:breadcrumb>
+            <x-admin.ui.breadcrumb :items="[
+                ['label' => 'Discount Requests', 'href' => route('staff.discounts.index')],
+                ['label' => 'Request #' . $discount->id],
+            ]" />
+        </x-slot:breadcrumb>
         Discount Request <span class="text-clsu-700">#{{ $discount->id }}</span>
         <x-slot:actions>
-            <a href="{{ route('staff.discounts.index') }}" class="flex items-center gap-2 text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors !no-underline">
+            <x-admin.ui.button variant="secondary" :href="route('staff.discounts.index')">
                 <x-admin.ui.icon name="chevron-left" class="w-4 h-4" stroke-width="2" />
                 Back to Requests
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 
@@ -111,7 +117,7 @@
                 @php $files = $reservation->discountFiles ?? collect(); @endphp
                 <div>
                     <div class="flex flex-wrap items-center gap-3 mb-3">
-                        <span class="grid h-9 w-12 shrink-0 place-items-center rounded-lg bg-clsu-800 font-data text-xs font-bold text-white">{{ $reservation->room_number }}</span>
+                        <span class="grid h-9 w-12 shrink-0 place-items-center rounded-lg bg-clsu-600 font-data text-xs font-bold text-white">{{ $reservation->room_number }}</span>
                         <div>
                             <p class="text-sm font-bold text-stone-800 capitalize">{{ $reservation->room_type }} Room</p>
                             <p class="text-[11px] font-semibold text-stone-400">{{ $reservation->num_seniors }} declared senior{{ $reservation->num_seniors === 1 ? '' : 's' }} / PWD · capacity {{ $reservation->capacity }}</p>
@@ -156,7 +162,7 @@
                                             <div class="grid grid-cols-2 gap-2">
                                                 <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}">
                                                     @csrf
-                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-700 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-all hover:bg-clsu-800 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-600 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-all hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                                         <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> Approve
                                                     </button>
                                                 </form>
@@ -220,7 +226,7 @@
                         </form>
                         <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}" data-confirm="Approve this discount? The 20% per approved ID will be applied to the booking total.">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-700 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-all hover:bg-clsu-800 active:scale-[0.98] cursor-pointer">
+                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-600 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-all hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                 <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve Discount
                             </button>
                         </form>

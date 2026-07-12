@@ -17,23 +17,27 @@ $.ajaxSetup({
     <x-admin.ui.page-header subtitle="Here's what's happening at Farmers Hostel today.">
         Welcome back, <span class="text-clsu-700">{{ explode(' ', Auth::guard('staff')->user()->name)[0] }}</span>
         <x-slot:actions>
-            <a href="{{ route('staff.reports.index') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+            <x-admin.ui.button variant="secondary" type="button" id="openInsightsBtn">
+                <x-admin.ui.icon name="chart-bar" class="w-4 h-4" />
+                Booking insights
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" :href="route('staff.reports.index')">
                 <x-admin.ui.icon name="calendar" class="w-4 h-4" />
                 View Reports
-            </a>
-            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all !no-underline">
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="primary" :href="route('staff.manualbooking')">
                 <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                 New Booking
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 
-    <!-- Quick Actions Grid -->
+    <!-- Quick Actions Grid — each tile lands on the page where the task is actually completed -->
     <div class="animate-in grid grid-cols-2 lg:grid-cols-4 gap-3" style="animation-delay:20ms">
-        <x-admin.ui.quick-action icon="log-in" title="Check-in Guest" subtitle="Mark an arrival" :href="route('staff.manualbooking')" />
-        <x-admin.ui.quick-action icon="block" title="Block a Room" subtitle="Mark unavailable" :href="route('staff.rooms')" />
-        <x-admin.ui.quick-action icon="credit-card" title="Log a Payment" subtitle="Record a receipt" :href="route('staff.paymentlogs.index')" />
-        <x-admin.ui.quick-action icon="wrench" title="Maintenance Note" subtitle="Flag an issue" :href="route('staff.audit.index')" />
+        <x-admin.ui.quick-action icon="plus" title="New Booking" subtitle="Walk-in or phone" :href="route('staff.manualbooking')" />
+        <x-admin.ui.quick-action icon="log-in" title="Arrivals & Departures" subtitle="Check guests in / out" :href="route('staff.bookings.index') . '#arrivals'" />
+        <x-admin.ui.quick-action icon="bed" title="Room Status" subtitle="Block or free rooms" :href="route('staff.rooms')" />
+        <x-admin.ui.quick-action icon="credit-card" title="Payments" subtitle="Review the ledger" :href="route('staff.paymentlogs.index')" />
     </div>
 
     <!-- Stat cards -->
@@ -81,23 +85,21 @@ $.ajaxSetup({
 
     <!-- Secondary metrics strip -->
     <div class="animate-in grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style="animation-delay:180ms">
+        <x-admin.ui.mini-stat icon="check-circle" label="Rooms available now">{{ $availableCount }}</x-admin.ui.mini-stat>
         <x-admin.ui.mini-stat icon="arrival" label="Check-ins this week">{{ $checkinsThisWeek }}</x-admin.ui.mini-stat>
         <x-admin.ui.mini-stat icon="departure" label="Check-outs this week">{{ $checkoutsThisWeek }}</x-admin.ui.mini-stat>
         <a href="{{ route('staff.discounts.index') }}" class="!no-underline">
             <x-admin.ui.mini-stat icon="tag" color="palay" label="Pending discount requests" class="h-full hover:shadow-card-lg transition-shadow">{{ $pendingDiscounts }}</x-admin.ui.mini-stat>
         </a>
-        <x-admin.ui.mini-stat icon="wrench" color="ember" label="Rooms under maintenance">{{ $roomsUnderMaintenance }}</x-admin.ui.mini-stat>
     </div>
 
-    <!-- Charts row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <!-- Bookings insights -->
-        <x-admin.ui.section-card icon="chart-bar" title="Bookings Insights" class="lg:col-span-2" :delay="200">
-            <x-slot:actions>
-                <span class="text-xs font-medium text-stone-500 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">{{ date('Y') }}</span>
-            </x-slot:actions>
-
-            <p class="text-xs text-stone-400 mb-5 -mt-4 ml-[42px]">Peak month: <span class="font-semibold text-palay-700">{{ $peakMonthName }} · {{ $peakMonthCount }} bookings</span></p>
+    <!-- Bookings Insights modal (opened from the page header) -->
+    <x-admin.ui.modal id="bookingInsightsModal" icon="chart-bar" title="Bookings Insights" max-width="xl" scroll-body>
+        <div class="modal-body">
+            <div class="flex items-center justify-between gap-3 mb-6">
+                <p class="text-xs text-stone-500">Peak month: <span class="font-semibold text-palay-700">{{ $peakMonthName }} · {{ $peakMonthCount }} bookings</span></p>
+                <span class="text-xs font-semibold text-stone-500 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">{{ date('Y') }}</span>
+            </div>
 
             <div class="pl-1">
                 <div class="flex gap-3">
@@ -127,13 +129,13 @@ $.ajaxSetup({
                                 @php
                                     $heightPercent = $maxScale > 0 ? ($val / $maxScale) * 100 : 0;
                                     $isPeak = $val == $peakMonthCount && $val > 0;
-                                    $barColor = $isPeak ? 'bg-gradient-to-t from-palay-600 to-palay-400' : 'bg-gradient-to-t from-clsu-700 to-clsu-400 group-hover:from-clsu-800 group-hover:to-clsu-500';
+                                    $barColor = $isPeak ? 'bg-gradient-to-t from-palay-600 to-palay-400' : 'bg-gradient-to-t from-clsu-600 to-clsu-400 group-hover:from-clsu-700 group-hover:to-clsu-500';
                                     if($val == 0) $barColor = 'bg-stone-100';
                                 @endphp
                                 <div class="flex-1 group relative flex justify-center h-full items-end">
                                     @if($val > 0)
                                         <div class="rounded-t-md w-full {{ $barColor }} transition-colors" style="height:{{ $heightPercent }}%"></div>
-                                        <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity {{ $isPeak ? 'text-palay-700 bg-palay-50' : 'text-clsu-700 bg-clsu-50' }} rounded-full px-1.5 py-0.5 tracking-wide whitespace-nowrap">{{ $val }} · ₱{{ number_format($revenueValues[$index]) }}</span>
+                                        <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity {{ $isPeak ? 'text-palay-700 bg-palay-50' : 'text-clsu-700 bg-clsu-50' }} rounded-full px-1.5 py-0.5 tracking-wide whitespace-nowrap">{{ $val }} · ₱{{ number_format($revenueValues[$index]) }}</span>
                                     @else
                                         <div class="rounded-t-md w-full bg-stone-100 h-0"></div>
                                     @endif
@@ -154,19 +156,28 @@ $.ajaxSetup({
                     </div>
                 </div>
             </div>
-        </x-admin.ui.section-card>
+        </div>
+    </x-admin.ui.modal>
 
-        <!-- Occupancy Snapshot component -->
-        <livewire:dashboard.occupancy-snapshot />
-    </div>
+    <script>
+      (function () {
+        function openBI() { $('#bookingInsightsModal').removeClass('hidden').addClass('flex'); }
+        function closeBI() { $('#bookingInsightsModal').addClass('hidden').removeClass('flex'); }
+        $(document).on('click', '#openInsightsBtn', openBI);
+        $('#bookingInsightsModal').on('click', '[data-modal-close]', closeBI);
+        $(document).on('keydown', function (e) { if (e.key === 'Escape' && $('#bookingInsightsModal').hasClass('flex')) closeBI(); });
+      })();
+    </script>
 
-    <!-- Room Status Map (signature feature) -->
-    <x-admin.ui.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20" :delay="300">
+    <!-- Rooms & occupancy row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- Room Status Map (signature feature) -->
+        <x-admin.ui.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20 lg:col-span-2" :delay="260">
         <x-slot:actions>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Reserved · <span data-map-count="reserved">{{ $reservedCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span data-map-count="maintenance">{{ $maintenanceCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--available"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--occupied"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--reserved"></span>Reserved · <span data-map-count="reserved">{{ $reservedCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--maintenance"></span>Maintenance · <span data-map-count="maintenance">{{ $maintenanceCount }}</span></span>
         </x-slot:actions>
 
         <div class="space-y-5">
@@ -176,11 +187,11 @@ $.ajaxSetup({
                     @foreach($dormBeds as $room)
                         @php
                             $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950';
+                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -190,11 +201,11 @@ $.ajaxSetup({
                     @foreach($standardRooms as $room)
                         @php
                             $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950';
+                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
@@ -204,16 +215,20 @@ $.ajaxSetup({
                     @foreach($deluxeRooms as $room)
                         @php
                             $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950';
+                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
                             if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
                             if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
                         @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
                     @endforeach
                 </div>
             </div>
         </div>
-    </x-admin.ui.section-card>
+        </x-admin.ui.section-card>
+
+        <!-- Occupancy Snapshot component -->
+        <livewire:dashboard.occupancy-snapshot />
+    </div>
 
     <!-- Bottom row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -226,7 +241,7 @@ $.ajaxSetup({
         <div class="space-y-6">
             <!-- Calendar snapshot (bespoke dark header, not a section-card) -->
             <div class="animate-in bg-white rounded-2xl border border-stone-200 shadow-card hover:shadow-card-lg transition-shadow duration-200 overflow-hidden" style="animation-delay:380ms">
-                <div class="flex items-center justify-between bg-gradient-to-r from-clsu-900 to-clsu-950 text-white px-4 py-3.5">
+                <div class="flex items-center justify-between bg-gradient-to-r from-clsu-600 to-clsu-700 text-white px-4 py-3.5">
                     <button id="prev" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/50 cursor-pointer">
                         <x-admin.ui.icon name="chevron-left" class="w-3.5 h-3.5" stroke-width="2.5" />
                     </button>
@@ -243,7 +258,7 @@ $.ajaxSetup({
                         <!-- JS generated -->
                     </div>
                     <div class="flex items-center gap-4 mt-3 pt-3 border-t border-stone-100 text-[10px] font-medium text-stone-400">
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-clsu-800"></span>Today</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-clsu-700"></span>Today</span>
                         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Has bookings</span>
                     </div>
                 </div>
@@ -360,10 +375,10 @@ $.ajaxSetup({
 document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.room-map-btn')) return; // map not on this page
 
-    const MAP_BASE = 'room-map-btn w-14 h-11 rounded-lg border text-xs font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40';
+    const MAP_BASE = 'room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40';
     const MAP_VARIANT = {
         available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
-        occupied:    'bg-clsu-800 text-white border-clsu-900 hover:bg-clsu-950',
+        occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700',
         reserved:    'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200',
         maintenance: 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
     };

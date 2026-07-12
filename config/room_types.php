@@ -20,7 +20,7 @@ return [
     [
         'id'          => 'double',
         'title'       => 'Double Room',
-        'description' => 'A cozy, well-appointed room with two single beds — perfect for pairs, colleagues, or friends visiting CLSU together. All essential amenities included for a comfortable stay.',
+        'description' => 'A cozy, well-appointed room with two single beds, perfect for pairs, colleagues, or friends visiting CLSU together. All essential amenities included for a comfortable stay.',
         'floor'       => 'Ground Floor · Block A',
         'beds'        => 2,
         'price'       => 1600,

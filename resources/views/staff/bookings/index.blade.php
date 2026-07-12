@@ -17,10 +17,10 @@ $.ajaxSetup({
     <x-admin.ui.page-header subtitle="Arrivals, departures, and every active or pending booking in one place.">
         Bookings <span class="text-clsu-700">Hub</span>
         <x-slot:actions>
-            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all !no-underline">
+            <x-admin.ui.button variant="primary" :href="route('staff.manualbooking')">
                 <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                 New Booking
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 

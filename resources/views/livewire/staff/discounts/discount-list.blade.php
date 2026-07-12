@@ -20,7 +20,7 @@
             <div class="flex flex-wrap gap-2">
                 @foreach ($tabs as $key => $label)
                     <button type="button" wire:click="$set('status', '{{ $key }}')"
-                            class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer {{ $status === $key ? 'bg-clsu-700 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                            class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer {{ $status === $key ? 'bg-clsu-600 border-clsu-700 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
                         {{ $label }}
                         <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $counts[$key] ?? 0 }}</span>
                     </button>

@@ -12,36 +12,39 @@
   </div>
 
   <div wire:poll.{{ $pollInterval }}s.keep-alive class="flex flex-col items-center py-2">
-    <div class="relative w-[136px] h-[136px]">
+    <div class="relative w-[140px] h-[140px]">
       @php
           $circumference = 364.42;
-          $dashArray = ($percent / 100) * $circumference;
+          $dashOffset = $circumference - ($percent / 100) * $circumference;
       @endphp
-      <svg width="136" height="136" viewBox="0 0 140 140">
+      <svg width="140" height="140" viewBox="0 0 140 140" class="gauge-ring">
         <defs>
           <linearGradient id="occGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#4CB86D"/>
-            <stop offset="100%" stop-color="#114E28"/>
+            <stop offset="0%" stop-color="#3ccb7f"/>
+            <stop offset="55%" stop-color="#16b364"/>
+            <stop offset="100%" stop-color="#099250"/>
           </linearGradient>
         </defs>
-        <!-- Background track (dashed) -->
-        <circle cx="70" cy="70" r="58" fill="none" stroke="#DCF4E1" stroke-width="14" stroke-dasharray="4 6" />
+        <!-- Background track -->
+        <circle cx="70" cy="70" r="58" fill="none" stroke="#e6f7ed" stroke-width="13" />
         <!-- Progress track -->
-        <circle cx="70" cy="70" r="58" fill="none" stroke="url(#occGrad)" stroke-width="14" stroke-dasharray="{{ $dashArray }} {{ $circumference }}" stroke-linecap="round" transform="rotate(-90 70 70)" />
+        <circle cx="70" cy="70" r="58" fill="none" stroke="url(#occGrad)" stroke-width="13"
+                stroke-linecap="round" class="gauge-value"
+                stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $dashOffset }}" />
       </svg>
       <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <p class="text-2xl font-bold font-data tabnum text-stone-900">{{ round($percent) }}%</p>
-        <p class="text-[10px] font-semibold text-stone-400 tracking-wide">OCCUPIED</p>
+        <p class="text-[28px] font-extrabold font-data tabnum text-stone-900 leading-none">{{ round($percent) }}<span class="text-lg text-stone-400">%</span></p>
+        <p class="text-[9.5px] font-bold text-stone-400 tracking-[0.15em] mt-1">OCCUPIED</p>
       </div>
     </div>
     
     <div class="mt-5 space-y-1.5 w-full">
       <div class="flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-100 border border-clsu-200"></span>Available</span>
+        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-100 border border-clsu-300"></span>Available</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $available }}</span>
       </div>
       <div class="flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-700"></span>Occupied</span>
+        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-500"></span>Occupied</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $occupied }}</span>
       </div>
     </div>

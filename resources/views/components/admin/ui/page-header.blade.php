@@ -12,6 +12,9 @@
 
 <div {{ $attributes->merge(['class' => 'dashboard-greeting-row animate-in']) }}>
     <div class="dashboard-greeting-copy">
+        @isset($breadcrumb)
+            <div class="dashboard-greeting-breadcrumb">{{ $breadcrumb }}</div>
+        @endisset
         <h2 class="dashboard-greeting-title">{{ $slot }}</h2>
         @if($subtitle)
             <p class="dashboard-greeting-subtitle">{{ $subtitle }}</p>

@@ -18,7 +18,7 @@
         <x-slot:footnote><p class="text-xs text-faint">Across {{ $wings }} wings</p></x-slot:footnote>
     </x-admin.ui.stat-card>
 
-    `dark` renders the hero accent variant (deep CLSU green gradient, gold hairline).
+    `dark` renders the hero accent variant (vivid emerald gradient).
 --}}
 
 @php

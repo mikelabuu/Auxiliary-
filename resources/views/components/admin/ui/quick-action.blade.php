@@ -12,8 +12,8 @@
 --}}
 
 <a href="{{ $href }}" {{ $attributes->merge(['class' => 'quick-action !no-underline']) }}>
-    <div class="stat-icon stat-icon-green" style="width:38px;height:38px;">
-        <x-admin.ui.icon :name="$icon" class="w-[18px] h-[18px]" />
+    <div class="stat-icon stat-icon-green">
+        <x-admin.ui.icon :name="$icon" class="w-[19px] h-[19px]" />
     </div>
     <div class="min-w-0">
         <p class="quick-action-title truncate">{{ $title }}</p>

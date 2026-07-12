@@ -23,20 +23,26 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
     <x-admin.ui.page-header :subtitle="'Created via manual booking · ' . ucfirst($booking->payment_mode)">
+        <x-slot:breadcrumb>
+            <x-admin.ui.breadcrumb :items="[
+                ['label' => 'Bookings', 'href' => route('staff.bookings.index')],
+                ['label' => 'Booking #' . $booking->id],
+            ]" />
+        </x-slot:breadcrumb>
         Booking <span class="text-clsu-700">#{{ $booking->id }}</span>
         <x-slot:actions>
-            <a href="{{ route('staff.bookings.index') }}" class="flex items-center gap-2 text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors !no-underline">
+            <x-admin.ui.button variant="secondary" :href="route('staff.bookings.index')">
                 <x-admin.ui.icon name="chevron-left" class="w-4 h-4" stroke-width="2" />
                 Back to Bookings
-            </a>
-            <button type="button" onclick="window.print()" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm cursor-pointer">
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" type="button" onclick="window.print()">
                 <x-admin.ui.icon name="printer" class="w-4 h-4" />
                 Print
-            </button>
-            <a href="{{ route('staff.manualbooking') }}" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all !no-underline">
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="primary" :href="route('staff.manualbooking')">
                 <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
                 New Booking
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 

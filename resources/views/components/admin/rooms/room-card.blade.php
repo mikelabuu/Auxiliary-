@@ -90,7 +90,7 @@
                 <span class="truncate">{{ \Illuminate\Support\Str::limit($room->notes, 28) }}</span>
             </p>
         @endif
-        <p class="room-updated text-[9px] text-stone-400 italic">Updated {{ $room->updated_at->diffForHumans() }}</p>
+        <p class="room-updated text-[11px] text-stone-400 italic">Updated {{ $room->updated_at->diffForHumans() }}</p>
     </div>
 
     <div class="border-t border-stone-100 px-4 py-2 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-stone-400 group-hover/card:text-clsu-600 group-hover/card:bg-clsu-50/60 transition-colors">

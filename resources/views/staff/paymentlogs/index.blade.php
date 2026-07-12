@@ -21,18 +21,18 @@
     <x-admin.ui.page-header subtitle="Every peso that moved through the system — online, sandbox, and manual payments.">
         Payment <span class="text-clsu-700">Hub</span>
         <x-slot:actions>
-            <a href="{{ route('reports.payments.all') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+            <x-admin.ui.button variant="secondary" :href="route('reports.payments.all')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 All
-            </a>
-            <a href="{{ route('reports.payments.cash') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" :href="route('reports.payments.cash')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Cash
-            </a>
-            <a href="{{ route('reports.payments.sandbox') }}" class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm !no-underline">
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" :href="route('reports.payments.sandbox')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Sandbox
-            </a>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 
@@ -65,7 +65,7 @@
         <div class="flex flex-wrap gap-2 mb-5">
             @foreach ($statusTabs as $key => $meta)
                 <a href="{{ route('staff.paymentlogs.index', array_filter(['status' => $key, 'search' => $search, 'sort' => $sort])) }}"
-                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-clsu-700 border-clsu-800 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
+                   class="flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors {{ $status === $key ? 'bg-clsu-600 border-clsu-700 text-white shadow-card' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50' }}">
                     {{ $meta['label'] }}
                     <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none {{ $status === $key ? 'bg-white/15 text-white' : 'bg-stone-100 text-stone-500' }}">{{ $meta['count'] }}</span>
                 </a>

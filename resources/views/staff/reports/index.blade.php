@@ -9,10 +9,10 @@
     <x-admin.ui.page-header subtitle="Generate, filter, and export booking and payment data.">
         Analytics <span class="text-clsu-700">&amp; Reporting</span>
         <x-slot:actions>
-            <button type="button" id="exportBtn" disabled class="flex items-center gap-2 text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 active:scale-[0.98] transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:active:scale-100 cursor-pointer">
+            <x-admin.ui.button variant="secondary" type="button" id="exportBtn" disabled>
                 <x-admin.ui.icon name="download" class="w-4 h-4" stroke-width="2" />
                 Export Excel
-            </button>
+            </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
 
@@ -86,11 +86,11 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-stone-100">
                 <div id="reportSummary" class="hidden flex-wrap items-center gap-1.5"></div>
                 <div class="flex items-center gap-2.5 sm:ml-auto">
-                    <button type="button" id="resetBtn" class="text-sm font-medium text-stone-600 border border-stone-200 bg-white rounded-xl px-4 py-2.5 hover:bg-stone-50 transition-colors cursor-pointer">Reset</button>
-                    <button type="button" id="generateBtn" class="flex items-center gap-2 text-sm font-semibold text-white bg-clsu-700 rounded-xl px-4 py-2.5 shadow-card hover:shadow-card-lg hover:bg-clsu-800 active:scale-[0.98] transition-all cursor-pointer">
+                    <x-admin.ui.button variant="secondary" type="button" id="resetBtn">Reset</x-admin.ui.button>
+                    <x-admin.ui.button variant="primary" type="button" id="generateBtn">
                         <x-admin.ui.icon name="refresh" class="w-4 h-4" stroke-width="2" />
                         Update Results
-                    </button>
+                    </x-admin.ui.button>
                 </div>
             </div>
         </div>
@@ -124,7 +124,7 @@ $(function () {
     function setToggleActive(el, markerClass, active) {
         const base = markerClass + ' text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer';
         const appearance = active
-            ? 'bg-clsu-700 border-clsu-800 text-white shadow-card'
+            ? 'bg-clsu-600 border-clsu-700 text-white shadow-card'
             : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50';
         el.attr('class', base + ' ' + appearance);
     }

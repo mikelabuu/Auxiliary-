@@ -21,7 +21,7 @@
                 <option value="latest" @selected($sort === 'latest')>Sort: Latest</option>
                 <option value="oldest" @selected($sort === 'oldest')>Sort: Oldest</option>
             </select>
-            <button type="submit" class="text-sm font-medium text-clsu-700 border border-clsu-200 bg-white rounded-xl px-4 py-2.5 hover:bg-clsu-50 hover:border-clsu-300 transition-colors cursor-pointer">Search</button>
+            <x-admin.ui.button variant="secondary" type="submit">Search</x-admin.ui.button>
         </form>
 
         @if($bookings->isEmpty())

@@ -7,6 +7,11 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
 
+    {{-- Desktop rail collapse toggle --}}
+    <button class="sidebar-collapse-btn" @click="toggleSidebarCollapsed()" :aria-expanded="(!sidebarCollapsed).toString()" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" aria-label="Toggle sidebar width">
+      <svg :class="{ 'is-collapsed': sidebarCollapsed }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="9.5" y1="4" x2="9.5" y2="20"/><path d="m15.5 10-2 2 2 2"/></svg>
+    </button>
+
     <div>
       <p class="topbar-title">@yield('page-title', 'Dashboard')</p>
       <p class="topbar-sub">Farmers Hostel · Admin workspace</p>
@@ -30,9 +35,10 @@
           results: { bookings: [], users: [], rooms: [] },
           controller: null,
           get hasResults() { return this.results.bookings.length + this.results.users.length + this.results.rooms.length > 0 },
+          get showQuick() { return this.q.trim().length < 2 },
           search() {
               const term = this.q.trim();
-              if (term.length < 2) { this.open = false; this.loading = false; return; }
+              if (term.length < 2) { this.loading = false; this.results = { bookings: [], users: [], rooms: [] }; return; }
               this.loading = true;
               this.open = true;
               if (this.controller) this.controller.abort();
@@ -56,6 +62,10 @@
                       e.preventDefault();
                       this.$refs.searchInput.focus();
                   }
+                  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                      e.preventDefault();
+                      this.$refs.searchInput.focus();
+                  }
               });
           }
        }"
@@ -64,11 +74,11 @@
     <svg class="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input x-ref="searchInput" x-model="q"
            @input.debounce.300ms="search()"
-           @focus="if (q.trim().length >= 2) open = true"
+           @focus="open = true"
            @keydown.enter.prevent="goFirst()"
            type="text" placeholder="Search guests, bookings, rooms…"
            class="topbar-search-input" />
-    <kbd class="topbar-search-kbd">/</kbd>
+    <kbd class="topbar-search-kbd">Ctrl K</kbd>
 
     {{-- Results dropdown --}}
     <div x-show="open" x-transition x-cloak class="topbar-search-panel">
@@ -77,12 +87,51 @@
         Searching…
       </div>
 
-      <div x-show="!loading && !hasResults" class="notif-empty">
+      {{-- Quick navigation (empty query) --}}
+      <div x-show="!loading && showQuick">
+        <p class="search-group-label">Quick navigation</p>
+        <div class="quick-nav-grid">
+          <a href="{{ route('staff.dashboard') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </a>
+          <a href="{{ route('staff.bookings.index') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V9z"/></svg>
+            All bookings
+          </a>
+          <a href="{{ route('staff.manualbooking') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+            Manual booking
+          </a>
+          <a href="{{ route('staff.rooms') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"/><path d="M2 18h20"/><path d="M6 10V7a2 2 0 0 1 2-2h3v5"/></svg>
+            Rooms
+          </a>
+          <a href="{{ route('staff.paymentlogs.index') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Payments
+          </a>
+          <a href="{{ route('staff.discounts.index') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12l9 9 10-10V2z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+            Discounts
+          </a>
+          <a href="{{ route('staff.userrecords.index') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            Users
+          </a>
+          <a href="{{ route('staff.reports.index') }}" class="quick-nav-item !no-underline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
+            Reports
+          </a>
+        </div>
+      </div>
+
+      <div x-show="!loading && !showQuick && !hasResults" class="notif-empty">
         <p class="notif-empty-title">No matches found</p>
         <p class="notif-empty-copy">Try a guest name, booking # or room number</p>
       </div>
 
-      <div x-show="!loading && hasResults" class="max-h-96 overflow-y-auto">
+      <div x-show="!loading && !showQuick && hasResults" class="max-h-96 overflow-y-auto">
         {{-- Bookings --}}
         <div x-show="results.bookings.length">
           <p class="search-group-label">Bookings</p>
@@ -145,6 +194,14 @@
   {{-- Clock & dropdowns --}}
   <div class="topbar-actions">
     <div id="liveClock" class="topbar-date font-mono tabnum hidden md:block" aria-live="off"></div>
+
+    {{-- Table density toggle (persisted on <body> via layouts/admin) --}}
+    <button @click="toggleDensity()" class="btn btn-ghost btn-sm btn-icon hidden md:inline-flex"
+            :title="densityCompact ? 'Switch to comfortable density' : 'Switch to compact density'"
+            aria-label="Toggle table density">
+      <svg x-show="!densityCompact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg x-show="densityCompact" x-cloak viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18.5" x2="21" y2="18.5"/></svg>
+    </button>
 
     {{-- Notifications --}}
     <div class="user-menu-root"

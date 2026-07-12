@@ -1,4 +1,4 @@
-{{-- Sidebar — AAIS shell: dark CLSU green, gold accents, seal head, user card footer --}}
+{{-- Sidebar — AAIS shell: light airy surface, emerald accents, seal head, user card footer --}}
 @php
   $pendingBookingsCount = \App\Models\Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count();
   $pendingDiscountsCount = \App\Models\Discount::where('status', 'pending')->count();

@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
         setTimeout(() => btnCheck.click(), 120);
       } else if (roomTypeSelect.value) {
-        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-stone-500 py-3 flex items-center gap-1.5"><span class="material-icons text-[15px] text-gold">event</span>Choose your check-in and check-out dates above to see open rooms.</div>';
+        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-ink/55 py-3 flex items-center gap-1.5"><span class="material-icons text-[15px] text-gold">event</span>Choose your check-in and check-out dates above to see open rooms.</div>';
       }
       generateBookingSummary();
     });
@@ -236,12 +236,12 @@ document.addEventListener('DOMContentLoaded', function () {
       
       // Beautiful animated SVG spinner
       roomTilesWrap.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-6 text-stone-400">
-            <svg class="animate-spin h-7 w-7 text-emerald-deep mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div class="flex flex-col items-center justify-center py-6 text-ink/50">
+            <svg class="animate-spin h-7 w-7 text-gold mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">Retrieving open rooms...</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-ink/55">Retrieving open rooms...</span>
         </div>
       `;
 
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = await resp.json();
         renderRoomTilesForBlock(index, data.rooms || [], block);
       } catch (err) {
-        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-ember-600 py-4">Error checking availability</div>';
+        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-ember-500 py-4">Error checking availability</div>';
         console.error(err);
       }
     });
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const priorSelection = hiddenInput.value; // the guest's current pick, if any
     tilesWrap.innerHTML = '';
     if (!rooms.length) {
-      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-stone-500 py-4">No rooms available</div>';
+      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-ink/55 py-4">No rooms available</div>';
       // Nothing open at all — drop any existing pick for this block.
       if (priorSelection) {
         hiddenInput.value = '';
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const b = document.getElementById(id);
       if (!b) return;
       b.classList.add('opacity-80', 'pointer-events-none');
-      b.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="ml-2">Placing booking…</span>';
+      b.innerHTML = '<svg class="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="ml-2">Placing booking…</span>';
     });
   });
 
@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (badgeText) {
             badge.textContent = badgeText;
             badge.className = 'type-card-avail absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm ' +
-              (isFull ? 'bg-ember-600 text-white' : 'bg-gold text-ink');
+              (isFull ? 'bg-ember-600 text-white' : 'bg-gold text-night');
           } else {
             badge.textContent = '';
             badge.className = 'type-card-avail hidden';
@@ -667,8 +667,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!checkInVal || !checkOutVal) {
       container.innerHTML = `
-        <div class="text-center py-10 text-stone-400">
-            <span class="material-icons text-5xl mb-3 block text-stone-200">event</span>
+        <div class="text-center py-10 text-ink/45">
+            <span class="material-icons text-5xl mb-3 block text-white/10">event</span>
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
@@ -685,8 +685,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const blocks = document.querySelectorAll('.reservation-block');
     if (blocks.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-10 text-stone-400">
-            <span class="material-icons text-5xl mb-3 block text-stone-200">hotel</span>
+        <div class="text-center py-10 text-ink/45">
+            <span class="material-icons text-5xl mb-3 block text-white/10">hotel</span>
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const typeSelect = block.querySelector('.room-type-select');
       const typeName   = typeSelect?.selectedOptions[0]?.text?.split('(')[0]?.trim() || 'Unknown Room';
       const price      = parseFloat(block.querySelector('.res-price-hidden')?.value) || 0;
-      const roomNum    = block.querySelector('.res-room-number-hidden')?.value || '—';
+      const roomNum    = block.querySelector('.res-room-number-hidden')?.value || '--';
       const numGuests  = parseInt(block.querySelector('.res-num-guests')?.value)  || 0;
       const blockTotal = price * nights;
       totalPrice += blockTotal;
@@ -717,24 +717,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
       const mealLine = mealChips.length
-        ? `<p class="text-[11px] font-semibold text-emerald mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
+        ? `<p class="text-[11px] font-semibold text-gold/90 mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
         : '';
 
       roomRows += `
-        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-emerald-deep/10 last:border-0">
+        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-white/10 last:border-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-stone-800 truncate">${typeName}</p>
-            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
-            <p class="text-[11px] font-semibold text-stone-500">${formatPrice(price)} &times; ${nights} night(s)</p>
+            <p class="text-sm font-bold text-ink truncate">${typeName}</p>
+            <p class="text-[11px] font-semibold text-ink/50 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
+            <p class="text-[11px] font-semibold text-ink/50">${formatPrice(price)} &times; ${nights} night(s)</p>
             ${mealLine}
           </div>
-          <span class="text-sm font-extrabold text-emerald-deep tabnum">${formatPrice(blockTotal)}</span>
+          <span class="text-sm font-extrabold text-gold tabnum">${formatPrice(blockTotal)}</span>
         </div>`;
     });
 
     const discountNote = document.getElementById('request_discount')?.checked
       ? `
-      <div class="mt-4 text-xs font-bold text-ink/75 bg-gold-soft/30 rounded-xl px-4 py-3 border border-gold/40 leading-relaxed flex items-start gap-1.5">
+      <div class="mt-4 text-xs font-bold text-ink/80 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
           <span class="material-icons text-[16px] text-gold">info</span>
           <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
       </div>`
@@ -743,22 +743,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const guestsTotal = parseInt(expectedGuestsInput?.value) || 1;
 
     container.innerHTML = `
-      <div class="grid grid-cols-3 items-center bg-cream ring-1 ring-emerald-deep/10 rounded-2xl px-2 py-3 text-center">
+      <div class="grid grid-cols-3 items-center bg-white/5 ring-1 ring-white/10 rounded-2xl px-2 py-3 text-center">
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Check-in</span>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Check-in</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
         </div>
-        <div class="border-x border-emerald-deep/10">
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
-          <span class="block text-[13px] font-extrabold text-emerald-deep mt-0.5">${nights}</span>
+        <div class="border-x border-white/10">
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Nights</span>
+          <span class="block text-[13px] font-extrabold text-gold mt-0.5">${nights}</span>
         </div>
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Check-out</span>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Check-out</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
         </div>
       </div>
-      <div class="mt-1.5 text-center text-[11px] font-semibold text-stone-400">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
-      <div class="space-y-1 bg-cream p-4 rounded-2xl ring-1 ring-emerald-deep/5 mt-3">
+      <div class="mt-1.5 text-center text-[11px] font-semibold text-ink/45">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
+      <div class="space-y-1 bg-white/5 p-4 rounded-2xl ring-1 ring-white/10 mt-3">
         ${roomRows}
       </div>
       <div class="mt-5 bg-emerald-deep p-5 rounded-2xl flex justify-between items-center">
