@@ -21,13 +21,11 @@ class RoomController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today();
+        // Business dates are Manila; the app timezone is UTC, so a bare
+        // today() is yesterday between midnight and 8 AM Manila.
+        $today = Carbon::today('Asia/Manila');
 
-        $rooms = Room::withCount(['bookings as occupied_bookings_count' => function ($query) use ($today) {
-            $query->where('status', 'checked_in')
-                  ->whereDate('check_in', '<=', $today)
-                  ->whereDate('check_out', '>=', $today);
-        }])->get();
+        $rooms = Room::all();
 
         $stayContext = $this->buildStayContext($today);
 
@@ -99,7 +97,7 @@ class RoomController extends Controller
      */
     public function statusFeed()
     {
-        $today = Carbon::today();
+        $today = Carbon::today('Asia/Manila');
         $stayContext = $this->buildStayContext($today);
 
         $rooms = Room::all(['id', 'room_number', 'status'])->map(function ($room) use ($stayContext) {
@@ -128,7 +126,7 @@ class RoomController extends Controller
 
 public function occupancyForRoom(Room $room)
 {
-    $today = now()->toDateString();
+    $today = now('Asia/Manila')->toDateString();
 
     $bookings = \App\Models\Booking::query()
         ->select(

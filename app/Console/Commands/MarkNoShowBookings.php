@@ -5,6 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Booking;
 use App\Models\NoShowLog;
+use App\Events\BookingChanged;
+use App\Events\RoomStatusChanged;
+use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +21,7 @@ class MarkNoShowBookings extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Mark paid bookings as no_show if they did not check in by 11 PM PH time.';
+    protected $description = 'Mark paid bookings as no_show when their check-in day has passed (runs just after midnight Manila).';
 
     /**
      * Execute the console command.
@@ -30,7 +33,6 @@ class MarkNoShowBookings extends Command
 
         $bookings = Booking::where('status', 'paid')
             ->whereDate('check_in', '<', $now->toDateString())
-            ->where('status', '!=', 'active')
             ->get();
 
         if ($bookings->isEmpty()) {
@@ -54,6 +56,10 @@ class MarkNoShowBookings extends Command
                 ]);
             }
         });
+
+        // A no-show stops blocking its rooms, so panels and the map both care.
+        Realtime::emit(new BookingChanged());
+        Realtime::emit(new RoomStatusChanged());
 
         $this->info(" Marked {$bookings->count()} bookings as no_show.");
     }

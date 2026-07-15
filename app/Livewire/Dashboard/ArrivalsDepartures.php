@@ -136,7 +136,7 @@ class ArrivalsDepartures extends Component
         $upcomingBookings = Booking::with('reservations.room')
             ->where(function ($q) use ($today) {
                 $q->whereBetween('check_in', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])
-                  ->whereIn('status', ['paid', 'confirmed']);
+                  ->where('status', 'paid');
             })
             ->orWhere(function ($q) use ($today) {
                 $q->whereBetween('check_out', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])

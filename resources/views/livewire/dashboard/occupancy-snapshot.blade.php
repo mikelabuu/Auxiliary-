@@ -6,12 +6,14 @@
       </div>
       <p class="font-semibold text-stone-900 text-sm">Occupancy</p>
     </div>
-    <button wire:click="recalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
+    <button wire:click="forceRecalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
       <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
   </div>
 
-  <div wire:poll.{{ $pollInterval }}s.keep-alive class="flex flex-col items-center py-2">
+  {{-- The poll must name a method: a bare wire:poll only re-renders the
+       already-mounted properties, so the card never actually updated. --}}
+  <div wire:poll.{{ $pollInterval }}s.keep-alive="recalculate" class="flex flex-col items-center py-2">
     <div class="relative w-[140px] h-[140px]">
       @php
           $circumference = 364.42;
@@ -47,6 +49,12 @@
         <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-500"></span>Occupied</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $occupied }}</span>
       </div>
+      @if($outOfService > 0)
+      <div class="flex items-center justify-between text-xs">
+        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-100 border border-ember-400"></span>Out of service</span>
+        <span class="font-bold font-data text-stone-700 tabnum">{{ $outOfService }}</span>
+      </div>
+      @endif
     </div>
   </div>
 

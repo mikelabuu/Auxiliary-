@@ -1,10 +1,9 @@
 @props(['room'])
 
 {{--
-    One tile in the dashboard Room Status Map. Extracted because the three room
-    groups (dorm/standard/deluxe) each carried an identical copy of this markup
-    and its status-colour if-chain, so adding a status meant editing it in three
-    places — which is how 'cleaning' came to be missing from the map entirely.
+    Room Status Map tile — original flat-button design (restored).
+    Tooltip includes room type for richer hover info without any
+    space cost; the button itself stays compact (w-16 h-12).
 --}}
 
 @php
@@ -16,12 +15,21 @@
         'maintenance' => 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
     ];
 
-    $status = $room['display_status'];
-    $btnClass = $variants[$status] ?? $variants['available'];
+    $typeLabels = [
+        'dormitory1' => 'Dorm',
+        'dormitory2' => 'Dorm',
+        'double'     => '2-bed',
+        'triple'     => '3-bed',
+        'quadruple'  => '4-bed',
+        'deluxe'     => 'Deluxe',
+    ];
 
-    // "101 · Occupied · Ana Cruz · until Apr 18" — the map showed status only,
-    // with no way to tell who a room was occupied by.
-    $title = $room['room_number'] . ' · ' . ucfirst($status);
+    $status    = $room['display_status'];
+    $btnClass  = $variants[$status] ?? $variants['available'];
+    $typeLabel = $typeLabels[$room['room_type']] ?? 'Room';
+
+    // Tooltip: number · type · status [ · occupant]
+    $title = $room['room_number'] . ' · ' . $typeLabel . ' · ' . ucfirst($status);
     if (!empty($room['occupant'])) {
         $title .= ' · ' . $room['occupant'];
     }

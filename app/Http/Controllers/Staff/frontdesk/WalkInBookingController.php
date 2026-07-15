@@ -55,7 +55,7 @@ class WalkInBookingController extends Controller
 
         // Validate request
         $request->validate([
-            'guest_name'      => 'required|string|max:255',
+            'guest_name'      => ['required', 'string', 'max:255', new \App\Rules\PersonName],
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
@@ -143,10 +143,13 @@ class WalkInBookingController extends Controller
             ->pluck('room_number')
             ->toArray();
 
-        // Check if any of these rooms are already booked for the selected range
+        // Check if any of these rooms are already booked for the selected range.
+        // Uses the shared BLOCKING_STATUSES constant: the old hand-rolled list
+        // omitted pending_discount, so a discount-pending booking's room could
+        // be double-booked by a walk-in.
         $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
             ->whereHas('booking', function ($q) use ($request) {
-                $q->whereIn('status', ['pending_payment', 'paid', 'confirmed', 'active'])
+                $q->whereIn('status', Booking::BLOCKING_STATUSES)
                 ->where('check_in', '<', $request->check_out)
                 ->where('check_out', '>', $request->check_in);
             })
@@ -270,9 +273,9 @@ class WalkInBookingController extends Controller
         // Get all rooms
         $rooms = Room::orderBy('room_number')->get();
 
-        // Get reservations that overlap
+        // Get reservations that overlap (same blocking rule as the guard above)
         $reservations = Reservation::whereHas('booking', function($q) use ($checkIn, $checkOut) {
-            $q->whereIn('status', ['pending_payment','paid','confirmed','active'])
+            $q->whereIn('status', Booking::BLOCKING_STATUSES)
             ->where('check_in', '<', $checkOut)
             ->where('check_out', '>', $checkIn);
         })->get();

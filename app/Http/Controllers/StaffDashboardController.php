@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Room;
-use App\Models\User;
 use App\Models\Booking;
-use App\Models\Discount;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -61,57 +59,10 @@ class StaffDashboardController extends Controller
             }
         }
 
-        // Sparkline for the revenue stat card (Jan → current month, 70x24 viewBox)
-        $spark = array_slice($revenueValues, 0, max(now()->month, 2));
-        $sparkMax = max(max($spark), 1);
-        $sparkCount = count($spark);
-        $revenueSparkline = collect($spark)->map(function ($v, $i) use ($sparkMax, $sparkCount) {
-            $x = $sparkCount > 1 ? round($i * (70 / ($sparkCount - 1)), 1) : 0;
-            $y = round(21 - ($v / $sparkMax) * 18, 1);
-            return "{$x},{$y}";
-        })->implode(' ');
-
+        // Stat cards + secondary strip moved to the live Livewire component
+        // (App\Livewire\Dashboard\StatCards); only values the rest of this
+        // page still renders are computed here.
         $totalRooms = Room::count();
-        $totalUsers = User::count();
-        $totalBookings = Booking::count();
-        
-        $totalRevenue = Payment::where('status', 'success')->sum('amount');
-
-        // New Users This Week
-        $newUsersThisWeek = User::where('created_at', '>=', Carbon::now()->subDays(7))->count();
-
-        // Percent Changes (Bookings & Revenue)
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-        
-        $lastMonth = Carbon::now()->subMonth()->month;
-        $lastMonthYear = Carbon::now()->subMonth()->year;
-
-        $bookingsThisMonth = Booking::whereYear('created_at', $currentYear)->whereMonth('created_at', $currentMonth)->count();
-        $bookingsLastMonth = Booking::whereYear('created_at', $lastMonthYear)->whereMonth('created_at', $lastMonth)->count();
-        
-        $bookingPercentChange = 0;
-        if ($bookingsLastMonth > 0) {
-            $bookingPercentChange = (($bookingsThisMonth - $bookingsLastMonth) / $bookingsLastMonth) * 100;
-        } elseif ($bookingsThisMonth > 0) {
-            $bookingPercentChange = 100; // went from 0 to something
-        }
-
-        $revenueThisMonth = Payment::where('status', 'success')->whereYear('created_at', $currentYear)->whereMonth('created_at', $currentMonth)->sum('amount');
-        $revenueLastMonth = Payment::where('status', 'success')->whereYear('created_at', $lastMonthYear)->whereMonth('created_at', $lastMonth)->sum('amount');
-
-        $revenuePercentChange = 0;
-        if ($revenueLastMonth > 0) {
-            $revenuePercentChange = (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100;
-        } elseif ($revenueThisMonth > 0) {
-            $revenuePercentChange = 100;
-        }
-
-        // Secondary Metrics Strip
-        $checkinsThisWeek = DB::table('checkins')->where('checked_in_at', '>=', Carbon::now()->subDays(7))->count();
-        $checkoutsThisWeek = DB::table('checkouts')->where('checked_out_at', '>=', Carbon::now()->subDays(7))->count();
-        $roomsUnderMaintenance = Room::where('status', 'maintenance')->count();
-        $pendingDiscounts = Discount::where('status', 'pending')->count();
 
         // Dates with at least one active/upcoming stay, for the calendar's
         // "has bookings" dots (window: 2 months back to 10 months ahead).
@@ -156,90 +107,17 @@ class StaffDashboardController extends Controller
         $cleaningCount = $rooms->where('display_status', 'cleaning')->count();
         $maintenanceCount = $rooms->where('display_status', 'maintenance')->count();
 
-        // Occupancy Breakdown percentages
-        $dormTotal = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])->count();
-        $dormOccupied = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])->where('status', 'occupied')->count();
-        $dormPercent = $dormTotal > 0 ? round(($dormOccupied / $dormTotal) * 100) : 0;
-
-        $standardTotal = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])->count();
-        $standardOccupied = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])->where('status', 'occupied')->count();
-        $standardPercent = $standardTotal > 0 ? round(($standardOccupied / $standardTotal) * 100) : 0;
-
-        $deluxeTotal = Room::where('room_type', 'deluxe')->count();
-        $deluxeOccupied = Room::where('room_type', 'deluxe')->where('status', 'occupied')->count();
-        $deluxePercent = $deluxeTotal > 0 ? round(($deluxeOccupied / $deluxeTotal) * 100) : 0;
-
-        // Occupancy circle calculations
-        $occupiedRooms = Room::where('status', 'occupied')->count();
-        $occupancyPercent = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100) : 0;
-
-        // Recent activity query from audit logs
-        $recentActivities = DB::table('audit_logs')
-            ->leftJoin('staff', 'audit_logs.staff_id', '=', 'staff.id')
-            ->select('audit_logs.*', 'staff.name as staff_name')
-            ->orderBy('audit_logs.created_at', 'desc')
-            ->limit(4)
-            ->get()
-            ->map(function ($log) {
-                $icon = 'check_circle';
-                $colorClass = 'bg-clsu-50 text-clsu-700';
-                
-                $action = strtolower($log->action);
-                $target = strtolower($log->target_type);
-                
-                if (str_contains($action, 'booking') || $target === 'booking' || $target === 'reservation') {
-                    $icon = 'receipt';
-                    $colorClass = 'bg-clsu-50 text-clsu-700';
-                } elseif (str_contains($action, 'user') || str_contains($action, 'staff') || $target === 'user' || $target === 'staff') {
-                    $icon = 'person';
-                    $colorClass = 'bg-palay-50 text-palay-700';
-                } elseif (str_contains($action, 'room') || $target === 'room') {
-                    $icon = 'bed';
-                    $colorClass = 'bg-stone-100 text-stone-500';
-                }
-                
-                return [
-                    'description' => $log->description ?: "Action '{$log->action}' executed",
-                    'created_at' => Carbon::parse($log->created_at)->diffForHumans(),
-                    'icon' => $icon,
-                    'color_class' => $colorClass,
-                ];
-            });
-
-        // Fallback for demo/empty state
-        if ($recentActivities->isEmpty()) {
-            $recentActivities = collect([
-                [
-                    'description' => 'System initialized · 22 rooms added',
-                    'created_at' => '1 week ago',
-                    'icon' => 'settings',
-                    'color_class' => 'bg-stone-100 text-stone-500',
-                ]
-            ]);
-        }
+        // Recent activity moved to the live App\Livewire\Dashboard\RecentActivity component.
 
         return view('staff.dashboard.index', compact(
-            'totalRooms', 
-            'totalUsers', 
-            'totalBookings',
+            'totalRooms',
             'labels',
             'values',
             'revenueValues',
-            'revenueSparkline',
-            'totalRevenue',
             'peakMonthName',
             'peakMonthCount',
-            'newUsersThisWeek',
-            'bookingPercentChange',
-            'revenuePercentChange',
-            
-            // New Dashboard variables
-            'checkinsThisWeek',
-            'checkoutsThisWeek',
-            'roomsUnderMaintenance',
-            'pendingDiscounts',
             'bookedDates',
-            
+
             // Room Status Map variables
             'dormBeds',
             'standardRooms',
@@ -248,102 +126,18 @@ class StaffDashboardController extends Controller
             'occupiedCount',
             'reservedCount',
             'cleaningCount',
-            'maintenanceCount',
-            
-            // Occupancy variables
-            'occupancyPercent',
-            'occupiedRooms',
-            'dormTotal',
-            'dormOccupied',
-            'dormPercent',
-            'standardTotal',
-            'standardOccupied',
-            'standardPercent',
-            'deluxeTotal',
-            'deluxeOccupied',
-            'deluxePercent',
-            
-            // Recent activity
-            'recentActivities'
+            'maintenanceCount'
         ));
     }
 
     /**
-     * Per-room display status for the dashboard Room Status Map. Extracted so
-     * the initial page render and the real-time roomMapFeed() endpoint stay in
-     * lock-step. 'reserved' = a paid/confirmed booking with a future check-in.
+     * Per-room display status for the dashboard Room Status Map. Logic lives
+     * in App\Support\RoomBoard so the page render, the roomMapFeed() endpoint,
+     * and the live stat cards all share one definition.
      */
     private function roomMapState()
     {
-        $reservedRoomIds = DB::table('booking_room')
-            ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
-            ->whereIn('bookings.status', ['paid', 'confirmed'])
-            ->where('bookings.check_in', '>', Carbon::now())
-            ->pluck('booking_room.room_id')
-            ->toArray();
-
-        // Who is actually in each room. The map used to show status with no way
-        // to tell WHO a room was occupied by; this also exposes any room flagged
-        // occupied with no booking behind it.
-        $today = Carbon::today();
-
-        $stays = DB::table('booking_room')
-            ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
-            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->whereDate('bookings.check_out', '>=', $today)
-            ->orderBy('bookings.check_in')
-            ->get(['booking_room.room_id', 'bookings.guest_name', 'bookings.check_in', 'bookings.check_out']);
-
-        $currentByRoom = [];
-        $nextByRoom = [];
-        foreach ($stays as $stay) {
-            $checkIn = Carbon::parse($stay->check_in);
-            $checkOut = Carbon::parse($stay->check_out);
-
-            if ($checkIn->lte($today) && $checkOut->gte($today)) {
-                $currentByRoom[$stay->room_id] ??= $stay->guest_name . ' · until ' . $checkOut->format('M d');
-            } elseif ($checkIn->gt($today)) {
-                $nextByRoom[$stay->room_id] ??= $stay->guest_name . ' · arrives ' . $checkIn->format('M d');
-            }
-        }
-
-        return Room::all()->map(function ($room) use ($reservedRoomIds, $currentByRoom, $nextByRoom) {
-            if ($room->status === 'maintenance') {
-                $displayStatus = 'maintenance';
-            } elseif ($room->status === 'cleaning') {
-                // Without this branch a room being cleaned fell through to the
-                // else and showed as Available — green and bookable-looking.
-                $displayStatus = 'cleaning';
-            } elseif ($room->status === 'occupied') {
-                $displayStatus = 'occupied';
-            } elseif (in_array($room->id, $reservedRoomIds)) {
-                $displayStatus = 'reserved';
-            } else {
-                $displayStatus = 'available';
-            }
-
-            $current = $currentByRoom[$room->id] ?? null;
-            $next = $nextByRoom[$room->id] ?? null;
-
-            if ($displayStatus === 'occupied') {
-                // No booking behind an occupied room means it was flagged by
-                // hand — say so rather than imply a guest exists.
-                $occupant = $current ?: 'No guest on record';
-            } elseif ($displayStatus === 'reserved') {
-                $occupant = $next;
-            } else {
-                $occupant = $current ?: $next;
-            }
-
-            return [
-                'id' => $room->id,
-                'room_number' => $room->room_number,
-                'room_type' => $room->room_type,
-                'status' => $room->status,
-                'display_status' => $displayStatus,
-                'occupant' => $occupant,
-            ];
-        });
+        return \App\Support\RoomBoard::state();
     }
 
     /**

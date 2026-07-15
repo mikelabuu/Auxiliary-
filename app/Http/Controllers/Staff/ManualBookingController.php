@@ -55,7 +55,7 @@ class ManualBookingController extends Controller
 
         // Validate request
         $request->validate([
-            'guest_name'      => 'required|string|max:255',
+            'guest_name'      => ['required', 'string', 'max:255', new \App\Rules\PersonName],
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',

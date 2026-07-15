@@ -6,6 +6,9 @@ use Illuminate\Console\Command;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\ExpiryLog;
+use App\Events\BookingChanged;
+use App\Events\RoomStatusChanged;
+use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -56,6 +59,11 @@ class ExpireBookingsCommand extends Command
                 ]);
             }
         });
+
+        // Expiry releases the booking's hold on its rooms (BLOCKING_STATUSES),
+        // so both the booking panels and the room map need a push.
+        Realtime::emit(new BookingChanged());
+        Realtime::emit(new RoomStatusChanged());
 
         $this->info(" Marked {$expiredBookings->count()} bookings as expired and logged them.");
     }

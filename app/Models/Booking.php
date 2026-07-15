@@ -16,13 +16,18 @@ class Booking extends Model
      * Single source of truth — used by both the availability endpoints and
      * the double-booking guard inside BookingController::store().
      */
+    /**
+     * Every status a booking can actually hold is written somewhere in the
+     * app: pending_payment, pending_discount, paid, active, completed,
+     * cancelled, expired, no_show. Keep this list to statuses that exist —
+     * phantom entries ('confirmed', 'checked_in') hid a dead occupancy count
+     * for months because queries against them silently matched nothing.
+     */
     public const BLOCKING_STATUSES = [
         'pending_payment',
         'pending_discount',
         'paid',
-        'confirmed',
         'active',
-        'checked_in',
     ];
 
     protected $fillable = [
@@ -149,8 +154,8 @@ class Booking extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['paid', 'active', 'checked_in'])
-                    ->where('check_out', '>=', now()->startOfDay());
+        return $query->whereIn('status', ['paid', 'active'])
+                    ->where('check_out', '>=', now('Asia/Manila')->startOfDay());
     }
     
     public function balance()

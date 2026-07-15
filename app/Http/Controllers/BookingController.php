@@ -46,10 +46,10 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'first_name'      => 'required|string|max:255',
-            'middle_name'     => 'required|string|max:10',
-            'last_name'       => 'required|string|max:255',
-            'suffix'          => 'nullable|string|max:255',
+            'first_name'      => ['required', 'string', 'max:255', new \App\Rules\PersonName],
+            'middle_name'     => ['required', 'string', 'max:10', new \App\Rules\PersonName],
+            'last_name'       => ['required', 'string', 'max:255', new \App\Rules\PersonName],
+            'suffix'          => ['nullable', 'string', 'max:255', new \App\Rules\PersonName],
             'guest_phone'     => 'required|string|max:20',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',

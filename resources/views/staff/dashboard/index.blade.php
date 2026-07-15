@@ -40,58 +40,9 @@ $.ajaxSetup({
         <x-admin.ui.quick-action icon="credit-card" title="Payments" subtitle="Review the ledger" :href="route('staff.paymentlogs.index')" />
     </div>
 
-    <!-- Stat cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.ui.stat-card icon="bed" badge="ALL ACTIVE" label="Total Rooms" :delay="40">
-            {{ $totalRooms }}
-            <x-slot:footnote><p class="text-xs text-stone-400">{{ $roomsUnderMaintenance }} under maintenance</p></x-slot:footnote>
-        </x-admin.ui.stat-card>
-
-        <x-admin.ui.stat-card icon="clipboard" badge="ALL-TIME" label="Total Bookings" :delay="80">
-            {{ $totalBookings }}
-            <x-slot:footnote>
-                <p class="text-xs font-semibold {{ $bookingPercentChange >= 0 ? 'text-clsu-600' : 'text-red-500' }} flex items-center gap-1">
-                    <x-admin.ui.icon :name="$bookingPercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
-                    {{ $bookingPercentChange >= 0 ? '+' : '' }}{{ number_format($bookingPercentChange, 1) }}% vs last month
-                </p>
-            </x-slot:footnote>
-        </x-admin.ui.stat-card>
-
-        <x-admin.ui.stat-card icon="users" badge="REGISTERED" label="Users" :delay="120">
-            {{ $totalUsers }}
-            <x-slot:footnote>
-                <p class="text-xs font-semibold text-clsu-600 flex items-center gap-1">
-                    <x-admin.ui.icon name="trend-up" class="w-3 h-3" stroke-width="2.5" />
-                    +{{ $newUsersThisWeek }} new this week
-                </p>
-            </x-slot:footnote>
-        </x-admin.ui.stat-card>
-
-        <x-admin.ui.stat-card icon="receipt" badge="GROSS" label="Revenue" :delay="160" dark>
-            ₱{{ number_format($totalRevenue, 2) }}
-            <x-slot:footnote>
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-semibold text-palay-300 flex items-center gap-1">
-                        <x-admin.ui.icon :name="$revenuePercentChange >= 0 ? 'trend-up' : 'trend-down'" class="w-3 h-3" stroke-width="2.5" />
-                        {{ $revenuePercentChange >= 0 ? '+' : '' }}{{ number_format($revenuePercentChange, 1) }}% vs last month
-                    </p>
-                    <svg width="70" height="24" viewBox="0 0 70 24" class="text-palay-300/80" aria-label="Monthly revenue trend">
-                        <polyline points="{{ $revenueSparkline }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </x-slot:footnote>
-        </x-admin.ui.stat-card>
-    </div>
-
-    <!-- Secondary metrics strip -->
-    <div class="animate-in grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" style="animation-delay:180ms">
-        <x-admin.ui.mini-stat icon="check-circle" label="Rooms available now">{{ $availableCount }}</x-admin.ui.mini-stat>
-        <x-admin.ui.mini-stat icon="arrival" label="Check-ins this week">{{ $checkinsThisWeek }}</x-admin.ui.mini-stat>
-        <x-admin.ui.mini-stat icon="departure" label="Check-outs this week">{{ $checkoutsThisWeek }}</x-admin.ui.mini-stat>
-        <a href="{{ route('staff.discounts.index') }}" class="!no-underline">
-            <x-admin.ui.mini-stat icon="tag" color="palay" label="Pending discount requests" class="h-full hover:shadow-card-lg transition-shadow">{{ $pendingDiscounts }}</x-admin.ui.mini-stat>
-        </a>
-    </div>
+    {{-- Stat cards + secondary strip: live Livewire component (polls + follows
+         the same broadcast pushes as the room map) --}}
+    <livewire:dashboard.stat-cards />
 
     <!-- Bookings Insights modal (opened from the page header) -->
     <x-admin.ui.modal id="bookingInsightsModal" icon="chart-bar" title="Bookings Insights" max-width="xl" scroll-body>
@@ -171,42 +122,61 @@ $.ajaxSetup({
 
     <!-- Rooms & occupancy row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <!-- Room Status Map (signature feature) -->
-        <x-admin.ui.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20 lg:col-span-2" :delay="260">
-        <x-slot:actions>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--available"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--occupied"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--reserved"></span>Reserved · <span data-map-count="reserved">{{ $reservedCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--cleaning"></span>Cleaning · <span data-map-count="cleaning">{{ $cleaningCount }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--maintenance"></span>Maintenance · <span data-map-count="maintenance">{{ $maintenanceCount }}</span></span>
-        </x-slot:actions>
 
-        <div class="space-y-5">
-            <div>
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($dormBeds as $room)
-                        <x-admin.rooms.map-tile :room="$room" />
-                    @endforeach
+        <!-- Room Status Map (original design + proportional legend bars) -->
+        <x-admin.ui.section-card id="room-map" icon="grid" title="Room Status Map" :subtitle="'All ' . $totalRooms . ' rooms at a glance'" class="scroll-mt-20 lg:col-span-2" :delay="260">
+            <x-slot:actions>
+                @php
+                    $legendItems = [
+                        ['key' => 'available',   'label' => 'Available',   'count' => $availableCount,   'mod' => 'available'],
+                        ['key' => 'occupied',    'label' => 'Occupied',    'count' => $occupiedCount,    'mod' => 'occupied'],
+                        ['key' => 'reserved',    'label' => 'Reserved',    'count' => $reservedCount,    'mod' => 'reserved'],
+                        ['key' => 'cleaning',    'label' => 'Cleaning',    'count' => $cleaningCount,    'mod' => 'cleaning'],
+                        ['key' => 'maintenance', 'label' => 'Maint.',      'count' => $maintenanceCount, 'mod' => 'maintenance'],
+                    ];
+                @endphp
+                @foreach($legendItems as $li)
+                    @php $pct = $totalRooms > 0 ? round(($li['count'] / $totalRooms) * 100) : 0; @endphp
+                    <span class="map-stat map-stat--{{ $li['mod'] }}">
+                        <span class="map-stat__top">
+                            <span class="map-key map-key--{{ $li['mod'] }}"></span>
+                            {{ $li['label'] }} · <span class="map-stat__n" data-map-count="{{ $li['key'] }}">{{ $li['count'] }}</span>
+                        </span>
+                        <span class="map-stat__bar" aria-hidden="true">
+                            <span class="map-stat__fill map-stat__fill--{{ $li['mod'] }}"
+                                  data-map-fill="{{ $li['key'] }}"
+                                  style="width:{{ $pct }}%"></span>
+                        </span>
+                    </span>
+                @endforeach
+            </x-slot:actions>
+
+            <div class="space-y-5">
+                <div>
+                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($dormBeds as $room)
+                            <x-admin.rooms.map-tile :room="$room" />
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($standardRooms as $room)
+                            <x-admin.rooms.map-tile :room="$room" />
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($deluxeRooms as $room)
+                            <x-admin.rooms.map-tile :room="$room" />
+                        @endforeach
+                    </div>
                 </div>
             </div>
-            <div>
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($standardRooms as $room)
-                        <x-admin.rooms.map-tile :room="$room" />
-                    @endforeach
-                </div>
-            </div>
-            <div>
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($deluxeRooms as $room)
-                        <x-admin.rooms.map-tile :room="$room" />
-                    @endforeach
-                </div>
-            </div>
-        </div>
         </x-admin.ui.section-card>
 
         <!-- Occupancy Snapshot component -->
@@ -214,6 +184,8 @@ $.ajaxSetup({
     </div>
 
     <!-- Bottom row -->
+
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <!-- Arrivals & Departures -->
         <div class="lg:col-span-2">
@@ -253,21 +225,9 @@ $.ajaxSetup({
                 </div>
             </div>
 
-            <!-- Recent Activity -->
+            <!-- Recent Activity (live Livewire component) -->
             <x-admin.ui.section-card icon="clock" title="Recent Activity" :delay="420">
-                <div class="space-y-5">
-                    @foreach($recentActivities as $activity)
-                        <div class="timeline-item flex gap-3.5">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ring-4 ring-white z-10 {{ $activity['color_class'] }}">
-                                <span class="material-icons text-sm">{{ $activity['icon'] }}</span>
-                            </div>
-                            <div class="pb-1">
-                                <p class="text-sm text-stone-700">{!! $activity['description'] !!}</p>
-                                <p class="text-xs text-stone-400 mt-0.5">{{ $activity['created_at'] }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                <livewire:dashboard.recent-activity />
             </x-admin.ui.section-card>
         </div>
     </div>
@@ -351,31 +311,57 @@ $.ajaxSetup({
 @push('scripts')
 <script>
 // ── Real-time Room Status Map ────────────────────────────────────────────────
-// The map is server-rendered on load; here we keep it live. Room status changes
-// AND booking changes both matter ('reserved' = a future paid/confirmed booking),
-// so we listen to both broadcast channels, patch only the buttons that changed,
-// and refresh the legend counts. A slow poll is the fallback if the socket drops.
+// Targets .room-map-btn (original flat buttons).
+// Also keeps proportional legend bars (data-map-fill) in sync.
 document.addEventListener('DOMContentLoaded', function () {
-    if (!document.querySelector('.room-map-btn')) return; // map not on this page
+    if (!document.querySelector('.room-map-btn')) return;
 
-    const MAP_BASE = 'room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40';
-    // Keep in step with resources/views/components/admin/rooms/map-tile.blade.php
-    const MAP_VARIANT = {
+    const CLASSES = {
         available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
         occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700',
         reserved:    'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200',
         cleaning:    'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100 hover:border-sky-300',
         maintenance: 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
     };
+    const STATUS_LABELS = {
+        available: 'Available', occupied: 'Occupied', reserved: 'Reserved',
+        cleaning: 'Cleaning', maintenance: 'Maintenance',
+    };
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
     function patchButton(btn, status, occupant) {
-        if (btn.dataset.displayStatus !== status) {
-            btn.dataset.displayStatus = status;
-            btn.className = MAP_BASE + ' ' + (MAP_VARIANT[status] || MAP_VARIANT.available);
+        const prev = btn.dataset.displayStatus;
+        if (prev === status && (btn.dataset.occupant || '') === (occupant || '')) return;
+
+        // Swap Tailwind classes
+        if (prev && CLASSES[prev]) {
+            CLASSES[prev].split(' ').forEach(c => btn.classList.remove(c));
         }
+        if (CLASSES[status]) {
+            CLASSES[status].split(' ').forEach(c => btn.classList.add(c));
+        }
+        btn.dataset.displayStatus = status;
+
+        // Occupant data attr
         if (occupant) { btn.dataset.occupant = occupant; } else { delete btn.dataset.occupant; }
-        btn.title = btn.textContent.trim() + ' · ' + cap(status) + (occupant ? ' · ' + occupant : '');
+
+        // Tooltip: number · type (from existing title if present) · status · occupant
+        const existing = btn.title || '';
+        const numMatch = existing.match(/^([^\s·]+)/);
+        const typeMatch = existing.match(/·\s*([^·]+?)\s*·/);
+        const num  = numMatch  ? numMatch[1]  : btn.textContent.trim();
+        const type = typeMatch ? typeMatch[1].trim() : '';
+        btn.title = num + (type ? ' · ' + type : '') + ' · ' + (STATUS_LABELS[status] || cap(status)) + (occupant ? ' · ' + occupant : '');
+    }
+
+    function updateLegendBars(counts) {
+        if (!counts) return;
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        if (!total) return;
+        Object.keys(counts).forEach(k => {
+            const fill = document.querySelector('[data-map-fill="' + k + '"]');
+            if (fill) fill.style.width = Math.round((counts[k] / total) * 100) + '%';
+        });
     }
 
     function applyFeed(data) {
@@ -386,9 +372,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         if (data.counts) {
             Object.keys(data.counts).forEach(k => {
-                const el = document.querySelector('[data-map-count="' + k + '"]');
-                if (el) el.textContent = data.counts[k];
+                document.querySelectorAll('[data-map-count="' + k + '"]').forEach(el => {
+                    el.textContent = data.counts[k];
+                });
             });
+            updateLegendBars(data.counts);
         }
     }
 
@@ -403,15 +391,23 @@ document.addEventListener('DOMContentLoaded', function () {
             .finally(() => { inFlight = false; });
     }
 
-    // Push: debounced so a burst of changes triggers one refresh.
     let mapTimer = null;
-    function scheduleFetch() { clearTimeout(mapTimer); mapTimer = setTimeout(fetchMap, 400); }
+    function scheduleFetch() {
+        clearTimeout(mapTimer);
+        mapTimer = setTimeout(function () {
+            fetchMap();
+            if (window.Livewire) {
+                Livewire.dispatch('refreshOccupancy');
+                Livewire.dispatch('refreshDashboardStats');
+                Livewire.dispatch('refreshRecentActivity');
+            }
+        }, 400);
+    }
     if (window.Echo) {
         window.Echo.channel('rooms').listen('.RoomStatusChanged', scheduleFetch);
         window.Echo.channel('bookings').listen('.BookingChanged', scheduleFetch);
     }
 
-    // Fallback poll + refresh on returning to the tab.
     setInterval(fetchMap, 20000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) fetchMap(); });
     window.addEventListener('focus', fetchMap);

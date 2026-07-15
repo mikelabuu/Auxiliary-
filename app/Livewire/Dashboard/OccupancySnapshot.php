@@ -13,6 +13,7 @@ class OccupancySnapshot extends Component
     public $total = 0;
     public $occupied = 0;
     public $available = 0;
+    public $outOfService = 0;
     public $percent = 0.0;
     
     // Breakdown values
@@ -28,19 +29,37 @@ class OccupancySnapshot extends Component
     public $deluxeOccupied = 0;
     public $deluxePercent = 0.0;
 
-    public $pollInterval = 60; // seconds
+    public $pollInterval = 30; // seconds
     public $date;
     protected $occupyingStatuses = ['active'];
+
+    protected $listeners = ['refreshOccupancy' => 'forceRecalculate'];
 
     public function mount()
     {
         $this->recalculate();
     }
 
+    /**
+     * Broadcast pushes and the manual refresh button bypass the cache — an
+     * event means something JUST changed, so serving the cached 30s snapshot
+     * would show the pre-change numbers.
+     */
+    public function forceRecalculate()
+    {
+        Cache::forget($this->cacheKey());
+        $this->recalculate();
+    }
+
+    protected function cacheKey(): string
+    {
+        return 'dashboard:occupancy:' . Carbon::today('Asia/Manila')->toDateString();
+    }
+
     public function recalculate()
     {
         $today = Carbon::today('Asia/Manila')->toDateString();
-        $cacheKey = "dashboard:occupancy:{$today}";
+        $cacheKey = $this->cacheKey();
 
         $data = Cache::remember($cacheKey, 30, function () use ($today) {
             $totalRooms = Room::count();
@@ -51,7 +70,19 @@ class OccupancySnapshot extends Component
             })->pluck('room_number')->toArray();
 
             $occupiedRoomsCount = count(array_unique($occupiedRoomNumbers));
-            $available = max(0, $totalRooms - $occupiedRoomsCount);
+
+            // "Available" used to be total − occupied, which silently counted
+            // maintenance/cleaning rooms as sellable — this card said 22 while
+            // every other panel said 16. Out-of-service rooms are their own
+            // bucket; a set-union guards against a room being both.
+            $outOfServiceNumbers = Room::whereIn('status', ['maintenance', 'cleaning'])
+                ->pluck('room_number')->map(fn ($n) => trim($n))->toArray();
+            $unavailable = array_unique(array_merge(
+                array_map('trim', $occupiedRoomNumbers),
+                $outOfServiceNumbers
+            ));
+
+            $available = max(0, $totalRooms - count($unavailable));
             $percent = $totalRooms ? round(($occupiedRoomsCount / $totalRooms) * 100, 1) : 0.0;
 
             // Dorm rooms
@@ -76,6 +107,7 @@ class OccupancySnapshot extends Component
                 'total' => $totalRooms,
                 'occupied' => $occupiedRoomsCount,
                 'available' => $available,
+                'outOfService' => count($outOfServiceNumbers),
                 'percent' => $percent,
                 
                 'dormTotal' => $dormTotal,
@@ -95,6 +127,7 @@ class OccupancySnapshot extends Component
         $this->total = $data['total'];
         $this->occupied = $data['occupied'];
         $this->available = $data['available'];
+        $this->outOfService = $data['outOfService'];
         $this->percent = $data['percent'];
 
         $this->dormTotal = $data['dormTotal'];

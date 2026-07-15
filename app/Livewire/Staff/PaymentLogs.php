@@ -47,14 +47,18 @@ class PaymentLogs extends Component
 
     public function mount()
     {
+        // Once per login session: this used to write a row on every visit and
+        // page change, and became 14% of the entire audit log — noise that
+        // buries the actions the log exists to record.
         $staff = Auth::guard('staff')->user();
-        if ($staff) {
+        if ($staff && !session()->has('audited_payment_records_view')) {
+            session(['audited_payment_records_view' => true]);
             AuditLogger::log(
                 'view_payment_records',
                 'Payments',
                 null,
                 null,
-                "Staff {$staff->name} viewed payment records (initial page view)."
+                "Staff {$staff->name} viewed payment records."
             );
         }
     }

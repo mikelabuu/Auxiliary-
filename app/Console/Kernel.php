@@ -14,7 +14,16 @@ class Kernel extends ConsoleKernel
     {
         // Run the expiry check every minute
         $schedule->command('bookings:expire')->everyMinute()->withoutOverlapping();
-        $schedule->command('bookings:mark-no-show')->dailyAt('00:05');
+
+        // Schedule times are evaluated in the app timezone (UTC) unless pinned;
+        // without ->timezone() "00:05" would fire at 08:05 Manila.
+        $schedule->command('bookings:mark-no-show')
+            ->timezone('Asia/Manila')->dailyAt('00:05');
+
+        // The command no-ops before 2 PM Manila; half-hourly runs give it
+        // same-day retries if a run is missed.
+        $schedule->command('bookings:autocheckout')
+            ->everyThirtyMinutes()->withoutOverlapping();
     }
 
     /**

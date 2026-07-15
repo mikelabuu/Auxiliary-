@@ -4,20 +4,12 @@ namespace App\Http\Controllers\Staff\frontdesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;
-use Carbon\Carbon;
-
 
 class FrontDeskRoomController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today();
-
-        $rooms = Room::withCount(['bookings as occupied_bookings_count' => function ($query) use ($today) {
-            $query->where('status', 'checked_in')
-                  ->whereDate('check_in', '<=', $today)
-                  ->whereDate('check_out', '>=', $today);
-        }])->get();
+        $rooms = Room::all();
 
         $totalRooms = $rooms->count();
         $occupiedRooms = $rooms->where('status', 'occupied')->count();
@@ -40,7 +32,7 @@ class FrontDeskRoomController extends Controller
 
     public function occupancyForRoom(Room $room)
     {
-        $today = now()->toDateString();
+        $today = now('Asia/Manila')->toDateString();
 
         $bookings = \App\Models\Booking::query()
             ->select(

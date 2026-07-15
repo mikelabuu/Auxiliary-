@@ -107,7 +107,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-stone-800 truncate">{{ $booking['guest_name'] }}</p>
-                                <p class="text-xs text-stone-400">{!! $booking['details'] !!}</p>
+                                <p class="text-xs text-stone-400">{{ $booking['details'] }}</p>
                             </div>
                             <span class="text-[10px] font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 shrink-0 flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>

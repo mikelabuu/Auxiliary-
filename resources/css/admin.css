@@ -2108,32 +2108,87 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
 .swal2-cancel { border-radius: var(--radius-sm) !important; font-weight: 700 !important; }
 
 /* ============================================================
-   ROOM STATUS MAP — non-colour status cues (accessibility)
-   The dashboard status map encoded status by fill colour alone,
-   which fails colour-blind staff and greyscale prints. A border
-   STYLE cue makes each status distinguishable by shape as well:
-   available = solid · reserved = dashed · maintenance = dotted ·
-   cleaning = double · occupied = solid + dark fill (already
-   distinct). Keyed on [data-display-status] so it survives the
-   live JS class swap in the dashboard room-map feed.
+   ROOM STATUS MAP — original flat-button edition
+   ─────────────────────────────────────────────────────────────
+   .room-map-btn    — flat colored button per room
+   .map-key         — legend swatch square
+   .map-stat        — legend item with proportional bar
    ============================================================ */
-.room-map-btn[data-display-status="reserved"]    { border-style: dashed; }
-.room-map-btn[data-display-status="maintenance"] { border-style: dotted; border-width: 1.5px; }
-.room-map-btn[data-display-status="cleaning"]    { border-style: double; border-width: 3px; }
 
-/* Legend swatches mirror the tile treatment so the key teaches the cue */
-.map-key { display: inline-block; width: 12px; height: 12px; border-radius: 4px; border: 1.5px solid; flex-shrink: 0; }
+/* ── Room map buttons ── */
+.room-map-btn {
+    /* Base sizing set via Tailwind: w-16 h-12 rounded-xl */
+    /* Color variants also via Tailwind on the element */
+    position: relative;
+}
+
+/* ── Legend swatches ── */
+.map-key {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    border: 1.5px solid;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
 .map-key--available   { background: var(--color-g-50);     border-color: var(--color-g-400);     border-style: solid; }
 .map-key--occupied    { background: var(--color-g-600);    border-color: var(--color-g-700);     border-style: solid; }
 .map-key--reserved    { background: var(--color-au-100);   border-color: var(--color-au-500);    border-style: dashed; }
 .map-key--cleaning    { background: #f0f9ff;               border-color: #0ea5e9;                border-style: double; border-width: 3px; }
 .map-key--maintenance { background: var(--color-ember-50); border-color: var(--color-ember-500); border-style: dotted; }
 
+/* ── Legend stat items with proportional underline bars ──
+   Layout: the card-header-actions slot is flex row, so each
+   .map-stat is a tiny column (flex-col) that stacks:
+     ① swatch · label · count  (text row)
+     ② thin colored bar        (proportion of total rooms)
+   ── */
+.map-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+.map-stat__top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-stone-500);
+    white-space: nowrap;
+    line-height: 1;
+}
+.map-stat__n { font-weight: 700; }
+
+/* Proportional bar track */
+.map-stat__bar {
+    width: 100%;
+    min-width: 44px;
+    height: 3px;
+    background: var(--color-stone-100);
+    border-radius: 2px;
+    overflow: hidden;
+}
+/* Bar fill — width driven by inline style (PHP-rendered %) */
+.map-stat__fill {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    transition: width .55s cubic-bezier(.4,0,.2,1);
+}
+.map-stat__fill--available   { background: var(--color-g-400); }
+.map-stat__fill--occupied    { background: var(--color-g-600); }
+.map-stat__fill--reserved    { background: var(--color-au-400); }
+.map-stat__fill--cleaning    { background: #38bdf8; }
+.map-stat__fill--maintenance { background: var(--color-ember-400); }
+
 /* ============================================================
    BREADCRUMB — orientation on detail / nested pages so a
    deep-linked user knows where they are and can climb back up.
    Rendered via the page-header's optional `breadcrumb` slot.
    ============================================================ */
+
 .dashboard-greeting-breadcrumb { margin-bottom: 7px; }
 .admin-breadcrumb { font-size: 12.5px; line-height: 1; }
 .admin-breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; list-style: none; margin: 0; padding: 0; }
