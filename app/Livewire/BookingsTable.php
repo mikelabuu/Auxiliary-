@@ -30,6 +30,7 @@ class BookingsTable extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => '', 'as' => 'status'],
+        'dateFilter' => ['except' => '', 'as' => 'date'],
     ];
 
     protected $listeners = [
@@ -43,6 +44,27 @@ class BookingsTable extends Component
     public function resetFilters()
     {
         $this->reset(['search', 'statusFilter', 'dateFilter']);
+        $this->resetPage();
+    }
+
+    // Status pills are radio-like: the "All" pill is the way back to unfiltered.
+    public function setStatus($status)
+    {
+        $this->statusFilter = $status;
+        $this->resetPage();
+    }
+
+    // Quick filters have no "off" pill of their own, so clicking the active one
+    // clears it — otherwise the only escape is wiping the search box too.
+    public function toggleDate($date)
+    {
+        $this->dateFilter = $this->dateFilter === $date ? '' : $date;
+        $this->resetPage();
+    }
+
+    public function toggleStatus($status)
+    {
+        $this->statusFilter = $this->statusFilter === $status ? '' : $status;
         $this->resetPage();
     }
 
@@ -159,12 +181,12 @@ class BookingsTable extends Component
         Realtime::emit(new BookingChanged());
     }
 
-    public function render()
+    // Search + date, but deliberately not the status pill — the pill counts are
+    // built from this so each pill shows what clicking it would actually return.
+    protected function baseQuery()
     {
-        $query = Booking::with('reservations.room')
-            ->where('status', '!=', 'completed');
+        $query = Booking::where('status', '!=', 'completed');
 
-        //  Search filter
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('guest_name', 'like', "%{$this->search}%")
@@ -175,12 +197,6 @@ class BookingsTable extends Component
             });
         }
 
-        //  Status filter
-        if (!empty($this->statusFilter)) {
-            $query->where('status', $this->statusFilter);
-        }
-
-        //  Date-based filter
         if (!empty($this->dateFilter)) {
             $today = Carbon::today('Asia/Manila');
             $tomorrow = Carbon::tomorrow('Asia/Manila');
@@ -204,11 +220,25 @@ class BookingsTable extends Component
             }
         }
 
-        //  Paginate results
-        $bookings = $query->latest()->paginate(15);
+        return $query;
+    }
+
+    public function render()
+    {
+        $statusCounts = $this->baseQuery()
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $query = $this->baseQuery()->with('reservations.room');
+
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
 
         return view('livewire.bookings-table', [
-            'bookings' => $bookings,
+            'bookings' => $query->latest()->paginate(15),
+            'statusCounts' => $statusCounts,
         ]);
     }
 }

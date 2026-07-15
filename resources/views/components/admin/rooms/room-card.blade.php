@@ -1,6 +1,7 @@
 @props([
     'room',
     'statusMeta',
+    'settableStatuses' => null, // statusMeta minus the booking-owned ones; falls back to all
     'stay' => null, // ['current' => ['guest','until'], 'next' => ['guest','from']] from RoomController::index
 ])
 
@@ -15,6 +16,7 @@
 
 @php
     $meta = $statusMeta[$room->status] ?? $statusMeta['available'];
+    $settable = $settableStatuses ?? $statusMeta;
     $current = $stay['current'] ?? null;
     $next = $stay['next'] ?? null;
 
@@ -55,13 +57,18 @@
             </button>
             <div data-kebab-panel class="hidden animate-pop absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl border border-stone-200 shadow-card-lg overflow-hidden z-20 py-1">
                 <p class="px-3.5 pt-1.5 pb-1 text-[10px] font-bold text-stone-400 tracking-wide uppercase">Set status</p>
-                @foreach($statusMeta as $statusKey => $sm)
+                @foreach($settable as $statusKey => $sm)
                     <button type="button" class="quick-status-btn w-full flex items-center gap-2 px-3.5 py-1.5 text-xs text-stone-600 hover:bg-clsu-50 hover:text-clsu-800 transition-colors" data-status-value="{{ $statusKey }}">
-                        <span class="w-1.5 h-1.5 rounded-full {{ $statusKey === 'occupied' ? 'bg-clsu-800' : $sm['dot'] }}"></span>
+                        <span class="w-1.5 h-1.5 rounded-full {{ $sm['dot'] }}"></span>
                         <span class="flex-1 text-left">{{ $sm['label'] }}</span>
                         <x-admin.ui.icon name="check" class="quick-status-check icon w-3 h-3 text-clsu-600 {{ $room->status === $statusKey ? '' : 'invisible' }}" stroke-width="2.5" />
                     </button>
                 @endforeach
+                @if(in_array($room->status, \App\Models\Room::DERIVED_STATUSES, true))
+                    <p class="px-3.5 pt-1 pb-1.5 text-[10px] text-clsu-700 bg-clsu-50/70 leading-snug">
+                        Occupied by check-in{{ $current ? ' · ' . $current['guest'] : '' }} — check out to free this room.
+                    </p>
+                @endif
                 <div class="h-px bg-stone-100 my-1"></div>
                 <button type="button" class="room-delete-btn w-full flex items-center gap-2 px-3.5 py-1.5 text-xs text-ember-600 hover:bg-ember-50 transition-colors">
                     <x-admin.ui.icon name="trash" class="w-3.5 h-3.5" stroke-width="2" />

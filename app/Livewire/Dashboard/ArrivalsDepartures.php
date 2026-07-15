@@ -31,6 +31,7 @@ class ArrivalsDepartures extends Component
     protected $paginationTheme = 'tailwind'; // optional, improves pagination look
     protected $listeners = [
         'arrivalsPasswordConfirmed' => 'handlePasswordConfirmed',
+        'refreshArrivalsDepartures' => '$refresh',
         'refresh' => '$refresh',
     ];
 
@@ -299,16 +300,18 @@ class ArrivalsDepartures extends Component
             return;
         }
 
+        // Capture before the update, or the log records 'no_show' as its own
+        // previous status.
+        $previousStatus = $booking->status;
+        $now = Carbon::now('Asia/Manila');
+
         // Update booking status
         $booking->update(['status' => 'no_show']);
 
-        // Update rooms
+        // The guest never arrived, so the rooms go back on the board.
         foreach ($booking->reservations as $reservation) {
-            $reservation->room->update(['status' => 'occupied']);
+            $reservation->room->update(['status' => 'available']);
         }
-
-        $previousStatus = $booking->status;
-        $now = Carbon::now('Asia/Manila');
 
         // Log No Show
         NoShowLog::create([
@@ -321,11 +324,11 @@ class ArrivalsDepartures extends Component
         ]);
 
         AuditLogger::log(
-            'booking_checked_out',
+            'booking_no_show',
             $booking,
-            ['status' => 'paid'],
+            ['status' => $previousStatus],
             ['status' => 'no_show'],
-            "Booking #{$booking->id} marked by {$staff->name}"
+            "Booking #{$booking->id} marked as no-show by {$staff->name}"
         );
 
         $this->dispatch('alert', type: 'success', message: 'No Show successful!');

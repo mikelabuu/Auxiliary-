@@ -10,17 +10,10 @@ use Illuminate\Support\Facades\Auth;
 
 class CompletedBookingsController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-        $sort = $request->input('sort', 'latest');
-
-        $bookings = Booking::where('status', 'completed')
-            ->when($search, fn($q) => $q->where('id', 'like', "%{$search}%"))
-            ->orderBy('updated_at', $sort === 'oldest' ? 'asc' : 'desc')
-            ->paginate(10);
-
-        return view('staff.completedbookings.index', compact('bookings', 'search', 'sort'));
+        // Query logic moved to Livewire component
+        return view('staff.completedbookings.index');
     }
 
     public function verifyPassword(Request $request)

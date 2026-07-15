@@ -63,7 +63,7 @@
                                     <div class="cell-name">
                                         <span class="avatar-initials">{{ $initials }}</span>
                                         <div class="cell-name-text">
-                                            <p class="cell-name-primary">{{ $item->guest_name }}</p>
+                                            <p class="cell-name-primary" title="{{ $item->guest_name }}">{{ $item->guest_name }}</p>
                                             <p class="cell-name-secondary">#{{ $item->id }}</p>
                                         </div>
                                     </div>

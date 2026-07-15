@@ -177,6 +177,7 @@ $.ajaxSetup({
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--available"></span>Available · <span data-map-count="available">{{ $availableCount }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--occupied"></span>Occupied · <span data-map-count="occupied">{{ $occupiedCount }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--reserved"></span>Reserved · <span data-map-count="reserved">{{ $reservedCount }}</span></span>
+            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--cleaning"></span>Cleaning · <span data-map-count="cleaning">{{ $cleaningCount }}</span></span>
             <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="map-key map-key--maintenance"></span>Maintenance · <span data-map-count="maintenance">{{ $maintenanceCount }}</span></span>
         </x-slot:actions>
 
@@ -185,13 +186,7 @@ $.ajaxSetup({
                 <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($dormBeds as $room)
-                        @php
-                            $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
-                            if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
-                            if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
-                        @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <x-admin.rooms.map-tile :room="$room" />
                     @endforeach
                 </div>
             </div>
@@ -199,13 +194,7 @@ $.ajaxSetup({
                 <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($standardRooms as $room)
-                        @php
-                            $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
-                            if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
-                            if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
-                        @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <x-admin.rooms.map-tile :room="$room" />
                     @endforeach
                 </div>
             </div>
@@ -213,13 +202,7 @@ $.ajaxSetup({
                 <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($deluxeRooms as $room)
-                        @php
-                            $btnClass = 'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300';
-                            if($room['display_status'] === 'occupied') $btnClass = 'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700';
-                            if($room['display_status'] === 'reserved') $btnClass = 'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200';
-                            if($room['display_status'] === 'maintenance') $btnClass = 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100';
-                        @endphp
-                        <button type="button" data-room-btn="{{ $room['id'] }}" data-display-status="{{ $room['display_status'] }}" title="{{ $room['room_number'] }} · {{ ucfirst($room['display_status']) }}" class="room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">{{ $room['room_number'] }}</button>
+                        <x-admin.rooms.map-tile :room="$room" />
                     @endforeach
                 </div>
             </div>
@@ -376,26 +359,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.room-map-btn')) return; // map not on this page
 
     const MAP_BASE = 'room-map-btn w-16 h-12 rounded-xl border text-[13px] font-bold font-data flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40';
+    // Keep in step with resources/views/components/admin/rooms/map-tile.blade.php
     const MAP_VARIANT = {
         available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
         occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700',
         reserved:    'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200',
+        cleaning:    'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100 hover:border-sky-300',
         maintenance: 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
     };
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-    function patchButton(btn, status) {
-        if (btn.dataset.displayStatus === status) return;
-        btn.dataset.displayStatus = status;
-        btn.className = MAP_BASE + ' ' + (MAP_VARIANT[status] || MAP_VARIANT.available);
-        btn.title = btn.textContent.trim() + ' · ' + cap(status);
+    function patchButton(btn, status, occupant) {
+        if (btn.dataset.displayStatus !== status) {
+            btn.dataset.displayStatus = status;
+            btn.className = MAP_BASE + ' ' + (MAP_VARIANT[status] || MAP_VARIANT.available);
+        }
+        if (occupant) { btn.dataset.occupant = occupant; } else { delete btn.dataset.occupant; }
+        btn.title = btn.textContent.trim() + ' · ' + cap(status) + (occupant ? ' · ' + occupant : '');
     }
 
     function applyFeed(data) {
         if (!data || !data.success) return;
         (data.rooms || []).forEach(r => {
             const btn = document.querySelector('.room-map-btn[data-room-btn="' + r.id + '"]');
-            if (btn) patchButton(btn, r.display_status);
+            if (btn) patchButton(btn, r.display_status, r.occupant);
         });
         if (data.counts) {
             Object.keys(data.counts).forEach(k => {

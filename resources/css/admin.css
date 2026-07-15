@@ -1940,7 +1940,7 @@ body.density-compact .data-table { min-width: 800px; }
     font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
     color: var(--color-faint);
 }
-.cell-name { display: inline-flex; align-items: center; gap: 11px; }
+.cell-name { display: inline-flex; align-items: center; gap: 11px; max-width: 100%; }
 .avatar-initials {
     width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
     display: inline-flex; align-items: center; justify-content: center;
@@ -1948,9 +1948,17 @@ body.density-compact .data-table { min-width: 800px; }
     background: linear-gradient(135deg, var(--color-g-100), var(--color-g-200));
     color: var(--color-g-800); border: 1px solid rgba(22,179,100,.2);
 }
-.cell-name-text { min-width: 0; }
-.cell-name-primary { font-weight: 650; color: var(--color-ink); }
-.cell-name-secondary { font-size: 11.5px; color: var(--color-faint); margin-top: 1px; }
+/* Names are free text, so they must never be allowed to size the column —
+   one long value otherwise widens the table until Actions is scrolled off. */
+.cell-name-text { min-width: 0; max-width: 240px; }
+.cell-name-primary {
+    font-weight: 650; color: var(--color-ink);
+    overflow: hidden; text-overflow: ellipsis;
+}
+.cell-name-secondary {
+    font-size: 11.5px; color: var(--color-faint); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Small tag pill for type/category cells */
 .cell-tag {
@@ -1961,6 +1969,18 @@ body.density-compact .data-table { min-width: 800px; }
 
 /* Compact table action buttons */
 .table-actions { display: inline-flex; align-items: center; gap: 6px; }
+
+/* These tables are wider than their scroll container, which parked the Actions
+   column past the right edge — pin it so its buttons are always on screen.
+   :has() keeps tables whose last column is plain data in normal flow. */
+.data-table:has(.table-actions) thead th:last-child,
+.data-table:has(.table-actions) tbody td:last-child {
+    position: sticky; right: 0; z-index: 2;
+    box-shadow: -10px 0 12px -10px rgba(5, 46, 28, .16);
+}
+.data-table:has(.table-actions) thead th:last-child { background: #f6fbf8; }
+.data-table:has(.table-actions) tbody td:last-child { background: var(--color-card); }
+.data-table:has(.table-actions) tbody tr:hover td:last-child { background: #f3fbf6; }
 
 /* ============================================================
    V3.4 SELECTS + FLATPICKR CALENDAR
@@ -2093,18 +2113,20 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
    which fails colour-blind staff and greyscale prints. A border
    STYLE cue makes each status distinguishable by shape as well:
    available = solid · reserved = dashed · maintenance = dotted ·
-   occupied = solid + dark fill (already distinct). Keyed on
-   [data-display-status] so it survives the live JS class swap in
-   the dashboard room-map feed.
+   cleaning = double · occupied = solid + dark fill (already
+   distinct). Keyed on [data-display-status] so it survives the
+   live JS class swap in the dashboard room-map feed.
    ============================================================ */
 .room-map-btn[data-display-status="reserved"]    { border-style: dashed; }
 .room-map-btn[data-display-status="maintenance"] { border-style: dotted; border-width: 1.5px; }
+.room-map-btn[data-display-status="cleaning"]    { border-style: double; border-width: 3px; }
 
 /* Legend swatches mirror the tile treatment so the key teaches the cue */
 .map-key { display: inline-block; width: 12px; height: 12px; border-radius: 4px; border: 1.5px solid; flex-shrink: 0; }
 .map-key--available   { background: var(--color-g-50);     border-color: var(--color-g-400);     border-style: solid; }
 .map-key--occupied    { background: var(--color-g-600);    border-color: var(--color-g-700);     border-style: solid; }
 .map-key--reserved    { background: var(--color-au-100);   border-color: var(--color-au-500);    border-style: dashed; }
+.map-key--cleaning    { background: #f0f9ff;               border-color: #0ea5e9;                border-style: double; border-width: 3px; }
 .map-key--maintenance { background: var(--color-ember-50); border-color: var(--color-ember-500); border-style: dotted; }
 
 /* ============================================================

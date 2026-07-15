@@ -28,7 +28,7 @@
                                     <div class="cell-name">
                                         <span class="avatar-initials">{{ $initials }}</span>
                                         <div class="cell-name-text">
-                                            <p class="cell-name-primary">{{ $booking->guest_name }}</p>
+                                            <p class="cell-name-primary" title="{{ $booking->guest_name }}">{{ $booking->guest_name }}</p>
                                         </div>
                                     </div>
                                 </td>

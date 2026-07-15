@@ -73,17 +73,20 @@
     <div class="filter-row mb-3">
         <span class="filter-row-label">Status</span>
         @foreach($statusPills as $value => $label)
-            <button type="button" wire:click="$set('statusFilter', '{{ $value }}')"
-                    @class(['filter-tab', 'selected' => $statusFilter === $value])>{{ $label }}</button>
+            <button type="button" wire:click="setStatus('{{ $value }}')"
+                    @class(['filter-tab', 'selected' => $statusFilter === $value])>
+                {{ $label }}
+                <span class="ft-count">{{ $value === '' ? $statusCounts->sum() : ($statusCounts[$value] ?? 0) }}</span>
+            </button>
         @endforeach
     </div>
 
     {{-- Quick filters --}}
     <div class="filter-row mb-6">
         <span class="filter-row-label">Quick filters</span>
-        <button type="button" wire:click="$set('dateFilter', 'today_checkin')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkin'])>Arriving today</button>
-        <button type="button" wire:click="$set('dateFilter', 'today_checkout')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkout'])>Departing today</button>
-        <button type="button" wire:click="$set('statusFilter', 'active')" @class(['filter-tab', 'selected' => $statusFilter === 'active'])>Active stays</button>
+        <button type="button" wire:click="toggleDate('today_checkin')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkin'])>Arriving today</button>
+        <button type="button" wire:click="toggleDate('today_checkout')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkout'])>Departing today</button>
+        <button type="button" wire:click="toggleStatus('active')" @class(['filter-tab', 'selected' => $statusFilter === 'active'])>Active stays</button>
     </div>
 
     @if($bookings->isEmpty())
@@ -130,7 +133,7 @@
                                 <div class="cell-name">
                                     <span class="avatar-initials">{{ $initials }}</span>
                                     <div class="cell-name-text">
-                                        <p class="cell-name-primary">{{ $booking->guest_name }}</p>
+                                        <p class="cell-name-primary" title="{{ $booking->guest_name }}">{{ $booking->guest_name }}</p>
                                         <p class="cell-name-secondary">#{{ $booking->id }}</p>
                                     </div>
                                 </div>

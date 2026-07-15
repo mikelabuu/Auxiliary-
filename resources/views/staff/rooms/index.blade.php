@@ -7,6 +7,8 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 @php
+    use App\Models\Room;
+
     $wingLabel = fn ($w) => ucwords(str_replace('_', ' ', $w));
     $statusMeta = [
         'available'   => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200', 'dot' => 'bg-clsu-400', 'bar' => 'bg-clsu-400', 'label' => 'Available'],
@@ -14,6 +16,12 @@
         'maintenance' => ['badge' => 'bg-ember-50 text-ember-700 border-ember-200', 'dot' => 'bg-ember-500', 'bar' => 'bg-ember-500', 'label' => 'Maintenance'],
         'cleaning'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200', 'dot' => 'bg-palay-500', 'bar' => 'bg-palay-400', 'label' => 'Cleaning'],
     ];
+
+    // "Occupied" is owned by the booking lifecycle — check-in sets it, check-out
+    // clears it — so it is shown and filterable but never hand-picked. Setting it
+    // by hand produced a room with no guest, no end date and nothing to clear it.
+    // Housekeeping states below are the ones staff actually control.
+    $settableStatuses = collect($statusMeta)->except(Room::DERIVED_STATUSES)->all();
     $roomsByWing = $rooms->groupBy('wing');
     $wingOrder = ['rooster', 'tumana', 'chev_re', 'torii'];
     $orderedWings = collect($wingOrder)->filter(fn ($w) => $roomsByWing->has($w))
@@ -148,7 +156,7 @@
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     @foreach($group as $room)
-                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :stay="$stayContext[trim($room->room_number)] ?? null" />
+                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :settable-statuses="$settableStatuses" :stay="$stayContext[trim($room->room_number)] ?? null" />
                     @endforeach
                 </div>
             </div>
@@ -197,7 +205,7 @@
             <div>
                 <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
                 <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
-                    @foreach($statusMeta as $statusKey => $sm)
+                    @foreach($settableStatuses as $statusKey => $sm)
                         <option value="{{ $statusKey }}" @selected(old('status', 'available') === $statusKey)>{{ $sm['label'] }}</option>
                     @endforeach
                 </select>
@@ -252,10 +260,19 @@
                 <div>
                     <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
                     <select id="editStatus" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
-                        @foreach($statusMeta as $statusKey => $sm)
+                        @foreach($settableStatuses as $statusKey => $sm)
                             <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
                         @endforeach
                     </select>
+                    {{-- Shown instead of the select when a guest is checked in: the
+                         status is the booking's to change, not this form's. --}}
+                    <div id="editStatusLocked" class="hidden">
+                        <div class="w-full px-4 py-2.5 rounded-xl border border-clsu-200 bg-clsu-50 text-clsu-800 text-sm flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-clsu-600 shrink-0"></span>
+                            <span class="font-semibold">Occupied</span>
+                        </div>
+                        <p class="text-[11px] text-stone-400 mt-1.5" id="editStatusLockedNote">Set by check-in — clears on check-out.</p>
+                    </div>
                 </div>
             </div>
 
@@ -312,6 +329,7 @@ $(function () {
     const base = "{{ url('staff/rooms') }}";
     const typesBase = "{{ url('staff/room-types') }}";
     const STATUS_META = {!! $statusMetaJson !!};
+    const DERIVED_STATUSES = {!! json_encode(Room::DERIVED_STATUSES) !!};
     let roomTypes = {!! $roomTypesJson !!};
     let activeTypeFilter = null;
 
@@ -597,9 +615,15 @@ $(function () {
             $('#editRoomType').val(room.room_type);
             $('#editWing').val(room.wing);
             $('#editPrice').val(room.price ?? (typeBySlug(room.room_type)?.base_price ?? ''));
-            $('#editStatus').val(room.status);
             $('#editNotes').val(room.notes || '');
             $('#editFormError').addClass('hidden').text('');
+
+            // 'occupied' is not one of the options, so .val() would find no match
+            // and post an empty status — swap in the read-only panel instead and
+            // leave the derived status to the booking that owns it.
+            const derived = DERIVED_STATUSES.includes(room.status);
+            $('#editStatus').toggleClass('hidden', derived).val(derived ? 'available' : room.status);
+            $('#editStatusLocked').toggleClass('hidden', !derived);
 
             openModal('roomEditModal');
         });
@@ -621,9 +645,12 @@ $(function () {
             room_type: $('#editRoomType').val(),
             wing: $('#editWing').val(),
             price: $('#editPrice').val(),
-            status: $('#editStatus').val(),
             notes: $('#editNotes').val(),
         };
+        // Omitted entirely for an occupied room so the server leaves it untouched.
+        if (!$('#editStatus').hasClass('hidden')) {
+            payload.status = $('#editStatus').val();
+        }
 
         $.ajax({
             url: `${base}/${roomId}`,

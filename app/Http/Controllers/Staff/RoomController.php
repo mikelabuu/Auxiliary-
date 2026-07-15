@@ -10,6 +10,7 @@ use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
@@ -180,7 +181,7 @@ public function occupancyForRoom(Room $room)
             'room_type'   => 'required|string|max:255',
             'wing'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
-            'status'      => 'nullable|in:available,occupied,maintenance,cleaning',
+            'status'      => ['nullable', Rule::in(Room::SETTABLE_STATUSES)],
             'notes'       => 'nullable|string|max:2000',
         ]);
 
@@ -216,9 +217,15 @@ public function occupancyForRoom(Room $room)
             'room_type'   => 'required|string',
             'wing'        => 'required|string',
             'price'       => 'required|numeric|min:0',
-            'status'      => 'nullable|in:available,occupied,maintenance,cleaning',
+            'status'      => ['nullable', Rule::in(Room::SETTABLE_STATUSES)],
             'notes'       => 'nullable|string|max:2000',
         ]);
+
+        // The edit form omits status for an occupied room. Drop the key rather
+        // than let a missing/blank value overwrite a status the booking owns.
+        if (!$request->filled('status')) {
+            unset($validated['status']);
+        }
 
         $oldValues = $room->getOriginal();
         $oldRoomNumber = $room->room_number;
@@ -261,7 +268,9 @@ public function occupancyForRoom(Room $room)
         $staff = Auth::guard('staff')->user();
 
         $validated = $request->validate([
-            'status' => 'required|in:available,occupied,maintenance,cleaning',
+            'status' => ['required', Rule::in(Room::SETTABLE_STATUSES)],
+        ], [
+            'status.in' => 'Occupied is set by checking a guest in, not by hand. Use a booking to occupy a room.',
         ]);
 
         $oldValues = $room->getOriginal();

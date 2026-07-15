@@ -6,9 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Room extends Model
-{   
+{
     protected $table = 'rooms';
-    
+
+    /**
+     * Housekeeping states staff set by hand. 'occupied' is deliberately absent:
+     * it is derived from the booking lifecycle (check-in writes it, check-out
+     * clears it), so a guest is always the reason a room is occupied.
+     */
+    public const SETTABLE_STATUSES = ['available', 'cleaning', 'maintenance'];
+
+    /**
+     * States the booking lifecycle owns. Never offered as a manual choice.
+     */
+    public const DERIVED_STATUSES = ['occupied'];
+
     protected $fillable = [
         'room_number',
         'room_type',

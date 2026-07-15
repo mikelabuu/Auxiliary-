@@ -468,8 +468,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Subscribe once. Guarded because Echo only exists if the Reverb assets loaded.
+  // Room status changes AND bookings both affect availability, so listen to both.
   if (window.Echo) {
     window.Echo.channel('rooms').listen('.RoomStatusChanged', recheckAllBlocksAvailability);
+    window.Echo.channel('bookings').listen('.BookingChanged', recheckAllBlocksAvailability);
   }
 
   // ── Progress rail (checkout header) ──────────────────────────────
@@ -596,13 +598,22 @@ document.addEventListener('DOMContentLoaded', function () {
   // guest can see at a glance that, say, every Double Room is taken — before
   // they pick it. Uses the same /rooms/availability-summary the landing page does.
   async function updateTypeAvailability() {
-    if (!check_in?.value || !check_out?.value) return;
+    // Guest's chosen dates, or a default (tonight → tomorrow) so the type cards
+    // show "Fully booked" / "Only N left" on load, before stay dates are picked.
+    let ci = check_in?.value, co = check_out?.value;
+    if (!ci || !co) {
+      const pad = n => String(n).padStart(2, '0');
+      const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      const today = new Date();
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      ci = iso(today); co = iso(tomorrow);
+    }
     try {
       const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
       const resp = await fetch('/rooms/availability-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-        body: JSON.stringify({ check_in: check_in.value, check_out: check_out.value })
+        body: JSON.stringify({ check_in: ci, check_out: co })
       });
       if (!resp.ok) return;
       const data = await resp.json();
@@ -842,9 +853,9 @@ document.addEventListener('DOMContentLoaded', function () {
       addReservationBlock({});
     }
 
-    // If dates are already set (e.g. deep-linked from the landing search),
-    // badge the room-type cards immediately.
-    if (check_in?.value && check_out?.value) updateTypeAvailability();
+    // Badge the room-type cards immediately on load — uses the guest's dates if
+    // deep-linked, otherwise a default (tonight) so "Fully booked" shows upfront.
+    updateTypeAvailability();
   }, 100);
 
 });

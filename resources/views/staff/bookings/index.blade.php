@@ -13,23 +13,12 @@ $.ajaxSetup({
 });
 </script>
 
-@php
-    $opsVisibleNow  = \App\Models\Booking::where('status', '!=', 'completed')->count();
-    $opsInProcess   = \App\Models\Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count();
-    $opsActiveStays = \App\Models\Booking::where('status', 'active')->count();
-    $opsArrivingToday = \App\Models\Booking::whereDate('check_in', \Carbon\Carbon::today('Asia/Manila'))
-        ->whereNotIn('status', ['cancelled', 'expired', 'no_show', 'completed'])->count();
-@endphp
-
 <div class="space-y-6 max-w-[1680px] mx-auto">
     <x-admin.ui.ops-header eyebrow="Operations Center"
         subtitle="Manage, monitor, and verify every booking from reservation to check-out — arrivals, departures, and active stays in one live view.">
         Bookings <span class="accent">Operations</span>
         <x-slot:pills>
-            <span class="ops-pill"><span class="ops-pill-num">{{ $opsVisibleNow }}</span> visible now</span>
-            <span class="ops-pill"><span class="ops-pill-dot warn"></span><span class="ops-pill-num">{{ $opsInProcess }}</span> in process</span>
-            <span class="ops-pill"><span class="ops-pill-dot"></span><span class="ops-pill-num">{{ $opsActiveStays }}</span> active stays</span>
-            <span class="ops-pill"><span class="ops-pill-dot info"></span><span class="ops-pill-num">{{ $opsArrivingToday }}</span> arriving today</span>
+            <livewire:dashboard.booking-ops-stats />
         </x-slot:pills>
         <x-slot:aside>
             <p class="ops-aside-label">Live View</p>
@@ -75,6 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.Livewire) {
             Livewire.dispatch('refreshBookingsTable');
             Livewire.dispatch('refreshActiveBookings');
+            Livewire.dispatch('refreshArrivalsDepartures');
+            Livewire.dispatch('refreshBookingOpsStats');
         }
     });
 });

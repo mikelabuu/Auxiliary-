@@ -16,14 +16,6 @@
       <p class="topbar-title">@yield('page-title', 'Dashboard')</p>
       <p class="topbar-sub">Farmers Hostel · Admin workspace</p>
     </div>
-
-    <span class="chip chip-green hidden sm:inline-flex" style="gap:6px;">
-      <span class="relative flex w-1.5 h-1.5">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-g-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-g-500"></span>
-      </span>
-      Live
-    </span>
   </div>
 
   {{-- Global search --}}
