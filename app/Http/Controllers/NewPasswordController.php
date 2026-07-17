@@ -12,7 +12,7 @@ class NewPasswordController extends Controller
 {
     public function create(string $token)
     {
-        return view('auth.reset-password', ['token' => $token]);
+        return view('public.auth.reset-password', ['token' => $token]);
     }
 
     public function store(Request $request)

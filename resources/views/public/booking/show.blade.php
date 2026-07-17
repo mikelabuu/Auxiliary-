@@ -19,30 +19,25 @@
                     <h2 class="text-balance font-display text-3xl sm:text-4xl text-ink tracking-tight mt-3">Your rooms are <span class="italic text-gold">on hold</span></h2>
                     <p class="text-sm font-medium text-ink/55 mt-3 max-w-md mx-auto">Here's what happens next:</p>
 
+                    @php
+                        $nextSteps = ($booking->wants_discount && $booking->status === 'pending_discount')
+                            ? [
+                                'Upload your Senior / PWD IDs for the 20% discount review.',
+                                'Once approved, settle the discounted amount to confirm your stay.',
+                            ]
+                            : [
+                                'Settle your payment to lock in the reservation.',
+                                'Keep your receipt — you\'ll get it right after payment.',
+                            ];
+                        $nextSteps[] = 'Check in from 2:00 PM on ' . $booking->check_in->format('M d') . ' with a valid ID.';
+                    @endphp
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-3xl mx-auto text-left">
-                        @if($booking->wants_discount && $booking->status === 'pending_discount')
+                        @foreach ($nextSteps as $step)
                             <div class="flex items-start gap-3 bg-stone-50/70 border border-stone-200/70 rounded-2xl px-4 py-3.5">
-                                <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">1</span>
-                                <p class="text-xs font-bold text-stone-700 leading-relaxed">Upload your Senior / PWD IDs for the 20% discount review.</p>
+                                <span class="w-7 h-7 rounded-full {{ $loop->last ? 'bg-gold text-ink' : 'bg-emerald-deep text-cream' }} font-display italic text-xs flex items-center justify-center shrink-0">{{ $loop->iteration }}</span>
+                                <p class="text-xs font-bold text-stone-700 leading-relaxed">{{ $step }}</p>
                             </div>
-                            <div class="flex items-start gap-3 bg-stone-50/70 border border-stone-200/70 rounded-2xl px-4 py-3.5">
-                                <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">2</span>
-                                <p class="text-xs font-bold text-stone-700 leading-relaxed">Once approved, settle the discounted amount to confirm your stay.</p>
-                            </div>
-                        @else
-                            <div class="flex items-start gap-3 bg-stone-50/70 border border-stone-200/70 rounded-2xl px-4 py-3.5">
-                                <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">1</span>
-                                <p class="text-xs font-bold text-stone-700 leading-relaxed">Settle your payment to lock in the reservation.</p>
-                            </div>
-                            <div class="flex items-start gap-3 bg-stone-50/70 border border-stone-200/70 rounded-2xl px-4 py-3.5">
-                                <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">2</span>
-                                <p class="text-xs font-bold text-stone-700 leading-relaxed">Keep your receipt — you'll get it right after payment.</p>
-                            </div>
-                        @endif
-                        <div class="flex items-start gap-3 bg-stone-50/70 border border-stone-200/70 rounded-2xl px-4 py-3.5">
-                            <span class="w-7 h-7 rounded-full bg-gold text-ink font-display italic text-xs flex items-center justify-center shrink-0">3</span>
-                            <p class="text-xs font-bold text-stone-700 leading-relaxed">Check in from 2:00 PM on {{ $booking->check_in->format('M d') }} with a valid ID.</p>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>

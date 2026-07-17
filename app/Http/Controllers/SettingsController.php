@@ -17,7 +17,7 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
         $username = $user->username;
-        return view('settings', compact('username'));
+        return view('public.account.profile', compact('username'));
     }
     
     public function bookings(Request $request)
@@ -61,7 +61,7 @@ class SettingsController extends Controller
             ->where('updated_at', '>=', now()->subMinutes(30))
             ->exists();
 
-        return view('settings.bookings', [
+        return view('public.account.bookings', [
             'username'   => $user->username,
             'bookings'   => $bookings,
             'onCooldown' => $onCooldown,
@@ -112,7 +112,7 @@ class SettingsController extends Controller
                         ->paginate(10)
                         ->withQueryString();
 
-        return view('settings.transactions', [
+        return view('public.account.transactions', [
             'username' => $user->username,
             'payments' => $payments,
             'search'   => $search,

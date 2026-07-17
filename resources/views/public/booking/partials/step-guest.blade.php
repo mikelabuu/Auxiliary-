@@ -1,11 +1,5 @@
-<div class="flex items-center gap-2.5 mb-5">
-    <span class="w-8 h-8 rounded-xl bg-gold/10 text-gold ring-1 ring-gold/25 flex items-center justify-center shrink-0"><span class="material-icons text-[18px]">person</span></span>
-    <div>
-        <span class="block text-[9px] font-black text-ink/45 uppercase tracking-[0.18em] leading-none">Step 2 of 3</span>
-        <h4 class="text-sm font-bold text-ink tracking-tight mt-1">Personal Information</h4>
-    </div>
-</div>
-
+{{-- Guest details fields — rendered inside the "Step 2 of 3" step-card in
+     public/booking/checkout.blade.php (the card supplies the header). --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
         <label class="block text-xs font-bold text-ink/60 tracking-wider uppercase mb-1.5">First Name</label>

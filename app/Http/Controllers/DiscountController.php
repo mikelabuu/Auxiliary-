@@ -30,7 +30,7 @@ class DiscountController extends Controller
                 ->with('info', 'You have already submitted a discount request.');
         }
 
-        return view('discount.create', [
+        return view('public.discount.create', [
             'booking' => $booking,
             'username' => $username,
         ]);

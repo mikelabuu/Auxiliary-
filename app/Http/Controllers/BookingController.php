@@ -22,7 +22,7 @@ class BookingController extends Controller
         $username = $user ? $user->username : null;
         $roomTypes = RoomCatalog::all();
         $minPrice = RoomCatalog::minPrice();
-        return view('welcome', compact('username', 'roomTypes', 'minPrice'));
+        return view('public.home', compact('username', 'roomTypes', 'minPrice'));
     }
 
     // Show checkout form
@@ -39,7 +39,7 @@ class BookingController extends Controller
 
         $selectedRoomType = RoomCatalog::find($roomTypeKey);
         
-        return view('checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests'));
+        return view('public.booking.checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests'));
     }
 
     // Handle booking submission
@@ -322,7 +322,7 @@ class BookingController extends Controller
         // Check if a discount request already exists
         $discountRequested = $booking->discount()->exists();
 
-        return view('show', [
+        return view('public.booking.show', [
             'username' => $username,
             'booking' => $booking,
             'discountRequested' => $discountRequested,

@@ -20,50 +20,21 @@
 
             <!-- Live progress rail — booking.js toggles .done per step -->
             <ol id="checkoutProgress" class="mb-8 grid grid-cols-3 gap-3">
-                <li data-progress-step="dates" class="checkout-step">
-                    <div class="flex items-center gap-2.5">
-                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-all duration-200">
-                            <span class="step-num">1</span>
-                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </span>
-                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Dates</span>
-                    </div>
-                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-white/10 transition-colors duration-300"></span>
-                </li>
-                <li data-progress-step="details" class="checkout-step">
-                    <div class="flex items-center gap-2.5">
-                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-all duration-200">
-                            <span class="step-num">2</span>
-                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </span>
-                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Your details</span>
-                    </div>
-                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-white/10 transition-colors duration-300"></span>
-                </li>
-                <li data-progress-step="rooms" class="checkout-step">
-                    <div class="flex items-center gap-2.5">
-                        <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-all duration-200">
-                            <span class="step-num">3</span>
-                            <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </span>
-                        <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">Rooms</span>
-                    </div>
-                    <span class="step-bar mt-2.5 block h-1 rounded-full bg-white/10 transition-colors duration-300"></span>
-                </li>
+                @foreach (['dates' => 'Dates', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
+                    <li data-progress-step="{{ $step }}" class="checkout-step">
+                        <div class="flex items-center gap-2.5">
+                            <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-all duration-200">
+                                <span class="step-num">{{ $loop->iteration }}</span>
+                                <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </span>
+                            <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 sm:block">{{ $label }}</span>
+                        </div>
+                        <span class="step-bar mt-2.5 block h-1 rounded-full bg-white/10 transition-colors duration-300"></span>
+                    </li>
+                @endforeach
             </ol>
 
-            <!-- Error feedback display -->
-            @if ($errors->any())
-                <div class="mb-6">
-                    <x-booking.ui.alert type="danger">
-                        <ul class="list-disc list-inside space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </x-booking.ui.alert>
-                </div>
-            @endif
+            <x-booking.ui.error-list class="mb-6" />
             {{-- animate-pop replays each time booking.js un-hides this (display swap restarts the keyframes) --}}
             <div id="bookingFormAlert" class="animate-pop mb-6 p-4 bg-ember-600/15 text-ember-200 border border-ember-600/40 rounded-2xl text-sm font-semibold d-none"></div>
 
@@ -80,17 +51,10 @@
                 <div class="lg:col-span-8 space-y-6">
 
                     <!-- DATES -->
-                    <div class="bg-white/[0.04] rounded-3xl p-6 sm:p-8 ring-1 ring-white/10">
-                        <div class="flex items-center justify-between gap-3 mb-5">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-8 h-8 rounded-xl bg-gold/10 text-gold ring-1 ring-gold/25 flex items-center justify-center shrink-0"><span class="material-icons text-[18px]">event</span></span>
-                                <div>
-                                    <span class="block text-[9px] font-black text-ink/45 uppercase tracking-[0.18em] leading-none">Step 1 of 3</span>
-                                    <h4 class="text-sm font-bold text-ink tracking-tight mt-1">Stay Dates</h4>
-                                </div>
-                            </div>
+                    <x-booking.checkout.step-card icon="event" step="Step 1 of 3" title="Stay Dates">
+                        <x-slot:aside>
                             <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-ink/85 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
-                        </div>
+                        </x-slot:aside>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-ink/60 tracking-wider uppercase mb-1.5">Check-in</label>
@@ -101,33 +65,26 @@
                                 <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-ink text-sm placeholder:text-ink/35 focus:bg-white/10 focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-all" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
                             </div>
                         </div>
-                    </div>
+                    </x-booking.checkout.step-card>
 
-                    <!-- GUEST INFO (Imported from Partial) -->
-                    <div class="bg-white/[0.04] rounded-3xl p-6 sm:p-8 ring-1 ring-white/10">
-                        @include('booking.partials.step-guest')
-                    </div>
+                    <!-- GUEST INFO -->
+                    <x-booking.checkout.step-card icon="person" step="Step 2 of 3" title="Personal Information">
+                        @include('public.booking.partials.step-guest')
+                    </x-booking.checkout.step-card>
 
                     <!-- ROOM SELECTION -->
-                    <div class="bg-white/[0.04] rounded-3xl p-6 sm:p-8 ring-1 ring-white/10">
-                        <div class="flex items-center justify-between mb-5">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-8 h-8 rounded-xl bg-gold/10 text-gold ring-1 ring-gold/25 flex items-center justify-center shrink-0"><span class="material-icons text-[18px]">meeting_room</span></span>
-                                <div>
-                                    <span class="block text-[9px] font-black text-ink/45 uppercase tracking-[0.18em] leading-none">Step 3 of 3</span>
-                                    <h4 class="text-sm font-bold text-ink tracking-tight mt-1">Room Allocation</h4>
-                                </div>
-                            </div>
+                    <x-booking.checkout.step-card icon="meeting_room" step="Step 3 of 3" title="Room Allocation">
+                        <x-slot:aside>
                             <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-bone hover:text-night cursor-pointer">
                                 <span class="material-icons text-[15px]">add</span> Add Room Type
                             </button>
-                        </div>
+                        </x-slot:aside>
                         <p class="text-sm text-ink/55 font-medium mb-4">Configure the rooms you want to book. You must select specific room numbers for each type.</p>
 
                         <div id="reservationBlocks" class="space-y-4">
                             <!-- JS will inject blocks here -->
                         </div>
-                    </div>
+                    </x-booking.checkout.step-card>
 
                 </div>
 
@@ -183,7 +140,7 @@
 
     <!-- Template for Room Blocks -->
     <template id="reservationBlockTemplate">
-        @include('booking.partials.reservation-block-template')
+        @include('public.booking.partials.reservation-block')
     </template>
 
 @endsection

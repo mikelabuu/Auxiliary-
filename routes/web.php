@@ -57,7 +57,7 @@ Route::post('/rooms/availability-summary', [BookingController::class, 'availabil
 Route::middleware('guest')->group(function () {
     // Login form
     Route::get('/login', function () {
-        return view('auth');
+        return view('public.auth.login');
     })->name('login');
 
     // User Login actions
@@ -317,7 +317,7 @@ Route::middleware(['auth:staff', 'staff.role:frontdesk,master_admin'])
 
 // Verification notice
 Route::get('/email/verify', function () {
-    return view('auth.verify-email');
+    return view('public.auth.verify-email');
 })->middleware('auth')->name('verification.notice');
 
 // Verify via link
