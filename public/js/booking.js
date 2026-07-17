@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     wrapper.innerHTML = html;
     const block = wrapper.firstElementChild;
     block.dataset.index = index;
+    block.classList.add('animate-pop'); // brief pop-in so added blocks don't teleport
 
     const roomTypeSelect = block.querySelector('.room-type-select');
     const resBeds = block.querySelector('.res-beds');
@@ -264,10 +265,18 @@ document.addEventListener('DOMContentLoaded', function () {
     btnRemove.addEventListener('click', () => {
       const rn = roomNumberHidden.value;
       if (rn) selectedRoomNumbersSet.delete(rn);
-      block.remove();
-      updateAggregateHiddenInputs();
-      generateBookingSummary();
-      document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
+      // Opacity-only exit (reduced-motion safe). Bookkeeping waits for the
+      // node to leave the DOM — the summary/aggregate selectors would still
+      // count the fading block's inputs otherwise.
+      block.style.transition = 'opacity 0.15s ease';
+      block.style.opacity = '0';
+      block.style.pointerEvents = 'none';
+      setTimeout(() => {
+        block.remove();
+        updateAggregateHiddenInputs();
+        generateBookingSummary();
+        document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
+      }, 150);
     });
 
     // Wire up custom plus/minus meal increment buttons
@@ -322,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Returns { lostSelection } — the room number the guest had picked that is no
   // longer bookable after this render (or null). Callers use it to warn the guest.
-  function renderRoomTilesForBlock(index, rooms, blockEl) {
+  function renderRoomTilesForBlock(index, rooms, blockEl, opts = {}) {
     const tilesWrap = blockEl.querySelector('.room-tiles-wrapper');
     const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
     const priorSelection = hiddenInput.value; // the guest's current pick, if any
@@ -340,7 +349,8 @@ document.addEventListener('DOMContentLoaded', function () {
       return { lostSelection: null };
     }
     const container = document.createElement('div');
-    container.className = 'room-tiles';
+    // Silent (live/Reverb) re-renders skip the entrance stagger — see app.css
+    container.className = 'room-tiles' + (opts.silent ? ' no-anim' : '');
 
     let priorStillAvailable = false;
 
@@ -445,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
       if (!resp.ok) return null;
       const data = await resp.json();
-      const result = renderRoomTilesForBlock(block.dataset.index, data.rooms || [], block);
+      const result = renderRoomTilesForBlock(block.dataset.index, data.rooms || [], block, { silent: true });
       return result && result.lostSelection ? result.lostSelection : null;
     } catch (e) { console.error(e); return null; }
   }

@@ -2,7 +2,109 @@
 @section('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')
 @section('nav_dark', '1')
 @section('theme_night', '1')
+
+{{-- Intro gate — must run in <head> before first paint so the splash frame
+     is the very first thing painted (no flash of the page behind it).
+     Skipped for reduced-motion users and repeat visits this session. --}}
+@push('styles')
+<script>
+    (function () {
+        try {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (sessionStorage.getItem('fhIntroSeen')) return;
+            document.documentElement.classList.add('intro-hold');
+        } catch (e) { /* storage blocked — just skip the intro */ }
+    })();
+</script>
+@endpush
+
 @section('content')
+
+    <!-- ====== CINEMATIC INTRO SPLASH (styles in app.css, gate in head) ====== -->
+    <div id="introSplash" aria-hidden="true">
+        <div class="intro-curtain">
+            <div class="intro-grain"></div>
+        </div>
+        <div class="intro-center">
+            {{-- Plain text node: background-clip:text breaks in Chromium when
+                 descendants are compositor-animated, so the staggered reveal
+                 is a mask sweep on the element itself (see .intro-wordmark) --}}
+            <h2 id="introWordmark" class="intro-wordmark">Farmers Hostel</h2>
+            <p class="intro-tagline">
+                <span class="intro-rule" aria-hidden="true"></span>
+                Quality rest on campus · Est. 1998
+                <span class="intro-rule" aria-hidden="true"></span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Intro exit timeline: after a short dwell (or first interaction) the
+        // wordmark FLIP-flies into the hero headline, the cream curtain wipes
+        // up, the held hero entrance is released, and a gold gradient band
+        // sweeps the title — the splash "delivering" its gradient.
+        (function () {
+            var splash = document.getElementById('introSplash');
+            if (!splash) return;
+            if (!document.documentElement.classList.contains('intro-hold')) {
+                splash.remove(); // repeat visit / reduced motion — nothing to play
+                return;
+            }
+
+            var done = false;
+            function finish() {
+                if (done) return;
+                done = true;
+                try { sessionStorage.setItem('fhIntroSeen', '1'); } catch (e) {}
+
+                var wordmark = document.getElementById('introWordmark');
+                var title = document.getElementById('heroTitle');
+
+                // FLIP: measure the resting position of the headline's second
+                // line ("Farmers Hostel") and fly the wordmark onto it.
+                if (wordmark && title && wordmark.animate) {
+                    var lines = title.querySelectorAll('.reveal-line');
+                    var target = lines.length ? lines[lines.length - 1] : title;
+                    var from = wordmark.getBoundingClientRect();
+                    var to = target.getBoundingClientRect();
+                    var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+                    var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+                    var s = Math.max(0.35, Math.min(2.5, to.height / from.height));
+                    wordmark.animate([
+                        { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+                        { transform: 'translate(' + dx * 0.85 + 'px, ' + dy * 0.85 + 'px) scale(' + ((1 + s) / 2) + ')', opacity: 0.55, offset: 0.7 },
+                        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + s + ')', opacity: 0 }
+                    ], { duration: 950, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                }
+
+                splash.classList.add('is-exiting');
+
+                // Release the hero (and the retreated nav) as the curtain
+                // lifts, then sweep the gradient across the landing title.
+                setTimeout(function () {
+                    document.documentElement.classList.remove('intro-hold');
+                    if (title) {
+                        title.classList.add('title-gradient-pass');
+                        setTimeout(function () { title.classList.remove('title-gradient-pass'); }, 2400);
+                    }
+                }, 240);
+
+                setTimeout(function () { splash.remove(); }, 1450);
+            }
+
+            // Impatient visitors skip straight to the reveal
+            ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (t) {
+                window.addEventListener(t, finish, { once: true, passive: true });
+            });
+
+            function arm() { setTimeout(finish, 2050); }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', arm);
+            } else {
+                arm();
+            }
+        })();
+    </script>
 
     <!-- Site-wide film grain: fixed, non-interactive, breaks digital flatness.
          Sits above content but below the nav (z-50) and overlays. -->
@@ -21,7 +123,7 @@
         <!-- Headline (left-aligned, lines rise out of clipped masks) -->
         <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-24 pb-10 text-left text-bone prlx-hero-content">
             <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s">A premium stay on campus · Est. 1998</span></p>
-            <h1 class="hero-text-glow mt-5 font-display leading-[1.06] text-bone" style="font-size:clamp(2.5rem, 5.5vw, 4.75rem)">
+            <h1 id="heroTitle" class="hero-text-glow mt-5 font-display leading-[1.06] text-bone" style="font-size:clamp(2.5rem, 5.5vw, 4.75rem)">
                 <span class="reveal-line"><span style="--rise-delay:.28s">Welcome to</span></span>
                 <span class="reveal-line"><span style="--rise-delay:.46s"><x-booking.ui.flip-fade-text text="Farmers" :duration="4.5" class="italic text-gold" /> Hostel</span></span>
             </h1>
@@ -61,10 +163,16 @@
                         </div>
                     </div>
                     <button type="button" id="btnSearchRooms"
-                            class="focus-ring press cta-shine group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full bg-bone px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]"
+                            class="focus-ring press cta-shine group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full bg-bone px-8 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]"
                             data-prlx-y="0.04" data-prlx-mouse="5" data-prlx-scale="0.02" data-prlx-ease="0.08">
                         <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search rooms <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
                     </button>
+                </div>
+
+                <!-- Nights summary — filled by availability-search.js once both dates are set -->
+                <div id="capsuleNights" class="capsule-nights" hidden>
+                    <span class="capsule-nights-dot" aria-hidden="true"></span>
+                    <span id="capsuleNightsText"></span>
                 </div>
             </div>
         </div>
@@ -298,7 +406,7 @@
             <span aria-hidden="true" class="block h-px w-12 bg-gold/70"></span>
             <h2 class="text-balance mt-6 pb-1 font-display text-4xl leading-[1.12] text-bone md:text-6xl">Ready for your <span class="italic text-gold">campus stay?</span></h2>
             <p class="mx-auto mt-4 max-w-md text-base text-bone/70">Pick your dates, choose a room, and confirm. No prepayment, and Senior or PWD guests save 20%.</p>
-            <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press focus-ring mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-bone px-9 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]">
+            <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press focus-ring mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-bone px-9 py-4 text-[12px] font-semibold uppercase tracking-[0.2em] text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_32%,transparent),0_18px_44px_-18px_rgba(0,0,0,0.85)]">
                 <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                 Reserve your stay
             </button>
@@ -371,7 +479,7 @@
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-200"
+            x-transition:leave="ease-out duration-200"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             class="fixed inset-0 z-[998] bg-black/70 backdrop-blur-sm"
@@ -385,7 +493,7 @@
             x-transition:enter="ease-out duration-400"
             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-            x-transition:leave="ease-in duration-200"
+            x-transition:leave="ease-out duration-200"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
             class="fixed inset-0 z-[999] flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-6"
@@ -489,8 +597,8 @@
 
                 <!-- Sticky footer CTAs -->
                 <div class="sticky bottom-0 z-20 flex gap-3 border-t border-white/10 bg-night-2/95 px-6 py-5 backdrop-blur-xl">
-                    <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 transition-all hover:bg-white/10 cursor-pointer">Close</button>
-                    <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
+                    <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-white/10 cursor-pointer">Close</button>
+                    <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
                         <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                         <span x-text="isFullyBooked() ? 'Fully Booked' : 'Book this room'">Book this room</span>
                     </button>
@@ -575,6 +683,32 @@
             if (minusBtn && plusBtn && display && hiddenInput) {
                 minusBtn.addEventListener('click', (e) => { e.stopPropagation(); setGuests((parseInt(hiddenInput.value) || 1) - 1); });
                 plusBtn.addEventListener('click', (e) => { e.stopPropagation(); setGuests((parseInt(hiddenInput.value) || 1) + 1); });
+            }
+
+            // Stats strip: numerals roll up the first time the strip enters the
+            // viewport ("₱1,600" → counts to 1,600; "24/7" → counts the 24).
+            // Static markup stays the no-JS / reduced-motion fallback.
+            const statEls = document.querySelectorAll('.stat-value');
+            if (statEls.length && !reduceMotion && 'IntersectionObserver' in window) {
+                const io = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (!entry.isIntersecting) return;
+                        obs.unobserve(entry.target);
+                        const el = entry.target;
+                        const m = (el.textContent || '').trim().match(/^([^\d]*)([\d,]+)(.*)$/);
+                        if (!m) return;
+                        const prefix = m[1], target = parseInt(m[2].replace(/,/g, ''), 10), suffix = m[3];
+                        if (!target) return;
+                        const t0 = performance.now(), dur = 1400;
+                        const ease = t => 1 - Math.pow(1 - t, 4);
+                        (function tick(now) {
+                            const p = Math.min(1, ((now || performance.now()) - t0) / dur);
+                            el.textContent = prefix + Math.round(target * ease(p)).toLocaleString('en-PH') + suffix;
+                            if (p < 1) requestAnimationFrame(tick);
+                        })();
+                    });
+                }, { threshold: 0.4 });
+                statEls.forEach(el => io.observe(el));
             }
 
             // Testimonials Swiper — one editorial quote at a time, slow rotation

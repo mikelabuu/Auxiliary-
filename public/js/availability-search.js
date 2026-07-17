@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
       minDate: new Date(Date.now() + 86400000),
       disableMobile: true,
       onChange: function (dates) {
+        updateNightsChip();
         if (inEl.value && outEl.value) {
           runSearch({ silent: true });
         }
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (outEl.value && new Date(outEl.value) < nextDay) {
           fpOut.clear();
         }
+        updateNightsChip();
         // Natural flow: picking check-in slides straight into check-out
         if (!outEl.value) {
           setTimeout(() => fpOut.open(), 120);
@@ -52,6 +54,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       },
     });
+  }
+
+  // Capsule nights summary — "3 nights · Jul 20 → Jul 23" under the fields
+  // once both dates are set; hides again when either side is cleared.
+  function updateNightsChip() {
+    const chip = document.getElementById('capsuleNights');
+    const txt = document.getElementById('capsuleNightsText');
+    if (!chip || !txt) return;
+    if (inEl.value && outEl.value) {
+      const nights = Math.round((new Date(outEl.value) - new Date(inEl.value)) / 86400000);
+      if (nights > 0) {
+        txt.textContent = nights + ' night' + (nights > 1 ? 's' : '') + ' · ' + fmtDate(inEl.value) + ' → ' + fmtDate(outEl.value);
+        chip.hidden = false;
+        return;
+      }
+    }
+    chip.hidden = true;
   }
 
   /* ---------- Helpers ---------- */
@@ -268,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
   clearBtn && clearBtn.addEventListener('click', function () {
     fpIn ? fpIn.clear() : (inEl.value = '');
     fpOut ? fpOut.clear() : (outEl.value = '');
+    updateNightsChip();
     clearResults();
   });
 

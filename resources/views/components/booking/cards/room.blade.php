@@ -21,14 +21,19 @@
 <article data-room-card="{{ $typeId }}" class="group flex h-full flex-col" data-aos="fade-up" data-aos-delay="{{ $revealDelay }}">
     <!-- Portrait image -->
     <div class="hover-lift-premium relative aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep ring-1 ring-white/10 sm:aspect-[4/5]">
+        {{-- Zoom rides the slow editorial curve; filter/opacity (the fully-booked
+             dim toggled by availability-search.js) read as one 400ms state change --}}
         <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy" decoding="async"
-             class="absolute inset-0 h-full w-full object-cover brightness-[0.92] saturate-[0.9] transition-[transform,filter] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100">
+             class="absolute inset-0 h-full w-full object-cover brightness-[0.92] saturate-[0.9] [transition:transform_1200ms_cubic-bezier(0.22,1,0.36,1),filter_400ms_ease,opacity_400ms_ease] group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-night/60 via-transparent to-night/20"></div>
+
+        <!-- Glare sweep on hover (see .card-shine in app.css) -->
+        <span class="card-shine" aria-hidden="true"></span>
 
         <!-- Gold corner hairlines on hover -->
         <span aria-hidden="true" class="pointer-events-none absolute top-3 right-3 h-6 w-6">
-            <span class="absolute top-0 right-0 h-px w-0 bg-gold transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-full"></span>
-            <span class="absolute top-0 right-0 h-0 w-px bg-gold transition-[height] duration-500 delay-100 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:h-full"></span>
+            <span class="absolute top-0 right-0 h-px w-full origin-right scale-x-0 bg-gold transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"></span>
+            <span class="absolute top-0 right-0 h-full w-px origin-top scale-y-0 bg-gold transition-transform duration-500 delay-100 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"></span>
         </span>
 
         @if ($badge)
@@ -87,7 +92,7 @@
                 data-book-btn
                 onclick="bookRoomDirect('{{ $typeId }}')"
                 aria-label="Book {{ $title }} for ₱{{ $formattedPrice }} per night"
-                class="press focus-ring inline-flex min-h-11 items-center rounded-full bg-bone px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-night transition-all duration-500 cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent),0_16px_40px_-18px_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bone disabled:hover:shadow-none"
+                class="press focus-ring inline-flex min-h-11 items-center rounded-full bg-bone px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent),0_16px_40px_-18px_rgba(0,0,0,0.8)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-bone disabled:hover:shadow-none"
             >
                 <span data-book-label>Book · ₱{{ $formattedPrice }}</span>
             </button>

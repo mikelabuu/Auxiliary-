@@ -94,10 +94,10 @@
                                  x-transition:enter="transition ease-out duration-150"
                                  x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave="transition ease-out duration-100"
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95"
-                                 class="absolute right-0 mt-3 w-60 overflow-hidden rounded-2xl border border-ink/10 bg-canvas py-2 text-ink shadow-[0_24px_60px_-20px_rgba(4,14,10,0.5)] z-50"
+                                 class="absolute right-0 mt-3 w-60 origin-top-right overflow-hidden rounded-2xl border border-ink/10 bg-canvas py-2 text-ink shadow-[0_24px_60px_-20px_rgba(4,14,10,0.5)] z-50"
                                  style="display: none;"
                             >
                                 <a href="{{ route('settings.profile') }}" class="flex items-center gap-3 px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink/70 hover:bg-canvas-deep hover:text-ink transition-colors">
@@ -119,7 +119,7 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="press focus-ring inline-flex items-center gap-2 rounded-full bg-emerald-deep px-5 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream transition-all hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_20%,transparent)]">
+                        <a href="{{ route('login') }}" class="press focus-ring inline-flex items-center gap-2 rounded-full bg-emerald-deep px-5 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_20%,transparent)]">
                             Sign in
                         </a>
                     @endauth
@@ -134,15 +134,15 @@
     </div>
 
     <!-- Mobile Drawer Navigation -->
-    <div id="mobileDrawer" class="fixed inset-0 z-[60] flex justify-end bg-ink/50 backdrop-blur-sm transition-opacity duration-300 hidden">
-        <div class="bg-canvas w-80 h-full shadow-2xl p-7 flex flex-col justify-between border-l border-ink/10">
+    <div id="mobileDrawer" class="fixed inset-0 z-[60] flex justify-end bg-ink/50 backdrop-blur-sm" aria-hidden="true">
+        <div class="drawer-panel bg-canvas w-80 h-full shadow-2xl p-7 flex flex-col justify-between border-l border-ink/10">
             <div>
                 <div class="flex items-center justify-between pb-6 border-b border-ink/10">
                     <div class="flex items-center gap-2.5">
                         <x-booking.ui.logo-mark class="h-9 w-9" />
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-gold">Hostel</span></span>
                     </div>
-                    <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink transition-all cursor-pointer" aria-label="Close navigation menu">
+                    <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">
                         <x-booking.ui.icon name="x" class="h-4 w-4" />
                     </button>
                 </div>
@@ -179,12 +179,12 @@
                 @auth
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf
-                        <button type="submit" class="press flex w-full items-center justify-center gap-2 rounded-full bg-ember-50 py-3 px-4 text-[12px] font-bold uppercase tracking-[0.16em] text-ember-700 hover:bg-ember-100 transition-all cursor-pointer">
+                        <button type="submit" class="press flex w-full items-center justify-center gap-2 rounded-full bg-ember-50 py-3 px-4 text-[12px] font-bold uppercase tracking-[0.16em] text-ember-700 hover:bg-ember-100 cursor-pointer">
                             <x-booking.ui.icon name="log-out" class="h-4 w-4" /> Log Out
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="press flex w-full items-center justify-center gap-2 rounded-full bg-emerald-deep py-3.5 px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream hover:bg-emerald transition-all">
+                    <a href="{{ route('login') }}" class="press flex w-full items-center justify-center gap-2 rounded-full bg-emerald-deep py-3.5 px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream hover:bg-emerald">
                         Sign in / Register
                     </a>
                 @endauth
@@ -311,7 +311,9 @@
             const closeBtn = document.getElementById('mobileDrawerCloseBtn');
 
             function toggleDrawer(open) {
-                drawer && drawer.classList.toggle('hidden', !open);
+                if (!drawer) return;
+                drawer.classList.toggle('drawer-open', open);
+                drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
             }
             menuBtn && menuBtn.addEventListener('click', () => toggleDrawer(true));
             closeBtn && closeBtn.addEventListener('click', () => toggleDrawer(false));

@@ -64,7 +64,8 @@
                     </x-booking.ui.alert>
                 </div>
             @endif
-            <div id="bookingFormAlert" class="mb-6 p-4 bg-ember-600/15 text-ember-200 border border-ember-600/40 rounded-2xl text-sm font-semibold d-none"></div>
+            {{-- animate-pop replays each time booking.js un-hides this (display swap restarts the keyframes) --}}
+            <div id="bookingFormAlert" class="animate-pop mb-6 p-4 bg-ember-600/15 text-ember-200 border border-ember-600/40 rounded-2xl text-sm font-semibold d-none"></div>
 
             <form id="bookingForm" method="POST" action="{{ route('booking.store') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 @csrf
@@ -146,7 +147,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" id="btnSubmitBooking" class="press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night transition-all duration-500 cursor-pointer flex items-center justify-center gap-2 hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
+                        <button type="submit" id="btnSubmitBooking" class="press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night cursor-pointer flex items-center justify-center gap-2 hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
                             <span class="material-icons text-[18px]">check_circle</span>
                             Confirm Booking
                         </button>
