@@ -10,6 +10,8 @@
     booking modal — one source of truth for what a booking's details look
     like, instead of two independently hand-maintained copies.
 --}}
-<x-admin.ui.modal id="bookingModal" icon="clipboard" :title="'Booking #' . $booking->id" max-width="lg">
+{{-- $modalId lets a second caller (the global guest-name handler) inject this
+     modal on a page that may already have #bookingModal in its own container. --}}
+<x-admin.ui.modal :id="$modalId ?? 'bookingModal'" icon="clipboard" :title="'Booking #' . $booking->id" max-width="lg">
     @include('staff.partials.booking-detail-body', ['booking' => $booking])
 </x-admin.ui.modal>

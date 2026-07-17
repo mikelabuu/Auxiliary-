@@ -140,6 +140,81 @@
           document.body.removeChild(t);
         }
       });
+
+      // Guest name → the booking detail modal (details + timeline + guest
+      // history — the same modal as the View button, not a separate dialog).
+      // Password-gated exactly like View, then fetched and injected.
+      function openGuestBookingModal(bookingId) {
+        fetch('{{ url('staff/bookings') }}/' + bookingId + '/guest-history', {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success) return;
+            let host = document.getElementById('guestBookingHost');
+            if (!host) {
+              host = document.createElement('div');
+              host.id = 'guestBookingHost';
+              document.body.appendChild(host);
+            }
+            host.innerHTML = res.html;
+            const dlg = document.getElementById('guestBookingModal');
+            if (dlg) { dlg.classList.remove('hidden'); dlg.classList.add('flex'); }
+            const pop = document.getElementById('roomMapPopover');
+            if (pop) pop.classList.add('hidden');
+          })
+          .catch(function () {});
+      }
+
+      document.addEventListener('click', function (e) {
+        const dlg = document.getElementById('guestBookingModal');
+
+        const closer = e.target.closest && e.target.closest('[data-modal-close="guestBookingModal"]');
+        if (closer && dlg) {
+          dlg.classList.add('hidden'); dlg.classList.remove('flex');
+          return;
+        }
+
+        const link = e.target.closest && e.target.closest('.guest-history-link');
+        if (!link) return;
+        const bookingId = link.getAttribute('data-booking-id');
+        if (!bookingId) return;
+        e.preventDefault();
+
+        if (typeof Swal === 'undefined') { openGuestBookingModal(bookingId); return; }
+
+        Swal.fire({
+          title: 'Enter your password',
+          input: 'password',
+          inputAttributes: { placeholder: 'Password', autocapitalize: 'off' },
+          showCancelButton: true,
+          confirmButtonText: 'Verify',
+          showLoaderOnConfirm: true,
+          preConfirm: function (password) {
+            return fetch('{{ route('staff.bookings.verify-password') }}', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+              body: JSON.stringify({ password: password })
+            })
+              .then(function (r) { return r.json(); })
+              .then(function (res) {
+                if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Incorrect password');
+                return true;
+              })
+              .catch(function (err) { Swal.showValidationMessage(err.message || 'Verification failed'); });
+          },
+          allowOutsideClick: function () { return !Swal.isLoading(); }
+        }).then(function (result) {
+          if (result.isConfirmed && result.value) openGuestBookingModal(bookingId);
+        });
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        const dlg = document.getElementById('guestBookingModal');
+        if (dlg && !dlg.classList.contains('hidden')) {
+          dlg.classList.add('hidden'); dlg.classList.remove('flex');
+        }
+      });
     })();
   </script>
   @livewireScripts

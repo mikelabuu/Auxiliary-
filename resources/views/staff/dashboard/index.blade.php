@@ -132,7 +132,7 @@ $.ajaxSetup({
                         ['key' => 'occupied',    'label' => 'Occupied',    'count' => $occupiedCount,    'mod' => 'occupied'],
                         ['key' => 'reserved',    'label' => 'Reserved',    'count' => $reservedCount,    'mod' => 'reserved'],
                         ['key' => 'cleaning',    'label' => 'Cleaning',    'count' => $cleaningCount,    'mod' => 'cleaning'],
-                        ['key' => 'maintenance', 'label' => 'Maint.',      'count' => $maintenanceCount, 'mod' => 'maintenance'],
+                        ['key' => 'maintenance', 'label' => 'Maintenance', 'count' => $maintenanceCount, 'mod' => 'maintenance'],
                     ];
                 @endphp
                 @foreach($legendItems as $li)
@@ -317,11 +317,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.room-map-btn')) return;
 
     const CLASSES = {
-        available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300',
-        occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700',
-        reserved:    'bg-palay-100 text-palay-800 border-palay-200 hover:bg-palay-200',
-        cleaning:    'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100 hover:border-sky-300',
-        maintenance: 'bg-ember-50 text-ember-800 border-ember-200 hover:bg-ember-100',
+        available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300 border-solid',
+        occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700 border-solid',
+        reserved:    'bg-palay-100 text-palay-800 border-palay-300 hover:bg-palay-200 border-dashed',
+        cleaning:    'bg-sky-50 text-sky-800 border-sky-300 hover:bg-sky-100 hover:border-sky-400 border-dotted',
+        maintenance: 'bg-ember-50 text-ember-800 border-ember-300 hover:bg-ember-100 border-double border-[3px]',
     };
     const STATUS_LABELS = {
         available: 'Available', occupied: 'Occupied', reserved: 'Reserved',
@@ -329,29 +329,53 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-    function patchButton(btn, status, occupant) {
+    function patchButton(btn, status, occupant, updatedAt) {
         const prev = btn.dataset.displayStatus;
         if (prev === status && (btn.dataset.occupant || '') === (occupant || '')) return;
 
         // Swap Tailwind classes
         if (prev && CLASSES[prev]) {
-            CLASSES[prev].split(' ').forEach(c => btn.classList.remove(c));
+            CLASSES[prev].split(/\s+/).forEach(c => btn.classList.remove(c));
         }
         if (CLASSES[status]) {
-            CLASSES[status].split(' ').forEach(c => btn.classList.add(c));
+            CLASSES[status].split(/\s+/).forEach(c => btn.classList.add(c));
         }
         btn.dataset.displayStatus = status;
 
         // Occupant data attr
         if (occupant) { btn.dataset.occupant = occupant; } else { delete btn.dataset.occupant; }
 
-        // Tooltip: number · type (from existing title if present) · status · occupant
+        // Update status dot/shape class for accessibility
+        const dot = btn.querySelector('[data-status-dot]');
+        if (dot) {
+            dot.className = 'absolute top-1.5 right-1.5';
+            if (status === 'available') {
+                dot.className += ' w-1.5 h-1.5 rounded-full border border-clsu-400';
+            } else if (status === 'occupied') {
+                dot.className += ' w-1.5 h-1.5 rounded-full bg-white';
+            } else if (status === 'reserved') {
+                dot.className += ' w-1.5 h-1.5 rounded-full border border-dashed border-palay-500';
+            } else if (status === 'cleaning') {
+                dot.className += ' w-1.5 h-1.5 rounded-full border border-dotted border-sky-500';
+            } else if (status === 'maintenance') {
+                dot.className += ' w-1.5 h-1.5 bg-ember-500 rotate-45';
+            }
+        }
+
+        // Tooltip: number · type (from existing title if present) · status · occupant [· Updated last-updated]
         const existing = btn.title || '';
         const numMatch = existing.match(/^([^\s·]+)/);
         const typeMatch = existing.match(/·\s*([^·]+?)\s*·/);
         const num  = numMatch  ? numMatch[1]  : btn.textContent.trim();
         const type = typeMatch ? typeMatch[1].trim() : '';
-        btn.title = num + (type ? ' · ' + type : '') + ' · ' + (STATUS_LABELS[status] || cap(status)) + (occupant ? ' · ' + occupant : '');
+        let newTitle = num + (type ? ' · ' + type : '') + ' · ' + (STATUS_LABELS[status] || cap(status));
+        if (occupant) {
+            newTitle += ' · ' + occupant;
+        }
+        if (updatedAt) {
+            newTitle += ' · Updated ' + updatedAt;
+        }
+        btn.title = newTitle;
     }
 
     function updateLegendBars(counts) {
@@ -368,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!data || !data.success) return;
         (data.rooms || []).forEach(r => {
             const btn = document.querySelector('.room-map-btn[data-room-btn="' + r.id + '"]');
-            if (btn) patchButton(btn, r.display_status, r.occupant);
+            if (btn) patchButton(btn, r.display_status, r.occupant, r.updated_at);
         });
         if (data.counts) {
             Object.keys(data.counts).forEach(k => {
@@ -411,6 +435,96 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(fetchMap, 20000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) fetchMap(); });
     window.addEventListener('focus', fetchMap);
+
+    // ── Clickable tiles: occupancy popover ──────────────────────────────────
+    // Click a room → who's in it now and who arrives next, from the existing
+    // staff.rooms.occupancy endpoint. Guest names inside open guest history.
+    const pop = document.createElement('div');
+    pop.id = 'roomMapPopover';
+    pop.className = 'hidden fixed z-[210] w-[320px] bg-white rounded-2xl border border-stone-200 shadow-card-lg overflow-hidden';
+    document.body.appendChild(pop);
+    let popRoomId = null;
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function hidePopover() { pop.classList.add('hidden'); popRoomId = null; }
+
+    function positionPopover(btn) {
+        const r = btn.getBoundingClientRect();
+        const w = 320;
+        let left = Math.min(Math.max(12, r.left), window.innerWidth - w - 12);
+        pop.style.left = left + 'px';
+        pop.style.visibility = 'hidden';
+        pop.classList.remove('hidden');
+        const h = pop.offsetHeight;
+        // Below the tile unless it would clip the viewport bottom
+        let top = r.bottom + 8;
+        if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 8);
+        pop.style.top = top + 'px';
+        pop.style.visibility = '';
+    }
+
+    function popoverHeader(btn) {
+        const status = btn.dataset.displayStatus || 'available';
+        const room = esc(btn.textContent.trim());
+        const occupant = btn.dataset.occupant ? '<p class="text-xs text-stone-500 mt-0.5">' + esc(btn.dataset.occupant) + '</p>' : '';
+        return '<div class="px-4 py-3 border-b border-stone-100 bg-stone-50/60">'
+            + '<div class="flex items-center justify-between gap-2">'
+            + '<p class="text-sm font-bold text-stone-900 font-data">Room ' + room + '</p>'
+            + '<span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ' + (CLASSES[status] || '').split(/\s+/).slice(0, 3).join(' ') + '">' + esc(STATUS_LABELS[status] || cap(status)) + '</span>'
+            + '</div>' + occupant + '</div>';
+    }
+
+    function bookingRow(b) {
+        const chip = b.timeline === 'current'
+            ? '<span class="text-[9px] font-bold uppercase tracking-wide text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-full px-1.5 py-0.5">Now</span>'
+            : '<span class="text-[9px] font-bold uppercase tracking-wide text-palay-800 bg-palay-100 border border-palay-200 rounded-full px-1.5 py-0.5">Upcoming</span>';
+        return '<div class="px-4 py-2.5 border-b border-stone-50 last:border-0">'
+            + '<div class="flex items-center justify-between gap-2">'
+            + '<p class="guest-history-link cursor-pointer hover:underline text-sm font-semibold text-stone-800 truncate" data-booking-id="' + esc(b.id) + '" title="View guest history">' + esc(b.guest_name) + '</p>'
+            + chip + '</div>'
+            + '<p class="text-xs text-stone-500 mt-0.5 font-data tabnum">' + esc(b.check_in_formatted) + ' – ' + esc(b.check_out_formatted)
+            + ' · ' + esc(b.nights) + (b.nights == 1 ? ' night' : ' nights') + ' · ' + esc(b.status) + '</p>'
+            + '</div>';
+    }
+
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.room-map-btn');
+        if (!btn) {
+            if (!e.target.closest('#roomMapPopover')) hidePopover();
+            return;
+        }
+        const roomId = btn.getAttribute('data-room-btn');
+        if (popRoomId === roomId && !pop.classList.contains('hidden')) { hidePopover(); return; }
+        popRoomId = roomId;
+
+        pop.innerHTML = popoverHeader(btn) + '<div class="px-4 py-3 text-xs text-stone-400">Loading…</div>';
+        positionPopover(btn);
+
+        fetch('{{ url('staff/rooms') }}/' + roomId + '/occupancy', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(res => {
+                if (popRoomId !== roomId) return; // user moved on
+                let body;
+                if (res && res.success && res.bookings && res.bookings.length) {
+                    body = res.bookings.map(bookingRow).join('');
+                } else {
+                    body = '<div class="px-4 py-3 text-xs text-stone-400">No current or upcoming stays.</div>';
+                }
+                pop.innerHTML = popoverHeader(btn) + '<div class="max-h-64 overflow-y-auto">' + body + '</div>'
+                    + '<div class="px-4 py-2 border-t border-stone-100 bg-stone-50/60">'
+                    + '<a href="{{ route('staff.rooms') }}" class="text-[11px] font-bold text-clsu-700 !no-underline hover:underline">Manage rooms →</a></div>';
+                positionPopover(btn);
+            })
+            .catch(() => {
+                if (popRoomId !== roomId) return;
+                pop.innerHTML = popoverHeader(btn) + '<div class="px-4 py-3 text-xs text-ember-600">Could not load occupancy.</div>';
+            });
+    });
+
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hidePopover(); });
+    window.addEventListener('scroll', hidePopover, { passive: true });
+    window.addEventListener('resize', hidePopover);
 });
 </script>
 @endpush

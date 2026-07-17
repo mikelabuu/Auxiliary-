@@ -54,7 +54,7 @@
                                 <div class="cell-name">
                                     <span class="avatar-initials">{{ $initials }}</span>
                                     <div class="cell-name-text">
-                                        <p class="cell-name-primary" title="{{ $booking->guest_name }}">{{ $booking->guest_name }}</p>
+                                        <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</p>
                                         <p class="cell-name-secondary">#{{ $booking->id }}</p>
                                     </div>
                                 </div>

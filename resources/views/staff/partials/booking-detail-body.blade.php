@@ -111,4 +111,8 @@
             </div>
         </div>
     @endif
+
+    <x-admin.bookings.timeline :booking="$booking" />
+
+    <x-admin.bookings.guest-history :booking="$booking" />
 </div>

@@ -751,7 +751,11 @@ body {
     margin-left: var(--sidebar-w); margin-top: var(--topbar-h);
     min-height: calc(100vh - var(--topbar-h));
     padding: 34px 40px 72px; overflow-y: auto;
-    position: relative; z-index: 1;
+    /* No z-index: a z-index here makes shell-main a stacking context, which
+       caps every position:fixed modal rendered inside the page content below
+       the sidebar (z-50) and topbar (z-40) — the backdrop then dims only the
+       content column and the panel centers relative to it, not the screen. */
+    position: relative;
     transition: margin-left var(--transition-slow);
 }
 .shell-content-wrap {

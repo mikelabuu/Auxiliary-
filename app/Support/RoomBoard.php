@@ -83,6 +83,7 @@ class RoomBoard
                 'status' => $room->status,
                 'display_status' => $displayStatus,
                 'occupant' => $occupant,
+                'updated_at' => $room->updated_at ? $room->updated_at->diffForHumans() : null,
             ];
         });
     }

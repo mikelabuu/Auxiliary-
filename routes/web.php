@@ -65,6 +65,13 @@ Route::middleware('guest')->group(function () {
     // Signup
     Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
 
+    // TEMP-DEV-LOGIN (remove before commit)
+    Route::get('/__dev-login', function () {
+        abort_unless(app()->environment('local'), 404);
+        auth('staff')->login(\App\Models\Staff::first());
+        return redirect()->route('staff.bookings.index');
+    });
+
     // Staff Login Form
     Route::get('/staff/login', [StaffAuthController::class, 'showLoginForm'])->name('staff.login');
     Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])->name('staff.login.submit');
@@ -270,6 +277,7 @@ Route::middleware('auth:staff')->group(function () {
     })->name('staff.logout');
 
     Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
+    Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
     
     //verify receipt route

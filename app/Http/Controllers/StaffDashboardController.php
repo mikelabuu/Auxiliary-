@@ -154,6 +154,7 @@ class StaffDashboardController extends Controller
                 'id' => $r['id'],
                 'display_status' => $r['display_status'],
                 'occupant' => $r['occupant'],
+                'updated_at' => $r['updated_at'],
             ])->values(),
             'counts'  => [
                 'available'   => $rooms->where('display_status', 'available')->count(),

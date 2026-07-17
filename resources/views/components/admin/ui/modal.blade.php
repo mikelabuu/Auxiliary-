@@ -37,7 +37,9 @@
     $resolvedTitleId = $titleId ?: ($title ? $id . '-title' : null);
 @endphp
 
-<div id="{{ $id }}" class="{{ $alwaysVisible ? 'flex' : 'hidden' }} fixed inset-0 z-[200] items-center justify-center p-5">
+{{-- z-[300]: above the sidebar/topbar (z-50/40) and the dashboard room-map
+     popover (z-[210]) so the backdrop dims the whole shell. --}}
+<div id="{{ $id }}" class="{{ $alwaysVisible ? 'flex' : 'hidden' }} fixed inset-0 z-[300] items-center justify-center p-5">
     <div class="modal-backdrop-tint" @if($closeAction) wire:click="{{ $closeAction }}" @else data-modal-close="{{ $id }}" @endif></div>
     <div {{ $attributes->merge(['class' => $panelClass]) }} style="max-width:{{ $maxWidthCss }};" role="dialog" aria-modal="true" @if($resolvedTitleId) aria-labelledby="{{ $resolvedTitleId }}" @endif tabindex="-1">
         @if($title)
