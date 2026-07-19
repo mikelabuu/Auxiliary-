@@ -1,0 +1,127 @@
+/* Part 06 of the admin bundle — V3.2 refinement layer.
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   V3.2 REFINEMENT LAYER
+   Filter toolbars, sticky sortable tables, richer modals/cards,
+   room-card polish, chart helpers. Design-system tokens only.
+   ============================================================ */
+
+/* ── Unified filter toolbar (rooms, list pages) ── */
+.filter-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 13px 15px; margin-bottom: 22px;
+    background: linear-gradient(180deg, #fff, var(--color-surface));
+    border: 1px solid var(--color-border); border-radius: var(--radius);
+    box-shadow: var(--shadow-xs);
+}
+.filter-search {
+    position: relative; flex: 1 1 220px; min-width: 180px; max-width: 340px;
+}
+.filter-search svg {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--color-faint); pointer-events: none;
+}
+.filter-search input {
+    width: 100%; height: 40px; padding: 0 14px 0 38px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+    background: #fff; font-size: 13.5px; color: var(--color-ink); outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.filter-search input::placeholder { color: var(--color-faint); }
+.filter-search input:focus {
+    border-color: var(--color-g-500); box-shadow: 0 0 0 4px rgba(22,179,100,.12);
+}
+.filter-select {
+    height: 40px; padding: 0 34px 0 14px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238ba295' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center;
+    font-size: 13.5px; font-weight: 500; color: var(--color-ink);
+    cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.filter-select:focus {
+    border-color: var(--color-g-500); box-shadow: 0 0 0 4px rgba(22,179,100,.12);
+}
+.filter-toolbar-spacer { flex: 1 1 auto; }
+.filter-clear {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--color-muted);
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    background: transparent; border: 1px solid transparent; cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition), transform 140ms var(--ease-out);
+}
+.filter-clear:hover { background: #fef2f2; color: #dc2626; }
+.filter-clear:active { transform: scale(.96); }
+.filter-clear svg { width: 13px; height: 13px; }
+
+/* ── Sortable table headers ── */
+.data-table thead th.sortable {
+    cursor: pointer; user-select: none;
+    transition: color var(--transition), background var(--transition);
+}
+.data-table thead th.sortable:hover { color: var(--color-g-700); background: var(--color-g-50); }
+.data-table thead th.sortable::after {
+    content: ''; display: inline-block; width: 0; height: 0; margin-left: 6px;
+    vertical-align: middle; opacity: .35;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    transition: opacity var(--transition), transform var(--transition);
+}
+.data-table thead th.sortable:hover::after { opacity: .8; }
+.data-table thead th.sort-asc::after { transform: rotate(180deg); opacity: 1; color: var(--color-g-600); }
+.data-table thead th.sort-desc::after { opacity: 1; color: var(--color-g-600); }
+
+/* Sticky header opt-in: wrap a table in .table-scroll for a fixed-height,
+   sticky-headed scroll region. */
+.table-scroll { max-height: 560px; overflow: auto; border-radius: var(--radius); }
+.table-scroll .data-table thead th {
+    position: sticky; top: 0; z-index: 2;
+    box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+/* ── Modal refinements: gradient accent + smoother ── */
+.modal { position: relative; }
+.modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    /* Green family only: amber is reserved for semantic states, not decoration */
+    background: linear-gradient(90deg, var(--color-g-600), var(--color-g-400) 60%, var(--color-g-300));
+    z-index: 3;
+}
+.modal-header {
+    background: linear-gradient(180deg, var(--color-g-50), #fff);
+}
+.modal-title svg {
+    width: 34px; height: 34px; padding: 8px;
+    background: #fff; border: 1px solid var(--color-g-100);
+    border-radius: 10px; box-shadow: var(--shadow-xs);
+}
+
+/* ── Card top-accent variant (opt-in via .card-accent) ── */
+.card-accent { overflow: hidden; }
+.card-accent::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--color-g-500), var(--color-g-300));
+    z-index: 1;
+}
+
+/* ── Room cards ── */
+.room-card { transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition) !important; }
+.room-card:hover { transform: translateY(-3px); }
+.room-card .status-bar { transition: height var(--transition); }
+.room-card:hover .status-bar { height: 5px; }
+
+/* Room-type pricing tile (built by rooms/index JS into #typesGrid) —
+   base look is inline Tailwind; this only adds the hover lift. */
+.type-tile { transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition) !important; }
+.type-tile:hover { transform: translateY(-3px); }
+#addTypeTile { transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition) !important; }
+#addTypeTile:hover { transform: translateY(-3px); }
+
+/* ── Donut / gauge chart helpers ── */
+.gauge-ring { transform: rotate(-90deg); transform-origin: center; }
+.gauge-ring circle.gauge-value {
+    transition: stroke-dashoffset 900ms var(--ease-out);
+    filter: drop-shadow(0 2px 6px rgba(9,146,80,.28));
+}

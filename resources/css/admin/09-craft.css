@@ -1,0 +1,98 @@
+/* Part 09 of the admin bundle — V3.5 feedback & craft layer.
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   V3.5 FEEDBACK & CRAFT LAYER
+   Livewire refresh feedback, flash notes, modal chart entrances,
+   on-system pagination, touch-device hover gating.
+   ============================================================ */
+
+/* ── Livewire refresh feedback ──
+   Wrap a table/list in .wire-panel and let Livewire toggle the class:
+     <div class="wire-panel" wire:loading.delay.class="is-refreshing"
+          wire:target="search,statusFilter,…">
+   Targets keep wire:poll from dimming the table on background refreshes. */
+.wire-panel { transition: opacity 200ms var(--ease-out); }
+.wire-panel.is-refreshing { opacity: .45; pointer-events: none; }
+
+/* Small "Refreshing" chip for toolbars — shown via wire:loading.delay.flex */
+.refresh-chip {
+    display: none; align-items: center; gap: 7px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--color-g-700);
+    white-space: nowrap;
+}
+.refresh-chip svg { width: 13px; height: 13px; }
+
+/* ── Session flash notes: soft slide-in, exit handled by Alpine leave ── */
+.flash-note {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(-6px); }
+}
+
+/* ── Bars that grow when a modal opens (insights chart) ──
+   Keyframes on purpose: they re-fire each time the hidden→flex wrapper
+   shows, giving the chart a fresh rise on every open. */
+@media (prefers-reduced-motion: no-preference) {
+    .chart-rise > * {
+        animation: chartRise 520ms var(--ease-out) both;
+        transform-origin: bottom;
+    }
+    .chart-rise > *:nth-child(2)  { animation-delay: 20ms; }
+    .chart-rise > *:nth-child(3)  { animation-delay: 40ms; }
+    .chart-rise > *:nth-child(4)  { animation-delay: 60ms; }
+    .chart-rise > *:nth-child(5)  { animation-delay: 80ms; }
+    .chart-rise > *:nth-child(6)  { animation-delay: 100ms; }
+    .chart-rise > *:nth-child(7)  { animation-delay: 120ms; }
+    .chart-rise > *:nth-child(8)  { animation-delay: 140ms; }
+    .chart-rise > *:nth-child(9)  { animation-delay: 160ms; }
+    .chart-rise > *:nth-child(10) { animation-delay: 180ms; }
+    .chart-rise > *:nth-child(11) { animation-delay: 200ms; }
+    .chart-rise > *:nth-child(12) { animation-delay: 220ms; }
+}
+@keyframes chartRise { from { transform: scaleY(0); } }
+
+/* ── Pagination (resources/views/vendor/pagination/admin.blade.php) ── */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.pager-meta { font-size: 12.5px; color: var(--color-muted); }
+.pager-meta b { color: var(--color-ink); font-weight: 700; }
+.pager-pages { display: inline-flex; align-items: center; gap: 5px; }
+.pager-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 9px;
+    border-radius: var(--radius-sm); border: 1px solid var(--color-border);
+    background: var(--color-card); color: var(--color-muted);
+    font-size: 12.5px; font-weight: 650; text-decoration: none; cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: background var(--transition), color var(--transition),
+        border-color var(--transition), transform 140ms var(--ease-out);
+}
+.pager-btn svg { width: 15px; height: 15px; }
+.pager-btn:hover { background: var(--color-g-50); border-color: var(--color-g-300); color: var(--color-g-800); }
+.pager-btn:active { transform: scale(.94); }
+.pager-btn:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
+.pager-btn[aria-current="page"] {
+    background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%);
+    border-color: var(--color-g-600); color: #fff;
+    box-shadow: 0 3px 10px -3px rgba(9,146,80,.45), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.pager-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
+.pager-gap { padding: 0 3px; color: var(--color-faint); font-size: 12.5px; }
+
+/* ── Reports-page chip/type buttons (inline Tailwind base) get press feedback ── */
+.filter-chip, .report-type-btn, .date-type-btn {
+    transition: background-color var(--transition), color var(--transition),
+        border-color var(--transition), transform 140ms var(--ease-out);
+}
+.filter-chip:active, .report-type-btn:active, .date-type-btn:active { transform: scale(.96); }
+
+/* ── Touch devices: no hover lifts, no cursor spotlight ── */
+@media (hover: none), (pointer: coarse) {
+    .card-hover:hover, .card-hoverable:hover, .stat-card:hover, .mini-stat:hover,
+    .quick-action:hover, .filter-tab:hover, .room-card:hover, .type-tile:hover,
+    #addTypeTile:hover, .ops-pill:hover, .btn-primary:hover, .btn-gold:hover,
+    .btn-hover-scale:hover, .back-to-top:hover { transform: none; }
+    .card:hover::before, .stat-card:hover::before,
+    .mini-stat:hover::before, .quick-action:hover::before { opacity: 0; }
+}

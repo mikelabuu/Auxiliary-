@@ -23,16 +23,22 @@
             </div>
         </div>
 
-        <div class="swiper testimonials-swiper mt-8" data-aos="fade-up" data-aos-delay="150">
+        {{-- Card deck (Swiper `cards` effect, Skiper-48-style): quotes stack
+             like a held hand of cards — the next one peeks from behind, and
+             the deck is draggable as well as button-driven. Deck sizing and
+             overflow overrides live in app.css (.testimonials-swiper). --}}
+        <div class="swiper testimonials-swiper mt-10" data-aos="fade-up" data-aos-delay="150">
             <div class="swiper-wrapper">
                 @foreach ($testimonials as $t)
                     <div class="swiper-slide h-auto">
-                        <x-booking.cards.testimonial
-                            :quote="$t['quote']"
-                            :name="$t['name']"
-                            :role="$t['role']"
-                            :initials="$t['initials']"
-                        />
+                        <div class="glass-night h-full rounded-3xl px-7 py-2 md:px-9">
+                            <x-booking.cards.testimonial
+                                :quote="$t['quote']"
+                                :name="$t['name']"
+                                :role="$t['role']"
+                                :initials="$t['initials']"
+                            />
+                        </div>
                     </div>
                 @endforeach
             </div>

@@ -45,7 +45,7 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.ui.page-header subtitle="Manage availability, wings, and pricing across all rooms.">
-        Room <span class="text-clsu-700">Management</span>
+        Room Management
         <x-slot:actions>
             <x-admin.ui.button variant="secondary" :href="route('staff.dashboard') . '#room-map'">
                 <x-admin.ui.icon name="grid" class="w-4 h-4" />
@@ -95,7 +95,7 @@
     </div>
 
     <!-- Room Types & Pricing -->
-    <x-admin.ui.section-card id="room-types" class="scroll-mt-32" icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category — click a type to filter rooms below" :delay="240">
+    <x-admin.ui.section-card id="room-types" class="scroll-mt-32" icon="tag" title="Room Types & Pricing" subtitle="Base nightly rates by category. Click a type to filter rooms below" :delay="240">
         <x-slot:actions>
             <button type="button" id="clearTypeFilterBtn" class="hidden shrink-0 items-center gap-1.5 text-xs font-semibold text-clsu-700 bg-clsu-50 hover:bg-clsu-100 rounded-full px-3 py-1.5 transition-colors cursor-pointer">
                 <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" />
@@ -150,7 +150,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-semibold text-stone-400"><span data-wing-open class="text-clsu-700 font-bold">{{ $wingOpen }}</span> available</span>
                         <div class="h-1.5 w-20 rounded-full bg-stone-200/70 overflow-hidden">
-                            <div data-wing-bar class="h-full rounded-full bg-clsu-400 transition-all duration-300" style="width: {{ $group->count() ? round($wingOpen / $group->count() * 100) : 0 }}%"></div>
+                            <div data-wing-bar class="h-full rounded-full bg-clsu-400 transition-[width] duration-300" style="width: {{ $group->count() ? round($wingOpen / $group->count() * 100) : 0 }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -271,7 +271,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-clsu-600 shrink-0"></span>
                             <span class="font-semibold">Occupied</span>
                         </div>
-                        <p class="text-[11px] text-stone-400 mt-1.5" id="editStatusLockedNote">Set by check-in — clears on check-out.</p>
+                        <p class="text-[11px] text-stone-400 mt-1.5" id="editStatusLockedNote">Set by check-in. Clears on check-out.</p>
                     </div>
                 </div>
             </div>
@@ -308,7 +308,7 @@
                     <input type="number" min="1" step="1" id="typeFormCapacity" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                 </div>
             </div>
-            <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms — existing rooms keep their current price.</p>
+            <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms. Existing rooms keep their current price.</p>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
             <x-admin.ui.modal-footer close-target="typeModal" submit-label="Save Type" />
@@ -340,20 +340,12 @@ $(function () {
     function typeName(slug) { const t = typeBySlug(slug); return t ? t.name : (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : ''); }
 
     function toast(message, icon) {
-        Swal.fire({ toast: true, position: 'bottom-end', icon: icon || 'success', title: message, showConfirmButton: false, timer: 2400, timerProgressBar: true });
+        window.toast(message, icon); // unified console toasts (resources/js/app.js)
     }
 
-    let lastFocusedBeforeModal = null;
-    function openModal(id) {
-        lastFocusedBeforeModal = document.activeElement;
-        const modal = $('#' + id).removeClass('hidden').addClass('flex');
-        const focusable = modal.find('input, select, textarea, button').not('[data-modal-close]').first();
-        (focusable.length ? focusable : modal.find('[role="dialog"]')).trigger('focus');
-    }
-    function closeModal(id) {
-        $('#' + id).addClass('hidden').removeClass('flex');
-        if (lastFocusedBeforeModal) { $(lastFocusedBeforeModal).trigger('focus'); lastFocusedBeforeModal = null; }
-    }
+    // Animated modal helpers (focus management included) live in layouts/admin.
+    const openModal = (id) => window.openModal(id);
+    const closeModal = (id) => window.closeModal(id);
 
     $('#openAddRoomBtn').on('click', () => openModal('addRoomModal'));
     $('[data-modal-close]').on('click', function () { closeModal($(this).data('modal-close')); });
@@ -377,13 +369,11 @@ $(function () {
         @endif
     @endif
 
-    @if(session('success'))
-        toast(@json(session('success')));
-    @endif
+    {{-- Session flash toasts fire from layouts/admin --}}
 
     /* ------------------- ROOM TYPE SELECT OPTIONS ------------------- */
     function populateRoomTypeSelects() {
-        const options = roomTypes.map(t => '<option value="' + t.slug + '" data-price="' + t.base_price + '">' + t.name + ' — ' + peso(t.base_price) + '</option>').join('');
+        const options = roomTypes.map(t => '<option value="' + t.slug + '" data-price="' + t.base_price + '">' + t.name + ' · ' + peso(t.base_price) + '</option>').join('');
         const addSelect = $('#room-type');
         const editSelect = $('#editRoomType');
         const addPrevVal = addSelect.val();
@@ -401,7 +391,7 @@ $(function () {
         const tiles = roomTypes.map(t => {
             const isActive = activeTypeFilter === t.slug;
             return (
-                '<div class="type-tile relative bg-white rounded-xl border ' + (isActive ? 'border-clsu-400 ring-1 ring-clsu-200' : 'border-stone-200') + ' shadow-subtle hover:shadow-card transition-all duration-200 overflow-hidden cursor-pointer" data-type-tile="' + t.slug + '">' +
+                '<div class="type-tile relative bg-white rounded-xl border ' + (isActive ? 'border-clsu-400 ring-1 ring-clsu-200' : 'border-stone-200') + ' shadow-subtle hover:shadow-card overflow-hidden cursor-pointer" data-type-tile="' + t.slug + '">' +
                     '<button type="button" class="type-edit-btn absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/95 border border-stone-200 text-stone-400 hover:text-clsu-700 hover:border-clsu-300 flex items-center justify-center transition-colors" data-edit-type="' + t.id + '" aria-label="Edit ' + t.name + '">' +
                         '<svg class="icon w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
                     '</button>' +

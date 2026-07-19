@@ -1,4 +1,4 @@
-<x-admin.ui.section-card wire:poll.15s icon="clipboard" title="Complete Booking Log" subtitle="Every booking that hasn't been checked out yet — search, filter, and act.">
+<x-admin.ui.section-card wire:poll.15s icon="clipboard" title="Complete Booking Log" subtitle="Every booking that has not been checked out yet.">
     <x-slot:actions>
         <a href="{{ route('reports.bookings.full') }}" class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
@@ -14,20 +14,7 @@
         </a>
     </x-slot:actions>
 
-    @if (session()->has('success'))
-        <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
-             class="flex items-center gap-2 text-sm font-medium text-clsu-800 bg-clsu-50 border border-clsu-200 rounded-xl px-4 py-2.5 mb-4" wire:ignore.self>
-            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session()->has('error'))
-        <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
-             class="flex items-center gap-2 text-sm font-medium text-ember-700 bg-ember-50 border border-ember-200 rounded-xl px-4 py-2.5 mb-4" wire:ignore.self>
-            <x-admin.ui.icon name="block" class="w-4 h-4 shrink-0" />
-            {{ session('error') }}
-        </div>
-    @endif
+    {{-- Action feedback arrives as toasts ($this->dispatch('toast', …)) --}}
 
     @php
         $statusPills = [
@@ -61,6 +48,10 @@
             <option value="tomorrow_checkout">Check-out tomorrow</option>
         </select>
         <div class="filter-toolbar-spacer"></div>
+        <span class="refresh-chip" wire:loading.delay.flex wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
+            <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+            Updating
+        </span>
         @if($search !== '' || $statusFilter !== '' || $dateFilter !== '')
             <button type="button" wire:click="resetFilters" class="filter-clear">
                 <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" />
@@ -92,6 +83,7 @@
     @if($bookings->isEmpty())
         <x-admin.ui.empty-state icon="clipboard" title="No bookings found." />
     @else
+        <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
         <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
             <table class="data-table">
                 <thead>
@@ -175,7 +167,8 @@
         </div>
 
         <div class="mt-6">
-            {{ $bookings->links() }}
+            {{ $bookings->links('vendor.pagination.admin') }}
+        </div>
         </div>
     @endif
 

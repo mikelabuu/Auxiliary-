@@ -46,23 +46,12 @@
         </x-slot:actions>
     </x-admin.ui.page-header>
 
-    @if(session('success'))
-        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3 text-sm font-medium text-ember-700">
-            <x-admin.ui.icon name="block" class="w-4 h-4 shrink-0" />
-            {{ session('error') }}
-        </div>
-    @endif
+    {{-- Session success/error toasts fire from layouts/admin --}}
 
     @if($isExpired)
         <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3 text-sm font-medium text-ember-700">
             <x-admin.ui.icon name="clock" class="w-4 h-4 shrink-0" />
-            This booking has expired — documents are shown for reference only and can no longer be actioned.
+            This booking has expired. Documents are shown for reference only and can no longer be actioned.
         </div>
     @endif
 
@@ -111,7 +100,7 @@
     </div>
 
     <!-- Documents per room -->
-    <x-admin.ui.section-card icon="clipboard" title="Verification Documents" subtitle="Approve or reject each uploaded ID — the discount is computed from approved IDs only" :delay="120">
+    <x-admin.ui.section-card icon="clipboard" title="Verification Documents" subtitle="Approve or reject each uploaded ID. The discount is computed from approved IDs only" :delay="120">
         <div class="space-y-7">
             @forelse($booking->reservations as $reservation)
                 @php $files = $reservation->discountFiles ?? collect(); @endphp
@@ -136,7 +125,7 @@
                                         <a href="{{ route('staff.discounts.file.preview', $file->id) }}" target="_blank" class="group relative block h-40 overflow-hidden bg-stone-100">
                                             <img src="{{ route('staff.discounts.file.preview', $file->id) }}" alt="ID document preview" loading="lazy"
                                                  class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                            <span class="absolute inset-0 flex items-center justify-center bg-clsu-950/0 opacity-0 transition-all duration-200 group-hover:bg-clsu-950/40 group-hover:opacity-100">
+                                            <span class="absolute inset-0 flex items-center justify-center bg-clsu-950/0 opacity-0 transition-[opacity,background-color] duration-200 group-hover:bg-clsu-950/40 group-hover:opacity-100">
                                                 <span class="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-bold text-clsu-800">
                                                     <x-admin.ui.icon name="eye" class="w-3.5 h-3.5" /> Open full size
                                                 </span>
@@ -162,7 +151,7 @@
                                             <div class="grid grid-cols-2 gap-2">
                                                 <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}">
                                                     @csrf
-                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-600 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-all hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-600 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                                         <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> Approve
                                                     </button>
                                                 </form>
@@ -214,7 +203,7 @@
             @if($totalFiles && $pendingFiles === 0 && !$isExpired)
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <p class="text-sm text-stone-500 leading-relaxed">
-                        All documents reviewed — <strong class="text-clsu-700">{{ $approvedFiles }} approved</strong>, <strong class="text-ember-600">{{ $rejectedFiles }} rejected</strong>.
+                        All documents reviewed: <strong class="text-clsu-700">{{ $approvedFiles }} approved</strong>, <strong class="text-ember-600">{{ $rejectedFiles }} rejected</strong>.
                         Finalizing will recalculate the guest's bill.
                     </p>
                     <div class="flex gap-2.5 shrink-0">
@@ -226,7 +215,7 @@
                         </form>
                         <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}" data-confirm="Approve this discount? The 20% per approved ID will be applied to the booking total.">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-600 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-all hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
+                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-600 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                 <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve Discount
                             </button>
                         </form>

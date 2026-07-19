@@ -29,7 +29,7 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.ui.page-header subtitle="Every guest account on the platform — activity, verification, and standing.">
-        User <span class="text-clsu-700">Hub</span>
+        User Hub
         <x-slot:actions>
             <x-admin.ui.button variant="secondary" :href="route('reports.users.all')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
@@ -76,7 +76,7 @@
             <span class="filter-row-label">Standing</span>
             @foreach ($statusTabs as $key => $meta)
                 <a href="{{ route('staff.userrecords.index', array_filter(['status' => $key, 'search' => $search, 'sort' => $sort])) }}"
-                   @class(['filter-tab', 'selected' => $status === $key]) style="text-decoration:none;">
+                   @class(['filter-tab', 'selected' => $status === $key])>
                     {{ $meta['label'] }}
                     <span class="ft-count">{{ $meta['count'] }}</span>
                 </a>
@@ -98,7 +98,7 @@
             <button type="submit" class="btn btn-outline btn-sm">Apply</button>
             <div class="filter-toolbar-spacer"></div>
             @if($search || $status !== 'all' || $sort !== 'latest')
-                <a href="{{ route('staff.userrecords.index') }}" class="filter-clear" style="text-decoration:none;">
+                <a href="{{ route('staff.userrecords.index') }}" class="filter-clear">
                     <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
                 </a>
             @endif
@@ -182,7 +182,7 @@
             </div>
 
             <div class="mt-6">
-                {{ $users->links() }}
+                {{ $users->links('vendor.pagination.admin', ['mode' => 'links']) }}
             </div>
         @endif
     </x-admin.ui.section-card>
@@ -277,13 +277,7 @@ $.ajaxSetup({
     }
 });
 
-// ── Modal helpers (same pattern as the rooms page) ──────────────────────────
-function openModal(id) {
-    $('#' + id).removeClass('hidden').addClass('flex');
-}
-function closeModal(id) {
-    $('#' + id).removeClass('flex').addClass('hidden');
-}
+// ── Modal helpers: shared animated open/close from layouts/admin ────────────
 $(document).on('click', '[data-modal-close]', function () {
     closeModal($(this).data('modal-close'));
 });

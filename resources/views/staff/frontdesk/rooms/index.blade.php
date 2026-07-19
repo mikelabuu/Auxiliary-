@@ -1,105 +1,134 @@
 @extends('layouts.frontdesk')
-<link rel="stylesheet" href="{{ asset('css/roomManagement.css') }}">
-@section('title', 'Front Desk - Room Management')
-@section('page-title', 'Room Management')
+@section('title', 'Front Desk · Rooms')
 
 @section('content')
 
-<!-- ==================== Top: Global Overview Section ==================== -->
-<section class="overview-section">
-    <div class="analytics-grid">
-        <!-- Analytics Cards -->
-        <div class="analytics-card total">
-            <h3>Total Rooms</h3>
-            <p class="count">{{ $totalRooms }}</p>
-        </div>
-        <div class="analytics-card active-bookings">
-            <h3>Occupied Rooms</h3>
-            <p class="count">{{ $occupiedRooms }}</p>
-        </div>
-        <div class="analytics-card maintenance">
-            <h3>Under Maintenance</h3>
-            <p class="count">{{ $maintenanceRooms }}</p>
-        </div>
-        <div class="analytics-card cleaning">
-            <h3>Cleaning</h3>
-            <p class="count">{{ $cleaningRooms }}</p>
-        </div>
-    </div>
+{{-- Status overview --}}
+<div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+    <x-admin.ui.stat-card icon="bed" label="Total Rooms" delay="0">
+        {{ $totalRooms }}
+    </x-admin.ui.stat-card>
+    <x-admin.ui.stat-card icon="users" color="palay" label="Occupied" delay="40">
+        {{ $occupiedRooms }}
+    </x-admin.ui.stat-card>
+    <x-admin.ui.stat-card icon="wrench" color="ember" label="Under Maintenance" delay="80">
+        {{ $maintenanceRooms }}
+    </x-admin.ui.stat-card>
+    <x-admin.ui.stat-card icon="droplet" color="sky" label="Cleaning" delay="120">
+        {{ $cleaningRooms }}
+    </x-admin.ui.stat-card>
+</div>
 
-    <!-- Room Type Cards -->
-    <div class="room-type-grid">
-        @foreach($prices as $type => $price)
-            <div class="room-type-card">
-                <div class="room-type-image">
-                    <img src="{{ asset('image/roomtypes/'.$type.'.jpg') }}" alt="{{ ucfirst($type) }}">
+{{-- Room types & nightly rates --}}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <x-admin.ui.icon name="tag" />
+            Room types &amp; rates
+        </h3>
+        <span class="section-label">Per night</span>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            @foreach($prices as $type => $price)
+                <div class="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-subtle transition-shadow duration-300 hover:shadow-card-lg">
+                    <div class="aspect-[4/3] overflow-hidden bg-stone-100">
+                        <img src="{{ asset('image/roomtypes/'.$type.'.jpg') }}" alt="{{ ucfirst($type) }} room"
+                             class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                    </div>
+                    <div class="flex items-baseline justify-between gap-2 px-3 py-2.5">
+                        <p class="truncate text-sm font-semibold text-ink">{{ ucfirst($type) }}</p>
+                        <p class="shrink-0 font-data text-sm font-bold text-g-700 tabnum">₱{{ number_format($price) }}</p>
+                    </div>
                 </div>
-                <div class="room-type-info">
-                    <strong>{{ ucfirst($type) }}</strong>
-                    <p>₱{{ number_format($price) }}</p>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</section>
-
-
-<!-- ==================== Middle: Rooms Display Section ==================== -->
-<section class="rooms-display">
-    <div class="filter-bar mb-4 flex gap-3 items-center">
-        <label class="font-medium">Filter by status:</label>
-        <select id="roomStatusFilter" class="border rounded px-2 py-1">
-            <option value="all">All Rooms</option>
-            <option value="available">Available</option>
-            <option value="occupied">Occupied</option>
-            <option value="maintenance">Under Maintenance</option>
-        </select>
-    </div>
-    <h1>Rooms</h1><br>
-    <div class="room-card-grid">
-        @foreach($rooms as $room)
-            <div class="room-card bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer relative"
-                data-room-id="{{ $room->id }}">
-
-                <div class="p-4 text-center">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Room {{ $room->room_number }}</h2>
-                    <p class="text-gray-500">{{ ucfirst($room->room_type) }} - {{ ucfirst($room->wing) }}</p>
-                    <p class="room-status {{ $room->status }} mt-2">{{ ucfirst($room->status) }}</p>
-                    <p class="text-sm text-gray-400 mt-1">
-                        Updated {{ $room->updated_at->diffForHumans() }}
-                    </p>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</section>
-
-<!-- ==================== Room Bookings Modal ==================== -->
-<div class="modal fade" id="occupancyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Current Occupant</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="occupancyModalBody">
-                <p class="text-center text-gray-500">Loading...</p>
-            </div>
+            @endforeach
         </div>
     </div>
 </div>
 
-<!-- jQuery (optional if you use it for AJAX) -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+{{-- Rooms board --}}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <x-admin.ui.icon name="bed" />
+            Rooms
+        </h3>
+        <span class="section-label">{{ $totalRooms }} rooms · {{ $availableRooms }} available</span>
+    </div>
+    <div class="card-body">
+        <div class="filter-toolbar mb-5">
+            <div class="filter-search">
+                <x-admin.ui.icon name="search" stroke-width="2" />
+                <input type="text" id="roomSearch" placeholder="Search room number, type or wing" autocomplete="off">
+            </div>
+            <select id="roomStatusFilter" class="filter-select" aria-label="Filter by status">
+                <option value="all">All statuses</option>
+                <option value="available">Available</option>
+                <option value="occupied">Occupied</option>
+                <option value="maintenance">Under Maintenance</option>
+                <option value="cleaning">Cleaning</option>
+            </select>
+            <button type="button" id="roomFilterClear" class="filter-clear">
+                <x-admin.ui.icon name="x" stroke-width="2.5" />
+                Clear
+            </button>
+        </div>
+
+        @php
+            $statusMeta = [
+                'available'   => ['bar' => 'bg-g-500'],
+                'occupied'    => ['bar' => 'bg-au-500'],
+                'maintenance' => ['bar' => 'bg-ember-500'],
+                'cleaning'    => ['bar' => 'bg-sky-500'],
+            ];
+        @endphp
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+            @foreach($rooms as $room)
+                <div class="room-card group/card relative cursor-pointer overflow-hidden rounded-xl border border-stone-200 bg-white shadow-subtle hover:border-clsu-200 hover:shadow-card-lg"
+                     data-room-id="{{ $room->id }}"
+                     data-room-number="{{ strtolower($room->room_number) }}"
+                     data-type="{{ $room->room_type }}"
+                     data-wing="{{ $room->wing }}">
+                    <div class="status-bar h-1 {{ ($statusMeta[$room->status] ?? $statusMeta['available'])['bar'] }}"></div>
+                    <div class="flex flex-col items-center gap-2 p-4 pb-3 text-center">
+                        <div>
+                            <p class="font-data text-base font-extrabold text-stone-900 tabnum">Room {{ $room->room_number }}</p>
+                            <p class="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-400">{{ ucfirst($room->room_type) }} · {{ ucfirst($room->wing) }} wing</p>
+                        </div>
+                        <span class="room-status status status-{{ $room->status }}">{{ ucfirst($room->status) }}</span>
+                        <p class="text-[11px] italic text-stone-400">Updated {{ $room->updated_at->diffForHumans() }}</p>
+                    </div>
+                    <div class="flex items-center justify-center gap-1.5 border-t border-stone-100 px-4 py-2 text-[10px] font-semibold text-stone-400 transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
+                        <x-admin.ui.icon name="eye" class="h-3 w-3" />
+                        View occupancy
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Inline display:none — .empty-state is unlayered and would beat a
+             Tailwind `hidden` utility; jQuery .toggle() drives it instead. --}}
+        <x-admin.ui.empty-state id="roomsEmpty" style="display:none" icon="search" title="No rooms match the current filters." />
+    </div>
+</div>
+
+{{-- Occupancy modal (admin modal system; opened by the jQuery below) --}}
+<x-admin.ui.modal id="occupancyModal" icon="user" title="Current occupant">
+    <div class="modal-body" id="occupancyModalBody">
+        <p class="py-2 text-center text-sm text-muted">Loading…</p>
+    </div>
+</x-admin.ui.modal>
+
+@endsection
+
+@push('scripts')
 <script>
 $(function() {
     const base = "{{ url('staff/rooms') }}";
-    const priceMap = @json($prices);
 
     // ------------------- ROOM CARD CLICK (Show Booking Info) -------------------
     $(document).on('click', '.room-card', function(e) {
         const roomId = $(this).data('room-id');
-        if ($(e.target).closest('.btn-update, .btn-delete').length) return;
 
         $.get(`${base}/${roomId}/occupancy`)
             .done(function(res) {
@@ -108,101 +137,50 @@ $(function() {
                 modalBody.empty();
 
                 if (res.bookings.length === 0) {
-                    modalBody.append('<p class="text-center text-gray-500">No active bookings for this room.</p>');
+                    modalBody.append('<p class="py-4 text-center text-sm text-muted">No active bookings for this room.</p>');
                 } else {
                     res.bookings.forEach(b => {
                         modalBody.append(`
-                            <div class="booking-entry mb-3">
-                                <p><strong>Account ID:</strong> ${b.user_id}</p>
-                                <p><strong>Guest:</strong> ${b.guest_name}</p>
-                                <p><strong>Check-in:</strong> ${b.check_in_formatted}</p>
-                                <p><strong>Check-out:</strong> ${b.check_out_formatted}</p>
-                                <p><strong>Status:</strong> ${b.status}</p>
-                                <hr>
+                            <div class="booking-entry record-detail-panel mb-3">
+                                <div class="record-detail-row"><span class="record-detail-label">Booking</span><span class="record-detail-value ref-code">BK-${String(b.id).padStart(4, '0')}</span></div>
+                                <div class="record-detail-row"><span class="record-detail-label">Guest</span><span class="record-detail-value">${b.guest_name}</span></div>
+                                <div class="record-detail-row"><span class="record-detail-label">Check-in</span><span class="record-detail-value">${b.check_in_formatted}</span></div>
+                                <div class="record-detail-row"><span class="record-detail-label">Check-out</span><span class="record-detail-value">${b.check_out_formatted}</span></div>
+                                <div class="record-detail-row"><span class="record-detail-label">Status</span><span class="status status-${String(b.status).toLowerCase()}">${b.status}</span></div>
                             </div>
                         `);
                     });
                 }
 
-                const modal = new bootstrap.Modal(document.getElementById('occupancyModal'));
-                modal.show();
+                openModal('occupancyModal');
             })
             .fail(() => alert('Error fetching booking info'));
     });
 
-    // ------------------- ROOM UPDATE -------------------
-    $(document).on('click', '.btn-update', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const roomId = $(this).data('id');
-
-        $.get(`${base}/${roomId}/edit`)
-            .done(function(res) {
-                if (!res.success) return alert('Could not load room');
-                const room = res.room;
-
-                $('#editRoomId').val(room.id);
-                $('#editRoomNumber').val(room.room_number);
-                $('#editRoomType').val(room.room_type);
-                $('#editWing').val(room.wing);
-                $('#editPrice').val(room.price ?? priceMap[room.room_type] ?? '');
-
-                const modal = new bootstrap.Modal(document.getElementById('roomEditModal'));
-                modal.show();
-            });
-    });
-
-    $('#editRoomType').on('change', function() {
-        const type = $(this).val();
-        if (priceMap[type] !== undefined) $('#editPrice').val(priceMap[type]);
-    });
-
-    $('#roomEditForm').on('submit', function(e) {
-        e.preventDefault();
-        const roomId = $('#editRoomId').val();
-        const payload = {
-            room_number: $('#editRoomNumber').val(),
-            room_type: $('#editRoomType').val(),
-            wing: $('#editWing').val(),
-            price: $('#editPrice').val(),
-            _token: $('meta[name="csrf-token"]').attr('content')
-        };
-
-        $.ajax({
-            url: `${base}/${roomId}`,
-            method: 'PUT',
-            data: payload,
-            success: function(res) {
-                if (!res.success) return alert('Update failed');
-                location.reload();
-            },
-            error: function() { alert('Update failed'); }
-        });
-    });
-
-    // ------------------- AUTO-FILL PRICE -------------------
-    $('#room-type').on('change', function(){
-        const price = $(this).find(':selected').data('price');
-        $('#price').val(price);
-    });
-
-    // ------------------- ROOM FILTERING -------------------
-    $('#roomStatusFilter').on('change', function() {
-        const selected = $(this).val();
+    // ------------------- ROOM FILTERING (status + search combined) -------------------
+    function applyRoomFilters() {
+        const status = $('#roomStatusFilter').val();
+        const q = ($('#roomSearch').val() || '').trim().toLowerCase();
 
         $('.room-card').each(function() {
-            const status = $(this).find('.room-status').text().trim().toLowerCase();
+            const cardStatus = $(this).find('.room-status').text().trim().toLowerCase();
+            const hay = [$(this).data('room-number'), $(this).data('type'), $(this).data('wing')].join(' ').toLowerCase();
 
-            if (selected === 'all' || status === selected) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
+            const okStatus = status === 'all' || cardStatus === status;
+            const okSearch = !q || hay.includes(q);
+            $(this).toggle(okStatus && okSearch);
         });
+
+        $('#roomsEmpty').toggle($('.room-card:visible').length === 0);
+    }
+
+    $('#roomStatusFilter').on('change', applyRoomFilters);
+    $('#roomSearch').on('input', applyRoomFilters);
+    $('#roomFilterClear').on('click', function() {
+        $('#roomSearch').val('');
+        $('#roomStatusFilter').val('all');
+        applyRoomFilters();
     });
-
-
 });
 </script>
-
-@endsection
+@endpush

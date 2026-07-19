@@ -1,7 +1,7 @@
 @extends('layouts.public.auth')
 @section('content')
         <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
-            <div class="mt-6 flex justify-center transform transition-hover hover:scale-105 duration-300">
+            <div class="mt-6 flex justify-center transition-transform duration-300 ease-out hover:scale-105">
                 <img src="{{ asset('image/FHLogo2.png') }}" alt="FH" class="h-20 w-auto drop-shadow-2xl">
             </div>
             
@@ -44,16 +44,18 @@
 
                     <form class="space-y-4" method="POST" action="{{ route('staff.otp.verify') }}">
                         @csrf
-                        <input type="text" placeholder="OTP Code" name="otp_code" id="otp_code" maxlength="6" required autofocus
-                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3B612A] focus:bg-white outline-none transition-all placeholder:text-slate-400">
+                        <input type="text" placeholder="••••••" name="otp_code" id="otp_code" maxlength="6" required autofocus
+                               inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl text-center text-2xl font-bold tracking-[0.45em] tabular-nums focus:ring-2 focus:ring-brand-light/60 focus:border-brand-light focus:bg-white outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-slate-300 placeholder:tracking-[0.45em]">
 
-                        <button type="submit" class="w-full bg-brand hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
+                        <button type="submit" class="w-full bg-brand hover:bg-brand-light text-white font-bold py-4 rounded-2xl shadow-xl transition-[background-color,transform,box-shadow] duration-200 ease-out active:scale-[0.98] mt-2">
                             Verify OTP
                         </button>
                     </form>
-                    <form class="space-y-4" method="POST" action="{{ route('staff.otp.resend') }}">
+                    {{-- Secondary action stays quiet — one primary CTA per screen --}}
+                    <form method="POST" action="{{ route('staff.otp.resend') }}">
                         @csrf
-                        <button type="submit" class="w-full bg-brand hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
+                        <button type="submit" class="w-full text-sm font-bold text-brand py-3 mt-2 rounded-2xl hover:bg-brand-muted transition-[background-color,transform] duration-200 ease-out active:scale-[0.99]">
                             Didn’t get the code? Resend OTP
                         </button>
                     </form>

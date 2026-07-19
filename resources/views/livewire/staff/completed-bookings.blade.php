@@ -10,6 +10,10 @@
             <option value="oldest">Oldest first</option>
         </select>
         <div class="filter-toolbar-spacer"></div>
+        <span class="refresh-chip" wire:loading.delay.flex wire:target="search, sort, resetFilters, gotoPage, previousPage, nextPage">
+            <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+            Updating
+        </span>
         @if($search)
             <button type="button" wire:click="resetFilters" class="filter-clear">
                 <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
@@ -20,6 +24,7 @@
     @if($bookings->isEmpty())
         <x-admin.ui.empty-state icon="check-circle" title="No completed bookings found." />
     @else
+        <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, sort, resetFilters, gotoPage, previousPage, nextPage">
         <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
             <table class="data-table">
                 <thead>
@@ -77,7 +82,8 @@
         </div>
 
         <div class="mt-6">
-            {{ $bookings->links() }}
+            {{ $bookings->links('vendor.pagination.admin') }}
+        </div>
         </div>
     @endif
 </x-admin.ui.section-card>

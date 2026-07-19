@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Staff\frontdesk;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Room;
-use App\Models\User;
 use App\Models\Booking;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
@@ -36,20 +33,40 @@ class FrontDeskDashboardController extends Controller
             $values[] = $bookingsPerMonth[$i]->total ?? 0;   // 0 if no bookings
         }
 
+        // Desk-day KPIs: the desk lives in Manila time while the app clock
+        // may be UTC, so "today" is pinned to Asia/Manila.
+        $manilaToday = now('Asia/Manila')->toDateString();
+
+        $arrivalsToday = Booking::whereDate('check_in', $manilaToday)
+            ->whereIn('status', Booking::BLOCKING_STATUSES)
+            ->count();
+
+        $departuresToday = Booking::whereDate('check_out', $manilaToday)
+            ->where('status', 'active')
+            ->count();
+
+        $inHouse = Booking::where('status', 'active')->count();
+
         $totalRooms = Room::count();
-        $totalUsers = User::count();
-        $totalBookings = Booking::count();
+        $availableTonight = Room::where('status', 'available')->count();
 
-        $totalRevenue = Payment::where('status', 'success')->sum('amount');
+        // Payments recorded during Manila's today (created_at is stored in
+        // the app timezone, so convert the Manila day bounds before querying)
+        $dayStart = now('Asia/Manila')->startOfDay()->setTimezone(config('app.timezone'));
+        $dayEnd = now('Asia/Manila')->endOfDay()->setTimezone(config('app.timezone'));
+        $collectedToday = Payment::where('status', 'success')
+            ->whereBetween('created_at', [$dayStart, $dayEnd])
+            ->sum('amount');
 
-        //dd(Auth::guard('staff')->user());
         return view('staff.frontdesk.dashboard.index', compact(
-            'totalRooms', 
-            'totalUsers', 
-            'totalBookings',
             'labels',
             'values',
-            'totalRevenue',
+            'arrivalsToday',
+            'departuresToday',
+            'inHouse',
+            'totalRooms',
+            'availableTonight',
+            'collectedToday',
         ));
     }
 }

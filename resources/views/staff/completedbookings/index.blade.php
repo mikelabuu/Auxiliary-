@@ -8,7 +8,7 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
     <x-admin.ui.page-header subtitle="Bookings that have been checked out.">
-        Completed <span class="text-clsu-700">Bookings</span>
+        Completed Bookings
     </x-admin.ui.page-header>
 
     {{-- Livewire handles search, filter, sort, and pagination reactively --}}
@@ -24,12 +24,13 @@
 $(function () {
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
-    function openModal(id) { $('#' + id).removeClass('hidden').addClass('flex'); }
-    function closeModal(id) { $('#' + id).addClass('hidden').removeClass('flex'); }
+    // Animated modal helpers live in layouts/admin (window.openModal/closeModal)
+    const openModal = (id) => window.openModal(id);
+    const closeModal = (id) => window.closeModal(id);
 
     $(document).on('click', '[data-modal-close]', function () { closeModal($(this).data('modal-close')); });
     $(document).on('keydown', function (e) {
-        if (e.key === 'Escape') $('#bookingModal').addClass('hidden').removeClass('flex');
+        if (e.key === 'Escape') closeModal('bookingModal');
     });
 
     $(document).on('click', '.password-verify', function (e) {

@@ -49,7 +49,7 @@
                     <span class="status {{ $statusClassMap[$stay->status] ?? 'status-neutral' }}">{{ ucwords(str_replace('_', ' ', $stay->status)) }}</span>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2.5 text-xs text-stone-500">
-                    <p>Stay <span class="block font-semibold text-stone-700 font-data tabnum">{{ $stay->check_in->format('M d') }} – {{ $stay->check_out->format('M d, Y') }}</span></p>
+                    <p>Stay <span class="block font-semibold text-stone-700 font-data tabnum">{{ $stay->check_in->format('M d') }} - {{ $stay->check_out->format('M d, Y') }}</span></p>
                     <p>{{ Str::plural('Night', $nights) }} <span class="block font-semibold text-stone-700 font-data tabnum">{{ $nights }}</span></p>
                     <p>Rooms <span class="block font-semibold text-stone-700 font-data">{{ $rooms ?: '—' }}</span></p>
                 </div>

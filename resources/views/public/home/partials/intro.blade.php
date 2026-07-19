@@ -53,21 +53,28 @@
             var wordmark = document.getElementById('introWordmark');
             var title = document.getElementById('heroTitle');
 
-            // FLIP: measure the resting position of the headline's second
-            // line ("Farmers Hostel") and fly the wordmark onto it.
-            if (wordmark && title && wordmark.animate) {
-                var lines = title.querySelectorAll('.reveal-line');
-                var target = lines.length ? lines[lines.length - 1] : title;
+            // FLIP: the headline no longer carries the brand name, so the
+            // wordmark flies home to the nav brand label instead. On phones
+            // that label is hidden — fall back to a fade-in-place.
+            if (wordmark && wordmark.animate) {
+                var target = document.querySelector('#siteNav .font-display');
                 var from = wordmark.getBoundingClientRect();
-                var to = target.getBoundingClientRect();
-                var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
-                var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
-                var s = Math.max(0.35, Math.min(2.5, to.height / from.height));
-                wordmark.animate([
-                    { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
-                    { transform: 'translate(' + dx * 0.85 + 'px, ' + dy * 0.85 + 'px) scale(' + ((1 + s) / 2) + ')', opacity: 0.55, offset: 0.7 },
-                    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + s + ')', opacity: 0 }
-                ], { duration: 950, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                var to = target ? target.getBoundingClientRect() : null;
+                if (to && to.width > 8) {
+                    var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+                    var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+                    var s = Math.max(0.1, Math.min(2.5, to.height / from.height));
+                    wordmark.animate([
+                        { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+                        { transform: 'translate(' + dx * 0.85 + 'px, ' + dy * 0.85 + 'px) scale(' + ((1 + s) / 2) + ')', opacity: 0.55, offset: 0.7 },
+                        { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + s + ')', opacity: 0 }
+                    ], { duration: 950, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                } else {
+                    wordmark.animate([
+                        { transform: 'scale(1)', opacity: 1 },
+                        { transform: 'scale(0.92)', opacity: 0 }
+                    ], { duration: 600, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                }
             }
 
             splash.classList.add('is-exiting');

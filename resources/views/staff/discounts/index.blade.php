@@ -8,7 +8,7 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
     <x-admin.ui.page-header subtitle="Review Senior Citizen / PWD verification documents and approve the 20% discount.">
-        Discount <span class="text-clsu-700">Requests</span>
+        Discount Requests
         <x-slot:actions>
             <x-admin.ui.button variant="secondary" :href="route('reports.discounts.all')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />

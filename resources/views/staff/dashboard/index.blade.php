@@ -32,6 +32,11 @@ $.ajaxSetup({
         </x-slot:actions>
     </x-admin.ui.page-header>
 
+    {{-- Stat cards + secondary strip: live Livewire component (polls + follows
+         the same broadcast pushes as the room map). KPIs lead the page — the
+         numbers are what a manager scans first; actions follow. --}}
+    <livewire:dashboard.stat-cards />
+
     <!-- Quick Actions Grid — each tile lands on the page where the task is actually completed -->
     <div class="animate-in grid grid-cols-2 lg:grid-cols-4 gap-3" style="animation-delay:20ms">
         <x-admin.ui.quick-action icon="plus" title="New Booking" subtitle="Walk-in or phone" :href="route('staff.manualbooking')" />
@@ -40,12 +45,8 @@ $.ajaxSetup({
         <x-admin.ui.quick-action icon="credit-card" title="Payments" subtitle="Review the ledger" :href="route('staff.paymentlogs.index')" />
     </div>
 
-    {{-- Stat cards + secondary strip: live Livewire component (polls + follows
-         the same broadcast pushes as the room map) --}}
-    <livewire:dashboard.stat-cards />
-
-    <!-- Bookings Insights modal (opened from the page header) -->
-    <x-admin.ui.modal id="bookingInsightsModal" icon="chart-bar" title="Bookings Insights" max-width="xl" scroll-body>
+    <!-- Booking Insights modal (opened from the page header) -->
+    <x-admin.ui.modal id="bookingInsightsModal" icon="chart-bar" title="Booking Insights" max-width="xl" scroll-body>
         <div class="modal-body">
             <div class="flex items-center justify-between gap-3 mb-6">
                 <p class="text-xs text-stone-500">Peak month: <span class="font-semibold text-palay-700">{{ $peakMonthName }} · {{ $peakMonthCount }} bookings</span></p>
@@ -75,7 +76,7 @@ $.ajaxSetup({
                             <div class="border-t border-dashed border-stone-100"></div>
                             <div></div>
                         </div>
-                        <div class="relative h-full flex items-end gap-2 px-1">
+                        <div class="relative h-full flex items-end gap-2 px-1 chart-rise">
                             @foreach($values as $index => $val)
                                 @php
                                     $heightPercent = $maxScale > 0 ? ($val / $maxScale) * 100 : 0;
@@ -112,8 +113,8 @@ $.ajaxSetup({
 
     <script>
       (function () {
-        function openBI() { $('#bookingInsightsModal').removeClass('hidden').addClass('flex'); }
-        function closeBI() { $('#bookingInsightsModal').addClass('hidden').removeClass('flex'); }
+        function openBI() { window.openModal('bookingInsightsModal'); }
+        function closeBI() { window.closeModal('bookingInsightsModal'); }
         $(document).on('click', '#openInsightsBtn', openBI);
         $('#bookingInsightsModal').on('click', '[data-modal-close]', closeBI);
         $(document).on('keydown', function (e) { if (e.key === 'Escape' && $('#bookingInsightsModal').hasClass('flex')) closeBI(); });
@@ -217,10 +218,11 @@ $.ajaxSetup({
                         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Has bookings</span>
                     </div>
                 </div>
+                {{-- Live month summary — counts the amber dots above --}}
                 <div class="px-4 pb-4">
                     <div class="bg-gradient-to-br from-clsu-50 to-white border border-clsu-100 rounded-xl p-3.5">
-                        <p class="text-xs font-semibold text-clsu-800">Check dates to plan ahead</p>
-                        <p class="text-[11px] text-clsu-600 mt-0.5">Use manual booking to block rooms.</p>
+                        <p class="text-xs font-semibold text-clsu-800" id="calStatTitle"></p>
+                        <p class="text-[11px] text-clsu-600 mt-0.5" id="calStatSub"></p>
                     </div>
                 </div>
             </div>
@@ -292,6 +294,19 @@ $.ajaxSetup({
       }
 
       calendarDays.innerHTML = daysHTML;
+
+      // Month summary under the grid: real occupancy signal, not filler copy
+      const mm = String(month + 1).padStart(2, '0');
+      let bookedCount = 0;
+      bookedDates.forEach(d => { if (d.startsWith(`${year}-${mm}-`)) bookedCount++; });
+      const statTitle = document.getElementById('calStatTitle');
+      const statSub = document.getElementById('calStatSub');
+      if (statTitle && statSub) {
+        statTitle.textContent = bookedCount > 0
+          ? `${bookedCount} ${bookedCount === 1 ? 'day' : 'days'} with guests`
+          : 'No booked dates';
+        statSub.textContent = `${months[month]} ${year} · active and upcoming stays`;
+      }
     };
 
     prevBtn.addEventListener("click", () => {
@@ -483,7 +498,7 @@ document.addEventListener('DOMContentLoaded', function () {
             + '<div class="flex items-center justify-between gap-2">'
             + '<p class="guest-history-link cursor-pointer hover:underline text-sm font-semibold text-stone-800 truncate" data-booking-id="' + esc(b.id) + '" title="View guest history">' + esc(b.guest_name) + '</p>'
             + chip + '</div>'
-            + '<p class="text-xs text-stone-500 mt-0.5 font-data tabnum">' + esc(b.check_in_formatted) + ' – ' + esc(b.check_out_formatted)
+            + '<p class="text-xs text-stone-500 mt-0.5 font-data tabnum">' + esc(b.check_in_formatted) + ' - ' + esc(b.check_out_formatted)
             + ' · ' + esc(b.nights) + (b.nights == 1 ? ' night' : ' nights') + ' · ' + esc(b.status) + '</p>'
             + '</div>';
     }

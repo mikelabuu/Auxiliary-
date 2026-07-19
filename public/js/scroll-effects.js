@@ -1,0 +1,173 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ * Farmers Hostel — Scroll-scrub effects
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Three scrubbed (position-mapped, reversible) scroll effects, ported from
+ * Skiper UI's React/Framer Motion demos into the same vanilla, reduced-
+ * motion-aware idiom as parallax.js:
+ *
+ *  [data-fx-band]   → cinematic mask reveal (Skiper 29 / siena.film): a
+ *                     full-bleed band starts inset in a rounded frame and
+ *                     expands to full bleed as it scrolls into view. The
+ *                     image inside keeps its own parallax drift, so frame
+ *                     and photo move at different rates, like a camera pull.
+ *  [data-fx-thread] → scroll-drawn SVG path (Skiper 19): a gold thread
+ *                     draws itself down the story section, its tip keyed to
+ *                     the reading position. The path carries pathLength="1"
+ *                     so the dash math is normalized and the markup can
+ *                     reshape the curve freely.
+ *  [data-fx-words]  → word-level materialize (Skiper 31, words not chars —
+ *                     per-character 3D on a full paragraph reads as noise):
+ *                     each word eases from lowered/blurred/dim to rest,
+ *                     staggered by index, as the paragraph crosses the
+ *                     viewport's reading band.
+ *
+ * Direct scrub, no lerp: on desktop Lenis already supplies the inertia, and
+ * a second smoothing layer would detach the effects from the scrollbar.
+ * All styles written here are paint/composite-only (clip-path, dashoffset,
+ * transform, opacity, filter), so the fresh rect reads each frame never
+ * trigger layout thrash. No-JS / reduced-motion pages render fully static —
+ * nothing is hidden by default.
+ */
+(function () {
+    'use strict';
+
+    const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduceMQ.matches) return;
+
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    // Smoothstep — softens both ends of a scrub without hiding the mapping
+    const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+
+    let viewH = window.innerHeight;
+    let viewW = window.innerWidth;
+    // Blur is a desktop luxury — same mobile stance as parallax.js
+    let allowBlur = viewW >= 768;
+
+    // ── Collect ─────────────────────────────────────────────────────
+    const bands = [];
+    document.querySelectorAll('[data-fx-band]').forEach((el) => {
+        bands.push({ el, done: false });
+    });
+
+    const threads = [];
+    document.querySelectorAll('[data-fx-thread]').forEach((svg) => {
+        const path = svg.querySelector('path');
+        if (!path) return;
+        path.style.strokeDasharray = '1 1';
+        path.style.strokeDashoffset = '1';
+        threads.push({ el: svg, path });
+    });
+
+    const wordSets = [];
+    document.querySelectorAll('[data-fx-words]').forEach((p) => {
+        const words = p.querySelectorAll('.fw');
+        if (!words.length) return;
+        // Arms the inline-block/will-change CSS — only under JS control,
+        // so a no-JS page keeps plain, fully visible text.
+        p.classList.add('fx-words-on');
+        wordSets.push({ el: p, words });
+    });
+
+    if (!bands.length && !threads.length && !wordSets.length) return;
+
+    // ── Frame updates ───────────────────────────────────────────────
+
+    function updateBand(item) {
+        const r = item.el.getBoundingClientRect();
+        // 0 → band top at the fold; 1 → top has climbed 78% of the viewport
+        const p = smooth((viewH - r.top) / (viewH * 0.78));
+        if (p >= 1) {
+            // Fully revealed: hand back an unclipped element so nothing is
+            // left masking while the band just sits there.
+            if (!item.done) { item.el.style.clipPath = ''; item.done = true; }
+            return;
+        }
+        item.done = false;
+        const inv = 1 - p;
+        const x = (inv * 0.07 * viewW).toFixed(1);
+        const y = (inv * 0.055 * viewH).toFixed(1);
+        const rad = (inv * 40).toFixed(1);
+        item.el.style.clipPath = 'inset(' + y + 'px ' + x + 'px round ' + rad + 'px)';
+    }
+
+    function updateThread(item) {
+        const r = item.el.getBoundingClientRect();
+        // Tip enters at ~82% of the viewport, completes as the section's
+        // bottom clears the reading band — the line tracks reading pace.
+        const start = viewH * 0.82;
+        const end = viewH * 0.42 - r.height;
+        const p = smooth((start - r.top) / (start - end));
+        item.path.style.strokeDashoffset = (1 - p).toFixed(4);
+    }
+
+    function updateWords(item) {
+        const r = item.el.getBoundingClientRect();
+        // The sweep begins as the paragraph clears the fold and completes
+        // when its middle reaches the upper reading band.
+        const start = viewH * 0.94;
+        const end = viewH * 0.38 - r.height / 2;
+        const P = clamp((start - r.top) / (start - end), 0, 1);
+        const n = item.words.length;
+        const span = 0.35; // each word's reveal window within the sweep
+        for (let i = 0; i < n; i++) {
+            const offset = (i / Math.max(1, n - 1)) * (1 - span);
+            const t = smooth((P - offset) / span);
+            const w = item.words[i];
+            w.style.opacity = (0.12 + 0.88 * t).toFixed(3);
+            w.style.transform = t >= 1 ? '' : 'translateY(' + ((1 - t) * 0.35).toFixed(3) + 'em)';
+            if (allowBlur) w.style.filter = t >= 1 ? '' : 'blur(' + ((1 - t) * 5).toFixed(2) + 'px)';
+        }
+    }
+
+    // ── Loop (scroll-armed rAF, idle when still) ────────────────────
+    let ticking = false;
+    let dead = false;
+
+    function render() {
+        ticking = false;
+        if (dead) return;
+        for (const b of bands) updateBand(b);
+        for (const t of threads) updateThread(t);
+        for (const w of wordSets) updateWords(w);
+    }
+
+    function requestTick() {
+        if (!ticking && !dead) {
+            ticking = true;
+            requestAnimationFrame(render);
+        }
+    }
+
+    window.addEventListener('scroll', requestTick, { passive: true });
+    window.addEventListener('resize', () => {
+        viewH = window.innerHeight;
+        viewW = window.innerWidth;
+        allowBlur = viewW >= 768;
+        requestTick();
+    }, { passive: true });
+    // Image loads shift layout after DOMContentLoaded — repaint once settled
+    window.addEventListener('load', requestTick);
+
+    // ── Live reduced-motion toggle: return everything to natural rest ──
+    reduceMQ.addEventListener('change', (e) => {
+        if (!e.matches) return;
+        dead = true;
+        for (const b of bands) b.el.style.clipPath = '';
+        for (const t of threads) {
+            t.path.style.strokeDasharray = '';
+            t.path.style.strokeDashoffset = '';
+        }
+        for (const s of wordSets) {
+            s.el.classList.remove('fx-words-on');
+            s.words.forEach((w) => {
+                w.style.opacity = '';
+                w.style.transform = '';
+                w.style.filter = '';
+            });
+        }
+    });
+
+    requestTick();
+})();

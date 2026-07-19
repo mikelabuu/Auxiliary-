@@ -26,6 +26,10 @@
                 </button>
             @endforeach
             <div class="filter-toolbar-spacer"></div>
+            <span class="refresh-chip" wire:loading.delay.flex wire:target="status, sort, gotoPage, previousPage, nextPage">
+                <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+                Updating
+            </span>
             <select wire:model.live="sort" class="filter-select" aria-label="Sort order">
                 <option value="">Newest first</option>
                 <option value="oldest">Oldest first</option>
@@ -36,6 +40,7 @@
         @if($discounts->isEmpty())
             <x-admin.ui.empty-state icon="tag" title="No discount requests in this view." />
         @else
+            <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="status, sort, gotoPage, previousPage, nextPage">
             <div class="scroll-x -mx-6 border-t border-stone-100">
                 <table class="data-table">
                     <thead>
@@ -90,9 +95,9 @@
                 </table>
             </div>
 
-            <div class="mt-6 flex flex-col items-center gap-2">
-                {{ $discounts->links('vendor.pagination.simple-tailwind') }}
-                <p class="text-xs text-stone-400">Showing {{ $discounts->firstItem() }}–{{ $discounts->lastItem() }} of {{ $discounts->total() }} requests</p>
+            <div class="mt-6">
+                {{ $discounts->links('vendor.pagination.admin') }}
+            </div>
             </div>
         @endif
     </x-admin.ui.section-card>

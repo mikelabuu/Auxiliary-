@@ -66,7 +66,7 @@
         <span class="text-stone-400 font-data tabnum">{{ $dormOccupied }} / {{ $dormTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-all duration-500" style="width:{{ $dormPercent }}%"></div>
+        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $dormPercent }}%"></div>
       </div>
     </div>
     <div>
@@ -75,7 +75,7 @@
         <span class="text-stone-400 font-data tabnum">{{ $standardOccupied }} / {{ $standardTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-all duration-500" style="width:{{ $standardPercent }}%"></div>
+        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $standardPercent }}%"></div>
       </div>
     </div>
     <div>
@@ -84,7 +84,7 @@
         <span class="text-stone-400 font-data tabnum">{{ $deluxeOccupied }} / {{ $deluxeTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-all duration-500" style="width:{{ $deluxePercent }}%"></div>
+        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $deluxePercent }}%"></div>
       </div>
     </div>
   </div>
@@ -97,9 +97,9 @@
             {{ $occupied }} room(s) currently occupied.
         @endif
     </p>
-    <a href="{{ route('staff.rooms') }}" class="mt-2 text-xs font-bold text-clsu-700 flex items-center gap-1 hover:gap-1.5 transition-all !no-underline w-fit">
+    <a href="{{ route('staff.rooms') }}" class="group mt-2 text-xs font-bold text-clsu-700 flex items-center gap-1 !no-underline w-fit">
       Manage Rooms
-      <svg class="icon w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg class="icon w-3 h-3 transition-transform duration-200 ease-out group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
   </div>
 </div>

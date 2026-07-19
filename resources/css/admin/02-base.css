@@ -1,0 +1,77 @@
+/* Part 02 of the admin bundle — Reset, base, utility classes, ambient overlay.
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+}
+body {
+    font-family: var(--font-sans);
+    font-size: var(--base-font-size);
+    color: var(--color-ink);
+    background: var(--color-surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Cross-page transitions: soft fade between admin pages while the
+   sidebar and topbar hold still (they get their own snapshots). */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root),
+    ::view-transition-new(root) { animation-duration: 200ms; }
+    .shell-sidebar { view-transition-name: admin-sidebar; }
+    .shell-topbar { view-transition-name: admin-topbar; }
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.font-mono, .font-data { font-family: var(--font-mono); }
+.font-display { font-family: var(--font-display); }
+.text-ink { color: var(--color-ink); }
+.text-muted { color: var(--color-muted); }
+.text-faint { color: var(--color-faint); }
+.text-g-900 { color: var(--color-g-900); }
+.text-g-700 { color: var(--color-g-700); }
+.text-au-500 { color: var(--color-au-500); }
+.bg-surface { background-color: var(--color-surface); }
+.tabnum { font-variant-numeric: tabular-nums; }
+
+.section-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--color-faint);
+}
+.section-title {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 700; color: var(--color-ink);
+    letter-spacing: -.01em;
+}
+.kv-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--color-faint); margin-bottom: 5px;
+}
+.kv-value {
+    font-size: 15px; font-weight: 700; color: var(--color-ink);
+}
+
+/* ============================================================
+   AMBIENT OVERLAY — faint grid + soft mint washes at the top
+   ============================================================ */
+.grid-overlay {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+        radial-gradient(48% 34% at 10% 0%, rgba(22,179,100,.06) 0%, transparent 65%),
+        radial-gradient(42% 30% at 90% 0%, rgba(60,203,127,.05) 0%, transparent 65%),
+        linear-gradient(rgba(22,179,100,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(22,179,100,.028) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 100%);
+}

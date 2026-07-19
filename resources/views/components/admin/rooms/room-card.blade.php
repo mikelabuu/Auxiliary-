@@ -43,7 +43,7 @@
     }
 @endphp
 
-<div {{ $attributes->merge(['class' => 'room-card group/card relative bg-white rounded-xl border border-stone-200 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 transition-all duration-200 cursor-pointer']) }}
+<div {{ $attributes->merge(['class' => 'room-card group/card relative bg-white rounded-xl border border-stone-200 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 cursor-pointer']) }}
      data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}" @if($current) data-held="1" @endif>
     <div class="status-bar h-1 rounded-t-xl {{ $meta['bar'] }}"></div>
 

@@ -1,21 +1,33 @@
-<header id="firstsection" class="vignette-emerald relative isolate flex min-h-[100dvh] flex-col justify-end overflow-hidden bg-night">
-    <!-- Ken-burns backdrop, graded down so the bone type carries the frame -->
+<header id="firstsection" class="vignette-emerald relative isolate flex min-h-[100dvh] flex-col overflow-hidden bg-night">
+    <!-- Ken-burns backdrop. The directional scrim below carries type
+         legibility: solid night on the left where the copy sits, thinning
+         rightward so the building (and its real signage) stays visible
+         instead of being graded into murk. -->
     <div class="absolute inset-0 z-0 will-change-transform prlx-hero-bg">
-        <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior at dusk, nestled inside the CLSU campus" fetchpriority="high" decoding="async" class="img-night-grade h-full w-full animate-ken-burns object-cover">
-        <div class="absolute inset-0 bg-linear-to-b from-night/70 via-night/25 to-night/70"></div>
+        {{-- The photo's aspect ratio ≈ the viewport's, so object-position has
+             no crop slack: the scaled origin-left wrapper creates it, pushing
+             the facade signage right, out from behind the headline (desktop
+             only; the portrait crop already clears it on mobile). Overlays
+             stay siblings so the scrims never scale with the photo. --}}
+        <div class="absolute inset-0 md:origin-left md:scale-[1.28]">
+            <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior inside the CLSU campus" fetchpriority="high" decoding="async" class="img-night-grade h-full w-full animate-ken-burns object-cover object-[25%_center]">
+        </div>
+        <div class="absolute inset-0 bg-linear-to-r from-night/95 via-night/70 via-50% to-night/15"></div>
+        <div class="absolute inset-x-0 top-0 h-44 bg-linear-to-b from-night/70 to-transparent"></div>
         <!-- The hero melts into the page instead of ending at an edge -->
         <div class="absolute inset-x-0 bottom-0 h-72 bg-linear-to-b from-transparent to-night"></div>
     </div>
 
-    <!-- Headline (left-aligned, lines rise out of clipped masks) -->
-    <div class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-24 pb-10 text-left text-bone prlx-hero-content">
-        <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s">A premium stay on campus · Est. 1998</span></p>
-        <h1 id="heroTitle" class="hero-text-glow mt-5 font-display leading-[1.06] text-bone" style="font-size:clamp(2.5rem, 5.5vw, 4.75rem)">
-            <span class="reveal-line"><span style="--rise-delay:.28s">Welcome to</span></span>
-            <span class="reveal-line"><span style="--rise-delay:.46s"><x-booking.ui.flip-fade-text text="Farmers" :duration="4.5" class="italic text-gold" /> Hostel</span></span>
+    <!-- Headline: vertically centered, left-anchored on the scrim; lines
+         rise out of clipped masks (reveal-line reserves italic descenders) -->
+    <div class="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pt-28 pb-8 text-left text-bone prlx-hero-content">
+        <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s">Inside CLSU since 1998</span></p>
+        <h1 id="heroTitle" class="mt-5 font-display leading-[1.1] text-bone" style="font-size:clamp(2.75rem, 6.2vw, 5.5rem)">
+            <span class="reveal-line"><span style="--rise-delay:.28s">The <span class="italic text-gold">quietest</span></span></span>
+            <span class="reveal-line"><span style="--rise-delay:.46s">address on campus</span></span>
         </h1>
-        <p class="text-pretty mt-5 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg animate-[fade-in-up_1s_ease-out_0.85s_both]">
-            Quiet rooms in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.
+        <p class="text-pretty mt-6 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg animate-[fade-in-up_1s_ease-out_0.85s_both]">
+            A boutique hostel in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.
         </p>
     </div>
 

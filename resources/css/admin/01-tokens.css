@@ -1,0 +1,144 @@
+/* Part 01 of the admin bundle — Design tokens (@theme) + custom properties.
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+@theme {
+    --font-sans: 'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --font-display: 'Sora', 'Geist', ui-sans-serif, system-ui, sans-serif;
+    /* Existing views use .font-data — same mono stack */
+    --font-data: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+    /* ── Green (Primary Brand) — fresh spring emerald ── */
+    --color-g-950: #052e1c;
+    --color-g-900: #084c2e;
+    --color-g-800: #095c37;
+    --color-g-700: #087443;
+    --color-g-600: #099250;
+    --color-g-500: #16b364;
+    --color-g-400: #3ccb7f;
+    --color-g-300: #73e2a3;
+    --color-g-200: #aaf0c4;
+    --color-g-100: #d3f8e0;
+    --color-g-50:  #edfdf3;
+
+    /* ── Amber (semantic accent: pending / warning / revenue) ── */
+    --color-au-800: #93370d;
+    --color-au-700: #b54708;
+    --color-au-600: #dc6803;
+    --color-au-500: #f79009;
+    --color-au-300: #fec84b;
+    --color-au-100: #fef0c7;
+    --color-au-50:  #fffaeb;
+
+    /* ── Sage Neutrals — green-tinted grays ── */
+    --color-ink:    #14201a;
+    --color-muted:  #51655a;
+    --color-faint:  #8ba295;
+    --color-border: #e2ebe4;
+    --color-surface: #f4f8f5;
+    --color-card:   #ffffff;
+
+    /* ─────────────────────────────────────────────────────────
+       Compat ramps — the existing admin views were written with
+       clsu-* / palay-* / ember-* / stone-* utilities. Re-pointing
+       those names at this palette reskins every page at once.
+       ───────────────────────────────────────────────────────── */
+    --color-clsu-50:  #edfdf3;
+    --color-clsu-100: #d3f8e0;
+    --color-clsu-200: #aaf0c4;
+    --color-clsu-300: #73e2a3;
+    --color-clsu-400: #3ccb7f;
+    --color-clsu-500: #16b364;
+    --color-clsu-600: #099250;
+    --color-clsu-700: #087443;
+    --color-clsu-800: #095c37;
+    --color-clsu-900: #084c2e;
+    --color-clsu-950: #052e1c;
+
+    --color-palay-50:  #fffaeb;
+    --color-palay-100: #fef0c7;
+    --color-palay-200: #fedf89;
+    --color-palay-300: #fec84b;
+    --color-palay-400: #fdb022;
+    --color-palay-500: #f79009;
+    --color-palay-600: #dc6803;
+    --color-palay-700: #b54708;
+    --color-palay-800: #93370d;
+    --color-palay-900: #7a2e0e;
+
+    --color-ember-50:  #fef2f2;
+    --color-ember-100: #fee2e2;
+    --color-ember-200: #fecaca;
+    --color-ember-500: #ef4444;
+    --color-ember-600: #dc2626;
+    --color-ember-700: #b91c1c;
+    --color-ember-800: #991b1b;
+
+    /* stone-* → sage gray so raw utilities blend with the system */
+    --color-stone-50:  #f6f9f6;
+    --color-stone-100: #ecf2ed;
+    --color-stone-200: #dce6de;
+    --color-stone-300: #c3d2c7;
+    --color-stone-400: #93a698;
+    --color-stone-500: #64786c;
+    --color-stone-600: #4a5b50;
+    --color-stone-700: #39463e;
+    --color-stone-800: #25302a;
+    --color-stone-900: #17201b;
+    --color-stone-950: #0b100d;
+
+    /* Legacy tokens still referenced by shared partials */
+    --color-canvas: #f4f8f5;
+    --color-canvas-deep: #ecf2ed;
+    --color-emerald-deep: #087443;
+    --color-emerald: #16b364;
+    --color-cream: #ffffff;
+    --color-cream-warm: #f4f8f5;
+    --color-gold: #f79009;
+    --color-gold-soft: #fec84b;
+
+    /* Shadows — tinted to the emerald surface hue, never pure black */
+    --shadow-soft: 0 1px 2px rgba(9,60,38,.05);
+    --shadow-subtle: 0 1px 2px rgba(9,60,38,.05);
+    --shadow-card: 0 1px 2px rgba(9,60,38,.04), 0 6px 20px -6px rgba(9,60,38,.07);
+    --shadow-card-lg: 0 4px 8px rgba(9,60,38,.04), 0 16px 44px -10px rgba(9,60,38,.10);
+    --shadow-glow: 0 1px 1px rgba(255,255,255,.5) inset, 0 18px 40px -14px rgba(8,116,67,.35);
+}
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+:root {
+    --sidebar-w: 288px;
+    --sidebar-w-collapsed: 86px;
+    --topbar-h: 74px;
+    --content-max-width: 1640px;
+    --base-font-size: 16px;
+
+    /* Shape scale: one soft-radius family, applied everywhere */
+    --radius-xs: 7px;
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+
+    --shadow-xs: 0 1px 2px rgba(9,60,38,.05);
+    --shadow-card: 0 1px 2px rgba(9,60,38,.04), 0 6px 20px -6px rgba(9,60,38,.07);
+    --shadow-lg: 0 4px 8px rgba(9,60,38,.04), 0 16px 44px -10px rgba(9,60,38,.10);
+    --shadow-hover: 0 10px 34px -8px rgba(9,60,38,.14);
+    --shadow-xl: 0 24px 64px -14px rgba(9,60,38,.18);
+
+    /* Sidebar surface: airy white with a whisper of mint */
+    --sidebar-bg: #ffffff;
+    --sidebar-bg-deep: #f7fbf8;
+    --sidebar-line: #e8f1ea;
+
+    /* One easing family for the whole console */
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+    --ease-spring: cubic-bezier(.34, 1.3, .5, 1);
+    --transition: 220ms var(--ease-out);
+    --transition-slow: 400ms var(--ease-out);
+}

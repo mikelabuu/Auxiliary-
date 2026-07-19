@@ -102,13 +102,18 @@ document.addEventListener('DOMContentLoaded', function () {
         statEls.forEach(el => io.observe(el));
     }
 
-    // Testimonials Swiper — one editorial quote at a time, slow rotation
+    // Testimonials Swiper — stacked card deck (bundle's `cards` effect):
+    // the next quote peeks from behind with a slight fan, and the deck is
+    // draggable as well as button-driven. Shadows off — the glass cards
+    // carry their own night shadow. Reduced-motion keeps a plain slide.
     new Swiper('.testimonials-swiper', {
-        slidesPerView: 1,
-        spaceBetween: 32,
-        autoHeight: true,
-        loop: true,
-        speed: 750,
+        effect: reduceMotion ? 'slide' : 'cards',
+        cardsEffect: { perSlideOffset: 9, perSlideRotate: 2.2, slideShadows: false },
+        grabCursor: true,
+        // rewind, not loop: the cards effect positions slides by real index,
+        // and loop's clone/reorder machinery deadlocks it (slideNext no-ops).
+        rewind: true,
+        speed: 650,
         autoplay: reduceMotion ? false : { delay: 7000, pauseOnMouseEnter: true, disableOnInteraction: false },
         navigation: {
             nextEl: '.swiper-button-next-custom',

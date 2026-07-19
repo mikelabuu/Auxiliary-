@@ -19,13 +19,23 @@ class BookingsController extends Controller{
     {
         $search = $request->input('search'); // search query
         $sort   = $request->input('sort', 'latest'); // sort option
+        $status = $request->input('status', 'all'); // status tab
         $perPage = 12; // pagination
+
+        // Tab counts reflect the whole book, not the current search
+        $statusCounts = Booking::select('status', DB::raw('COUNT(*) as c'))
+            ->groupBy('status')
+            ->pluck('c', 'status');
 
         // Base query with reservations eager loaded
         $query = Booking::with('reservations');
 
         if ($search) {
             $query->where('id', $search);
+        }
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
         }
 
         // Sorting
@@ -46,7 +56,7 @@ class BookingsController extends Controller{
         // Paginate results
         $bookings = $query->paginate($perPage)->withQueryString();
 
-        return view('staff.frontdesk.bookings.index', compact('bookings', 'search', 'sort'));
+        return view('staff.frontdesk.bookings.index', compact('bookings', 'search', 'sort', 'status', 'statusCounts'));
     }
     
     public function checkout(Booking $booking)

@@ -1,0 +1,213 @@
+/* Part 10 of the admin bundle — V4 front desk console (Meadow Nightfall band).
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   V4 FRONT DESK CONSOLE — "Meadow Nightfall" band
+   Loaded by layouts/frontdesk, which shares this bundle with the
+   admin. Finexa format: one dark photographic hero band carrying
+   the greeting + pill nav; everything below it is the same Fresh
+   Meadow card workspace the admin uses. All .fd-* classes are
+   frontdesk-only; nothing in the admin shell references them.
+   ============================================================ */
+
+/* ── The band ── */
+.fd-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #f2f7f3;
+    background:
+        radial-gradient(120% 170% at 88% -30%, rgba(15, 77, 46, .85) 0%, transparent 55%),
+        linear-gradient(115deg, #0b100d 10%, #142019 62%, #0d2c1c 125%);
+}
+
+/* Photographic layer: the hostel, graded into the night band and
+   masked so it only lives on the right half (the Finexa artwork slot). */
+.fd-hero-photo {
+    position: absolute; inset: 0 0 0 auto; width: 72%; height: 100%;
+    object-fit: cover; object-position: 70% 40%;
+    opacity: .34;
+    filter: saturate(.68) brightness(.9) contrast(1.05);
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 38%, transparent 96%);
+    mask-image: linear-gradient(to left, rgba(0,0,0,1) 38%, transparent 96%);
+}
+.fd-hero-scrim {
+    position: absolute; inset: 0;
+    background:
+        linear-gradient(to bottom, transparent 55%, rgba(8, 13, 10, .92) 100%),
+        linear-gradient(100deg, rgba(11, 16, 13, .9) 26%, rgba(11, 16, 13, .25) 62%, rgba(11, 16, 13, .05) 100%);
+}
+
+/* Emerald aurora blobs behind the content; slow drift, GPU-only. */
+.fd-glow {
+    position: absolute; border-radius: 50%;
+    filter: blur(72px); pointer-events: none;
+}
+.fd-glow-a {
+    width: 540px; height: 540px; top: -240px; right: 10%;
+    background: radial-gradient(circle, rgba(22, 179, 100, .38), transparent 66%);
+}
+.fd-glow-b {
+    width: 440px; height: 440px; bottom: -230px; right: 36%;
+    background: radial-gradient(circle, rgba(9, 146, 80, .3), transparent 66%);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .fd-glow-a { animation: fdDrift 17s var(--ease-out) infinite alternate; }
+    .fd-glow-b { animation: fdDrift 21s var(--ease-out) infinite alternate-reverse; }
+}
+@keyframes fdDrift {
+    to { transform: translate3d(-46px, 26px, 0) scale(1.09); }
+}
+
+.fd-hero-inner {
+    position: relative; z-index: 10;
+    max-width: 1680px; margin: 0 auto;
+    padding: 22px 24px 84px;
+}
+
+/* ── Band chrome: brand, clock, staff chip, icon buttons ── */
+.fd-brand-title {
+    font-family: var(--font-display);
+    font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; color: #f6faf7;
+}
+.fd-brand-sub {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .3em;
+    text-transform: uppercase; color: rgba(159, 211, 180, .75);
+}
+
+/* Animated shiny text (periodic sheen sweeping through the label) */
+.fd-shine {
+    background: linear-gradient(110deg,
+        rgba(159, 211, 180, .8) 42%, #ffffff 50%, rgba(159, 211, 180, .8) 58%);
+    background-size: 240% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .fd-shine { animation: fdShine 5.2s linear infinite; }
+}
+@keyframes fdShine {
+    to { background-position: -140% 0; }
+}
+
+.fd-clock {
+    font-family: var(--font-mono); font-size: 13.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: #e7f0e9;
+}
+.fd-clock-date { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(190, 210, 197, .55); }
+
+.fd-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 5px 15px 5px 5px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(255, 255, 255, .06);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+.fd-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-size: 13px; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, #16b364, #087443);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+.fd-chip-name { font-size: 12.5px; font-weight: 700; color: #f2f7f3; line-height: 1.15; }
+.fd-chip-role { font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(159, 211, 180, .7); }
+
+.fd-iconbtn {
+    display: grid; place-items: center; width: 40px; height: 40px;
+    border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(255, 255, 255, .06);
+    color: rgba(233, 242, 236, .7);
+    transition: color var(--transition), border-color var(--transition),
+        background var(--transition), transform 140ms var(--ease-out);
+}
+.fd-iconbtn svg { width: 17px; height: 17px; }
+.fd-iconbtn:hover { color: #fff; border-color: rgba(115, 226, 163, .55); background: rgba(22, 179, 100, .14); }
+.fd-iconbtn:active { transform: scale(.93); }
+.fd-iconbtn:focus-visible { outline: 2px solid var(--color-g-400); outline-offset: 2px; }
+
+/* ── Greeting: date line + display headline with per-character reveal ── */
+.fd-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: #9fd3b4;
+}
+.fd-greeting {
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.2vw, 38px);
+    font-weight: 700; letter-spacing: -.02em; line-height: 1.16;
+    color: #f6faf7;
+}
+.fd-greeting .fd-accent { color: #73e2a3; }
+.fd-ch { display: inline-block; white-space: pre; }
+@media (prefers-reduced-motion: no-preference) {
+    .fd-ch {
+        opacity: 0; filter: blur(7px); transform: translateY(12px);
+        animation: fdChar 620ms var(--ease-out) forwards;
+        animation-delay: calc(var(--ch) * 24ms);
+    }
+}
+@keyframes fdChar {
+    to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+/* ── Pill nav: glass rail, solid-white active pill, and a soft
+   glide pill that follows the hovered link (dock-style). ── */
+.fd-nav {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 4px;
+    max-width: 100%; overflow-x: auto;
+    padding: 6px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(12, 20, 15, .48);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+    scrollbar-width: none;
+}
+.fd-nav::-webkit-scrollbar { display: none; }
+.fd-nav-link {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: 999px;
+    font-size: 12px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; white-space: nowrap; text-decoration: none;
+    color: rgba(233, 242, 236, .64);
+    transition: color var(--transition);
+}
+.fd-nav-link:hover { color: #fff; }
+.fd-nav-link:focus-visible { outline: 2px solid var(--color-g-400); outline-offset: 2px; }
+.fd-nav-link svg { width: 15px; height: 15px; flex-shrink: 0; transition: transform 340ms var(--ease-spring); }
+.fd-nav-link:hover svg { transform: translateY(-1px) scale(1.16); }
+.fd-nav-link.is-active {
+    color: var(--color-ink); background: #fff;
+    box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+.fd-nav-link.is-active svg { color: var(--color-g-700); }
+.fd-nav-glide {
+    position: absolute; left: 0; top: 0;
+    height: 20px; width: 20px; border-radius: 999px;
+    background: rgba(255, 255, 255, .1);
+    opacity: 0; pointer-events: none;
+    transition: transform 420ms var(--ease-spring), width 420ms var(--ease-spring),
+        height 420ms var(--ease-spring), opacity 180ms var(--ease-out);
+    will-change: transform, width;
+}
+.fd-nav.glide-on .fd-nav-glide { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    .fd-nav-glide { display: none; }
+    .fd-nav-link:hover svg { transform: none; }
+}
+
+/* ── Workspace: cards pull up over the band's bottom edge ── */
+.fd-main {
+    position: relative; z-index: 10;
+    max-width: 1680px; margin: -52px auto 0;
+    padding: 0 24px 72px;
+}
+@media (max-width: 640px) {
+    .fd-hero-inner { padding-bottom: 72px; }
+    .fd-main { margin-top: -44px; padding-left: 16px; padding-right: 16px; }
+}

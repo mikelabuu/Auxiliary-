@@ -283,8 +283,18 @@ class WalkInBookingController extends Controller
         // Collect booked room numbers
         $bookedRoomNumbers = $reservations->pluck('room_number')->toArray();
 
+        // Staff-managed capacities per type slug (legacy fallback for slugs
+        // that have no room_types row) — same shape as the admin manual
+        // booking endpoint so the room board can render capacity and labels.
+        $legacyCapacities = [
+            'deluxe' => 2, 'double' => 2, 'triple' => 3,
+            'quadruple' => 4, 'dormitory1' => 5, 'dormitory2' => 6,
+        ];
+        $typeCapacities = RoomType::pluck('capacity', 'slug');
+        $typeNames      = RoomType::pluck('name', 'slug');
+
         // Map rooms to availability
-        $result = $rooms->map(function ($room) use ($bookedRoomNumbers) {
+        $result = $rooms->map(function ($room) use ($bookedRoomNumbers, $typeCapacities, $typeNames, $legacyCapacities) {
             if (in_array($room->room_number, $bookedRoomNumbers)) {
                 $status = 'booked';
             } elseif ($room->status !== 'available') {
@@ -293,10 +303,15 @@ class WalkInBookingController extends Controller
                 $status = 'available';
             }
 
+            $slug = strtolower($room->room_type);
+
             return [
                 'id' => $room->room_number, // this will now be room_number for AJAX
                 'room_number' => $room->room_number,
                 'room_type' => $room->room_type,
+                'type_name' => $typeNames[$slug] ?? ucfirst($room->room_type),
+                'capacity' => (int) ($typeCapacities[$slug] ?? $legacyCapacities[$slug] ?? 1),
+                'wing' => $room->wing,
                 'price' => $room->price,
                 'status' => $status,
             ];

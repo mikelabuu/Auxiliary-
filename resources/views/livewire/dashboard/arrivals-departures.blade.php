@@ -8,23 +8,29 @@
         </div>
 
         {{-- Filter Buttons --}}
-        <div class="flex bg-stone-100 rounded-full p-1 text-xs font-semibold w-fit">
-            <button wire:click="$set('filterType', 'all')"
-                class="px-3 py-1.5 rounded-full transition-all cursor-pointer {{ $filterType === 'all' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
-                All
-            </button>
-            <button wire:click="$set('filterType', 'arrival')"
-                class="px-3 py-1.5 rounded-full transition-all cursor-pointer {{ $filterType === 'arrival' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
-                Arrivals
-            </button>
-            <button wire:click="$set('filterType', 'departure')"
-                class="px-3 py-1.5 rounded-full transition-all cursor-pointer {{ $filterType === 'departure' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
-                Departures
-            </button>
+        <div class="flex items-center gap-2.5">
+            <span class="refresh-chip" wire:loading.delay.flex wire:target="filterType, sortBy, gotoPage, previousPage, nextPage">
+                <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+                Updating
+            </span>
+            <div class="flex bg-stone-100 rounded-full p-1 text-xs font-semibold w-fit">
+                <button wire:click="$set('filterType', 'all')"
+                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'all' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    All
+                </button>
+                <button wire:click="$set('filterType', 'arrival')"
+                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'arrival' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    Arrivals
+                </button>
+                <button wire:click="$set('filterType', 'departure')"
+                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'departure' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    Departures
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="overflow-x-auto flex-1 p-5">
+    <div class="overflow-x-auto flex-1 p-5 wire-panel" wire:loading.delay.class="is-refreshing" wire:target="filterType, sortBy, gotoPage, previousPage, nextPage">
         <div class="scroll-x rounded-xl border border-stone-200">
             @if($arrivalsDepartures->isEmpty())
                 <div class="grid grid-cols-6 bg-stone-50 text-[10px] font-bold text-clsu-700 tracking-wide px-4 py-2.5 uppercase border-b border-stone-200">
@@ -36,7 +42,7 @@
                   </div>
                   <p class="text-sm font-semibold text-stone-700">No arrivals or departures today</p>
                   <p class="text-xs text-stone-400 mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
-                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-600 rounded-lg px-3.5 py-2 hover:bg-clsu-700 active:scale-[0.98] transition-all !no-underline shadow-sm">Create manual booking</a>
+                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-600 rounded-lg px-3.5 py-2 hover:bg-clsu-700 active:scale-[0.98] transition-[color,background-color,transform] duration-200 !no-underline shadow-sm">Create manual booking</a>
                 </div>
             @else
                 <table class="data-table" style="min-width:640px;">
@@ -123,7 +129,7 @@
     {{-- Pagination --}}
     @if ($arrivalsDepartures->hasPages())
         <div class="px-5 py-3 border-t border-stone-150 bg-white">
-            {{ $arrivalsDepartures->links() }}
+            {{ $arrivalsDepartures->links('vendor.pagination.admin') }}
         </div>
     @endif
 </div>

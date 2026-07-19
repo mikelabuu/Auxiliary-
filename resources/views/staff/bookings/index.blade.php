@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Admin - Bookings Hub')
-@section('page-title', 'Bookings Hub')
+@section('title', 'Admin - Booking Operations')
+@section('page-title', 'Booking Operations')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -14,9 +14,9 @@ $.ajaxSetup({
 </script>
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.ui.ops-header eyebrow="Operations Center"
-        subtitle="Manage, monitor, and verify every booking from reservation to check-out — arrivals, departures, and active stays in one live view.">
-        Bookings <span class="accent">Operations</span>
+    <x-admin.ui.ops-header
+        subtitle="Manage, monitor, and verify every booking from reservation to check-out. Arrivals, departures, and active stays in one live view.">
+        Booking Operations
         <x-slot:pills>
             <livewire:dashboard.booking-ops-stats />
         </x-slot:pills>

@@ -1,0 +1,138 @@
+/* Part 05 of the admin bundle — V3.1 motion & UX layer.
+   Imported in strict order by resources/css/admin.css; do not reorder. */
+
+/* ============================================================
+   V3.1 MOTION & UX LAYER
+   Cursor spotlights, count-ups (JS in layouts/admin), staggered
+   rows, growing bars, command-palette quick nav, density toggle,
+   back-to-top. All entrance motion is gated on reduced-motion.
+   ============================================================ */
+
+/* ── Cursor-tracked spotlight on interactive surfaces ──
+   layouts/admin.blade.php sets --spot-x/--spot-y on pointermove. */
+.mini-stat, .quick-action { position: relative; }
+.card::before, .stat-card::before, .mini-stat::before, .quick-action::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    pointer-events: none; z-index: 0;
+    background: radial-gradient(300px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+        rgba(22,179,100,.075), transparent 65%);
+    opacity: 0; transition: opacity 320ms var(--ease-out);
+}
+.card:hover::before, .stat-card:hover::before,
+.mini-stat:hover::before, .quick-action:hover::before { opacity: 1; }
+.stat-card-hero::before {
+    background: radial-gradient(300px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+        rgba(255,255,255,.16), transparent 65%);
+}
+
+/* ── Card header icons become tinted chips ── */
+.card-title svg {
+    width: 33px; height: 33px; padding: 7.5px;
+    background: linear-gradient(180deg, var(--color-g-50), var(--color-g-100));
+    border: 1px solid rgba(22,179,100,.16);
+    border-radius: 10px;
+    color: var(--color-g-600);
+    box-shadow: 0 1px 2px rgba(9,60,38,.05);
+}
+
+/* ── Topbar hairline: whisper of emerald under the glass ── */
+.shell-topbar::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1.5px;
+    background: linear-gradient(90deg,
+        transparent, rgba(22,179,100,.30) 18%, rgba(60,203,127,.40) 50%,
+        rgba(22,179,100,.22) 82%, transparent);
+    pointer-events: none;
+}
+
+/* ── Tables: subtle zebra + staggered row entrance ── */
+.data-table tbody tr:nth-child(even) { background: #f9fcfa; }
+.data-table tbody tr:hover { background: #f3fbf6; }
+@media (prefers-reduced-motion: no-preference) {
+    .data-table tbody tr { animation: rowIn 300ms var(--ease-out) both; }
+    .data-table tbody tr:nth-child(1) { animation-delay: 30ms; }
+    .data-table tbody tr:nth-child(2) { animation-delay: 60ms; }
+    .data-table tbody tr:nth-child(3) { animation-delay: 90ms; }
+    .data-table tbody tr:nth-child(4) { animation-delay: 120ms; }
+    .data-table tbody tr:nth-child(5) { animation-delay: 150ms; }
+    .data-table tbody tr:nth-child(6) { animation-delay: 180ms; }
+    .data-table tbody tr:nth-child(7) { animation-delay: 210ms; }
+    .data-table tbody tr:nth-child(n+8) { animation-delay: 240ms; }
+}
+@keyframes rowIn { from { opacity: 0; transform: translateY(4px); } }
+
+/* ── Progress / breakdown bars grow from zero on load ── */
+@media (prefers-reduced-motion: no-preference) {
+    .bar-fill, .dashboard-breakdown-fill { animation: growBar 900ms var(--ease-out); }
+}
+@keyframes growBar { from { width: 0; } }
+
+/* ── Dropdown & search panels pop from their trigger ──
+   Entry is @starting-style so it retargets smoothly if reopened mid-exit;
+   exit is a fast Alpine leave (markup) — always quicker than entry. */
+.user-menu-panel, .topbar-search-panel {
+    transform-origin: top right;
+    opacity: 1; transform: translateY(0) scale(1);
+    transition: opacity 180ms var(--ease-out), transform 200ms var(--ease-spring);
+    @starting-style { opacity: 0; transform: translateY(-6px) scale(.97); }
+}
+.topbar-search-panel { transform-origin: top center; }
+@keyframes menuPop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+
+/* ── Cross-page view transition: content softly rises in ── */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) { animation: 170ms var(--ease-out) both vtOut; }
+    ::view-transition-new(root) { animation: 260ms var(--ease-out) both vtIn; }
+}
+@keyframes vtOut { to { opacity: 0; transform: translateY(-5px); } }
+@keyframes vtIn { from { opacity: 0; transform: translateY(7px); } }
+
+/* ── Command palette quick navigation (topbar, empty query) ── */
+.quick-nav-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px; padding: 6px 10px 12px;
+}
+.quick-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: var(--color-muted);
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition), transform 140ms var(--ease-out);
+}
+.quick-nav-item:active { transform: scale(.98); }
+.quick-nav-item:hover { background: var(--color-g-50); color: var(--color-g-800); }
+.quick-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-faint); transition: color var(--transition); }
+.quick-nav-item:hover svg { color: var(--color-g-600); }
+
+/* ── Table density toggle (body.density-compact, persisted) ── */
+body.density-compact .data-table thead th { padding: 9px 16px; }
+body.density-compact .data-table tbody td { padding: 9px 16px; font-size: 13.5px; }
+body.density-compact .data-table { min-width: 800px; }
+
+/* ── Back-to-top ── */
+.back-to-top {
+    position: fixed; right: 26px; bottom: 26px; z-index: 40;
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-lg); color: var(--color-muted); cursor: pointer;
+    opacity: 0; transform: translateY(12px); pointer-events: none;
+    transition: opacity var(--transition), transform var(--transition),
+        color var(--transition), border-color var(--transition), background var(--transition);
+}
+.back-to-top.visible { opacity: 1; transform: none; pointer-events: auto; }
+.back-to-top:hover {
+    color: var(--color-g-700); border-color: var(--color-g-300);
+    background: var(--color-g-50); transform: translateY(-2px);
+}
+.back-to-top:active { transform: translateY(0) scale(.94); }
+.back-to-top svg { width: 19px; height: 19px; }
+.back-to-top:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
+
+/* ── Richer empty states ── */
+.empty-state svg {
+    width: 74px; height: 74px; padding: 19px;
+    background: linear-gradient(180deg, #fff, var(--color-g-50));
+    border: 1px solid var(--color-g-100); border-radius: 22px;
+    color: var(--color-g-400); opacity: 1;
+    box-shadow: var(--shadow-xs);
+}

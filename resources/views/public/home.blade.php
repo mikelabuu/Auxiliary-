@@ -28,4 +28,5 @@
     <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
     <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}"></script>
     <script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
+    <script src="{{ asset('js/scroll-effects.js') }}?v={{ filemtime(public_path('js/scroll-effects.js')) }}" defer></script>
 @endsection

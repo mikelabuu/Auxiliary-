@@ -1,7 +1,7 @@
 @extends('layouts.public.auth')
 @section('content')
         <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
-            <div class="mt-6 flex justify-center transform transition-hover hover:scale-105 duration-300">
+            <div class="mt-6 flex justify-center transition-transform duration-300 ease-out hover:scale-105">
                 <img src="{{ asset('image/FHLogo2.png') }}" alt="FH" class="h-20 w-auto drop-shadow-2xl">
             </div>
             
@@ -46,16 +46,16 @@
                         @csrf
 
                         <input type="email" placeholder="Email address" name="staff_email"
-                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3B612A] focus:bg-white outline-none transition-all placeholder:text-slate-400">
-                        
+                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-light/60 focus:border-brand-light focus:bg-white outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-slate-400">
+
                         <input type="password" placeholder="Password" name="staff_password"
-                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3B612A] focus:bg-white outline-none transition-all placeholder:text-slate-400">
-                               
+                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-light/60 focus:border-brand-light focus:bg-white outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-slate-400">
+
                         <div class="flex justify-end">
                             <a href="/" class="text-xs font-bold text-brand hover:underline">Go Back</a>
                         </div>
 
-                        <button type="submit" class="w-full bg-brand hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-95 mt-2">
+                        <button type="submit" class="w-full bg-brand hover:bg-brand-light text-white font-bold py-4 rounded-2xl shadow-xl transition-[background-color,transform,box-shadow] duration-200 ease-out active:scale-[0.98] mt-2">
                             Log In
                         </button>
                     </form>

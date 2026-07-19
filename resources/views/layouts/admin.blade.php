@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@yield('title', 'Farmers Hostel · Admin Console')</title>
+  <link rel="icon" type="image/png" href="{{ asset('image/clsu.logo.png') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,6 +64,49 @@
   </button>
 
   <script>
+    // ── Shared modal helpers (animated open/close) ──
+    // Pages call openModal(id)/closeModal(id); the wrapper toggles hidden/flex
+    // while [data-closing] lets the CSS run a fast exit before display:none.
+    window.__lastModalFocus = null;
+    window.openModal = function (id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      window.__lastModalFocus = document.activeElement;
+      el.removeAttribute('data-closing');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      const focusable = el.querySelector('input:not([type="hidden"]), select, textarea, button:not([data-modal-close]):not([aria-label="Close"])')
+        || el.querySelector('[role="dialog"]');
+      if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
+    };
+    window.closeModal = function (id) {
+      const el = document.getElementById(id);
+      if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
+      el.setAttribute('data-closing', '');
+      setTimeout(function () {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+        el.removeAttribute('data-closing');
+        if (window.__lastModalFocus) {
+          try { window.__lastModalFocus.focus({ preventScroll: true }); } catch (e) {}
+          window.__lastModalFocus = null;
+        }
+      }, 150);
+    };
+
+    // Entrance keyframes (fadeInUp/popIn/rowIn) run with fill:forwards, and a
+    // filled opacity/transform animation keeps a stacking context forever —
+    // which traps page-level fixed modals below the sidebar (z-50) so the
+    // backdrop never dims the chrome. Clear the animation once it finishes;
+    // the inline opacity also stops Livewire morphs re-flashing entrances.
+    document.addEventListener('animationend', function (e) {
+      const n = e.animationName;
+      if (n === 'fadeInUp' || n === 'popIn' || n === 'rowIn') {
+        e.target.style.animation = 'none';
+        if (n !== 'rowIn') e.target.style.opacity = '1';
+      }
+    }, true);
+
     // Live clock
     function updateClock() {
       const now = new Date();
@@ -99,7 +143,7 @@
           const target = parseFloat(m[2].replace(/,/g, '') + (m[3] || ''));
           if (!isFinite(target) || target === 0) return;
           const dec = m[3] ? m[3].length - 1 : 0;
-          const dur = 800, start = performance.now();
+          const dur = 560, start = performance.now();
           function fmt(v) {
             return m[1] + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[4];
           }
@@ -158,8 +202,7 @@
               document.body.appendChild(host);
             }
             host.innerHTML = res.html;
-            const dlg = document.getElementById('guestBookingModal');
-            if (dlg) { dlg.classList.remove('hidden'); dlg.classList.add('flex'); }
+            window.openModal('guestBookingModal');
             const pop = document.getElementById('roomMapPopover');
             if (pop) pop.classList.add('hidden');
           })
@@ -167,11 +210,9 @@
       }
 
       document.addEventListener('click', function (e) {
-        const dlg = document.getElementById('guestBookingModal');
-
         const closer = e.target.closest && e.target.closest('[data-modal-close="guestBookingModal"]');
-        if (closer && dlg) {
-          dlg.classList.add('hidden'); dlg.classList.remove('flex');
+        if (closer) {
+          window.closeModal('guestBookingModal');
           return;
         }
 
@@ -212,11 +253,23 @@
         if (e.key !== 'Escape') return;
         const dlg = document.getElementById('guestBookingModal');
         if (dlg && !dlg.classList.contains('hidden')) {
-          dlg.classList.add('hidden'); dlg.classList.remove('flex');
+          window.closeModal('guestBookingModal');
         }
       });
     })();
   </script>
+
+  {{-- Session flashes surface as toasts (engine in resources/js/app.js).
+       Pages must not render their own success banners or this double-fires;
+       validation-error lists stay inline next to their forms. --}}
+  @if(session('success') || session('error'))
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      @if(session('success')) window.toast(@json(session('success')), 'success'); @endif
+      @if(session('error')) window.toast(@json(session('error')), 'error'); @endif
+    });
+  </script>
+  @endif
   @livewireScripts
   @stack('scripts')
 </body>

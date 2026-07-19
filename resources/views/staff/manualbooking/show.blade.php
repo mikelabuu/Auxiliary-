@@ -46,12 +46,7 @@
         </x-slot:actions>
     </x-admin.ui.page-header>
 
-    @if(session('success'))
-        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- Session success toasts fire from layouts/admin --}}
 
     <x-admin.ui.section-card icon="user" title="Guest &amp; Stay Information" :delay="40">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">

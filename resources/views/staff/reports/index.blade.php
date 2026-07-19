@@ -7,7 +7,7 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.ui.page-header subtitle="Generate, filter, and export booking and payment data.">
-        Analytics <span class="text-clsu-700">&amp; Reporting</span>
+        Analytics &amp; Reporting
         <x-slot:actions>
             <x-admin.ui.button variant="secondary" type="button" id="exportBtn" disabled>
                 <x-admin.ui.icon name="download" class="w-4 h-4" stroke-width="2" />

@@ -38,7 +38,7 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
     <x-admin.ui.page-header subtitle="Administrative and staff accounts, their roles, and access standing.">
-        Staff <span class="text-clsu-700">Center</span>
+        Staff Center
         @if ($isMaster)
             <x-slot:actions>
                 <x-admin.ui.button variant="primary" type="button" id="openCreateStaffBtn">
@@ -49,13 +49,7 @@
         @endif
     </x-admin.ui.page-header>
 
-    {{-- Flash messages --}}
-    @if(session('success'))
-        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- Session success toasts fire from layouts/admin; error lists stay inline --}}
     @if($errors->any())
         <div class="animate-in rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3.5 text-sm text-ember-700">
             <ul class="space-y-1">
@@ -111,7 +105,7 @@
             <button type="submit" class="btn btn-outline btn-sm">Apply</button>
             <div class="filter-toolbar-spacer"></div>
             @if($search || $role !== 'all' || $sort !== 'latest')
-                <a href="{{ route('staff.staffrecords.index') }}" class="filter-clear" style="text-decoration:none;">
+                <a href="{{ route('staff.staffrecords.index') }}" class="filter-clear">
                     <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
                 </a>
             @endif
@@ -140,7 +134,7 @@
                                     <div class="cell-name">
                                         <span class="avatar-initials"
                                             @if($staff->is_suspended) style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c;border-color:#fca5a5;"
-                                            @elseif($staff->role === 'master_admin') style="background:linear-gradient(135deg,#3b0764,#6b21a8);color:#fff;border-color:#7e22ce;" @endif>{{ strtoupper(mb_substr($staff->name, 0, 1)) }}</span>
+                                            @elseif($staff->role === 'master_admin') style="background:linear-gradient(135deg,#17201b,#39463e);color:#fff;border-color:#4a5b50;" @endif>{{ strtoupper(mb_substr($staff->name, 0, 1)) }}</span>
                                         <div class="cell-name-text">
                                             <p class="cell-name-primary truncate">{{ $staff->name }}</p>
                                             <p class="cell-name-secondary truncate">{{ $staff->email }}</p>
@@ -151,10 +145,10 @@
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $staffRole['badge'] }}">{{ $staffRole['label'] }}</span>
                                 </td>
                                 <td>
+                                    {{-- Role already carries "master"; Standing shows the real
+                                         account state so the two columns stop repeating each other. --}}
                                     @if($staff->is_suspended)
                                         <span class="status status-cancelled">Suspended</span>
-                                    @elseif($staff->role === 'master_admin')
-                                        <span class="status" style="color:#6b21a8;border-color:#e9d5ff;background:#faf5ff;"><span style="width:6px;height:6px;border-radius:50%;background:#a855f7;"></span>Master Account</span>
                                     @else
                                         <span class="status status-active">Active</span>
                                     @endif
@@ -203,7 +197,7 @@
             </div>
 
             <div class="mt-6">
-                {{ $staffs->links() }}
+                {{ $staffs->links('vendor.pagination.admin', ['mode' => 'links']) }}
             </div>
         @endif
     </x-admin.ui.section-card>
@@ -243,7 +237,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-600 border border-clsu-700 rounded-xl px-4 py-2.5 hover:bg-clsu-700 active:scale-[0.99] transition-all shadow-card cursor-pointer">
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-600 border border-clsu-700 rounded-xl px-4 py-2.5 hover:bg-clsu-700 active:scale-[0.99] transition-[color,background-color,transform] duration-200 ease-out shadow-card cursor-pointer">
                         <x-admin.ui.icon name="check" class="w-4 h-4" />
                         Save Changes
                     </button>
@@ -368,13 +362,7 @@ $.ajaxSetup({
     }
 });
 
-// ── Modal helpers (same pattern as the rooms page) ──────────────────────────
-function openModal(id) {
-    $('#' + id).removeClass('hidden').addClass('flex');
-}
-function closeModal(id) {
-    $('#' + id).removeClass('flex').addClass('hidden');
-}
+// ── Modal helpers: shared animated open/close from layouts/admin ────────────
 $(document).on('click', '[data-modal-close]', function () {
     closeModal($(this).data('modal-close'));
 });

@@ -9,9 +9,9 @@
         $upcomingReservationCount = $upcomingBookings->sum(fn ($b) => $b->reservations->count());
     @endphp
 
-    <x-admin.ui.ops-header eyebrow="Front Desk · Manual Booking"
-        subtitle="Create a booking on behalf of a guest — walk-in, phone, or any offline channel. Payment is recorded as paid.">
-        Manual <span class="accent">Booking</span>
+    <x-admin.ui.ops-header
+        subtitle="Create a booking on behalf of a guest: walk-in, phone, or any offline channel. Payment is recorded as paid.">
+        Manual Booking
         <x-slot:pills>
             <span class="ops-pill"><span class="ops-pill-dot"></span><span class="ops-pill-num">{{ $totalAvailableRooms }}</span> rooms available now</span>
             <span class="ops-pill"><span class="ops-pill-dot info"></span><span class="ops-pill-num">{{ $upcomingReservationCount }}</span> upcoming reservation{{ $upcomingReservationCount === 1 ? '' : 's' }}</span>
@@ -38,7 +38,7 @@
                         @foreach($booking->reservations as $res)
                             <span class="cell-tag" style="gap:6px;">
                                 <span style="width:6px;height:6px;border-radius:50%;background:var(--color-g-500);"></span>
-                                Room {{ $res->room_number }} · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}–{{ \Carbon\Carbon::parse($booking->check_out)->format('M d') }}
+                                Room {{ $res->room_number }} · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}-{{ \Carbon\Carbon::parse($booking->check_out)->format('M d') }}
                             </span>
                         @endforeach
                     @endforeach
@@ -47,12 +47,7 @@
         </div>
     @endif
 
-    @if(session('success'))
-        <div class="animate-in flex items-center gap-2.5 rounded-2xl border border-clsu-200 bg-clsu-50 px-5 py-3 text-sm font-medium text-clsu-800">
-            <x-admin.ui.icon name="check-circle" class="w-4 h-4 shrink-0" />
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- Session success toasts fire from layouts/admin; error lists stay inline --}}
     @if($errors->any())
         <div class="animate-in rounded-2xl border border-ember-200 bg-ember-50 px-5 py-3.5 text-sm text-ember-700">
             <ul class="space-y-1">
@@ -178,7 +173,7 @@
                             <span id="assign-progress-text" class="whitespace-nowrap text-[11px] font-bold text-ink/80 font-data tabnum">0 / 1</span>
                         </div>
                         <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-emerald-deep/10">
-                            <div id="assign-progress-bar" class="h-full w-0 rounded-full bg-palay-400 transition-all duration-300"></div>
+                            <div id="assign-progress-bar" class="h-full w-0 rounded-full bg-palay-400 transition-[width] duration-300"></div>
                         </div>
                     </div>
                 </div>
@@ -216,7 +211,7 @@
                     <div id="assignment-list" class="space-y-3"></div>
 
                     <p id="assignment-empty" class="rounded-2xl border border-dashed border-emerald-deep/20 bg-white/50 px-5 py-6 text-center text-sm font-medium text-stone-400">
-                        No rooms picked yet — tap available rooms on the board above.
+                        No rooms picked yet. Tap available rooms on the board above.
                     </p>
                 </div>
             </div>
@@ -379,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const wingLabel = w => (w || '').toString().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     function toast(message, icon = 'success') {
-        Swal.fire({ toast: true, position: 'bottom-end', icon, title: message, showConfirmButton: false, timer: 2600, timerProgressBar: true });
+        window.toast(message, icon); // unified console toasts (resources/js/app.js)
     }
 
     /* ─────────────────── Generic ± steppers ─────────────────── */
@@ -471,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
                </span>
                <span class="font-semibold text-clsu-700">${availableCount} room${availableCount === 1 ? '' : 's'} available for these dates.</span>`
             : `<span class="h-2 w-2 shrink-0 rounded-full bg-ember-500"></span>
-               <span class="font-semibold text-ember-600">No rooms available for these dates — try different dates.</span>`;
+               <span class="font-semibold text-ember-600">No rooms available for these dates. Try different dates.</span>`;
     }
 
     function renderBoardSkeleton() {
@@ -524,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         if (dropped.length) {
-            toast(`Removed room${dropped.length > 1 ? 's' : ''} ${dropped.join(', ')} — no longer available for these dates.`, 'warning');
+            toast(`Removed room${dropped.length > 1 ? 's' : ''} ${dropped.join(', ')}: no longer available for these dates.`, 'warning');
             syncAssignmentUI();
         }
     }
@@ -546,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ───────────────────── Room board ───────────────────── */
-    const TILE_BASE = 'room-pick-tile relative flex flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-2.5 text-center transition-all duration-150 select-none';
+    const TILE_BASE = 'room-pick-tile relative flex flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-2.5 text-center transition-[color,background-color,border-color,box-shadow,transform] duration-150 select-none';
     const TILE_STYLES = {
         available:   'border-clsu-200 bg-white text-clsu-800 shadow-subtle hover:-translate-y-0.5 hover:border-clsu-400 hover:bg-clsu-50 cursor-pointer',
         selected:    'border-emerald-deep bg-emerald-deep text-cream shadow-card -translate-y-0.5 cursor-pointer',
@@ -727,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function () {
         progressText.textContent = `${guests} / ${expected}`;
         const pct = expected > 0 ? Math.min(100, (guests / expected) * 100) : 0;
         progressBar.style.width = pct + '%';
-        progressBar.className = 'h-full rounded-full transition-all duration-300 ' +
+        progressBar.className = 'h-full rounded-full transition-[width] duration-300 ' +
             (guests === expected && expected > 0 ? 'bg-clsu-500' : guests > expected ? 'bg-ember-500' : 'bg-palay-400');
 
         updateSummary();
@@ -741,11 +736,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const totalCap = caps.reduce((a, b) => a + b, 0);
 
         if (expected < cards.length) {
-            toast(`You have ${cards.length} rooms but only ${expected} guest${expected === 1 ? '' : 's'} — remove rooms or raise the guest count.`, 'warning');
+            toast(`You have ${cards.length} rooms but only ${expected} guest${expected === 1 ? '' : 's'}. Remove rooms or raise the guest count.`, 'warning');
             return;
         }
         if (expected > totalCap) {
-            toast(`These rooms sleep ${totalCap} max, but ${expected} guests are expected — pick more rooms.`, 'warning');
+            toast(`These rooms sleep ${totalCap} max, but ${expected} guests are expected. Pick more rooms.`, 'warning');
         }
 
         // Everyone gets a bed: 1 guest per room, then fill up in order.

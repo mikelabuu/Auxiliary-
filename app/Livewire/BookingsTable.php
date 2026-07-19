@@ -132,7 +132,7 @@ class BookingsTable extends Component
                 ['status' => 'cancelled'],
                 "Booking #{$booking->id} was cancelled by {$staff->name}"
             );
-            session()->flash('success', "Booking #{$booking->id} cancelled.");
+            $this->dispatch('toast', message: "Booking #{$booking->id} cancelled.", type: 'success');
             $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
             Realtime::emit(new RoomStatusChanged());
             Realtime::emit(new BookingChanged());
@@ -146,7 +146,7 @@ class BookingsTable extends Component
         $booking = Booking::with('reservations.room')->find($bookingId);
 
         if (!$booking) {
-            session()->flash('error', 'Booking not found.');
+            $this->dispatch('toast', message: 'Booking not found.', type: 'error');
             return;
         }
 
@@ -175,7 +175,7 @@ class BookingsTable extends Component
             );
         });
 
-        session()->flash('success', "Booking #{$booking->id} checked out.");
+        $this->dispatch('toast', message: "Booking #{$booking->id} checked out.", type: 'success');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         Realtime::emit(new RoomStatusChanged());
         Realtime::emit(new BookingChanged());

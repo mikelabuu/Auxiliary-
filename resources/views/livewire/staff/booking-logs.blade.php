@@ -1,20 +1,22 @@
+@php
+    // Must be defined before the component tag: :subtitle is evaluated when
+    // the tag opens, so defining $tabs later leaves it undefined there.
+    $tabs = [
+        'checkins' => ['label' => 'Check-ins', 'icon' => 'log-in'],
+        'checkouts' => ['label' => 'Check-outs', 'icon' => 'log-out'],
+        'noshow' => ['label' => 'No Shows', 'icon' => 'block'],
+        'expiry' => ['label' => 'Expiries', 'icon' => 'clock'],
+        'cancellations' => ['label' => 'Cancellations', 'icon' => 'x'],
+    ];
+@endphp
 <x-admin.ui.section-card icon="clock" title="Activity Log" :subtitle="($tabs[$tab]['label'] ?? 'Logs') . ' · ' . $logs->total() . ' records'" :delay="40">
-    @php
-        $tabs = [
-            'checkins' => ['label' => 'Check-ins', 'icon' => 'log-in'],
-            'checkouts' => ['label' => 'Check-outs', 'icon' => 'log-out'],
-            'noshow' => ['label' => 'No Shows', 'icon' => 'block'],
-            'expiry' => ['label' => 'Expiries', 'icon' => 'clock'],
-            'cancellations' => ['label' => 'Cancellations', 'icon' => 'x'],
-        ];
-    @endphp
 
     {{-- View tabs --}}
     <div class="filter-row mb-4">
         <span class="filter-row-label">View</span>
         @foreach ($tabs as $key => $meta)
             <button type="button" wire:click="$set('tab', '{{ $key }}')"
-               @class(['filter-tab', 'selected' => $tab === $key]) style="text-decoration:none;">
+               @class(['filter-tab', 'selected' => $tab === $key])>
                 <x-admin.ui.icon :name="$meta['icon']" class="w-4 h-4" stroke-width="2" />
                 {{ $meta['label'] }}
             </button>
@@ -28,8 +30,12 @@
             <input type="text" wire:model.live.debounce.400ms="search" placeholder="Search booking ID or guest name…" aria-label="Search logs">
         </div>
         <div class="filter-toolbar-spacer"></div>
+        <span class="refresh-chip" wire:loading.delay.flex wire:target="search, tab, resetFilters, gotoPage, previousPage, nextPage">
+            <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
+            Updating
+        </span>
         @if($search)
-            <button type="button" wire:click="resetFilters" class="filter-clear" style="text-decoration:none;">
+            <button type="button" wire:click="resetFilters" class="filter-clear">
                 <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
             </button>
         @endif
@@ -38,6 +44,7 @@
     @if($logs->isEmpty())
         <x-admin.ui.empty-state icon="clock" title="No logs found for this tab." />
     @else
+        <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, tab, resetFilters, gotoPage, previousPage, nextPage">
         <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
             <table class="data-table">
                 <thead>
@@ -99,7 +106,8 @@
         </div>
 
         <div class="mt-6">
-            {{ $logs->links() }}
+            {{ $logs->links('vendor.pagination.admin') }}
+        </div>
         </div>
     @endif
 </x-admin.ui.section-card>

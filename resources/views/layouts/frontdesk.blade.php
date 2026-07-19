@@ -3,133 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@yield('title', 'Hotel Booking Front Desk')</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>@yield('title', 'Farmers Hostel · Front Desk')</title>
+  <link rel="icon" type="image/png" href="{{ asset('image/clsu.logo.png') }}">
 
-  {{-- dashboard CSS --}}
-  <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-  <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  {{-- Chart.js is loaded per-page (dashboard @push) — not every desk page charts --}}
+
+  {{-- Same design-system bundle as the admin console: Fresh Meadow tokens,
+       cards, tables, status pills, modals — plus the .fd-* band layer. --}}
+  @vite(['resources/css/admin.css', 'resources/js/app.js'])
   @livewireStyles
+  @stack('styles')
 </head>
-<body class="flex h-screen bg-gray-100">
+<body class="bg-surface text-ink antialiased">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-clsuGreen text-white flex flex-col shrink-0 shadow-lg">
-    <div class="h-20 flex items-center justify-center border-b border-clsuGreenLight bg-clsuGreenDark px-4">
-      <img src="{{ asset('image/FHLogo2.png') }}" class="h-12 w-auto object-contain mr-2" alt="logo">
-      <div class="flex flex-col">
-          <span class="text-xs font-bold text-clsuGold tracking-widest uppercase">Farmers Hostel</span>
-          <span class="text-[10px] text-gray-300 font-semibold tracking-wider">FRONT DESK</span>
-      </div>
-    </div>
+  {{-- Meadow Nightfall band: greeting, clock, pill nav (Finexa format) --}}
+  <x-frontdesk.hero />
 
-    <!-- Nav -->
-    <nav class="flex-1 overflow-y-auto py-4 space-y-1">
-      <!-- SECTION: MAIN -->
-      <div class="px-4 py-1.5">
-        <span class="text-[9px] font-bold text-clsuGold tracking-wider uppercase opacity-75">Main</span>
-      </div>
-      <div class="px-2 space-y-1">
-        <x-frontdesk.sidebar-link :href="route('frontdesk.dashboard.index')" icon="dashboard" :active="request()->routeIs('frontdesk.dashboard.index')">
-          Dashboard
-        </x-frontdesk.sidebar-link>
-      </div>
-
-      <!-- SECTION: OPERATIONS -->
-      <div class="px-4 py-1.5 pt-3">
-        <span class="text-[9px] font-bold text-clsuGold tracking-wider uppercase opacity-75">Operations</span>
-      </div>
-      <div class="px-2 space-y-1">
-        <x-frontdesk.sidebar-link :href="route('frontdesk.walkin.create')" icon="edit_calendar" :active="request()->routeIs('frontdesk.walkin.create')">
-          Manual Booking
-        </x-frontdesk.sidebar-link>
-        <x-frontdesk.sidebar-link :href="route('frontdesk.room.index')" icon="hotel" :active="request()->routeIs('frontdesk.room.index')">
-          Rooms
-        </x-frontdesk.sidebar-link>
-        <x-frontdesk.sidebar-link :href="route('frontdesk.booking')" icon="book" :active="request()->routeIs('frontdesk.booking')">
-          Bookings
-        </x-frontdesk.sidebar-link>
-      </div>
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4 border-t border-clsuGreenLight bg-clsuGreenDark">
-      <form method="POST" action="{{ route('staff.logout') }}">
-        @csrf
-        <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-red-700 hover:bg-red-800 text-white font-medium rounded-lg transition duration-150 shadow">
-          <span class="material-icons mr-2 text-base">logout</span> Logout
-        </button>
-      </form>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="flex-1 flex flex-col">
-    <!-- Top bar -->
-    <header class="h-16 bg-white shadow flex items-center px-6 justify-between">
-      <!-- Left: Page title -->
-      <h1 class="text-2xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h1>
-
-      <!-- Right: Clock + User Info -->
-      <div class="flex items-center space-x-6">
-        <!-- Digital clock/date -->
-        <div class="flex flex-col text-right text-sm text-gray-700">
-          <span class="font-medium" id="localTime">--:--:--</span>
-          <span class="text-gray-500 text-xs" id="todayDate">Loading...</span>
-        </div>
-
-        <!-- User info -->
-        <span class="text-gray-600">{{ Auth::guard('staff')->user()->name }}</span>
-        <img src="{{ asset('image/icon/admin2.png') }}" class="w-10 h-10 rounded-full border-2 border-[#3b612a]" alt="Profile">
-      </div>
-    </header>
-
-
-
-    <!-- Dynamic Content -->
-    <section class="flex-1 p-6 overflow-y-auto">
+  {{-- Workspace: light Fresh Meadow cards overlapping the band --}}
+  <main class="fd-main">
+    <div class="stagger-enter space-y-6">
       @yield('content')
-    </section>
+    </div>
   </main>
-  <script src="//unpkg.com/alpinejs" defer></script>
+
   <script>
-  function updateTimeAndDate() {
-    const timeEl = document.getElementById('localTime');
-    const dateEl = document.getElementById('todayDate');
+    // ── Shared modal helpers (same contract as the admin console) ──
+    window.__lastModalFocus = null;
+    window.openModal = function (id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      window.__lastModalFocus = document.activeElement;
+      el.removeAttribute('data-closing');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      const focusable = el.querySelector('input:not([type="hidden"]), select, textarea, button:not([data-modal-close]):not([aria-label="Close"])')
+        || el.querySelector('[role="dialog"]');
+      if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
+    };
+    window.closeModal = function (id) {
+      const el = document.getElementById(id);
+      if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
+      el.setAttribute('data-closing', '');
+      setTimeout(function () {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+        el.removeAttribute('data-closing');
+        if (window.__lastModalFocus) {
+          try { window.__lastModalFocus.focus({ preventScroll: true }); } catch (e) {}
+          window.__lastModalFocus = null;
+        }
+      }, 150);
+    };
 
-    const now = new Date();
+    // Any [data-modal-close="id"] dismisses its modal (backdrop + X buttons)
+    document.addEventListener('click', function (e) {
+      const closer = e.target.closest && e.target.closest('[data-modal-close]');
+      if (closer) window.closeModal(closer.getAttribute('data-modal-close'));
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll('.fixed.inset-0.flex [role="dialog"]').forEach(function (dlg) {
+        const wrap = dlg.closest('.fixed.inset-0');
+        if (wrap && wrap.id && !wrap.classList.contains('hidden')) window.closeModal(wrap.id);
+      });
+    });
 
-    // Format time as HH:MM:SS AM/PM
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
+    // Entrance keyframes fill forwards and would trap page-level fixed
+    // modals inside a stale stacking context — clear them once done.
+    document.addEventListener('animationend', function (e) {
+      const n = e.animationName;
+      if (n === 'fadeInUp' || n === 'popIn' || n === 'rowIn') {
+        e.target.style.animation = 'none';
+        if (n !== 'rowIn') e.target.style.opacity = '1';
+      }
+    }, true);
 
-    // Format date as Month Day, Year (e.g., Sep 5, 2025)
-    const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-    const dateString = now.toLocaleDateString(undefined, options);
+    // ── Band clock (desk time = Manila wall clock on the machine) ──
+    (function () {
+      const timeEl = document.getElementById('fdClock');
+      const dateEl = document.getElementById('fdClockDate');
+      if (!timeEl) return;
+      function tick() {
+        const now = new Date();
+        let h = now.getHours();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        timeEl.textContent = h + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ' ' + ampm;
+        if (dateEl) dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
 
-    timeEl.textContent = timeString;
-    dateEl.textContent = dateString;
-  }
+    // ── Nav glide pill: a soft highlight follows the hovered link ──
+    (function () {
+      const nav = document.querySelector('.fd-nav');
+      if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const glide = nav.querySelector('.fd-nav-glide');
+      if (!glide) return;
+      function place(link) {
+        glide.style.width = link.offsetWidth + 'px';
+        glide.style.height = link.offsetHeight + 'px';
+        glide.style.transform = 'translateX(' + link.offsetLeft + 'px) translateY(' + link.offsetTop + 'px)';
+      }
+      nav.querySelectorAll('.fd-nav-link').forEach(function (link) {
+        link.addEventListener('mouseenter', function () {
+          if (link.classList.contains('is-active')) { nav.classList.remove('glide-on'); return; }
+          place(link);
+          nav.classList.add('glide-on');
+        });
+      });
+      nav.addEventListener('mouseleave', function () { nav.classList.remove('glide-on'); });
+    })();
 
-  // Update immediately
-  updateTimeAndDate();
+    // ── Cursor spotlight on cards (CSS reads --spot-x/--spot-y) ──
+    (function () {
+      let raf = null;
+      document.addEventListener('pointermove', function (e) {
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = null;
+          const t = e.target.closest && e.target.closest('.card, .stat-card, .mini-stat, .quick-action');
+          if (!t) return;
+          const r = t.getBoundingClientRect();
+          t.style.setProperty('--spot-x', (e.clientX - r.left) + 'px');
+          t.style.setProperty('--spot-y', (e.clientY - r.top) + 'px');
+        });
+      }, { passive: true });
+    })();
 
-  // Update every second
-  setInterval(updateTimeAndDate, 1000);
-</script>
-@livewireScripts
-@stack('scripts')
+    // ── Animated count-up for plain numeric KPI values ──
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.stat-value, .mini-stat-value').forEach(function (el) {
+        if (el.children.length > 0) return;
+        const m = el.textContent.trim().match(/^([₱$]?)([\d,]+)(\.\d+)?(%?)$/);
+        if (!m) return;
+        const target = parseFloat(m[2].replace(/,/g, '') + (m[3] || ''));
+        if (!isFinite(target) || target === 0) return;
+        const dec = m[3] ? m[3].length - 1 : 0;
+        const dur = 560, start = performance.now();
+        function fmt(v) {
+          return m[1] + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[4];
+        }
+        (function tick(t) {
+          const p = Math.min(1, (t - start) / dur);
+          el.textContent = fmt(target * (1 - Math.pow(1 - p, 3)));
+          if (p < 1) requestAnimationFrame(tick);
+        })(start);
+      });
+    }
+  </script>
+
+  {{-- Session flashes surface as toasts (engine in resources/js/app.js).
+       <x-frontdesk.flash /> keeps only the inline validation-error list. --}}
+  @if(session('success') || session('error'))
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      @if(session('success')) window.toast(@json(session('success')), 'success'); @endif
+      @if(session('error')) window.toast(@json(session('error')), 'error'); @endif
+    });
+  </script>
+  @endif
+  @livewireScripts
+  @stack('scripts')
 </body>
 </html>
