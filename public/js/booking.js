@@ -262,6 +262,21 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
+    // One-tap room assignment: picks the first open room that no other
+    // block has claimed. Acts as "fill if empty" — an existing pick stays.
+    const btnAutopick = block.querySelector('.btn-autopick');
+    btnAutopick && btnAutopick.addEventListener('click', () => {
+      if (!roomTypeSelect.value) { showFormError('Pick a room style first, then we can assign an open room.'); return; }
+      if (!check_in.value || !check_out.value) { showFormError('Choose your check-in and check-out dates first.'); return; }
+      if (block.querySelector('.room-tile.selected')) return; // already assigned
+      const tiles = block.querySelectorAll('.room-tile.available');
+      if (!tiles.length) { showFormError('No open rooms are loaded for this block yet. Use Refresh or try other dates.'); return; }
+      for (const t of tiles) {
+        if (!selectedRoomNumbersSet.has(t.dataset.roomNumber)) { t.click(); return; }
+      }
+      showFormError('Every open room of this style is already selected in another block.');
+    });
+
     btnRemove.addEventListener('click', () => {
       const rn = roomNumberHidden.value;
       if (rn) selectedRoomNumbersSet.delete(rn);
@@ -521,9 +536,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bookingFormAlert) {
       bookingFormAlert.innerText = msg;
       bookingFormAlert.classList.remove('d-none');
-      bookingFormAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Restart the attention shake even when the banner is already visible
+      bookingFormAlert.classList.remove('shake-now');
+      void bookingFormAlert.offsetWidth;
+      bookingFormAlert.classList.add('shake-now');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      bookingFormAlert.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
     } else { alert(msg); }
   }
+
+  // Summary room rows deep-link back to their reservation block
+  document.getElementById('summaryInvoice')?.addEventListener('click', function (e) {
+    const row = e.target.closest('[data-jump-block]');
+    if (!row) return;
+    const block = document.querySelector('.reservation-block[data-index="' + row.dataset.jumpBlock + '"]');
+    if (!block) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    block.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    block.classList.remove('block-flash');
+    void block.offsetWidth;
+    block.classList.add('block-flash');
+  });
 
   bookingForm && bookingForm.addEventListener('submit', function(e) {
     bookingFormAlert && bookingFormAlert.classList.add('d-none');
@@ -742,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function () {
         : '';
 
       roomRows += `
-        <div class="flex items-start justify-between gap-3 py-3.5 border-b border-white/10 last:border-0">
+        <div class="sum-row flex items-start justify-between gap-3 py-3.5 border-b border-white/10 last:border-0" data-jump-block="${block.dataset.index}" title="Review this room">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-bold text-ink truncate">${typeName}</p>
             <p class="text-[11px] font-semibold text-ink/50 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>

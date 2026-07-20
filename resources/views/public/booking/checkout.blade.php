@@ -3,9 +3,14 @@
 @section('theme_night', '1')
 @section('content')
 
-    <div class="min-h-screen bg-canvas pt-28 pb-24">
+    <div class="min-h-screen bg-canvas pt-28 pb-24 relative isolate overflow-x-clip">
+        {{-- Ambient depth: soft color pools + film grain, same recipe as the landing --}}
+        <div class="night-aura night-aura--emerald" aria-hidden="true"></div>
+        <div class="night-aura night-aura--gold" aria-hidden="true"></div>
+        <div class="film-grain" aria-hidden="true"></div>
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div class="co-enter mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4" style="--co:0">
                 <div>
                     <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-gold mb-3">
                         <span class="h-px w-8 bg-gold/50"></span> Almost there
@@ -19,7 +24,7 @@
             </div>
 
             <!-- Live progress rail — booking.js toggles .done per step -->
-            <ol id="checkoutProgress" class="mb-8 grid grid-cols-3 gap-3">
+            <ol id="checkoutProgress" class="co-enter mb-8 grid grid-cols-3 gap-3" style="--co:1">
                 @foreach (['dates' => 'Dates', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
                     <li data-progress-step="{{ $step }}" class="checkout-step">
                         <div class="flex items-center gap-2.5">
@@ -36,7 +41,7 @@
 
             <x-booking.ui.error-list class="mb-6" />
             {{-- animate-pop replays each time booking.js un-hides this (display swap restarts the keyframes) --}}
-            <div id="bookingFormAlert" class="animate-pop mb-6 p-4 bg-ember-600/15 text-ember-200 border border-ember-600/40 rounded-2xl text-sm font-semibold d-none"></div>
+            <div id="bookingFormAlert" role="alert" class="animate-pop mb-6 p-4 bg-ember-600/15 text-ember-200 border border-ember-600/40 rounded-2xl text-sm font-semibold d-none"></div>
 
             <form id="bookingForm" method="POST" action="{{ route('booking.store') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 @csrf
@@ -51,7 +56,7 @@
                 <div class="lg:col-span-8 space-y-6">
 
                     <!-- DATES -->
-                    <x-booking.checkout.step-card icon="event" step="Step 1 of 3" title="Stay Dates">
+                    <x-booking.checkout.step-card icon="event" step="Step 1 of 3" title="Stay Dates" class="co-enter" style="--co:2">
                         <x-slot:aside>
                             <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-ink/85 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
                         </x-slot:aside>
@@ -68,12 +73,12 @@
                     </x-booking.checkout.step-card>
 
                     <!-- GUEST INFO -->
-                    <x-booking.checkout.step-card icon="person" step="Step 2 of 3" title="Personal Information">
+                    <x-booking.checkout.step-card icon="person" step="Step 2 of 3" title="Personal Information" class="co-enter" style="--co:3">
                         @include('public.booking.partials.step-guest')
                     </x-booking.checkout.step-card>
 
                     <!-- ROOM SELECTION -->
-                    <x-booking.checkout.step-card icon="meeting_room" step="Step 3 of 3" title="Room Allocation">
+                    <x-booking.checkout.step-card icon="meeting_room" step="Step 3 of 3" title="Room Allocation" class="co-enter" style="--co:4">
                         <x-slot:aside>
                             <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-bone hover:text-night cursor-pointer">
                                 <span class="material-icons text-[15px]">add</span> Add Room Type
@@ -90,7 +95,7 @@
 
                 <!-- Right Column: Sticky Summary -->
                 <div class="lg:col-span-4">
-                    <div class="bg-white/[0.04] rounded-3xl p-6 ring-1 ring-white/10 sticky top-28">
+                    <div class="co-enter bg-gradient-to-b from-white/[0.06] to-white/[0.03] rounded-3xl p-6 ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-30px_rgba(0,0,0,0.8)] sticky top-28" style="--co:3">
                         <h3 class="text-xl text-ink border-b border-white/10 pb-4 mb-4 font-display flex items-center gap-2.5">
                             <span class="material-icons text-gold text-[20px]">receipt_long</span>
                             Booking <span class="italic text-gold -ml-1">Summary</span>

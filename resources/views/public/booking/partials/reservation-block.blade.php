@@ -136,10 +136,16 @@
                 <span class="material-icons text-[14px] text-emerald">touch_app</span>
                 Pick a room style above and open rooms for your dates appear here. Tap a room number to reserve it.
             </p>
-            <button type="button" class="btn-check-availability press inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-bone hover:text-night cursor-pointer">
-                <span class="material-icons text-[13px]">refresh</span>
-                Refresh
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" class="btn-autopick press inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-gold transition-colors hover:bg-gold hover:text-night cursor-pointer">
+                    <span class="material-icons text-[13px]">auto_awesome</span>
+                    Pick for me
+                </button>
+                <button type="button" class="btn-check-availability press inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-bone hover:text-night cursor-pointer">
+                    <span class="material-icons text-[13px]">refresh</span>
+                    Refresh
+                </button>
+            </div>
         </div>
 
         <!-- Tile status legend -->
