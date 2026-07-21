@@ -68,14 +68,19 @@ class PaymentLogs extends Component
     public function render()
     {
         $perPage = 15;
-        $query = Payment::query();
+        // Eager-load the booking's guest name so the ledger can show WHO paid
+        // without an N+1 per row. Only id + guest_name are needed.
+        $query = Payment::query()->with('booking:id,guest_name');
 
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('id', 'like', "%{$this->search}%")
                   ->orWhere('booking_id', 'like', "%{$this->search}%")
                   ->orWhere('reference_no', 'like', "%{$this->search}%")
-                  ->orWhere('landbank_transaction_id', 'like', "%{$this->search}%");
+                  ->orWhere('landbank_transaction_id', 'like', "%{$this->search}%")
+                  ->orWhereHas('booking', function ($b) {
+                      $b->where('guest_name', 'like', "%{$this->search}%");
+                  });
             });
         }
 

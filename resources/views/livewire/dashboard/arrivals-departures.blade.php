@@ -205,37 +205,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+    const LABELS = {
+        checkin:  { title: 'Check in this guest?',  confirmButtonText: 'Yes, check in',  icon: 'question' },
+        checkout: { title: 'Check out this guest?', confirmButtonText: 'Yes, check out', icon: 'question' },
+        noshow:   { title: 'Mark as no-show?',      confirmButtonText: 'Yes, no-show',   icon: 'warning'  },
+    };
+
     const handleClick = (btn) => {
         const bookingId = btn.dataset.id;
         const action = btn.dataset.action;
+        const l = LABELS[action] || { title: 'Confirm this action?', confirmButtonText: 'Confirm', icon: 'question' };
 
+        // Password re-auth dropped — a plain confirm still guards the state change.
         Swal.fire({
-            title: 'Enter your password',
-            input: 'password',
+            title: l.title,
+            icon: l.icon,
             showCancelButton: true,
-            confirmButtonText: 'Verify',
-            showLoaderOnConfirm: true,
-            preConfirm: (password) => {
-                return fetch("{{ route('staff.bookings.verify-password') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ password })
-                })
-                .then(res => res.json())
-                .then(response => {
-                    if (!response.success) throw new Error(response.message);
-                    return response;
-                })
-                .catch(err => {
-                    Swal.showValidationMessage(err.message || 'Password verification failed');
-                });
-            },
-            allowOutsideClick: () => !Swal.isLoading()
+            confirmButtonText: l.confirmButtonText
         }).then(result => {
-            if (result.isConfirmed && result.value?.success) {
+            if (result.isConfirmed) {
                 // v3 requires array payload
                 window.Livewire.dispatch('arrivalsPasswordConfirmed', [ { bookingId, action } ]);
             }

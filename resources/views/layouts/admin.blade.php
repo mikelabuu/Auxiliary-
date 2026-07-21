@@ -25,22 +25,26 @@
           this.sidebarCollapsed = !this.sidebarCollapsed;
           localStorage.setItem('adminSidebarCollapsed', this.sidebarCollapsed ? '1' : '0');
         },
-        densityCompact: localStorage.getItem('adminDensityCompact') === '1',
-        toggleDensity() {
-          this.densityCompact = !this.densityCompact;
-          localStorage.setItem('adminDensityCompact', this.densityCompact ? '1' : '0');
+        density: (localStorage.getItem('adminDensity') || (localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal')),
+        cycleDensity() {
+          const order = ['compact', 'normal', 'large'];
+          this.density = order[(order.indexOf(this.density) + 1) % order.length];
+          localStorage.setItem('adminDensity', this.density);
         }
       }"
-      :class="{ 'sidebar-collapsed': sidebarCollapsed, 'density-compact': densityCompact }">
+      :class="{ 'sidebar-collapsed': sidebarCollapsed, 'density-compact': density === 'compact', 'density-large': density === 'large' }">
 
   {{-- Apply saved rail/density state before Alpine boots so nothing flashes --}}
   <script>
     if (localStorage.getItem('adminSidebarCollapsed') === '1') {
       document.body.classList.add('sidebar-collapsed');
     }
-    if (localStorage.getItem('adminDensityCompact') === '1') {
-      document.body.classList.add('density-compact');
-    }
+    (function () {
+      var d = localStorage.getItem('adminDensity');
+      if (!d) d = localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal';
+      if (d === 'compact') document.body.classList.add('density-compact');
+      else if (d === 'large') document.body.classList.add('density-large');
+    })();
   </script>
 
   <div class="grid-overlay"></div>
@@ -222,32 +226,8 @@
         if (!bookingId) return;
         e.preventDefault();
 
-        if (typeof Swal === 'undefined') { openGuestBookingModal(bookingId); return; }
-
-        Swal.fire({
-          title: 'Enter your password',
-          input: 'password',
-          inputAttributes: { placeholder: 'Password', autocapitalize: 'off' },
-          showCancelButton: true,
-          confirmButtonText: 'Verify',
-          showLoaderOnConfirm: true,
-          preConfirm: function (password) {
-            return fetch('{{ route('staff.bookings.verify-password') }}', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-              body: JSON.stringify({ password: password })
-            })
-              .then(function (r) { return r.json(); })
-              .then(function (res) {
-                if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Incorrect password');
-                return true;
-              })
-              .catch(function (err) { Swal.showValidationMessage(err.message || 'Verification failed'); });
-          },
-          allowOutsideClick: function () { return !Swal.isLoading(); }
-        }).then(function (result) {
-          if (result.isConfirmed && result.value) openGuestBookingModal(bookingId);
-        });
+        // Guest history is read-only — open it directly (no password re-auth).
+        openGuestBookingModal(bookingId);
       });
       document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;

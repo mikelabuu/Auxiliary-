@@ -400,27 +400,17 @@ $(document).on('click', '.password-verify-btn', function(e) {
     e.preventDefault();
     const userId = $(this).data('user-id');
     const action = $(this).data('action');
+    const isSuspend = action === 'suspend';
 
+    // Password re-auth dropped — a plain confirm still guards the account change.
     Swal.fire({
         target: 'body', // <-- ensures modal is appended to <body>, not inside layout container
-        title: 'Enter your staff password',
-        input: 'password',
-        inputAttributes: { placeholder: 'Password', autocapitalize: 'off' },
+        title: isSuspend ? 'Suspend this user?' : 'Unsuspend this user?',
+        text: isSuspend ? 'They will lose access until reinstated.' : 'They will regain access.',
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Verify',
-        showLoaderOnConfirm: true,
-        scrollbarPadding: false,
-        preConfirm: (password) => {
-            return $.ajax({
-                url: '/staff/user-records/verify-password',
-                method: 'POST',
-                data: { _token: $('meta[name="csrf-token"]').attr('content'), password }
-            }).then(response => {
-                if (!response.success) throw new Error(response.message);
-                return true;
-            }).catch(err => Swal.showValidationMessage(err.responseJSON?.message || err.message));
-        },
-        allowOutsideClick: () => !Swal.isLoading()
+        confirmButtonText: isSuspend ? 'Yes, suspend' : 'Yes, unsuspend',
+        scrollbarPadding: false
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({

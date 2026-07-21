@@ -222,12 +222,16 @@
   <div class="topbar-actions">
     <div id="liveClock" class="topbar-date font-mono tabnum hidden md:block" aria-live="off"></div>
 
-    {{-- Table density toggle (persisted on <body> via layouts/admin) --}}
-    <button @click="toggleDensity()" class="btn btn-ghost btn-sm btn-icon hidden md:inline-flex"
-            :title="densityCompact ? 'Switch to comfortable density' : 'Switch to compact density'"
-            aria-label="Toggle table density">
-      <svg x-show="!densityCompact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      <svg x-show="densityCompact" x-cloak viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18.5" x2="21" y2="18.5"/></svg>
+    {{-- Table density cycle — compact → comfortable → large (persisted on <body> via layouts/admin) --}}
+    <button @click="cycleDensity()" class="btn btn-ghost btn-sm btn-icon hidden md:inline-flex"
+            :title="density === 'compact' ? 'Switch to comfortable rows' : (density === 'normal' ? 'Switch to large rows' : 'Switch to compact rows')"
+            aria-label="Cycle table size (compact / comfortable / large)">
+      {{-- compact: 4 tight lines --}}
+      <svg x-show="density === 'compact'" x-cloak viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="3" y1="18.5" x2="21" y2="18.5"/></svg>
+      {{-- comfortable: 3 lines --}}
+      <svg x-show="density === 'normal'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      {{-- large: 2 spaced lines --}}
+      <svg x-show="density === 'large'" x-cloak viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/></svg>
     </button>
 
     {{-- Notifications --}}

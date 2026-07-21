@@ -103,10 +103,16 @@
 .quick-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--color-faint); transition: color var(--transition); }
 .quick-nav-item:hover svg { color: var(--color-g-600); }
 
-/* ── Table density toggle (body.density-compact, persisted) ── */
+/* ── Table density cycle (body.density-compact / .density-large, persisted) ──
+   Three levels: compact → comfortable (base .data-table) → large. Header labels
+   stay small; only their padding grows so the row rhythm reads bigger. */
 body.density-compact .data-table thead th { padding: 9px 16px; }
 body.density-compact .data-table tbody td { padding: 9px 16px; font-size: 13.5px; }
 body.density-compact .data-table { min-width: 800px; }
+
+body.density-large .data-table thead th { padding: 18px 24px; font-size: 12px; }
+body.density-large .data-table tbody td { padding: 22px 24px; font-size: 16px; }
+body.density-large .data-table { min-width: 960px; }
 
 /* ── Back-to-top ── */
 .back-to-top {

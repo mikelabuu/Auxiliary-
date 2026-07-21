@@ -53,7 +53,7 @@
         <div class="filter-toolbar">
             <div class="filter-search">
                 <x-admin.ui.icon name="search" class="w-4 h-4" stroke-width="2" />
-                <input type="text" wire:model.live.debounce.400ms="search" placeholder="Payment ID, booking, or reference…" aria-label="Search payments">
+                <input type="text" wire:model.live.debounce.400ms="search" placeholder="Payment ID, booking, guest, or reference…" aria-label="Search payments">
             </div>
             <select wire:model.live="sort" class="filter-select" aria-label="Sort order">
                 <option value="latest">Newest first</option>
@@ -81,6 +81,7 @@
                         <tr>
                             <x-admin.ui.sort-th field="id" :active="$sortField" :dir="$sortDirection">Payment</x-admin.ui.sort-th>
                             <x-admin.ui.sort-th field="booking_id" :active="$sortField" :dir="$sortDirection">Booking</x-admin.ui.sort-th>
+                            <th>Payer</th>
                             <x-admin.ui.sort-th field="amount" :active="$sortField" :dir="$sortDirection" class="text-right">Amount</x-admin.ui.sort-th>
                             <x-admin.ui.sort-th field="status" :active="$sortField" :dir="$sortDirection">Status</x-admin.ui.sort-th>
                             <x-admin.ui.sort-th field="gateway" :active="$sortField" :dir="$sortDirection">Gateway</x-admin.ui.sort-th>
@@ -99,6 +100,7 @@
                             <tr>
                                 <td><span class="ref-code">PMT-{{ str_pad($payment->id, 4, '0', STR_PAD_LEFT) }}</span></td>
                                 <td class="font-data tabnum text-muted">#{{ $payment->booking_id }}</td>
+                                <td class="font-medium capitalize">{{ $payment->booking?->guest_name ?? '—' }}</td>
                                 <td class="text-right font-data tabnum font-semibold">₱{{ number_format($payment->amount, 2) }}</td>
                                 <td><span class="status {{ $sClass }}">{{ $sLabel }}</span></td>
                                 <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ $payment->gateway ?? '—' }}</td>

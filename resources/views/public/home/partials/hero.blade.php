@@ -3,7 +3,7 @@
          legibility: solid night on the left where the copy sits, thinning
          rightward so the building (and its real signage) stays visible
          instead of being graded into murk. -->
-    <div class="absolute inset-0 z-0 will-change-transform prlx-hero-bg">
+    <div class="absolute -inset-8 z-0 will-change-transform prlx-hero-bg">
         {{-- The photo's aspect ratio ≈ the viewport's, so object-position has
              no crop slack: the scaled origin-left wrapper creates it, pushing
              the facade signage right, out from behind the headline (desktop

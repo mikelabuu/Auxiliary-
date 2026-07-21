@@ -33,43 +33,22 @@ $(function () {
         if (e.key === 'Escape') closeModal('bookingModal');
     });
 
+    // Read-only detail view — load it directly (no password re-auth).
     $(document).on('click', '.password-verify', function (e) {
         e.preventDefault();
         const bookingId = $(this).data('id');
 
-        Swal.fire({
-            title: 'Enter your password',
-            input: 'password',
-            inputAttributes: { placeholder: 'Password', autocapitalize: 'off' },
-            showCancelButton: true,
-            confirmButtonText: 'Verify',
-            showLoaderOnConfirm: true,
-            preConfirm: (password) => {
-                return $.ajax({
-                    url: "{{ route('staff.completedbookings.verify-password') }}",
-                    method: 'POST',
-                    data: { _token: $('meta[name="csrf-token"]').attr('content'), password }
-                }).then(response => {
-                    if (!response.success) throw new Error(response.message);
-                    return true;
-                }).catch(err => Swal.showValidationMessage(err.responseJSON?.message || err.message));
+        $.ajax({
+            url: `{{ url('staff/completed-bookings') }}/${bookingId}/details`,
+            method: 'GET',
+            success: function (response) {
+                if (!response.success) { Swal.fire('Error', response.message, 'error'); return; }
+                $('#bookingDetailsModal').html(response.html);
+                openModal('bookingModal');
             },
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (!result.isConfirmed) return;
-
-            $.ajax({
-                url: `{{ url('staff/completed-bookings') }}/${bookingId}/details`,
-                method: 'GET',
-                success: function (response) {
-                    if (!response.success) { Swal.fire('Error', response.message, 'error'); return; }
-                    $('#bookingDetailsModal').html(response.html);
-                    openModal('bookingModal');
-                },
-                error: function () {
-                    Swal.fire('Error', 'Failed to load booking details.', 'error');
-                }
-            });
+            error: function () {
+                Swal.fire('Error', 'Failed to load booking details.', 'error');
+            }
         });
     });
 });

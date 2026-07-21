@@ -33,47 +33,4 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-$(document).on('click', '.review-discount', function(e) {
-    e.preventDefault(); // prevent default navigation
-    const url = $(this).attr('href'); // get the original href
-
-    Swal.fire({
-        title: 'Enter your password',
-        text: 'Reviewing discount documents requires re-authentication.',
-        input: 'password',
-        inputAttributes: {
-            autocapitalize: 'off',
-            placeholder: 'Password'
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Verify',
-        confirmButtonColor: '#14532d',
-        showLoaderOnConfirm: true,
-        preConfirm: (password) => {
-            return $.ajax({
-                url: '/staff/discounts/verify-password',
-                method: 'POST',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    password: password
-                }
-            }).then(response => {
-                if (!response.success) {
-                    throw new Error(response.message)
-                }
-                return response.success;
-            }).catch(err => {
-                Swal.showValidationMessage(err.responseJSON?.message || err.message);
-            });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = url;
-        }
-    });
-});
-</script>
-@endpush
+{{-- Password re-auth removed — the .review-discount links now navigate directly. --}}

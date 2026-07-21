@@ -188,43 +188,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const bookingId = $(this).data('id');
         const action = $(this).data('action');
 
+        // View is read-only — open it straight away, no interstitial.
+        if (action === 'view') {
+            Livewire.dispatch('openBookingModal', { bookingId });
+            return;
+        }
+
+        // Cancel / checkout change state, so keep a lightweight confirm
+        // (no password) to guard against an accidental click.
+        const cfg = action === 'cancel'
+            ? { title: 'Cancel this booking?', text: 'This releases the pending booking.', icon: 'warning', confirmButtonText: 'Yes, cancel', event: 'cancelBookingConfirmed' }
+            : { title: 'Check out this guest?', text: 'This marks the booking as checked out.', icon: 'question', confirmButtonText: 'Yes, check out', event: 'checkoutBookingConfirmed' };
+
         Swal.fire({
-            title: 'Enter your password',
-            input: 'password',
-            inputAttributes: {
-                placeholder: 'Password',
-                autocapitalize: 'off'
-            },
+            title: cfg.title,
+            text: cfg.text,
+            icon: cfg.icon,
             showCancelButton: true,
-            confirmButtonText: 'Verify',
-            showLoaderOnConfirm: true,
-            preConfirm: (password) => {
-                return $.ajax({
-                    url: "{{ route('staff.bookings.verify-password') }}",
-                    method: 'POST',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        password: password
-                    }
-                }).then(response => {
-                    if (!response.success) {
-                        throw new Error(response.message);
-                    }
-                    return response.success;
-                }).catch(err => {
-                    Swal.showValidationMessage(err.responseJSON?.message || err.message);
-                });
-            },
-            allowOutsideClick: () => !Swal.isLoading()
+            confirmButtonText: cfg.confirmButtonText
         }).then((result) => {
             if (result.isConfirmed) {
-                if (action === 'view') {
-                    Livewire.dispatch('openBookingModal', { bookingId });
-                } else if (action === 'cancel') {
-                    Livewire.dispatch('cancelBookingConfirmed', { bookingId });
-                }else if (action === 'checkout') {
-                    Livewire.dispatch('checkoutBookingConfirmed', { bookingId });
-                }
+                Livewire.dispatch(cfg.event, { bookingId });
             }
         });
     });
