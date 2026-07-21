@@ -4,6 +4,7 @@ namespace App\Livewire\Staff;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Livewire\Concerns\WithSorting;
 use App\Models\Payment;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class PaymentLogs extends Component
 {
     use WithPagination;
+    use WithSorting;
 
     public $search = '';
     public $sort = 'latest';
@@ -81,11 +83,11 @@ class PaymentLogs extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        if ($this->sort === 'oldest') {
-            $query->orderBy('created_at', 'asc');
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
+        $query = $this->applySort(
+            $query,
+            ['id', 'booking_id', 'amount', 'status', 'gateway', 'reference_no', 'landbank_transaction_id', 'created_at'],
+            fn ($q) => $q->orderBy('created_at', $this->sort === 'oldest' ? 'asc' : 'desc')
+        );
 
         $payments = $query->paginate($perPage);
 

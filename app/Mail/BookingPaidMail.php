@@ -29,6 +29,10 @@ class BookingPaidMail extends Mailable
     {
         $booking = $this->booking;
 
+        // room_numbers is derived from reservations; ensure they're present
+        // (this mailable may be queued/serialized without the relation loaded).
+        $booking->loadMissing('reservations');
+
         // Generate receipt number and verification URL
         $receiptNumber = 'R-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
         $verificationUrl = url("/verify-receipt/{$receiptNumber}");

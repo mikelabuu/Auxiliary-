@@ -236,7 +236,6 @@ class BookingController extends Controller
 
                 $booking = Booking::create([
                     'user_id'         => $user->id,
-                    'room_numbers'    => implode(',', $allRoomNumbers),
                     'expected_guests' => $request->expected_guests,
                     'guest_name'      => $guestName,
                     'guest_address'   => $guest_address,
@@ -348,19 +347,13 @@ class BookingController extends Controller
             ->orderBy('room_number')
             ->get();
 
-        // Get bookings that overlap with the given range AND block availability
-        $bookings = Booking::whereIn('status', Booking::BLOCKING_STATUSES)
-            ->where('check_in', '<', $checkOut)
-            ->where('check_out', '>', $checkIn)
-            ->get();
-
-        // Collect booked room numbers
-        $bookedRoomNumbers = $bookings->flatMap(function ($b) {
-            if (is_array($b->room_numbers)) {
-                return $b->room_numbers;
-            }
-            return array_map('trim', explode(',', (string) $b->room_numbers));
-        })->toArray();
+        // Room numbers held by any blocking booking that overlaps the range,
+        // read from reservations (the authoritative per-room source).
+        $bookedRoomNumbers = Reservation::whereHas('booking', fn ($q) =>
+                $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                  ->where('check_in', '<', $checkOut)
+                  ->where('check_out', '>', $checkIn))
+            ->pluck('room_number')->map(fn ($n) => trim($n))->unique()->all();
 
         // Map rooms to availability
         $result = $rooms->map(function ($r) use ($bookedRoomNumbers) {
@@ -396,15 +389,13 @@ class BookingController extends Controller
         $checkIn  = $request->input('check_in');
         $checkOut = $request->input('check_out');
 
-        // Room numbers held by any blocking booking that overlaps the range
-        $bookedRoomNumbers = Booking::whereIn('status', Booking::BLOCKING_STATUSES)
-            ->where('check_in', '<', $checkOut)
-            ->where('check_out', '>', $checkIn)
-            ->get()
-            ->flatMap(fn ($b) => array_map('trim', (array) $b->room_numbers))
-            ->filter()
-            ->unique()
-            ->all();
+        // Room numbers held by any blocking booking that overlaps the range,
+        // read from reservations (the authoritative per-room source).
+        $bookedRoomNumbers = Reservation::whereHas('booking', fn ($q) =>
+                $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                  ->where('check_in', '<', $checkOut)
+                  ->where('check_out', '>', $checkIn))
+            ->pluck('room_number')->map(fn ($n) => trim($n))->filter()->unique()->all();
 
         $rooms   = Room::all();
         $catalog = RoomCatalog::all();

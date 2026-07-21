@@ -76,17 +76,17 @@
         @else
             <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, statusFilter, sort, resetFilters, gotoPage, previousPage, nextPage">
             <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
-                <table class="data-table">
+                <table class="data-table" data-server-sort>
                     <thead>
                         <tr>
-                            <th>Payment</th>
-                            <th>Booking</th>
-                            <th class="text-right">Amount</th>
-                            <th>Status</th>
-                            <th>Gateway</th>
-                            <th>Reference</th>
-                            <th>Transaction ID</th>
-                            <th>Date</th>
+                            <x-admin.ui.sort-th field="id" :active="$sortField" :dir="$sortDirection">Payment</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="booking_id" :active="$sortField" :dir="$sortDirection">Booking</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="amount" :active="$sortField" :dir="$sortDirection" class="text-right">Amount</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="status" :active="$sortField" :dir="$sortDirection">Status</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="gateway" :active="$sortField" :dir="$sortDirection">Gateway</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="reference_no" :active="$sortField" :dir="$sortDirection">Reference</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="landbank_transaction_id" :active="$sortField" :dir="$sortDirection">Transaction ID</x-admin.ui.sort-th>
+                            <x-admin.ui.sort-th field="created_at" :active="$sortField" :dir="$sortDirection">Date</x-admin.ui.sort-th>
                         </tr>
                     </thead>
                     <tbody>

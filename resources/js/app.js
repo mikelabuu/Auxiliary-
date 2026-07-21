@@ -1,4 +1,5 @@
 import './bootstrap';
+import './sortable-tables';
 import { createIcons } from 'lucide';
 import * as icons from 'lucide';
 

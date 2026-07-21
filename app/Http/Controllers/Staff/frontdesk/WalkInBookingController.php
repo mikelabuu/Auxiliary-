@@ -169,7 +169,6 @@ class WalkInBookingController extends Controller
             // Create main booking
             $booking = Booking::create([
                 'user_id'         => null,
-                'room_numbers'    => implode(',', $allRoomNumbers),
                 'expected_guests' => $request->expected_guests,
                 'guest_name'      => $request->guest_name,
                 'guest_address'   => $guest_address,

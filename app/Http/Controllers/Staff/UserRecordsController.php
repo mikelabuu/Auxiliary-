@@ -65,6 +65,7 @@ class UserRecordsController extends Controller
             ->sum('amount');
 
         $recentBookings = $user->bookings()
+            ->with('reservations')
             ->latest()
             ->take(5)
             ->get()

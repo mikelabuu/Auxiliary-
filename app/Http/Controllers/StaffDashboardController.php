@@ -64,25 +64,46 @@ class StaffDashboardController extends Controller
         // page still renders are computed here.
         $totalRooms = Room::count();
 
-        // Dates with at least one active/upcoming stay, for the calendar's
-        // "has bookings" dots (window: 2 months back to 10 months ahead).
+        // Per-date occupancy for the calendar modal: arrivals, departures,
+        // in-house night counts and each day's guest list (window: 2 months
+        // back to 10 months ahead). The blade renders dots + a day drill-down.
         $calendarStart = Carbon::now()->startOfMonth()->subMonths(2);
         $calendarEnd = Carbon::now()->startOfMonth()->addMonths(10);
-        $bookedDates = Booking::whereIn('status', array_merge(Booking::BLOCKING_STATUSES, ['completed']))
+
+        $calendarData = [];
+        Booking::with('reservations')
+            ->whereIn('status', array_merge(Booking::BLOCKING_STATUSES, ['completed']))
             ->where('check_in', '<', $calendarEnd)
             ->where('check_out', '>', $calendarStart)
-            ->get(['check_in', 'check_out'])
-            ->flatMap(function ($b) use ($calendarStart, $calendarEnd) {
-                $start = $b->check_in->max($calendarStart);
-                $end = $b->check_out->min($calendarEnd);
-                $dates = [];
+            ->get()
+            ->each(function ($b) use (&$calendarData, $calendarStart, $calendarEnd) {
+                $rooms = $b->reservations->pluck('room_number')->filter()->unique()->implode(', ');
+                $type = $b->reservations->first()->room_type ?? '';
+                $type = $type ? ucfirst(str_replace(['dormitory1', 'dormitory2'], 'dormitory', $type)) : 'Room';
+
+                $start = $b->check_in->greaterThan($calendarStart) ? $b->check_in->copy() : $calendarStart->copy();
+                $end   = $b->check_out->lessThan($calendarEnd) ? $b->check_out->copy() : $calendarEnd->copy();
+
                 for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                    $dates[] = $d->toDateString();
+                    $ds = $d->toDateString();
+                    $calendarData[$ds] ??= ['a' => 0, 'd' => 0, 's' => 0, 'guests' => []];
+
+                    $isArrival = $d->isSameDay($b->check_in);
+                    $isDeparture = $d->isSameDay($b->check_out);
+
+                    if ($isArrival) $calendarData[$ds]['a']++;
+                    if ($isDeparture) $calendarData[$ds]['d']++;
+                    if (!$isDeparture) $calendarData[$ds]['s']++; // occupied nights, not the checkout day
+
+                    $calendarData[$ds]['guests'][] = [
+                        'n'  => $b->guest_name,
+                        'r'  => $rooms ?: '—',
+                        't'  => $type,
+                        'k'  => $isArrival ? 'arrival' : ($isDeparture ? 'departure' : 'stay'),
+                        'st' => $b->status,
+                    ];
                 }
-                return $dates;
-            })
-            ->unique()
-            ->values();
+            });
 
         // Room Status Map Data — shared with the real-time roomMapFeed() endpoint.
         $rooms = $this->roomMapState();
@@ -116,7 +137,7 @@ class StaffDashboardController extends Controller
             'revenueValues',
             'peakMonthName',
             'peakMonthCount',
-            'bookedDates',
+            'calendarData',
 
             // Room Status Map variables
             'dormBeds',

@@ -32,13 +32,13 @@ class SettingsController extends Controller
 
         // Build base query
         $query = $user->bookings()
-            ->with('rooms', 'discountRequest');
+            ->with('reservations', 'rooms', 'discountRequest');
 
-        // Search: match ID, room type, or room numbers
+        // Search: match ID, room number, or guest name
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
-                ->orWhere('room_numbers', 'like', "%{$search}%")
+                ->orWhereHas('reservations', fn ($r) => $r->where('room_number', 'like', "%{$search}%"))
                 ->orWhere('guest_name', 'like', "%{$search}%");
             });
         }

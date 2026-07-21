@@ -28,6 +28,7 @@
         'md' => '520px',
         'lg' => '620px',
         'xl' => '680px',
+        '2xl' => '860px',
     ];
     $maxWidthCss = $maxWidthMap[$maxWidth] ?? $maxWidthMap['md'];
 

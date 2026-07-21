@@ -85,15 +85,15 @@
     @else
         <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
         <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
-            <table class="data-table">
+            <table class="data-table" data-server-sort>
                 <thead>
                     <tr>
-                        <th>Ref code</th>
-                        <th>Guest</th>
+                        <x-admin.ui.sort-th field="id" :active="$sortField" :dir="$sortDirection">Ref code</x-admin.ui.sort-th>
+                        <x-admin.ui.sort-th field="guest_name" :active="$sortField" :dir="$sortDirection">Guest</x-admin.ui.sort-th>
                         <th>Room(s)</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Status</th>
+                        <x-admin.ui.sort-th field="check_in" :active="$sortField" :dir="$sortDirection">Check-in</x-admin.ui.sort-th>
+                        <x-admin.ui.sort-th field="check_out" :active="$sortField" :dir="$sortDirection">Check-out</x-admin.ui.sort-th>
+                        <x-admin.ui.sort-th field="status" :active="$sortField" :dir="$sortDirection">Status</x-admin.ui.sort-th>
                         <th>Actions</th>
                     </tr>
                 </thead>

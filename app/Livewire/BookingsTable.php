@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Livewire\Concerns\WithSorting;
 use App\Models\Booking;
 use App\Models\Checkout;
 use App\Models\CancellationLog;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 class BookingsTable extends Component
 {
     use WithPagination;
+    use WithSorting;
 
     public $search = '';
     public $statusFilter = '';
@@ -236,8 +238,14 @@ class BookingsTable extends Component
             $query->where('status', $this->statusFilter);
         }
 
+        $query = $this->applySort(
+            $query,
+            ['id', 'guest_name', 'check_in', 'check_out', 'status', 'created_at'],
+            fn ($q) => $q->latest()
+        );
+
         return view('livewire.bookings-table', [
-            'bookings' => $query->latest()->paginate(15),
+            'bookings' => $query->paginate(15),
             'statusCounts' => $statusCounts,
         ]);
     }

@@ -30,6 +30,24 @@ class Booking extends Model
         'active',
     ];
 
+    /**
+     * Every status a booking may legitimately hold. This is the single source
+     * of truth now that `status` is a plain VARCHAR rather than a MySQL enum —
+     * validate against this list instead of relying on the column type. Keep it
+     * in sync with the lifecycle; do not add phantom values ('confirmed',
+     * 'checked_in') that no code actually sets.
+     */
+    public const STATUSES = [
+        'pending_discount',
+        'pending_payment',
+        'paid',
+        'active',
+        'completed',
+        'cancelled',
+        'expired',
+        'no_show',
+    ];
+
     protected $fillable = [
         'user_id',
         'guest_name',
@@ -43,8 +61,7 @@ class Booking extends Model
         'payable_amount',   // 
         'status',
         'wants_discount',
-        'room_numbers',       // Stored as CSV
-        'expected_guests',    // 
+        'expected_guests',    //
         'payment_mode',
     ];
 
@@ -74,16 +91,12 @@ class Booking extends Model
         }
     }
 
-    // Accessor for room_numbers (CSV -> Array)
-    public function getRoomNumbersAttribute($value)
+    // Derived from reservations (the authoritative per-room source) so it can
+    // never drift from a stored copy. Eager-load 'reservations' at read sites
+    // that loop over many bookings to avoid N+1.
+    public function getRoomNumbersAttribute()
     {
-        return explode(',', $value);
-    }
-
-    // Mutator for room_numbers (Array -> CSV)
-    public function setRoomNumbersAttribute($value)
-    {
-        $this->attributes['room_numbers'] = is_array($value) ? implode(',', $value) : $value;
+        return $this->reservations->pluck('room_number')->filter()->values()->all();
     }
 
     // Relationships

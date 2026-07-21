@@ -21,6 +21,10 @@ $.ajaxSetup({
                 <x-admin.ui.icon name="chart-bar" class="w-4 h-4" />
                 Booking insights
             </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" type="button" id="openCalendarBtn">
+                <x-admin.ui.icon name="calendar" class="w-4 h-4" />
+                Calendar
+            </x-admin.ui.button>
             <x-admin.ui.button variant="secondary" :href="route('staff.reports.index')">
                 <x-admin.ui.icon name="calendar" class="w-4 h-4" />
                 View Reports
@@ -45,81 +49,9 @@ $.ajaxSetup({
         <x-admin.ui.quick-action icon="credit-card" title="Payments" subtitle="Review the ledger" :href="route('staff.paymentlogs.index')" />
     </div>
 
-    <!-- Booking Insights modal (opened from the page header) -->
-    <x-admin.ui.modal id="bookingInsightsModal" icon="chart-bar" title="Booking Insights" max-width="xl" scroll-body>
-        <div class="modal-body">
-            <div class="flex items-center justify-between gap-3 mb-6">
-                <p class="text-xs text-stone-500">Peak month: <span class="font-semibold text-palay-700">{{ $peakMonthName }} · {{ $peakMonthCount }} bookings</span></p>
-                <span class="text-xs font-semibold text-stone-500 bg-stone-50 border border-stone-200 rounded-full px-3 py-1.5">{{ date('Y') }}</span>
-            </div>
-
-            <div class="pl-1">
-                <div class="flex gap-3">
-                    @php
-                        $maxVal = empty($values) ? 0 : max($values);
-                        $step = ceil($maxVal / 4);
-                        if($step == 0) $step = 1;
-                        $maxScale = $step * 4;
-                    @endphp
-                    <div class="w-4 shrink-0 flex flex-col justify-between h-40 text-[10px] text-stone-300 tabnum text-right">
-                        <span>{{ $maxScale }}</span>
-                        <span>{{ $maxScale - $step }}</span>
-                        <span>{{ $maxScale - $step*2 }}</span>
-                        <span>{{ $maxScale - $step*3 }}</span>
-                        <span>0</span>
-                    </div>
-                    <div class="flex-1 relative h-40 border-b border-stone-100">
-                        <div class="absolute inset-0 flex flex-col justify-between pb-0 pointer-events-none">
-                            <div class="border-t border-dashed border-stone-100"></div>
-                            <div class="border-t border-dashed border-stone-100"></div>
-                            <div class="border-t border-dashed border-stone-100"></div>
-                            <div class="border-t border-dashed border-stone-100"></div>
-                            <div></div>
-                        </div>
-                        <div class="relative h-full flex items-end gap-2 px-1 chart-rise">
-                            @foreach($values as $index => $val)
-                                @php
-                                    $heightPercent = $maxScale > 0 ? ($val / $maxScale) * 100 : 0;
-                                    $isPeak = $val == $peakMonthCount && $val > 0;
-                                    $barColor = $isPeak ? 'bg-gradient-to-t from-palay-600 to-palay-400' : 'bg-gradient-to-t from-clsu-600 to-clsu-400 group-hover:from-clsu-700 group-hover:to-clsu-500';
-                                    if($val == 0) $barColor = 'bg-stone-100';
-                                @endphp
-                                <div class="flex-1 group relative flex justify-center h-full items-end">
-                                    @if($val > 0)
-                                        <div class="rounded-t-md w-full {{ $barColor }} transition-colors" style="height:{{ $heightPercent }}%"></div>
-                                        <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity {{ $isPeak ? 'text-palay-700 bg-palay-50' : 'text-clsu-700 bg-clsu-50' }} rounded-full px-1.5 py-0.5 tracking-wide whitespace-nowrap">{{ $val }} · ₱{{ number_format($revenueValues[$index]) }}</span>
-                                    @else
-                                        <div class="rounded-t-md w-full bg-stone-100 h-0"></div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-                <div class="flex gap-3 mt-2">
-                    <div class="w-4 shrink-0"></div>
-                    <div class="flex-1 flex gap-2 px-1 text-[10px] font-medium text-stone-400">
-                        @foreach($labels as $index => $label)
-                            @php
-                                $isPeak = $values[$index] == $peakMonthCount && $values[$index] > 0;
-                            @endphp
-                            <span class="flex-1 text-center {{ $isPeak ? 'text-palay-700 font-bold' : '' }}">{{ $label }}</span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </x-admin.ui.modal>
-
-    <script>
-      (function () {
-        function openBI() { window.openModal('bookingInsightsModal'); }
-        function closeBI() { window.closeModal('bookingInsightsModal'); }
-        $(document).on('click', '#openInsightsBtn', openBI);
-        $('#bookingInsightsModal').on('click', '[data-modal-close]', closeBI);
-        $(document).on('keydown', function (e) { if (e.key === 'Escape' && $('#bookingInsightsModal').hasClass('flex')) closeBI(); });
-      })();
-    </script>
+    {{-- Booking Insights + Calendar modals (opened from the header buttons) --}}
+    @include('partials.dashboard.insights-modal')
+    @include('partials.dashboard.calendar-modal')
 
     <!-- Rooms & occupancy row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -193,40 +125,8 @@ $.ajaxSetup({
             <livewire:dashboard.arrivals-departures />
         </div>
 
-        <!-- Right Side: Calendar & Recent Activity -->
+        <!-- Right Side: Recent Activity (calendar moved to a header-button modal) -->
         <div class="space-y-6">
-            <!-- Calendar snapshot (bespoke dark header, not a section-card) -->
-            <div class="animate-in bg-white rounded-2xl border border-stone-200 shadow-card hover:shadow-card-lg transition-shadow duration-200 overflow-hidden" style="animation-delay:380ms">
-                <div class="flex items-center justify-between bg-gradient-to-r from-clsu-600 to-clsu-700 text-white px-4 py-3.5">
-                    <button id="prev" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/50 cursor-pointer">
-                        <x-admin.ui.icon name="chevron-left" class="w-3.5 h-3.5" stroke-width="2.5" />
-                    </button>
-                    <p id="monthYear" class="text-xs font-bold tracking-widest tabnum uppercase"></p>
-                    <button id="next" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/50 cursor-pointer">
-                        <x-admin.ui.icon name="chevron-right" class="w-3.5 h-3.5" stroke-width="2.5" />
-                    </button>
-                </div>
-                <div class="p-4">
-                    <div class="grid grid-cols-7 text-center text-[10px] font-bold text-stone-400 mb-2">
-                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                    </div>
-                    <div id="calendarDays" class="grid grid-cols-7 gap-y-2 text-xs tabnum">
-                        <!-- JS generated -->
-                    </div>
-                    <div class="flex items-center gap-4 mt-3 pt-3 border-t border-stone-100 text-[10px] font-medium text-stone-400">
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-clsu-700"></span>Today</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Has bookings</span>
-                    </div>
-                </div>
-                {{-- Live month summary — counts the amber dots above --}}
-                <div class="px-4 pb-4">
-                    <div class="bg-gradient-to-br from-clsu-50 to-white border border-clsu-100 rounded-xl p-3.5">
-                        <p class="text-xs font-semibold text-clsu-800" id="calStatTitle"></p>
-                        <p class="text-[11px] text-clsu-600 mt-0.5" id="calStatSub"></p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Recent Activity (live Livewire component) -->
             <x-admin.ui.section-card icon="clock" title="Recent Activity" :delay="420">
                 <livewire:dashboard.recent-activity />
@@ -236,91 +136,6 @@ $.ajaxSetup({
 </div>
 
 
-<script>
-    const monthYear = document.getElementById("monthYear");
-    const calendarDays = document.getElementById("calendarDays");
-    const prevBtn = document.getElementById("prev");
-    const nextBtn = document.getElementById("next");
-
-    // Dates (YYYY-MM-DD) with at least one active/upcoming stay
-    const bookedDates = new Set(@json($bookedDates));
-
-    let date = new Date();
-
-    const renderCalendar = () => {
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ];
-
-      monthYear.textContent = `${months[month].toUpperCase()} ${year}`;
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const prevLastDate = new Date(year, month, 0).getDate();
-
-      let daysHTML = "";
-
-      for (let i = firstDay; i > 0; i--) {
-        daysHTML += `<div class="flex flex-col items-center gap-0.5"><span class="w-7 h-7 flex items-center justify-center text-stone-300">${prevLastDate - i + 1}</span><span class="w-1 h-1 rounded-full bg-transparent"></span></div>`;
-      }
-
-      for (let i = 1; i <= lastDate; i++) {
-        const today = new Date();
-        const isToday =
-          i === today.getDate() &&
-          month === today.getMonth() &&
-          year === today.getFullYear();
-
-        const cellClass = isToday
-            ? "w-7 h-7 rounded-full bg-clsu-700 text-white font-bold flex items-center justify-center ring-4 ring-clsu-100"
-            : "w-7 h-7 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-full cursor-pointer transition";
-
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        const dotClass = bookedDates.has(dateStr) ? "bg-palay-400" : "bg-transparent";
-
-        daysHTML += `<div class="flex flex-col items-center gap-0.5"><span class="${cellClass}">${i}</span><span class="w-1 h-1 rounded-full ${dotClass}"></span></div>`;
-      }
-
-      const totalCells = firstDay + lastDate;
-      const nextDays = 7 - (totalCells % 7);
-      if (nextDays < 7) {
-        for (let i = 1; i <= nextDays; i++) {
-          daysHTML += `<div class="flex flex-col items-center gap-0.5"><span class="w-7 h-7 flex items-center justify-center text-stone-300">${i}</span><span class="w-1 h-1 rounded-full bg-transparent"></span></div>`;
-        }
-      }
-
-      calendarDays.innerHTML = daysHTML;
-
-      // Month summary under the grid: real occupancy signal, not filler copy
-      const mm = String(month + 1).padStart(2, '0');
-      let bookedCount = 0;
-      bookedDates.forEach(d => { if (d.startsWith(`${year}-${mm}-`)) bookedCount++; });
-      const statTitle = document.getElementById('calStatTitle');
-      const statSub = document.getElementById('calStatSub');
-      if (statTitle && statSub) {
-        statTitle.textContent = bookedCount > 0
-          ? `${bookedCount} ${bookedCount === 1 ? 'day' : 'days'} with guests`
-          : 'No booked dates';
-        statSub.textContent = `${months[month]} ${year} · active and upcoming stays`;
-      }
-    };
-
-    prevBtn.addEventListener("click", () => {
-      date.setMonth(date.getMonth() - 1);
-      renderCalendar();
-    });
-
-    nextBtn.addEventListener("click", () => {
-      date.setMonth(date.getMonth() + 1);
-      renderCalendar();
-    });
-
-    renderCalendar();
-  </script>
 @endsection
 
 @push('scripts')

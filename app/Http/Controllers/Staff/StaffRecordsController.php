@@ -8,6 +8,7 @@ use App\Models\Staff;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
 
 class StaffRecordsController extends Controller
@@ -55,7 +56,7 @@ class StaffRecordsController extends Controller
         $request->validate([
             'name'     => 'required|string|min:3|max:50',
             'email'    => 'required|email|unique:staff,email',
-            'role'     => 'required|in:admin,frontdesk,housekeeping',
+            'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
             'password' => 'required|string|min:6|confirmed', // add confirmation if you want
         ]);
 
@@ -188,7 +189,7 @@ class StaffRecordsController extends Controller
             'staff_id' => 'required|exists:staff,id',
             'name'     => 'required|string|min:3|max:50',
             'email'    => 'required|email|unique:staff,email,' . $request->staff_id,
-            'role'     => 'required|in:admin,frontdesk,housekeeping',
+            'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 

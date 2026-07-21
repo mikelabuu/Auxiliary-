@@ -59,6 +59,28 @@ class ArrivalsDepartures extends Component
             $this->sortDirection = 'asc';
         }
     }
+
+    // ── Day navigation ───────────────────────────────────────────────────────
+    // The panel is date-driven ($this->date). Actions stay limited to the real
+    // "today" (see $isToday in render()) so staff can browse other days safely.
+    public function previousDay()
+    {
+        $this->date = Carbon::parse($this->date)->subDay()->toDateString();
+        $this->resetPage();
+    }
+
+    public function nextDay()
+    {
+        $this->date = Carbon::parse($this->date)->addDay()->toDateString();
+        $this->resetPage();
+    }
+
+    public function goToday()
+    {
+        $this->date = Carbon::today('Asia/Manila')->toDateString();
+        $this->resetPage();
+    }
+
     //handler
     public function handlePasswordConfirmed($payload)
     {
@@ -104,12 +126,18 @@ class ArrivalsDepartures extends Component
                 'guest_name' => $b->guest_name,
                 'check_in' => $b->check_in,
                 'check_out' => $b->check_out,
-                'room_numbers_str' => $b->reservations->pluck('room_number')->unique()->implode(', '),
+                'nights' => max(1, Carbon::parse($b->check_in)->diffInDays(Carbon::parse($b->check_out))),
+                'room_numbers_str' => $b->reservations->pluck('room_number')->unique()->implode(', ') ?: '—',
                 'status' => $b->status,
                 'type' => $type,
                 'detail_url' => route('staff.bookings.index'),
             ];
         });
+
+        // Summary counts for the header strip — taken before the tab filter so
+        // they reflect the whole day, not the current view.
+        $arrivalsCount = $list->whereIn('type', ['arrival', 'both'])->count();
+        $departuresCount = $list->whereIn('type', ['departure', 'both'])->count();
 
         // Apply filter
         if ($this->filterType !== 'all') {
@@ -173,10 +201,68 @@ class ArrivalsDepartures extends Component
                 ];
             });
 
+        // Is the panel showing the real "today"? Actions are only offered then.
+        $actualToday = Carbon::today('Asia/Manila')->toDateString();
+        $isToday = $this->date === $actualToday;
+
+        // In-house on the viewed date: active stays spanning it.
+        $inHouseCount = Booking::where('status', 'active')
+            ->whereDate('check_in', '<=', $this->date)
+            ->whereDate('check_out', '>=', $this->date)
+            ->count();
+
+        // Upcoming-this-week count (next 7 days after the viewed date).
+        $weekStart = Carbon::parse($this->date)->addDay()->startOfDay();
+        $weekEnd = Carbon::parse($this->date)->addDays(7)->endOfDay();
+        $upcomingCount = Booking::where(function ($q) use ($weekStart, $weekEnd) {
+                $q->whereBetween('check_in', [$weekStart, $weekEnd])->where('status', 'paid');
+            })
+            ->orWhere(function ($q) use ($weekStart, $weekEnd) {
+                $q->whereBetween('check_out', [$weekStart, $weekEnd])->where('status', 'active');
+            })
+            ->count();
+
+        // ── Needs attention (relative to the real today, any viewed date) ─────
+        $mapAttention = fn ($b, $kind) => (object) [
+            'id' => $b->id,
+            'guest_name' => $b->guest_name,
+            'room_numbers_str' => $b->reservations->pluck('room_number')->unique()->implode(', ') ?: '—',
+            'date' => $kind === 'overdue_checkout' ? $b->check_out : $b->check_in,
+            'kind' => $kind,
+        ];
+
+        // Overdue check-outs: still active past their check-out date.
+        $overdueCheckouts = Booking::with('reservations')
+            ->where('status', 'active')
+            ->whereDate('check_out', '<', $actualToday)
+            ->orderBy('check_out')
+            ->limit(10)
+            ->get()
+            ->map(fn ($b) => $mapAttention($b, 'overdue_checkout'));
+
+        // Missed arrivals: paid, check-in date passed, never checked in.
+        $missedArrivals = Booking::with('reservations')
+            ->where('status', 'paid')
+            ->whereDate('check_in', '<', $actualToday)
+            ->orderBy('check_in')
+            ->limit(10)
+            ->get()
+            ->map(fn ($b) => $mapAttention($b, 'missed_arrival'));
+
         return view('livewire.dashboard.arrivals-departures', [
             'arrivalsDepartures' => $paginated,
             'total' => $list->count(),
             'upcomingBookings' => $upcomingBookings,
+            'isToday' => $isToday,
+            'viewLabel' => Carbon::parse($this->date)->isSameDay(Carbon::today('Asia/Manila'))
+                ? 'Today'
+                : Carbon::parse($this->date)->format('M d, Y'),
+            'arrivalsCount' => $arrivalsCount,
+            'departuresCount' => $departuresCount,
+            'inHouseCount' => $inHouseCount,
+            'upcomingCount' => $upcomingCount,
+            'overdueCheckouts' => $overdueCheckouts,
+            'missedArrivals' => $missedArrivals,
         ]);
     }
 
@@ -241,7 +327,10 @@ class ArrivalsDepartures extends Component
         //\Log::info('check out method received');
         $booking = Booking::with('reservations.room')->findOrFail($bookingId);
 
-        if ($booking->status !== 'active' || !Carbon::parse($booking->check_out)->timezone('Asia/Manila')->isToday()) {
+        // Allow today OR overdue (checkout date already passed) — the same
+        // window the auto-checkout command uses. Only future checkouts are barred.
+        $checkOutInFuture = Carbon::parse($booking->check_out)->timezone('Asia/Manila')->startOfDay()->gt(Carbon::today('Asia/Manila'));
+        if ($booking->status !== 'active' || $checkOutInFuture) {
             $this->dispatch('alert', type: 'error', message: 'Booking not eligible for check-out.');
             return;
         }
@@ -290,12 +379,14 @@ class ArrivalsDepartures extends Component
             return;
         }
 
-        // Eligibility checks
-        $checkInToday = Carbon::parse($booking->check_in)->timezone('Asia/Manila')->isToday();
+        // Eligibility checks. No-show is allowed for today OR a past check-in
+        // (a missed arrival the scheduler hasn't swept yet); only a future
+        // check-in is barred.
+        $checkInInFuture = Carbon::parse($booking->check_in)->timezone('Asia/Manila')->startOfDay()->gt(Carbon::today('Asia/Manila'));
         $paymentExists = $booking->payments !== null;
         $paymentStatus = $booking->payments->status ?? null;
 
-        if ($booking->status !== 'paid' || !$checkInToday || !$paymentExists || $paymentStatus !== 'success') {
+        if ($booking->status !== 'paid' || $checkInInFuture || !$paymentExists || $paymentStatus !== 'success') {
             $this->dispatch('alert', type: 'error', message: 'Booking not eligible for No Show.');
             return;
         }
