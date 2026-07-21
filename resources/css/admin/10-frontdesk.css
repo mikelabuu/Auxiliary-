@@ -180,7 +180,10 @@
 .fd-nav-link:hover { color: #fff; }
 .fd-nav-link:focus-visible { outline: 2px solid var(--color-g-400); outline-offset: 2px; }
 .fd-nav-link svg { width: 15px; height: 15px; flex-shrink: 0; transition: transform 340ms var(--ease-spring); }
-.fd-nav-link:hover svg { transform: translateY(-1px) scale(1.16); }
+/* Icon spring only for real pointers — tablet taps must not stick it */
+@media (hover: hover) and (pointer: fine) {
+    .fd-nav-link:hover svg { transform: translateY(-1px) scale(1.16); }
+}
 .fd-nav-link.is-active {
     color: var(--color-ink); background: #fff;
     box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .9);

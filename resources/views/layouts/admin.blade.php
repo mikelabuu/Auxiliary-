@@ -30,6 +30,9 @@
           const order = ['compact', 'normal', 'large'];
           this.density = order[(order.indexOf(this.density) + 1) % order.length];
           localStorage.setItem('adminDensity', this.density);
+          // Brief opacity dip masks the one-frame reflow (05-motion-ux.css)
+          document.body.classList.add('density-switching');
+          setTimeout(() => document.body.classList.remove('density-switching'), 160);
         }
       }"
       :class="{ 'sidebar-collapsed': sidebarCollapsed, 'density-compact': density === 'compact', 'density-large': density === 'large' }">

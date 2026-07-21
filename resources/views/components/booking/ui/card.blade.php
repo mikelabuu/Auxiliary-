@@ -6,7 +6,7 @@
 
 <div {{ $attributes->merge([
     'class' => 'bg-white rounded-3xl border border-stone-200/70 p-6 sm:p-7 shadow-[0_1px_2px_rgba(17,78,40,0.04),0_12px_32px_-16px_rgba(17,78,40,0.14)] ' .
-               ($hoverable ? 'hover:shadow-[0_4px_10px_rgba(17,78,40,0.06),0_24px_48px_-18px_rgba(17,78,40,0.2)] hover:-translate-y-0.5 transition-all duration-300' : '')
+               ($hoverable ? 'hover:shadow-[0_4px_10px_rgba(17,78,40,0.06),0_24px_48px_-18px_rgba(17,78,40,0.2)] hover:-translate-y-0.5 transition-[transform,color,background-color,border-color,box-shadow] duration-300' : '')
 ]) }}>
     @if($title || isset($header))
         <div class="flex items-center justify-between mb-5 border-b border-stone-100 pb-4">

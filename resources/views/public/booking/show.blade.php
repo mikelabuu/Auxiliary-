@@ -26,23 +26,28 @@
                     <p class="text-sm font-medium text-ink/55 mt-3 max-w-md mx-auto">Here's what happens next:</p>
 
                     @php
+                        // Step 1 names an action — so it IS the action: a link
+                        // to the payment CTA (or the discount upload) instead of
+                        // plain text that lives a scroll away from its button.
                         $nextSteps = ($booking->wants_discount && $booking->status === 'pending_discount')
                             ? [
-                                'Upload your Senior / PWD IDs for the 20% discount review.',
-                                'Once approved, settle the discounted amount to confirm your stay.',
+                                ['text' => 'Upload your Senior / PWD IDs for the 20% discount review.', 'href' => $discountRequested ? null : route('discount.create', $booking->id)],
+                                ['text' => 'Once approved, settle the discounted amount to confirm your stay.', 'href' => null],
                             ]
                             : [
-                                'Settle your payment to lock in the reservation.',
-                                'Keep your receipt — you\'ll get it right after payment.',
+                                ['text' => 'Settle your payment to lock in the reservation.', 'href' => $booking->status === 'pending_payment' ? '#paymentCta' : null],
+                                ['text' => 'Keep your receipt — you\'ll get it right after payment.', 'href' => null],
                             ];
-                        $nextSteps[] = 'Check in from 2:00 PM on ' . $booking->check_in->format('M d') . ' with a valid ID.';
+                        $nextSteps[] = ['text' => 'Check in from 2:00 PM on ' . $booking->check_in->format('M d') . ' with a valid ID.', 'href' => null];
                     @endphp
+                    {{-- .next-step-card: cards deal out in order after the checkmark draw (app.css) --}}
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-3xl mx-auto text-left">
                         @foreach ($nextSteps as $step)
-                            <div class="flex items-start gap-3 bg-white/5 ring-1 ring-white/10 rounded-2xl px-4 py-3.5">
+                            @php $tag = $step['href'] ? 'a' : 'div'; @endphp
+                            <{{ $tag }}@if($step['href']) href="{{ $step['href'] }}"@endif class="next-step-card flex items-start gap-3 bg-white/5 ring-1 ring-white/10 rounded-2xl px-4 py-3.5{{ $step['href'] ? ' press !no-underline hover:bg-white/10 hover:ring-gold/40 cursor-pointer' : '' }}" style="--ns:{{ $loop->index }}">
                                 <span class="w-7 h-7 rounded-full {{ $loop->last ? 'bg-gold text-night' : 'bg-bone text-night' }} font-display italic text-xs flex items-center justify-center shrink-0">{{ $loop->iteration }}</span>
-                                <p class="text-xs font-bold text-ink/80 leading-relaxed">{{ $step }}</p>
-                            </div>
+                                <p class="text-xs font-bold text-ink/80 leading-relaxed">{{ $step['text'] }}@if($step['href']) <span class="material-icons text-[13px] align-middle text-gold">arrow_forward</span>@endif</p>
+                            </{{ $tag }}>
                         @endforeach
                     </div>
                 </div>
@@ -140,7 +145,7 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     @foreach($booking->reservations as $reservation)
-                        <div class="bg-gradient-to-b from-white/[0.06] to-white/[0.03] rounded-3xl ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] p-5 hover:ring-white/20 transition-all duration-300 flex flex-col justify-between">
+                        <div class="bg-gradient-to-b from-white/[0.06] to-white/[0.03] rounded-3xl ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] p-5 hover:ring-white/20 transition-[color,background-color,border-color,box-shadow] duration-300 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
                                     <span class="text-sm font-bold text-ink">Room #{{ $reservation->room_number }}</span>
@@ -238,7 +243,7 @@
                                         </div>
                                         <form action="{{ route('discount.cancel', $booking->id) }}" method="POST" class="w-full">
                                             @csrf
-                                            <button type="submit" class="w-full py-2 bg-ember-600/15 hover:bg-ember-600/25 text-ember-200 ring-1 ring-ember-600/40 font-bold rounded-lg text-[10px] transition-all cursor-pointer">
+                                            <button type="submit" class="w-full py-2 bg-ember-600/15 hover:bg-ember-600/25 text-ember-200 ring-1 ring-ember-600/40 font-bold rounded-lg text-[10px] transition-[color,background-color,border-color,box-shadow] cursor-pointer">
                                                 Cancel Request
                                             </button>
                                         </form>
@@ -255,8 +260,8 @@
 
                     <!-- Primary Payments Button -->
                     @if($booking->status === 'pending_payment')
-                        <div class="pt-4 border-t border-white/10">
-                            <a href="{{ route('bookings.pay', $booking->id) }}" class="press focus-ring !no-underline w-full min-h-12 py-3.5 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] transition-all">
+                        <div id="paymentCta" class="pt-4 border-t border-white/10 scroll-mt-28">
+                            <a href="{{ route('bookings.pay', $booking->id) }}" class="press focus-ring !no-underline w-full min-h-12 py-3.5 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
                                 <span class="material-icons text-[18px]">payment</span>
                                 Proceed to Payment
                             </a>
@@ -274,4 +279,24 @@
     </div>
 </div>
 </div>
+
+@push('scripts')
+<script>
+    // Success-hero step 1 → glide to the payment CTA and flash its card
+    // (same reduced-motion-aware scroll + block-flash contract as checkout).
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href="#paymentCta"]');
+        if (!link) return;
+        e.preventDefault();
+        const target = document.getElementById('paymentCta');
+        if (!target) return;
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+        const card = target.closest('.rounded-3xl') || target;
+        card.classList.remove('block-flash');
+        void card.offsetWidth; // restart the outline flash even on repeat clicks
+        card.classList.add('block-flash');
+    });
+</script>
+@endpush
 @endsection

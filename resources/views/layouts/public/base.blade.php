@@ -10,7 +10,21 @@
 
     <!-- Gates the scroll-reveal hidden state (see reveal.js) so content is
          never invisible if JS doesn't run. Must execute before first paint. -->
-    <script>document.documentElement.classList.add('js-reveal');</script>
+    <script>
+        document.documentElement.classList.add('js-reveal');
+        // Animated close for the x-booking.ui.modal component — sets [data-closing]
+        // so the .pub-modal CSS exit (app.css) runs, then hides. Mirrors the admin
+        // data-closing contract. Defined early so inline onclick= can use it.
+        window.pubModalClose = function (id) {
+            const el = document.getElementById(id);
+            if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
+            el.setAttribute('data-closing', '');
+            setTimeout(function () {
+                el.classList.add('hidden');
+                el.removeAttribute('data-closing');
+            }, 140);
+        };
+    </script>
 
     <!-- Tailwind & Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -148,27 +162,27 @@
                 </div>
 
                 <nav class="mt-7 flex flex-col gap-1">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                    <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                         <x-booking.ui.icon name="home" class="h-4 w-4 text-emerald" /> Home
                     </a>
-                    <a href="{{ route('home') }}#rooms" id="mobileRoomsLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                    <a href="{{ route('home') }}#rooms" id="mobileRoomsLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                         <x-booking.ui.icon name="bed" class="h-4 w-4 text-emerald" /> Rooms
                     </a>
-                    <a href="{{ route('home') }}#gallery" id="mobileGalleryLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                    <a href="{{ route('home') }}#gallery" id="mobileGalleryLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                         <x-booking.ui.icon name="images" class="h-4 w-4 text-emerald" /> Gallery
                     </a>
-                    <a href="#Footer" id="mobileContactLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                    <a href="#Footer" id="mobileContactLink" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                         <x-booking.ui.icon name="mail" class="h-4 w-4 text-emerald" /> Contact
                     </a>
                     @auth
                         <div class="my-2 h-px bg-ink/10"></div>
-                        <a href="{{ route('settings.profile') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                        <a href="{{ route('settings.profile') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                             <x-booking.ui.icon name="user" class="h-4 w-4 text-emerald" /> My Profile
                         </a>
-                        <a href="{{ route('settings.bookings') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                        <a href="{{ route('settings.bookings') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                             <x-booking.ui.icon name="book-open" class="h-4 w-4 text-emerald" /> My Bookings
                         </a>
-                        <a href="{{ route('settings.transactions') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-all">
+                        <a href="{{ route('settings.transactions') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-ink/80 hover:bg-canvas-deep hover:text-ink transition-colors">
                             <x-booking.ui.icon name="credit-card" class="h-4 w-4 text-emerald" /> Transactions
                         </a>
                     @endauth

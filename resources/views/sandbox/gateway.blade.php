@@ -66,7 +66,7 @@
                     <div class="relative">
                         <span class="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">credit_card</span>
                         <input id="card" name="card" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1111 2222 3333 4444" maxlength="19" required
-                               class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-bold tracking-widest tabnum focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all">
+                               class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-bold tracking-widest tabnum focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
                 </div>
 
@@ -75,7 +75,7 @@
                     <div class="relative">
                         <span class="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">person</span>
                         <input id="holder" name="holder" type="text" autocomplete="cc-name" placeholder="Juan Dela Cruz" required
-                               class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-semibold focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all">
+                               class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-semibold focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
                 </div>
 
@@ -85,13 +85,13 @@
                     <div class="grid grid-cols-2 gap-2 rounded-2xl border border-stone-200 bg-stone-50/60 p-1.5">
                         <label class="cursor-pointer">
                             <input type="radio" name="simulate" value="success" class="peer sr-only" checked>
-                            <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-all peer-checked:bg-clsu-700 peer-checked:text-white peer-checked:shadow-md">
+                            <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] peer-checked:bg-clsu-700 peer-checked:text-white peer-checked:shadow-md">
                                 <span class="material-icons text-[15px]">check_circle</span> Approve payment
                             </span>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="simulate" value="fail" class="peer sr-only">
-                            <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-all peer-checked:bg-ember-600 peer-checked:text-white peer-checked:shadow-md">
+                            <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] peer-checked:bg-ember-600 peer-checked:text-white peer-checked:shadow-md">
                                 <span class="material-icons text-[15px]">cancel</span> Decline payment
                             </span>
                         </label>
@@ -100,7 +100,7 @@
 
                 <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
                     <button type="submit" id="payBtn"
-                            class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-clsu-600 to-clsu-800 px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_-4px_rgba(17,78,40,0.5)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(17,78,40,0.6)] focus:outline-none focus:ring-2 focus:ring-clsu-400 focus:ring-offset-2 cursor-pointer disabled:opacity-70 disabled:pointer-events-none">
+                            class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-clsu-600 to-clsu-800 px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_-4px_rgba(17,78,40,0.5)] transition-[transform,color,background-color,border-color,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(17,78,40,0.6)] focus:outline-none focus:ring-2 focus:ring-clsu-400 focus:ring-offset-2 cursor-pointer disabled:opacity-70 disabled:pointer-events-none">
                         <span class="material-icons text-[18px]">lock</span>
                         Pay ₱{{ number_format($payment->amount, 2) }}
                     </button>

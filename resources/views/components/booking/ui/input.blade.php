@@ -16,7 +16,7 @@
         id="{{ $name }}"
         value="{{ old($name, $value) }}"
         {{ $attributes->merge([
-            'class' => 'w-full px-4 py-2.5 rounded-xl border bg-stone-50/60 text-stone-800 text-sm transition-all focus:bg-white focus:ring-2 outline-none ' .
+            'class' => 'w-full px-4 py-2.5 rounded-xl border bg-stone-50/60 text-stone-800 text-sm transition-[color,background-color,border-color,box-shadow] focus:bg-white focus:ring-2 outline-none ' .
             ($errors->has($name)
                 ? 'border-ember-300 focus:border-ember-400 focus:ring-ember-200 bg-ember-50/40'
                 : 'border-stone-200 focus:border-clsu-400 focus:ring-clsu-200')

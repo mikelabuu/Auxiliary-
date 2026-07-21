@@ -532,6 +532,29 @@ document.addEventListener('DOMContentLoaded', function () {
     if (['first_name', 'last_name', 'guest_phone'].includes(e.target?.name)) updateProgressRail();
   });
 
+  // Rail steps double as jump-links to their step cards — same scroll +
+  // block-flash contract as the summary rows' deep links.
+  const railTargets = { dates: 'stepCardDates', details: 'stepCardDetails', rooms: 'stepCardRooms' };
+  function jumpToStepCard(li) {
+    const card = document.getElementById(railTargets[li.dataset.progressStep] || '');
+    if (!card) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    card.classList.remove('block-flash');
+    void card.offsetWidth; // restart the outline flash on repeat jumps
+    card.classList.add('block-flash');
+  }
+  const progressRail = document.getElementById('checkoutProgress');
+  progressRail?.addEventListener('click', function (e) {
+    const li = e.target.closest('[data-progress-step]');
+    if (li) jumpToStepCard(li);
+  });
+  progressRail?.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const li = e.target.closest('[data-progress-step]');
+    if (li) { e.preventDefault(); jumpToStepCard(li); }
+  });
+
   function showFormError(msg) {
     if (bookingFormAlert) {
       bookingFormAlert.innerText = msg;
@@ -704,12 +727,26 @@ document.addEventListener('DOMContentLoaded', function () {
     return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
   }
 
-  // Animate both the sidebar total and the mobile sticky-bar total
+  // Animate both the sidebar total and the mobile sticky-bar total.
+  // No total yet → "—": "₱0 due" would be a false statement.
   function syncTotals(totalPrice) {
-    animateCurrency(document.getElementById('summaryTotalAmount'), lastSummaryTotal, totalPrice);
-    animateCurrency(document.getElementById('mobileTotalAmount'), lastSummaryTotal, totalPrice);
+    const sideEl = document.getElementById('summaryTotalAmount');
+    const mobEl  = document.getElementById('mobileTotalAmount');
+    if (!totalPrice) {
+      if (sideEl) sideEl.textContent = '—';
+      if (mobEl)  mobEl.textContent  = '—';
+      lastSummaryTotal = 0;
+      return;
+    }
+    animateCurrency(sideEl, lastSummaryTotal, totalPrice);
+    animateCurrency(mobEl, lastSummaryTotal, totalPrice);
     lastSummaryTotal = totalPrice;
   }
+
+  // Tracks the summary's empty↔populated state so the invoice gets ONE
+  // entrance pop when it first materializes — never on the routine
+  // re-renders that follow every input (that would be motion noise).
+  let summaryWasEmpty = true;
 
   function generateBookingSummary() {
     const container = document.getElementById('summaryInvoice');
@@ -726,6 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
+      summaryWasEmpty = true;
       syncTotals(0);
       updateProgressRail();
       return;
@@ -744,6 +782,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
+      summaryWasEmpty = true;
       syncTotals(0);
       updateProgressRail();
       return;
@@ -825,6 +864,13 @@ document.addEventListener('DOMContentLoaded', function () {
       ${discountNote}
     `;
     if (mobileMeta) mobileMeta.textContent = `${blocks.length} room${blocks.length > 1 ? 's' : ''} · ${nights} night${nights > 1 ? 's' : ''}`;
+    if (summaryWasEmpty) {
+      // Empty → populated: bridge the swap with the shared 150ms pop
+      container.classList.remove('animate-pop');
+      void container.offsetWidth; // restart if a previous pop is mid-flight
+      container.classList.add('animate-pop');
+      summaryWasEmpty = false;
+    }
     syncTotals(totalPrice);
     updateProgressRail();
   }

@@ -94,6 +94,13 @@ createIcons({ icons });
             if (typeof p === 'string') return window.toast(p);
             if (p) window.toast(p.message, p.type, { duration: p.duration });
         });
+        // First Livewire commit = the user is interacting; retire table entrance
+        // choreography for the rest of the page's life (see 05-motion-ux.css).
+        if (window.Livewire.hook) {
+            window.Livewire.hook('commit', function (ctx) {
+                if (ctx && ctx.succeed) ctx.succeed(function () { document.body.classList.add('lw-updated'); });
+            });
+        }
     });
 })();
 

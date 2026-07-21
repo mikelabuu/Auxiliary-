@@ -59,10 +59,13 @@
     .data-table tbody tr:nth-child(n+8) { animation-delay: 240ms; }
 }
 @keyframes rowIn { from { opacity: 0; transform: translateY(4px); } }
+/* Livewire re-renders after first paint skip the entrance — the stagger
+   is a page-load welcome, not a per-search event (class set in app.js). */
+body.lw-updated .data-table tbody tr { animation: none; }
 
 /* ── Progress / breakdown bars grow from zero on load ── */
 @media (prefers-reduced-motion: no-preference) {
-    .bar-fill, .dashboard-breakdown-fill { animation: growBar 900ms var(--ease-out); }
+    .bar-fill, .dashboard-breakdown-fill { animation: growBar 500ms var(--ease-out); }
 }
 @keyframes growBar { from { width: 0; } }
 
@@ -114,6 +117,12 @@ body.density-large .data-table thead th { padding: 18px 24px; font-size: 12px; }
 body.density-large .data-table tbody td { padding: 22px 24px; font-size: 16px; }
 body.density-large .data-table { min-width: 960px; }
 
+/* Density switches reflow the table in one frame; a brief opacity dip masks
+   the jolt (class pulsed for 160ms by cycleDensity() in layouts/admin).
+   Padding/font-size must NOT be transitioned — layout properties stay snap. */
+.data-table { transition: opacity 150ms var(--ease-out); }
+body.density-switching .data-table { opacity: .35; }
+
 /* ── Back-to-top ── */
 .back-to-top {
     position: fixed; right: 26px; bottom: 26px; z-index: 40;
@@ -128,13 +137,38 @@ body.density-large .data-table { min-width: 960px; }
 .back-to-top.visible { opacity: 1; transform: none; pointer-events: auto; }
 .back-to-top:hover {
     color: var(--color-g-700); border-color: var(--color-g-300);
-    background: var(--color-g-50); transform: translateY(-2px);
+    background: var(--color-g-50);
+}
+/* Lift only for real pointers — taps must not stick the hover transform */
+@media (hover: hover) and (pointer: fine) {
+    .back-to-top:hover { transform: translateY(-2px); }
 }
 .back-to-top:active { transform: translateY(0) scale(.94); }
 .back-to-top svg { width: 19px; height: 19px; }
 .back-to-top:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 
+/* ── Touch devices: taps must not stick hover transforms ──
+   Color/background hover changes stay (harmless when tapped); only the
+   lift/scale transforms are neutralized for coarse pointers. :active press
+   feedback is untouched — presses should work everywhere. */
+@media (hover: none), (pointer: coarse) {
+    .card-hover:hover, .card-hoverable:hover, .stat-card:hover,
+    .quick-action:hover, .quick-action:hover .stat-icon, .mini-stat:hover,
+    .filter-tab:hover, .btn-hover-scale:hover, .room-card:hover,
+    .type-tile:hover, #addTypeTile:hover, .ops-pill:hover,
+    .sidebar-link:hover svg {
+        transform: none;
+    }
+}
+
 /* ── Richer empty states ── */
+/* Rare-view surfaces get one soft rise so they enter like their neighbors.
+   `backwards` (not both/forwards) — a filled entrance would trap a stacking
+   context; the animationend cleanup in layouts/admin clears fadeInUp anyway. */
+@media (prefers-reduced-motion: no-preference) {
+    .empty-state { animation: fadeInUp 250ms var(--ease-out) backwards; }
+}
+
 .empty-state svg {
     width: 74px; height: 74px; padding: 19px;
     background: linear-gradient(180deg, #fff, var(--color-g-50));

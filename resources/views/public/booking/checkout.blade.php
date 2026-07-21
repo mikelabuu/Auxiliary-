@@ -23,12 +23,14 @@
                 </a>
             </div>
 
-            <!-- Live progress rail — booking.js toggles .done per step -->
+            <!-- Live progress rail — booking.js toggles .done per step; each
+                 step doubles as a jump-link to its card (same deep-link
+                 contract as the summary rows) -->
             <ol id="checkoutProgress" class="co-enter mb-8 grid grid-cols-3 gap-3" style="--co:1">
                 @foreach (['dates' => 'Dates', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
-                    <li data-progress-step="{{ $step }}" class="checkout-step">
+                    <li data-progress-step="{{ $step }}" class="checkout-step cursor-pointer" role="button" tabindex="0" aria-label="Jump to {{ strtolower($label) }}">
                         <div class="flex items-center gap-2.5">
-                            <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-all duration-200">
+                            <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-[11px] font-bold text-ink/60 transition-[color,background-color,border-color,box-shadow] duration-200">
                                 <span class="step-num">{{ $loop->iteration }}</span>
                                 <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             </span>
@@ -56,29 +58,29 @@
                 <div class="lg:col-span-8 space-y-6">
 
                     <!-- DATES -->
-                    <x-booking.checkout.step-card icon="event" step="Step 1 of 3" title="Stay Dates" class="co-enter" style="--co:2">
+                    <x-booking.checkout.step-card icon="event" step="Step 1 of 3" title="Stay Dates" id="stepCardDates" class="co-enter scroll-mt-28" style="--co:2">
                         <x-slot:aside>
                             <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-ink/85 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
                         </x-slot:aside>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-ink/60 tracking-wider uppercase mb-1.5">Check-in</label>
-                                <input type="text" id="check_in" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-ink text-sm placeholder:text-ink/35 focus:bg-white/10 focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-all" placeholder="Select Date" value="{{ $checkIn ?? '' }}">
+                                <input type="text" id="check_in" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-ink text-sm placeholder:text-ink/35 focus:bg-white/10 focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-[color,background-color,border-color,box-shadow]" placeholder="Select Date" value="{{ $checkIn ?? '' }}">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-ink/60 tracking-wider uppercase mb-1.5">Check-out</label>
-                                <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-ink text-sm placeholder:text-ink/35 focus:bg-white/10 focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-all" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
+                                <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-ink text-sm placeholder:text-ink/35 focus:bg-white/10 focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-[color,background-color,border-color,box-shadow]" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
                             </div>
                         </div>
                     </x-booking.checkout.step-card>
 
                     <!-- GUEST INFO -->
-                    <x-booking.checkout.step-card icon="person" step="Step 2 of 3" title="Personal Information" class="co-enter" style="--co:3">
+                    <x-booking.checkout.step-card icon="person" step="Step 2 of 3" title="Personal Information" id="stepCardDetails" class="co-enter scroll-mt-28" style="--co:3">
                         @include('public.booking.partials.step-guest')
                     </x-booking.checkout.step-card>
 
                     <!-- ROOM SELECTION -->
-                    <x-booking.checkout.step-card icon="meeting_room" step="Step 3 of 3" title="Room Allocation" class="co-enter" style="--co:4">
+                    <x-booking.checkout.step-card icon="meeting_room" step="Step 3 of 3" title="Room Allocation" id="stepCardRooms" class="co-enter scroll-mt-28" style="--co:4">
                         <x-slot:aside>
                             <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-bone hover:text-night cursor-pointer">
                                 <span class="material-icons text-[15px]">add</span> Add Room Type
@@ -102,10 +104,12 @@
                         </h3>
 
                         <!-- Summary Invoice will be rendered here by JS -->
+                        {{-- Initial markup mirrors booking.js's empty state exactly,
+                             so the JS takeover on load is invisible --}}
                         <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-ink/70">
-                            <div class="text-center py-8">
-                                <span class="material-icons text-white/15 text-4xl mb-2 block">receipt_long</span>
-                                <p>Select dates and rooms to view summary.</p>
+                            <div class="text-center py-10 text-ink/45">
+                                <span class="material-icons text-5xl mb-3 block text-white/10">event</span>
+                                <p class="font-semibold">Please select your stay dates.</p>
                             </div>
                         </div>
 
@@ -134,7 +138,8 @@
     <div class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-night-2/90 backdrop-blur-xl border-t border-white/12 px-4 py-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3">
         <div>
             <p class="text-[9px] font-bold text-ink/50 uppercase tracking-[0.28em] leading-none">Total due</p>
-            <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">₱0</p>
+            {{-- "—" until a real total exists; ₱0 due would be a false statement --}}
+            <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">—</p>
             <p id="mobileMetaLine" class="text-[10px] font-semibold text-ink/45 mt-0.5"></p>
         </div>
         <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-night text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-bone hover:bg-cream flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">

@@ -33,7 +33,7 @@
             <div data-room-item
                  data-beds="{{ $type['beds'] }}"
                  data-premium="{{ ($type['badge'] ?? '') === 'Premium' ? 1 : 0 }}"
-                 class="transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
+                 class="transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
                 <x-booking.cards.room
                     :title="$type['title']"
                     :beds="$type['beds']"

@@ -1,8 +1,41 @@
-# Animation improvement plans — public booking flow
+# Animation improvement plans
 
-Written by the `improve-animations` audit at commit `fed2f3d` (2026-07-17). Each plan is
-self-contained: exact file:line, current code, target code, steps, boundaries, and a feel-check.
-Execute with `improve-animations execute <plan>` or hand any plan to an agent as-is.
+Each plan is self-contained: exact file:line, current code, target code, steps, boundaries,
+and a feel-check. Execute with `improve-animations execute <plan>` or hand any plan to an
+agent as-is.
+
+## Batch 2 — whole-system audit (commit `ac773f6`, 2026-07-21)
+
+Scope: admin console, frontdesk, and remaining public surfaces (the booking flow was
+covered by batch 1). Headline: the motion system is mature — toasts, admin modals, dropdown
+origins, and reduced-motion scoping all passed clean. These plans cover what survived vetting.
+
+| # | Plan | Severity | Status |
+| --- | --- | --- | --- |
+| 007 | [Table row stagger → first paint only](007-table-row-stagger-first-paint-only.md) | HIGH | DONE |
+| 008 | [Replace `transition-all` on public blades](008-replace-transition-all-public.md) | MEDIUM | DONE |
+| 009 | [Public modal animated exit](009-public-modal-animated-exit.md) | MEDIUM | DONE |
+| 010 | [Dashboard draw-on budget](010-dashboard-drawon-budget.md) | LOW | DONE |
+| 011 | [SweetAlert easing + tempo](011-sweetalert-easing-and-tempo.md) | LOW | DONE |
+| 012 | [Admin hover gating for touch](012-admin-hover-gating-touch.md) | LOW | DONE |
+| 013 | [Polish: density crossfade + empty states](013-density-crossfade-and-empty-states.md) | LOW (optional) | DONE |
+
+### Recommended execution order
+
+**007** (highest daily leverage) → **011** (2-line quick win) → **009** → **008** (large but
+mechanical) → **010** → **012** → **013** (optional polish, last).
+
+### Dependencies
+
+- All plans are independent of each other; none block.
+- **013** touches `cycleDensity()` in `layouts/admin.blade.php` — if other work edits that
+  function, re-read it before applying (plans stamp `ac773f6`).
+- **008** and **009** both edit public blades/app.css but different lines; either order.
+- Admin-CSS plans (007, 010, 011, 012, 013) all finish with `npm run build` — when executing
+  several in one session, a single build at the end suffices. Blade-touching plans
+  (008, 009, 013) also need `php artisan view:clear && php artisan view:cache`.
+
+## Batch 1 — public booking flow (commit `fed2f3d`, 2026-07-17) — all DONE
 
 | # | Plan | Severity | Status |
 | --- | --- | --- | --- |
@@ -13,29 +46,20 @@ Execute with `improve-animations execute <plan>` or hand any plan to an agent as
 | 005 | [Room-card hairlines → GPU transforms](005-room-card-hairlines-gpu.md) | MEDIUM | DONE |
 | 006 | [Room tiles: transitions + calm live re-renders](006-room-tiles-transitions-and-silent-rerender.md) | MEDIUM | DONE |
 
-All six plans were applied on 2026-07-17 (`npm run build` + `php artisan view:clear` run).
-Also applied from the "not planned" list: checkout error-alert pop-in, reservation-block
-enter/exit, progress-rail check pop, and the 400ms fully-booked dim on room-card images.
-Still open: easing-token consolidation and the hero flip-fade `:loop="false"` judgment call.
+All six applied 2026-07-17, plus from the not-planned list: checkout error-alert pop-in,
+reservation-block enter/exit, progress-rail check pop, and the 400ms fully-booked dim.
 
-## Recommended execution order
+### Still open from batch 1 (unpromoted)
 
-001 → 002 → 003 → 004 → 005 → 006 (leverage order; all are independent).
+- Easing-token consolidation: `--ease-boutique` (app.css:305) defined but barely referenced;
+  ~7 distinct cubic-beziers hand-typed ~25×. A `@theme` token would unlock a Tailwind utility.
+- Hero `flip-fade-text` infinite loop (judgment call; consider `:loop="false"`).
 
-## Dependencies
+## Vetted and NOT planned (batch 2)
 
-- None are blocking. Note only that **002** and **004** both edit `resources/css/app.css` near the
-  `.press` rules — apply 002 first so 004's reduced-motion block references the final `.press`.
-- All plans finish with `npm run build`; if executing several, one build at the end suffices.
-
-## Audited but not planned (ask to promote any of these)
-
-- Easing-token consolidation: `--ease-boutique` (app.css:305) is defined but never referenced;
-  ~7 distinct cubic-beziers are hand-typed ~25×. A `@theme` token would also unlock a Tailwind
-  `ease-boutique` utility.
-- Hero `flip-fade-text` infinite loop on the brand word (welcome.blade.php:128) — judgment call;
-  consider `:loop="false"` so it plays once. Needs a feel-check, not a rule.
-- Fully-booked card dim (availability-search.js:147-163) — opacity snaps while grayscale eases
-  over the hover-zoom's 1200ms; deserves a purposeful ~400ms state transition.
-- Small entrance polish: checkout error alert (`d-none` toggle), reservation-block add/remove,
-  progress-rail check icon swap.
+- Toast system (11-notify-nav.css + app.js) — Sonner-grade already: grid-collapse
+  transitions, pause-on-hover bookkeeping, asymmetric exits. Leave alone.
+- Admin modal enter/exit (04-components.css:498-521) — `@starting-style` + spring +
+  asymmetric exit; the exemplar other plans copy.
+- `chartRise scaleY(0)` — data draw-on, not an element entrance; exempt from the scale(0) rule.
+- Modal `transform-origin: center` — modals are exempt by design.

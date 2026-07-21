@@ -16,7 +16,7 @@
 @endphp
 
 <div id="{{ $id }}"
-     class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-clsu-950/50 backdrop-blur-sm transition-opacity duration-300 hidden"
+     class="pub-modal fixed inset-0 z-[70] flex items-center justify-center p-4 bg-clsu-950/50 backdrop-blur-sm hidden"
      aria-modal="true"
      role="dialog"
 >
@@ -27,8 +27,8 @@
         <div class="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-ink tracking-tight font-display">{{ $title }}</h3>
             <button type="button"
-                    class="text-stone-400 hover:text-stone-600 w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center transition-all cursor-pointer"
-                    onclick="document.getElementById('{{ $id }}').classList.add('hidden')"
+                    class="text-stone-400 hover:text-stone-600 w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors cursor-pointer"
+                    onclick="window.pubModalClose('{{ $id }}')"
                     aria-label="Close"
             >
                 <span class="material-icons text-[20px]">close</span>

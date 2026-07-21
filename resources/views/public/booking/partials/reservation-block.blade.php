@@ -1,5 +1,5 @@
 {{-- Cloned by booking.js for each reservation block. __INDEX__ is replaced at runtime. --}}
-<div class="reservation-block ring-1 ring-white/10 bg-white/[0.03] p-6 rounded-3xl relative transition-all duration-300 hover:ring-white/15" data-index="__INDEX__">
+<div class="reservation-block ring-1 ring-white/10 bg-white/[0.03] p-6 rounded-3xl relative transition-[color,background-color,border-color,box-shadow] duration-300 hover:ring-white/15" data-index="__INDEX__">
 
     <!-- Block header -->
     <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
@@ -7,7 +7,7 @@
             <span class="w-6 h-6 rounded-full bg-gold text-night font-display italic text-[11px] flex items-center justify-center block-number shadow-sm">1</span>
             <span class="text-xs font-bold text-ink/70 uppercase tracking-[0.18em]">Room Allocation</span>
         </div>
-        <button type="button" class="btn-remove-block inline-flex items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-bold bg-ember-600/15 text-ember-200 border border-ember-600/40 hover:bg-ember-600/25 transition-all cursor-pointer" style="display:none;">
+        <button type="button" class="btn-remove-block inline-flex items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-bold bg-ember-600/15 text-ember-200 border border-ember-600/40 hover:bg-ember-600/25 transition-[color,background-color,border-color,box-shadow] cursor-pointer" style="display:none;">
             <span class="material-icons text-[14px]">delete_outline</span>
             Remove
         </button>
@@ -27,7 +27,7 @@
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
                 <button type="button" data-type-value="{{ $type['id'] }}" data-type-title="{{ $type['title'] }}"
-                        class="type-card group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-gold hover:shadow-[0_16px_36px_-20px_rgba(0,0,0,0.8)]">
+                        class="type-card group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] text-left transition-[transform,color,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-gold hover:shadow-[0_16px_36px_-20px_rgba(0,0,0,0.8)]">
                     <span class="block h-20 w-full overflow-hidden sm:h-24">
                         <img src="{{ asset($type['image']) }}" alt="{{ $type['title'] }}" loading="lazy"
                              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
@@ -62,11 +62,11 @@
         <div>
             <label class="block text-[10px] font-bold text-ink/55 uppercase tracking-widest mb-1.5">No. of Guests</label>
             <div class="stepper flex items-center gap-1.5">
-                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-all cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests in room">
+                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests in room">
                     <span class="material-icons text-[16px]">remove</span>
                 </button>
-                <input type="number" name="reservations[__INDEX__][num_guests]" class="res-num-guests w-full px-2 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" placeholder="e.g. 2" required>
-                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-all cursor-pointer shrink-0" data-step="1" aria-label="More guests in room">
+                <input type="number" name="reservations[__INDEX__][num_guests]" class="res-num-guests w-full px-2 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" placeholder="e.g. 2" required>
+                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests in room">
                     <span class="material-icons text-[16px]">add</span>
                 </button>
             </div>
@@ -74,11 +74,11 @@
         <div>
             <label class="block text-[10px] font-bold text-ink/55 uppercase tracking-widest mb-1.5">Seniors / PWD in Room</label>
             <div class="stepper flex items-center gap-1.5">
-                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-all cursor-pointer shrink-0" data-step="-1" aria-label="Fewer seniors">
+                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer seniors">
                     <span class="material-icons text-[16px]">remove</span>
                 </button>
-                <input type="number" name="reservations[__INDEX__][num_seniors]" class="res-num-seniors w-full px-2 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
-                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-all cursor-pointer shrink-0" data-step="1" aria-label="More seniors">
+                <input type="number" name="reservations[__INDEX__][num_seniors]" class="res-num-seniors w-full px-2 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
+                <button type="button" class="btn-step w-9 h-9 rounded-xl border border-white/12 bg-white/5 flex items-center justify-center text-ink/70 hover:bg-white/10 hover:border-gold/50 hover:text-ink active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More seniors">
                     <span class="material-icons text-[16px]">add</span>
                 </button>
             </div>
@@ -88,7 +88,7 @@
 
     <!-- Meal Selection (Alpine-powered collapsible panel) -->
     <div class="mt-4" x-data="{ mealsOpen: false }">
-        <button type="button" @click="mealsOpen = !mealsOpen" class="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-ink/80 transition-all cursor-pointer border border-white/12">
+        <button type="button" @click="mealsOpen = !mealsOpen" class="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-ink/80 transition-[color,background-color,border-color,box-shadow] cursor-pointer border border-white/12">
             <span class="material-icons text-[15px] text-emerald">restaurant_menu</span>
             Breakfast Meal Selections
             <span class="text-ink/45 font-medium">(optional)</span>

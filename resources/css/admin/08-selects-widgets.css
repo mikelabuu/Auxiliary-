@@ -104,10 +104,10 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
     padding-bottom: 24px !important;
 }
 .swal2-popup.swal2-show {
-    animation: swalEntrance 0.32s var(--ease-spring) !important;
+    animation: swalEntrance 0.22s var(--ease-spring) !important;
 }
 .swal2-popup.swal2-hide {
-    animation: swalExit 0.2s ease-in forwards !important;
+    animation: swalExit 0.16s var(--ease-out) forwards !important;
 }
 @keyframes swalEntrance {
     0% { transform: scale(0.94) translateY(10px); opacity: 0; }

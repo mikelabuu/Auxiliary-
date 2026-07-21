@@ -923,6 +923,30 @@ html.lenis body {
     animation: popIn .15s cubic-bezier(.16, 1, .3, 1) both;
 }
 
+/* Public modal animated exit — pubModalClose() (layouts/public/base) sets
+   [data-closing], waits 140ms, then hides. Exit runs faster than the 150ms
+   popIn entrance, mirroring the admin data-closing contract. */
+[data-closing].pub-modal {
+    transition: opacity 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0;
+}
+
+[data-closing].pub-modal > div {
+    transition:
+        opacity 140ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0;
+    transform: translateY(-6px) scale(.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    [data-closing].pub-modal,
+    [data-closing].pub-modal>div {
+        transition: none;
+    }
+}
+
 /* Reduced motion = gentler, not zero: drop movement (transforms,
    entrance cascades), keep the opacity/color transitions that aid
    comprehension. Never a universal `*` nuke. */
@@ -2110,6 +2134,16 @@ body.theme-night .numInputWrapper span.arrowDown::after {
     .co-enter {
         animation: fadeUp .55s cubic-bezier(.22, 1, .36, 1) backwards;
         animation-delay: calc(var(--co, 0) * 80ms);
+    }
+}
+
+/* Post-booking "what happens next" cards deal out in reading order once
+   the checkmark finishes drawing (circle .7s → tick lands ~.95s). Rare,
+   first-time moment — the one place the delight budget belongs. */
+@media (prefers-reduced-motion: no-preference) {
+    .next-step-card {
+        animation: fadeUp .5s cubic-bezier(.22, 1, .36, 1) backwards;
+        animation-delay: calc(.7s + var(--ns, 0) * 80ms);
     }
 }
 

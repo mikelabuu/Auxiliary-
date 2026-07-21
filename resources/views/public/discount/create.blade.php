@@ -81,7 +81,7 @@
                         <input type="file" name="discount_files[{{ $reservation->id }}][]" class="discount-file-input sr-only"
                                multiple accept="image/jpeg,image/png,image/jpg" tabindex="-1" aria-hidden="true">
 
-                        <div class="dropzone group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-deep/20 bg-white/60 px-6 py-8 text-center transition-all duration-200 cursor-pointer hover:border-gold hover:bg-gold-soft/15"
+                        <div class="dropzone group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-deep/20 bg-white/60 px-6 py-8 text-center transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer hover:border-gold hover:bg-gold-soft/15"
                              role="button" tabindex="0" aria-label="Upload verification IDs for room {{ $reservation->room_number }}">
                             <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10 transition-transform duration-200 group-hover:-translate-y-0.5">
                                 <span class="material-icons text-[24px]">upload_file</span>

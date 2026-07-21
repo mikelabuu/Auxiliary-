@@ -24,7 +24,7 @@
     $icon = $icons[$type] ?? $icons['success'];
 @endphp
 
-<div {{ $attributes->merge(['class' => "p-4 rounded-2xl border flex gap-3 items-start transition-all duration-300 $class"]) }}>
+<div {{ $attributes->merge(['class' => "p-4 rounded-2xl border flex gap-3 items-start transition-[color,background-color,border-color,box-shadow] duration-300 $class"]) }}>
     <div class="flex-shrink-0 mt-0.5">
         {!! $icon !!}
     </div>

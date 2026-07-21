@@ -22,7 +22,7 @@
                 @foreach($navItems as $item)
                     @php $active = request()->routeIs($item['route']); @endphp
                     <a href="{{ route($item['route']) }}"
-                       class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer select-none border-l-4
+                       class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold rounded-xl transition-[color,background-color,border-color,box-shadow] whitespace-nowrap cursor-pointer select-none border-l-4
                        {{ $active
                           ? 'bg-clsu-50 text-clsu-800 border-clsu-600'
                           : 'text-stone-600 hover:text-clsu-800 hover:bg-stone-50 border-transparent' }}">

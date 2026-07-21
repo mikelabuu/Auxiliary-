@@ -6,14 +6,14 @@
                 <span class="material-icons text-[16px]">chevron_left</span> {!! __('pagination.previous') !!}
             </span>
         @else
-            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="inline-flex items-center gap-1 px-4 py-2 text-sm font-bold text-clsu-700 bg-white border border-clsu-200 rounded-full hover:bg-clsu-50 hover:border-clsu-300 transition-all cursor-pointer">
+            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="inline-flex items-center gap-1 px-4 py-2 text-sm font-bold text-clsu-700 bg-white border border-clsu-200 rounded-full hover:bg-clsu-50 hover:border-clsu-300 transition-[color,background-color,border-color,box-shadow] cursor-pointer">
                 <span class="material-icons text-[16px]">chevron_left</span> {!! __('pagination.previous') !!}
             </a>
         @endif
 
         {{-- Next Page Link --}}
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="inline-flex items-center gap-1 px-4 py-2 text-sm font-bold text-clsu-700 bg-white border border-clsu-200 rounded-full hover:bg-clsu-50 hover:border-clsu-300 transition-all cursor-pointer">
+            <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="inline-flex items-center gap-1 px-4 py-2 text-sm font-bold text-clsu-700 bg-white border border-clsu-200 rounded-full hover:bg-clsu-50 hover:border-clsu-300 transition-[color,background-color,border-color,box-shadow] cursor-pointer">
                 {!! __('pagination.next') !!} <span class="material-icons text-[16px]">chevron_right</span>
             </a>
         @else

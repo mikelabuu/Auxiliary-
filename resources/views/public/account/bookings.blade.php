@@ -11,12 +11,12 @@
             <div class="lg:col-span-2">
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Search</label>
                 <input type="text" name="search" placeholder="Search by ID, name, or room..." value="{{ request('search') }}"
-                       class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all font-semibold">
+                       class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
             </div>
 
             <div>
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Status</label>
-                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
                     <option value="pending_payment" {{ request('status') == 'pending_payment' ? 'selected' : '' }}>Pending Payment</option>
                     <option value="pending_discount" {{ request('status') == 'pending_discount' ? 'selected' : '' }}>Pending Discount</option>
@@ -28,7 +28,7 @@
 
             <div>
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Sort by</label>
-                <select name="sort_by" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="sort_by" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Booking Date</option>
                     <option value="check_in" {{ request('sort_by') == 'check_in' ? 'selected' : '' }}>Check-in Date</option>
                     <option value="check_out" {{ request('sort_by') == 'check_out' ? 'selected' : '' }}>Check-out Date</option>
@@ -38,7 +38,7 @@
             </div>
 
             <div class="flex gap-2">
-                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>Descending</option>
                     <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
                 </select>
@@ -199,12 +199,12 @@
             <div>
                 <label for="reason" class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Reason for Cancellation</label>
                 <textarea name="reason" id="reason" rows="3" required placeholder="Please provide details on why you are cancelling your booking..."
-                          class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all font-semibold"></textarea>
+                          class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"></textarea>
             </div>
 
             <div class="pt-4 border-t border-stone-100 flex justify-end gap-2.5">
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition-all cursor-pointer">Close</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-ember-600 hover:bg-ember-700 text-white shadow-sm transition-all cursor-pointer">Confirm Cancellation</button>
+                <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition-[color,background-color,border-color,box-shadow] cursor-pointer">Close</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-ember-600 hover:bg-ember-700 text-white shadow-sm transition-[color,background-color,border-color,box-shadow] cursor-pointer">Confirm Cancellation</button>
             </div>
         </form>
     </x-booking.ui.modal>
@@ -218,7 +218,7 @@
         }
 
         function closeModal() {
-            document.getElementById('cancelModal').classList.add('hidden');
+            window.pubModalClose('cancelModal');
         }
     </script>
 @endsection

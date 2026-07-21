@@ -11,12 +11,12 @@
             <div class="lg:col-span-2">
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Search</label>
                 <input type="text" name="search" placeholder="Search by ID, booking, reference, gateway..." value="{{ request('search') }}"
-                       class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all font-semibold">
+                       class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
             </div>
 
             <div>
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Status</label>
-                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
                     <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>Success</option>
                     <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
@@ -25,7 +25,7 @@
 
             <div>
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Sort by</label>
-                <select name="sort_by" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="sort_by" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Transaction Date</option>
                     <option value="amount" {{ request('sort_by') == 'amount' ? 'selected' : '' }}>Payment Amount</option>
                     <option value="status" {{ request('sort_by') == 'status' ? 'selected' : '' }}>Payment Status</option>
@@ -33,7 +33,7 @@
             </div>
 
             <div class="flex gap-2">
-                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-all cursor-pointer font-semibold">
+                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>Descending</option>
                     <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
                 </select>

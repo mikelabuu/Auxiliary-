@@ -22,7 +22,7 @@
         <form class="space-y-4" method="POST" action="{{ route('verification.send') }}">
             @csrf
             <p class="text-xs font-bold text-stone-400 text-center">Didn't receive the email? Click below to request another.</p>
-            <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-all active:scale-[0.98] cursor-pointer">
+            <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] cursor-pointer">
                 Resend Verification Email
             </button>
         </form>
