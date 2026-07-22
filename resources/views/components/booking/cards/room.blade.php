@@ -74,12 +74,12 @@
         <!-- Amenity chips -->
         <div class="mt-4 flex flex-1 flex-wrap content-start gap-2">
             @forelse ($amenities as $amenity)
-                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-[11px] font-medium text-ink/80 ring-1 ring-white/10">
+                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1 text-[11px] font-medium text-ink/80 ring-1 ring-ink/10">
                     <x-booking.ui.icon :name="$amenity['icon'] ?? 'check'" class="h-3.5 w-3.5 text-gold/80" />
                     {{ $amenity['label'] ?? $amenity }}
                 </span>
             @empty
-                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-[11px] font-medium text-ink/80 ring-1 ring-white/10">
+                <span class="inline-flex h-fit items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1 text-[11px] font-medium text-ink/80 ring-1 ring-ink/10">
                     <x-booking.ui.icon name="wifi" class="h-3.5 w-3.5 text-gold/80" />
                     Free Wi-Fi
                 </span>

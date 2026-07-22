@@ -261,14 +261,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const entering = boxes[idx];
 
         roll(entering.__chars,
-            { transform: 'rotateX(90deg) translateY(20px)', opacity: 0, filter: 'blur(8px)' },
-            { transform: 'rotateX(0deg) translateY(0px)', opacity: 1, filter: 'blur(0px)' },
+            { transform: 'rotateX(88deg) translateY(16px)', opacity: 0 },
+            { transform: 'rotateX(0deg) translateY(0px)', opacity: 1 },
             FLIP, 'rotateX(0deg)', '1');
 
         roll(leaving.__chars,
-            { transform: 'rotateX(0deg)', opacity: 1, filter: 'blur(0px)' },
-            { transform: 'rotateX(-90deg) translateY(-20px)', opacity: 0, filter: 'blur(8px)' },
-            FLIP, 'rotateX(90deg) translateY(20px)', '0'); // park flipped-up, ready to re-enter
+            { transform: 'rotateX(0deg)', opacity: 1 },
+            { transform: 'rotateX(-88deg) translateY(-16px)', opacity: 0 },
+            FLIP, 'rotateX(88deg) translateY(16px)', '0'); // park flipped-up, ready to re-enter
 
         track.style.width = widths[idx] + 'px';
     }

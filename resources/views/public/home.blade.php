@@ -1,7 +1,8 @@
 @extends('layouts.public.base')
 @section('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')
-@section('nav_dark', '1')
-@section('theme_night', '1')
+{{-- Light CLSU redesign: the landing now rides the light theme-boutique tokens
+     (ivory canvas, warm ink, green + palay-gold accents) instead of the dark
+     Night Estate. nav stays light (nav-glass-solid). --}}
 
 @section('content')
 

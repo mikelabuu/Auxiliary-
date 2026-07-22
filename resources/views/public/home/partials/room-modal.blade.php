@@ -77,8 +77,8 @@
         <div
             @click.stop
             x-show="room"
-            class="relative flex max-h-screen w-full flex-col overflow-hidden border border-white/10 bg-night-2 sm:max-h-[90vh] sm:max-w-3xl sm:rounded-[2rem]"
-            style="box-shadow: var(--shadow-night-float)"
+            class="relative flex max-h-screen w-full flex-col overflow-hidden border border-ink/10 bg-cream-warm sm:max-h-[90vh] sm:max-w-3xl sm:rounded-[2rem]"
+            style="box-shadow: var(--shadow-boutique-modal)"
         >
             <!-- Hero Image -->
             <div class="relative h-64 flex-shrink-0 overflow-hidden bg-night sm:h-72">
@@ -108,12 +108,12 @@
                     <!-- Price + Capacity -->
                     <div class="flex items-start justify-between gap-4">
                         <div>
-                            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Room rate</p>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-ink/45">Room rate</p>
                             <p class="mt-1 font-display text-3xl leading-none text-ink">₱<span x-text="room ? Number(room.price).toLocaleString() : ''"></span></p>
                             <p class="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink/45">per night</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Capacity</p>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-ink/45">Capacity</p>
                             <p class="mt-1 text-sm font-semibold text-ink" x-text="room ? room.capacity : ''"></p>
                             <p class="mt-1 flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.22em] text-ink/45">
                                 <x-booking.ui.icon name="users" class="h-3 w-3" />
@@ -129,10 +129,10 @@
 
                     <!-- Amenities -->
                     <div x-show="room && room.amenities && room.amenities.length > 0">
-                        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">Room features</p>
+                        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-ink/45">Room features</p>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="amenity in (room ? room.amenities : [])" :key="amenity.label">
-                                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-[11px] font-medium text-ink/85 ring-1 ring-white/10">
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1.5 text-[11px] font-medium text-ink/85 ring-1 ring-ink/10">
                                     <span class="h-1 w-1 rounded-full bg-gold"></span>
                                     <span x-text="amenity.label"></span>
                                 </span>
@@ -142,7 +142,7 @@
 
                     <!-- What's Included -->
                     <div x-show="room && room.includes && room.includes.length > 0">
-                        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-bone/45">What's included</p>
+                        <p class="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-ink/45">What's included</p>
                         <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             <template x-for="item in (room ? room.includes : [])" :key="item">
                                 <li class="flex items-center gap-2 text-sm font-medium text-ink/80">
@@ -171,9 +171,9 @@
             </div>
 
             <!-- Sticky footer CTAs -->
-            <div class="sticky bottom-0 z-20 flex gap-3 border-t border-white/10 bg-night-2/95 px-6 py-5 backdrop-blur-xl">
-                <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-white/10 cursor-pointer">Close</button>
-                <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
+            <div class="sticky bottom-0 z-20 flex gap-3 border-t border-ink/10 bg-cream-warm/95 px-6 py-5 backdrop-blur-xl">
+                <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-ink/15 bg-ink/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-ink/10 cursor-pointer">Close</button>
+                <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-clsu-500)_28%,transparent)]">
                     <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                     <span x-text="isFullyBooked() ? 'Fully Booked' : 'Book this room'">Book this room</span>
                 </button>

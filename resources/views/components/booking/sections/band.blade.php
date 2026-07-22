@@ -6,14 +6,17 @@
 @props([
     'image',
     'alt' => '',
-    'overlay' => 'bg-night/60',
+    'overlay' => 'bg-clsu-950/62',
     'imageClass' => '',
 ])
+{{-- Deep CLSU-green accent band on the light page: the photo sits under a green
+     wash (cream text on top), and the top/bottom edges fade to the light canvas
+     so the band melts into the page instead of ending on a hard edge. --}}
 <div data-fx-band {{ $attributes->merge(['class' => 'relative overflow-hidden']) }}>
     <img src="{{ asset($image) }}" alt="{{ $alt }}" loading="lazy" decoding="async"
          class="img-night-grade absolute inset-0 h-full w-full scale-110 object-cover {{ $imageClass }}" data-prlx-y="-0.08" data-prlx-ease="0.06">
     <div class="absolute inset-0 {{ $overlay }}"></div>
-    <div class="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-night to-transparent"></div>
-    <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-night to-transparent"></div>
+    <div class="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-canvas to-transparent"></div>
+    <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-canvas to-transparent"></div>
     {{ $slot }}
 </div>

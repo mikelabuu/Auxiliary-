@@ -7,7 +7,7 @@
     ];
 @endphp
 
-<section class="relative overflow-hidden border-t border-white/10 py-24 md:py-28">
+<section class="relative overflow-hidden border-t border-ink/10 py-24 md:py-28">
     <div class="mx-auto max-w-4xl px-6">
         <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
             {{-- data-split-text: reveal.js splits this into per-character spans
@@ -16,10 +16,10 @@
                 Loved by <span class="italic text-gold">academics</span> and travelers alike.
             </h2>
             <div class="flex items-center gap-3">
-                <button class="swiper-button-prev-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 text-ink transition hover:bg-bone hover:text-night cursor-pointer" aria-label="Previous testimonial">
+                <button class="swiper-button-prev-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-ink/15 bg-ink/5 text-ink transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Previous testimonial">
                     <x-booking.ui.icon name="chevron-left" class="h-4 w-4" />
                 </button>
-                <button class="swiper-button-next-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/5 text-ink transition hover:bg-bone hover:text-night cursor-pointer" aria-label="Next testimonial">
+                <button class="swiper-button-next-custom focus-ring press grid h-11 w-11 place-items-center rounded-full border border-ink/15 bg-ink/5 text-ink transition hover:bg-emerald-deep hover:text-cream cursor-pointer" aria-label="Next testimonial">
                     <x-booking.ui.icon name="chevron-right" class="h-4 w-4" />
                 </button>
             </div>
@@ -33,7 +33,7 @@
             <div class="swiper-wrapper">
                 @foreach ($testimonials as $t)
                     <div class="swiper-slide h-auto">
-                        <div class="glass-night h-full rounded-3xl px-7 py-2 md:px-9">
+                        <div class="glass-light h-full rounded-3xl px-7 py-2 md:px-9">
                             <x-booking.cards.testimonial
                                 :quote="$t['quote']"
                                 :name="$t['name']"

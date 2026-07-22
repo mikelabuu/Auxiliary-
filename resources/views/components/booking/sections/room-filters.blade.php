@@ -17,7 +17,7 @@
         <button type="button"
                 data-filter="{{ $key }}"
                 aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
-                class="room-filter-pill press focus-ring rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 cursor-pointer hover:border-gold/60 hover:text-ink {{ $loop->first ? 'active' : '' }}">
+                class="room-filter-pill press focus-ring rounded-full border border-ink/15 bg-ink/5 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-ink/70 cursor-pointer hover:border-clsu-500/60 hover:text-ink {{ $loop->first ? 'active' : '' }}">
             {{ $label }}
         </button>
     @endforeach

@@ -1,6 +1,6 @@
 <!-- Final CTA (full-bleed evening band) -->
 <section class="mt-8">
-    <x-booking.sections.band image="image/hostel1.jpg" alt="Farmers Hostel exterior in the evening" overlay="bg-night/70" image-class="object-top">
+    <x-booking.sections.band image="image/hostel1.jpg" alt="Farmers Hostel exterior in the evening" overlay="bg-clsu-950/72" image-class="object-top">
         <div class="relative mx-auto flex min-h-[60dvh] max-w-4xl flex-col items-center justify-center px-6 py-28 text-center" data-aos="fade-up">
             <span aria-hidden="true" class="block h-px w-12 bg-gold/70"></span>
             {{-- data-split-text: reveal.js splits this into per-character spans
@@ -16,12 +16,12 @@
 </section>
 
 <!-- Mobile sticky reserve bar (revealed after the hero by home.js) -->
-<div id="mobileStickyBar" class="fixed bottom-0 left-0 right-0 z-40 flex translate-y-full items-center justify-between border-t border-white/12 bg-night-2/90 p-4 backdrop-blur-xl transition-transform duration-500 md:hidden shadow-[0_-16px_40px_rgba(0,0,0,0.5)]">
+<div id="mobileStickyBar" class="fixed bottom-0 left-0 right-0 z-40 flex translate-y-full items-center justify-between border-t border-ink/10 bg-cream-warm/95 p-4 backdrop-blur-xl transition-transform duration-500 md:hidden shadow-[0_-16px_40px_rgba(8,36,20,0.18)]">
     <div>
-        <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-bone/50">Starting from</p>
+        <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-ink/50">Starting from</p>
         <p class="font-display text-lg text-ink">₱{{ number_format($minPrice ?? 1600) }} <span class="text-[10px] uppercase tracking-[0.2em] text-ink/50">/ night</span></p>
     </div>
-    <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press inline-flex min-h-11 items-center rounded-full bg-bone px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-night cursor-pointer">
+    <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press inline-flex min-h-11 items-center rounded-full bg-emerald-deep px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream cursor-pointer">
         Reserve
     </button>
 </div>

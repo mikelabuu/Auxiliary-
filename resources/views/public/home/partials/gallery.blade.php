@@ -28,7 +28,7 @@
     </div>
 
     <div class="mt-10 flex justify-center" data-aos="fade-up">
-        <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press focus-ring inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:border-gold/60 cursor-pointer">
+        <button type="button" onclick="document.querySelector('#gallery a[data-lightbox]')?.click()" class="press focus-ring inline-flex items-center gap-3 rounded-full border border-ink/15 bg-ink/5 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.3em] text-ink transition hover:border-clsu-500/60 hover:bg-clsu-50 cursor-pointer">
             <x-booking.ui.icon name="sparkles" class="h-4 w-4 text-gold" />
             Explore the full gallery
         </button>

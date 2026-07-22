@@ -78,7 +78,7 @@
             <!-- Logo -->
             <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="focus-ring flex min-w-0 items-center gap-3 rounded-full">
                 <x-booking.ui.logo-mark class="h-9 w-9" />
-                <span class="hidden truncate font-display text-lg tracking-tight sm:block">Farmers <span class="italic text-gold">Hostel</span></span>
+                <span class="hidden truncate font-display text-lg tracking-tight sm:block">Farmers <span class="italic text-clsu-600">Hostel</span></span>
             </a>
 
             <!-- Center Nav Links -->
@@ -154,7 +154,7 @@
                 <div class="flex items-center justify-between pb-6 border-b border-ink/10">
                     <div class="flex items-center gap-2.5">
                         <x-booking.ui.logo-mark class="h-9 w-9" />
-                        <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-gold">Hostel</span></span>
+                        <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-clsu-600">Hostel</span></span>
                     </div>
                     <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">
                         <x-booking.ui.icon name="x" class="h-4 w-4" />
@@ -212,7 +212,7 @@
     </main>
 
     <!-- Editorial Footer (Night Estate; shared across cream and night pages) -->
-    <footer class="relative overflow-hidden border-t border-white/10 bg-night text-bone/85 mt-auto" id="Footer">
+    <footer class="relative overflow-hidden border-t border-white/10 bg-clsu-950 text-bone/85 mt-auto" id="Footer">
         <div class="mx-auto max-w-7xl px-6 pt-20 pb-14 md:pt-24">
             <div class="grid gap-12 md:grid-cols-3 md:gap-16">
                 <!-- Brand column -->

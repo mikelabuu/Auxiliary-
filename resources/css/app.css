@@ -396,6 +396,25 @@ body.theme-night .room-filter-pill.active {
     }
 }
 
+/* Light frosted glass — the daytime sibling of .glass-night for the light
+   CLSU landing (booking capsule). Warm-cream tint + hairline green edge +
+   inner top highlight so it reads as a real refractive panel on the ivory page. */
+.glass-light {
+    background: color-mix(in oklch, var(--color-cream-warm) 76%, transparent);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep) 12%, transparent);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.6), 0 26px 60px -26px rgba(8, 36, 20, 0.28);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .glass-light {
+        background: var(--color-cream-warm);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
 /* ── Floating pill nav skins ─────────────────────────────────────
    The inline nav script swaps these two classes; the theme scope
    decides what "solid" looks like, so the same JS serves both the
@@ -668,26 +687,24 @@ body.theme-night #siteNav.nav-glass-solid {
     .flip-char {
         display: inline-block;
         opacity: 0;
-        transform: rotateX(90deg) translateY(20px);
-        filter: blur(8px);
+        transform: rotateX(88deg) translateY(16px);
         transform-origin: 50% 100%;
         backface-visibility: hidden;
-        animation: flip-fade-in .62s cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
-        animation-delay: calc(.35s + var(--i, 0) * 34ms);
+        animation: flip-fade-in .5s cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
+        animation-delay: calc(.3s + var(--i, 0) * 30ms);
     }
 }
 
+/* No blur — a plain flip + fade keeps the serif type crisp the whole way in. */
 @keyframes flip-fade-in {
     from {
         opacity: 0;
-        transform: rotateX(90deg) translateY(20px);
-        filter: blur(8px);
+        transform: rotateX(88deg) translateY(16px);
     }
 
     to {
         opacity: 1;
         transform: none;
-        filter: none;
     }
 }
 
@@ -2336,12 +2353,12 @@ body.theme-night .numInputWrapper span.arrowDown::after {
     gap: 0.5rem;
     margin-top: 0.35rem;
     padding: 0.7rem 1rem 0.4rem;
-    border-top: 1px solid oklch(100% 0 0 / 0.08);
+    border-top: 1px solid color-mix(in oklch, var(--color-ink) 10%, transparent);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: color-mix(in oklch, var(--color-bone) 60%, transparent);
+    color: color-mix(in oklch, var(--color-ink) 55%, transparent);
     animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -2354,8 +2371,8 @@ body.theme-night .numInputWrapper span.arrowDown::after {
     height: 5px;
     flex: none;
     border-radius: 50%;
-    background: var(--color-gold);
-    box-shadow: 0 0 10px color-mix(in oklch, var(--color-gold) 70%, transparent);
+    background: var(--color-clsu-500);
+    box-shadow: 0 0 10px color-mix(in oklch, var(--color-clsu-500) 70%, transparent);
 }
 /* ═══════════════════════════════════════════════════════════════════
    Scroll-scrub effects (public/js/scroll-effects.js)

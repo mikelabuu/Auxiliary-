@@ -13,11 +13,11 @@
 
     <!-- Live Availability Results Banner (filled by availability-search.js) -->
     <div id="availabilityBanner" class="hidden mb-10">
-        <div class="animate-pop glass-night mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 rounded-full px-6 py-4 sm:flex-row">
+        <div class="animate-pop glass-light mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 rounded-full px-6 py-4 sm:flex-row">
             <div class="flex items-center gap-3">
                 <span class="relative flex h-2.5 w-2.5 shrink-0">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-60"></span>
-                    <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold"></span>
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-clsu-500 opacity-60"></span>
+                    <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-clsu-500"></span>
                 </span>
                 <p class="text-sm font-semibold text-ink" id="availabilityBannerText">Live availability</p>
             </div>
@@ -52,8 +52,8 @@
     </div>
 
     <!-- Filter empty state -->
-    <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-8 py-16 text-center">
-        <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-bone/30" />
+    <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-ink/15 bg-ink/[0.02] px-8 py-16 text-center">
+        <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-ink/25" />
         <p class="mt-4 font-display text-2xl text-ink">No rooms in this range</p>
         <p class="mt-2 text-sm text-ink/55">Try a different capacity, or the dormitories for larger groups.</p>
     </div>
