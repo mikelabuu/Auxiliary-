@@ -718,6 +718,24 @@
 .stagger-enter > *:nth-child(7) { animation-delay: 220ms; }
 .stagger-enter > *:nth-child(n+8) { animation-delay: 240ms; }
 
+/* ── AnimatedContent (reactbits.dev/animations/animated-content) ──────────
+   GSAP ScrollTrigger scroll-reveal (resources/js/animated-content.js) — each
+   admin content block starts offset + hidden and eases in as it scrolls into
+   view, replacing the load-time .stagger-enter for the shell content wrap.
+   The hidden state is gated behind html.js-anim (set before first paint in the
+   admin layout head) AND no-preference, so no-JS, a GSAP load failure, and
+   reduced motion all render content visible with no flash. GSAP then writes an
+   inline visibility:visible + opacity the moment it inits, so this only covers
+   the pre-init window. visibility (not display) keeps layout stable — nothing
+   reflows when a block reveals. */
+@media (prefers-reduced-motion: no-preference) {
+    html.js-anim .animate-children > *:not(.fixed),
+    html.js-anim [data-animate] {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
 /* Skeleton shimmer block (loading placeholder) */
 .skeleton {
     position: relative;

@@ -10,7 +10,9 @@
 <section class="relative overflow-hidden border-t border-white/10 py-24 md:py-28">
     <div class="mx-auto max-w-4xl px-6">
         <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between" data-aos="fade-up" data-prlx-y="0.06" data-prlx-opacity>
-            <h2 class="text-balance max-w-xl pb-1 font-display text-4xl leading-[1.12] text-ink md:text-5xl">
+            {{-- data-split-text: reveal.js splits this into per-character spans
+                 that rise + fade as the block reveals (reactbits SplitText port) --}}
+            <h2 data-split-text class="text-balance max-w-xl pb-1 font-display text-4xl leading-[1.12] text-ink md:text-5xl">
                 Loved by <span class="italic text-gold">academics</span> and travelers alike.
             </h2>
             <div class="flex items-center gap-3">

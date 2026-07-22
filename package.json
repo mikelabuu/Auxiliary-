@@ -15,10 +15,13 @@
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.6",
         "pusher-js": "^8.5.0",
+        "shadcn": "^4.13.1",
         "tailwindcss": "^4.2.1",
         "vite": "^6.2.4"
     },
     "dependencies": {
-        "lucide": "^0.544.0"
+        "gsap": "^3.15.0",
+        "lucide": "^0.544.0",
+        "motion": "^12.42.2"
     }
 }

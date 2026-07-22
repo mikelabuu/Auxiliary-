@@ -133,3 +133,183 @@ document.addEventListener('DOMContentLoaded', function () {
         observer.observe(heroSection);
     }
 });
+
+// ── Hero rotating superlative ────────────────────────────────────
+// FlipFadeText (vengenceui.com/components/flip-fade-text) ported to vanilla:
+// each word's characters flip up into place on the X axis with a per-character
+// stagger. The incoming word flips in (rotateX 90°→0, blur 8px→0) while the
+// outgoing one flips out (0→-90°) — the FlipFadeText enter/exit, minus
+// framer-motion. The first word's characters flip in via the CSS .flip-char
+// entrance (shared with the static headline words); home.js reuses those same
+// chars, then cycles the words with the same flip. The track's width eases to
+// each word. Skips under reduced motion — the static first word stays.
+(function () {
+    const host = document.getElementById('heroWordRotate');
+    if (!host) return;
+    const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const track = host.querySelector('.word-rotate-track');
+    const words = (host.dataset.words || '').split(',').map(w => w.trim()).filter(Boolean);
+
+    if (reduceMQ.matches) return; // reduced motion keeps the static first word
+
+    if (!track || words.length < 2) return;
+
+    // FlipFadeText tuning.
+    const STAGGER = 34;   // ms between characters (enter stagger feel)
+    const DURATION = 600; // per-character flip (letterDuration 0.6s)
+    const FLIP = 'cubic-bezier(0.2, 0.65, 0.3, 0.9)'; // FlipFadeText easing
+    const INTERVAL = 2600;
+
+    // Grapheme-aware split, like ReactBits' Intl.Segmenter path.
+    const seg = (window.Intl && Intl.Segmenter)
+        ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+        : null;
+    function graphemes(text) {
+        return seg ? Array.from(seg.segment(text), s => s.segment) : Array.from(text);
+    }
+
+    // Replace a word box's text with per-character .rt-char spans.
+    function buildChars(box, text) {
+        box.textContent = '';
+        return graphemes(text).map(function (ch) {
+            const c = document.createElement('span');
+            c.className = 'rt-char';
+            c.textContent = ch;
+            box.appendChild(c);
+            return c;
+        });
+    }
+
+    // One box per word; the first stays in flow so the pre-live track has a
+    // size while fonts load, the clones start absolute + hidden.
+    const first = track.querySelector('.word-rotate-word');
+    const boxes = words.map(function (w, i) {
+        if (i === 0) {
+            // Reuse the Blade-rendered characters — they carry .flip-char for the
+            // CSS entrance, so rebuilding them here would wipe that flip-in.
+            first.__chars = Array.prototype.slice.call(first.querySelectorAll('.rt-char'));
+            if (!first.__chars.length) first.__chars = buildChars(first, w);
+            return first;
+        }
+        const box = first.cloneNode(false);
+        box.classList.remove('is-active');
+        box.style.position = 'absolute';
+        box.style.left = '0';
+        box.style.top = '0';
+        box.style.visibility = 'hidden';
+        track.appendChild(box);
+        box.__chars = buildChars(box, w);
+        return box;
+    });
+
+    function setChars(chars, transform, opacity) {
+        chars.forEach(function (c) {
+            c.style.transform = transform;
+            c.style.opacity = opacity;
+        });
+    }
+
+    // Flip a set of chars from → to with a per-character stagger, then commit
+    // the resting state on finish so the WAAPI animations don't pile up.
+    function roll(chars, from, to, ease, restTransform, restOpacity) {
+        chars.forEach(function (c, i) {
+            if (c.__a) c.__a.cancel();
+            const a = c.animate([from, to], {
+                duration: DURATION,
+                delay: i * STAGGER,
+                easing: ease,
+                fill: 'both',
+            });
+            c.__a = a;
+            a.onfinish = function () {
+                c.style.transform = restTransform;
+                c.style.opacity = restOpacity;
+                c.style.filter = '';
+                a.cancel();
+                if (c.__a === a) c.__a = null;
+            };
+        });
+    }
+
+    let widths = [];
+    let idx = 0;
+    let timer = null;
+
+    function start() {
+        widths = boxes.map(function (b) { return b.offsetWidth; });
+        track.style.height = first.offsetHeight + 'px';
+        track.style.width = widths[0] + 'px';
+        // Retire the first word's CSS flip-in before we drive it via WAAPI: a
+        // finished fill:both CSS animation would otherwise override our inline
+        // transforms during cycling.
+        first.__chars.forEach(function (c) { c.classList.remove('flip-char'); c.style.filter = ''; });
+        boxes.forEach(function (b, i) {
+            b.style.position = 'absolute';
+            b.style.left = '0';
+            b.style.top = '0';
+            b.style.visibility = '';
+            // First word flat at rest; the rest parked flipped-up + invisible.
+            setChars(b.__chars, i === 0 ? 'rotateX(0deg)' : 'rotateX(90deg) translateY(20px)', i === 0 ? '1' : '0');
+        });
+        host.classList.add('is-live');
+        timer = setInterval(function () { if (!document.hidden) swap(); }, INTERVAL);
+    }
+
+    function swap() {
+        const leaving = boxes[idx];
+        idx = (idx + 1) % boxes.length;
+        const entering = boxes[idx];
+
+        roll(entering.__chars,
+            { transform: 'rotateX(90deg) translateY(20px)', opacity: 0, filter: 'blur(8px)' },
+            { transform: 'rotateX(0deg) translateY(0px)', opacity: 1, filter: 'blur(0px)' },
+            FLIP, 'rotateX(0deg)', '1');
+
+        roll(leaving.__chars,
+            { transform: 'rotateX(0deg)', opacity: 1, filter: 'blur(0px)' },
+            { transform: 'rotateX(-90deg) translateY(-20px)', opacity: 0, filter: 'blur(8px)' },
+            FLIP, 'rotateX(90deg) translateY(20px)', '0'); // park flipped-up, ready to re-enter
+
+        track.style.width = widths[idx] + 'px';
+    }
+
+    // Start cycling once fonts are ready (for width measurement) AND the first
+    // word's flip-in entrance has finished — so we never strip it mid-flip. Using
+    // the animation's own finished promise (not a fixed timer) means it also
+    // waits correctly for the intro curtain, which pauses the CSS animation.
+    function armStart() {
+        let started = false;
+        const go = function () { if (started) return; started = true; start(); };
+        const chars = first.__chars;
+        const last = chars && chars[chars.length - 1];
+        const a = last && last.getAnimations && last.getAnimations()[0];
+        if (a && a.finished) {
+            a.finished.then(function () { setTimeout(go, 140); }, go);
+            setTimeout(go, 5000); // fallback if it never resolves
+        } else {
+            setTimeout(go, 1800); // no entrance animation (e.g. cached fonts) — original cadence
+        }
+    }
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(armStart);
+    } else {
+        setTimeout(armStart, 200);
+    }
+
+    // Live reduced-motion switch: stop and restore the static first word.
+    reduceMQ.addEventListener('change', function (e) {
+        if (!e.matches) return;
+        clearInterval(timer);
+        host.classList.remove('is-live');
+        boxes.forEach(function (b, i) {
+            b.__chars.forEach(function (c) {
+                if (c.__a) { c.__a.cancel(); c.__a = null; }
+                c.style.transform = '';
+                c.style.opacity = '';
+            });
+            b.style.visibility = i === 0 ? '' : 'hidden';
+        });
+        track.style.width = '';
+        track.style.height = '';
+    });
+})();

@@ -90,7 +90,10 @@
         // every side) so this ±22px drift never exposes the night edge behind
         // it — if you raise `mouse`, keep that overscan ≥ its value.
         'prlx-hero-bg': { y: 0.5, x: 0, opacity: false, scale: 0, rotate: 0, origin: 'top', ease: 0.06, blur: 6, skew: 0.8, mouse: 22 },
-        'prlx-hero-content': { y: -0.35, x: 0, opacity: true, scale: 0, rotate: 0, origin: 'top', ease: 0.07, blur: 2, skew: 0, mouse: -13 },
+        // blur 6 + scale .04: the cinematic "camera refocus" recede — the hero
+        // copy softens and pulls back as the next section arrives as a card
+        // (pairs with scroll-effects.js [data-fx-card]).
+        'prlx-hero-content': { y: -0.35, x: 0, opacity: true, scale: 0.04, rotate: 0, origin: 'top', ease: 0.07, blur: 6, skew: 0, mouse: -13 },
         'prlx-float': { y: 0.06, x: 0, opacity: false, scale: 0.04, rotate: 1.5, origin: 'center', ease: 0.06, blur: 0, skew: 0, mouse: 0 },
         'prlx-rise': { y: 0.12, x: 0, opacity: false, scale: 0.06, rotate: 0, origin: 'center', ease: 0.07, blur: 0, skew: 0, mouse: 0 },
         'prlx-drift-left': { y: 0.05, x: -0.04, opacity: false, scale: 0, rotate: 0, origin: 'center', ease: 0.06, blur: 0, skew: 0, mouse: 0 },

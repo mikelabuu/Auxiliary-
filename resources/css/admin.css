@@ -22,6 +22,7 @@
 @import './admin/09-craft.css';
 @import './admin/10-frontdesk.css';
 @import './admin/11-notify-nav.css';
+@import './admin/12-bento-blur.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

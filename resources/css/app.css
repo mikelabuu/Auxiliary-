@@ -539,6 +539,311 @@ body.theme-night #siteNav.nav-glass-solid {
     }
 }
 
+/* ── ShinyText (reactbits.dev shiny-text port, Tailwind/JS variant) ──
+   The reactbits recipe: a translucent base fill with a bright highlight
+   band clipped to the text (background-clip:text) and swept across by
+   animating background-position. Themed gold→cream so the eyebrow keeps
+   its colour and just gains a slow shimmer. It nests inside the rising
+   .reveal-line span, so line-rise owns that element's single animation
+   slot and the sweep lives here undisturbed. Clip + sweep only arm under
+   no-preference; reduced motion / no-JS fall back to the plain
+   text-gold on the parent <p>, so the label never loses legibility. */
+@media (prefers-reduced-motion: no-preference) {
+    .shiny-text {
+        display: inline-block;
+        /* Base stays gold but semi-transparent so the band shines
+           through it — the reactbits ShinyText trick, palette-swapped. */
+        color: color-mix(in oklch, var(--color-gold) 70%, transparent);
+        background-image: linear-gradient(
+            110deg,
+            transparent 38%,
+            color-mix(in oklch, var(--color-cream) 90%, white) 50%,
+            transparent 62%
+        );
+        background-size: 220% 100%;
+        background-repeat: no-repeat;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shiny-sweep 5s linear 1.3s infinite;
+    }
+}
+
+@keyframes shiny-sweep {
+    0%   { background-position: 150% 0; }
+    100% { background-position: -50% 0; }
+}
+
+/* ── Hero rotating superlative (reactbits.dev rotating-text port) ──
+   home.js splits each word into per-character .rt-char spans and rolls
+   them vertically inside the clipped track with a staggered spring: the
+   incoming word rises (y:100%→0) as the outgoing one lifts out (0→-120%),
+   staggered from the first character (splitBy 'characters', grapheme-aware
+   via Intl.Segmenter). The track's width eases to each incoming word. The
+   static markup is the no-JS / reduced-motion fallback. */
+.word-rotate {
+    position: relative;
+    display: inline-block;
+}
+
+.word-rotate-track {
+    display: inline-block;
+    position: relative;
+    /* visible (not hidden): the FlipFadeText characters rotate up/down out of
+       the line as they flip, so they must not be clipped. */
+    overflow: visible;
+    vertical-align: bottom;
+    transition: width .5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-rotate-word {
+    display: inline-block;
+    white-space: nowrap;
+    /* perspective for the per-character rotateX flip (both entrance + cycling) */
+    perspective: 640px;
+}
+
+/* Live: word boxes stack absolutely so the swaps overlap; the per-character
+   roll (driven by WAAPI in home.js) carries all the motion. */
+.word-rotate.is-live .word-rotate-word {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.word-rotate.is-live .rt-char {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* ── Hero subtitle: BlurText (reactbits.dev/text-animations/blur-text) ──
+   Per-word two-step blur-sharpen (10px → 5px at the midpoint → 0) drifting
+   down from above (direction 'top'), staggered word-by-word. Runs on the
+   hero's own load clock (not the scroll observer) so it lands inside the
+   choreography. Hidden state sits inside the gate so reduced motion / no-JS
+   read it instantly. */
+@media (prefers-reduced-motion: no-preference) {
+    .hero-sub-word {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(-12px);
+        filter: blur(10px);
+        animation: hero-sub-blur .7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(.95s + var(--w, 0) * 60ms);
+    }
+}
+
+@keyframes hero-sub-blur {
+    0% {
+        opacity: 0;
+        transform: translateY(-12px);
+        filter: blur(10px);
+    }
+
+    50% {
+        opacity: .5;
+        transform: translateY(-3px);
+        filter: blur(5px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+/* ── Hero headline: FlipFadeText (vengenceui.com/components/flip-fade-text) ──
+   Each character flips up into place on the hero's own load clock: from
+   rotateX(90deg) + y 20px + blur 8px + opacity 0 to flat + sharp, staggered
+   character-by-character via --i. #heroTitle carries perspective so the flip
+   reads as 3D; the words are wrapped in inline-block .split-word so they never
+   break mid-word. Hidden state sits inside the no-preference gate so reduced
+   motion / no-JS render the plain headline instantly; it also inherits the
+   intro-curtain pause (html.intro-hold #firstsection *). */
+#heroTitle { perspective: 900px; }
+
+@media (prefers-reduced-motion: no-preference) {
+    .flip-char {
+        display: inline-block;
+        opacity: 0;
+        transform: rotateX(90deg) translateY(20px);
+        filter: blur(8px);
+        transform-origin: 50% 100%;
+        backface-visibility: hidden;
+        animation: flip-fade-in .62s cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
+        animation-delay: calc(.35s + var(--i, 0) * 34ms);
+    }
+}
+
+@keyframes flip-fade-in {
+    from {
+        opacity: 0;
+        transform: rotateX(90deg) translateY(20px);
+        filter: blur(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+/* Word grouping shared by FlipFadeText (hero) and SplitText (sections): keeps a
+   word's characters on one line so they never wrap mid-word. Perspective lives
+   here (the flip-char's direct parent) so each character's rotateX reads as a
+   real 3D flip; it's inert for the section SplitText (translateY only). */
+.split-word { display: inline-block; white-space: nowrap; perspective: 640px; }
+
+/* ── BlurText (reactbits.dev blur-text port) ─────────────────────
+   reveal.js splits [data-blur-text] headlines into .bt-word spans and
+   arms .bt-on; the cascade keys off the ancestor's .aos-animate reveal —
+   the block's own rise supplies the movement, words handle only the
+   two-step blur-sharpen (10px → 5px at the midpoint → 0), so the two
+   layers never fight. .js-reveal + .bt-on gating means no-JS pages and
+   reduced motion render plain, fully visible text. */
+@media (prefers-reduced-motion: no-preference) {
+    .js-reveal .bt-on .bt-word {
+        display: inline-block;
+        opacity: 0;
+        filter: blur(10px);
+    }
+
+    .js-reveal [data-aos].aos-animate .bt-on .bt-word,
+    .js-reveal .bt-on.aos-animate .bt-word {
+        animation: bt-in .7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--bt-i, 0) * 90ms);
+    }
+}
+
+@keyframes bt-in {
+    0% {
+        opacity: 0;
+        filter: blur(10px);
+    }
+
+    50% {
+        opacity: .5;
+        filter: blur(5px);
+    }
+
+    100% {
+        opacity: 1;
+        filter: none;
+    }
+}
+
+/* ── SplitText (reactbits.dev/text-animations/split-text) ────────────
+   reveal.js splits [data-split-text] headings into per-character .split-char
+   spans (grouped in inline-block .split-word so words never break mid-line),
+   arms .st-on, and the cascade keys off the ancestor's .aos-animate scroll
+   reveal — each character rises + fades, staggered via --i (the reactbits
+   default: from {opacity:0, y:40} to {opacity:1, y:0}, chars, stagger). Same
+   .js-reveal + .st-on gating as BlurText, so no-JS / reduced motion render
+   plain, fully-visible text. Used on the section headings. */
+@media (prefers-reduced-motion: no-preference) {
+    .js-reveal .st-on .split-char {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(0.44em);
+    }
+
+    .js-reveal [data-aos].aos-animate .st-on .split-char,
+    .js-reveal .st-on.aos-animate .split-char {
+        animation: st-rise .62s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 24ms);
+    }
+}
+
+@keyframes st-rise {
+    from {
+        opacity: 0;
+        transform: translateY(0.44em);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* ── Cinematic card handoff (easemize cinematic-landing-hero port) ──
+   scroll-effects.js scrubs transform/border-radius/--fx-card on
+   [data-fx-card] sections; the card surface + lift shadow live here so
+   they fade to nothing (--fx-card: 0) once the section settles. */
+[data-fx-card] {
+    position: relative;
+}
+
+[data-fx-card]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: color-mix(in oklch, var(--color-bone) 5%, transparent);
+    box-shadow:
+        0 -30px 90px -40px rgba(0, 0, 0, .85),
+        inset 0 1px 0 rgba(255, 255, 255, .07);
+    opacity: var(--fx-card, 0);
+}
+
+/* ── Hero fireflies (digital-serenity port): slow gold drift over the
+   night photo. Decorative — invisible under reduced motion. */
+.hero-fireflies {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.hero-fireflies span {
+    position: absolute;
+    left: var(--fx, 50%);
+    top: var(--fy, 50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    filter: blur(1px);
+    opacity: 0;
+    box-shadow: 0 0 10px 2px color-mix(in oklch, var(--color-gold) 45%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .hero-fireflies span {
+        animation: firefly-drift var(--fd, 17s) ease-in-out var(--fdel, 0s) infinite;
+    }
+}
+
+@keyframes firefly-drift {
+
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+        opacity: 0;
+    }
+
+    12% {
+        opacity: .55;
+    }
+
+    45% {
+        transform: translate3d(18px, -30px, 0);
+        opacity: .28;
+    }
+
+    68% {
+        opacity: .5;
+    }
+
+    88% {
+        transform: translate3d(-6px, -52px, 0);
+        opacity: 0;
+    }
+}
+
 /* ── Scroll-reveal variants (reveal.js adds .aos-animate) ────────
    These extend the generic fade-up with softer, weightier entries.
    `html.js-reveal` outranks the generic `.js-reveal [data-aos]`

@@ -6,6 +6,18 @@
   <title>@yield('title', 'Farmers Hostel · Admin Console')</title>
   <link rel="icon" type="image/png" href="{{ asset('image/clsu.logo.png') }}">
 
+  {{-- AnimatedContent (reactbits.dev/animations/animated-content) gate: hide
+       the content-block entrances before first paint so GSAP (app.js) can
+       reveal them on scroll with no flash. Skipped under reduced motion; if the
+       script never runs the CSS gate never arms, so content renders visible. --}}
+  <script>
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-anim');
+      }
+    } catch (e) {}
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -59,11 +71,19 @@
   <x-admin.layout.topbar />
 
   {{-- Main content --}}
+  {{-- .animate-children hands each top-level block to AnimatedContent
+       (resources/js/animated-content.js) for a GSAP scroll-reveal, replacing
+       the old CSS .stagger-enter load cascade. --}}
   <main class="shell-main">
-    <div class="shell-content-wrap stagger-enter space-y-6">
+    <div class="shell-content-wrap animate-children space-y-6">
       @yield('content')
     </div>
   </main>
+
+  {{-- GradualBlur (reactbits.dev/animations/gradual-blur): the page content
+       dissolves under a soft frosted fade at the bottom of the viewport. Fixed +
+       pointer-events:none; the sidebar/topbar (higher z) cover their own regions. --}}
+  <x-admin.ui.gradual-blur mode="fixed" height="4.5rem" :strength="1.8" class="gb-page" />
 
   {{-- Back to top --}}
   <button id="backToTop" class="back-to-top" aria-label="Back to top">
@@ -254,6 +274,7 @@
   </script>
   @endif
   @livewireScripts
+  @stack('modals')
   @stack('scripts')
 </body>
 </html>

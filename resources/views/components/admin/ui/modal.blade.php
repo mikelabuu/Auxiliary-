@@ -57,5 +57,11 @@
             </div>
         @endif
         {{ $slot }}
+        @if($scrollBody)
+            {{-- GradualBlur (reactbits.dev/animations/gradual-blur): scrollable
+                 modal bodies dissolve under a frosted fade pinned to the panel's
+                 bottom edge. pointer-events:none so buttons underneath still work. --}}
+            <x-admin.ui.gradual-blur mode="sticky" height="4.25rem" :strength="1.6" class="gb-tint-card" />
+        @endif
     </div>
 </div>

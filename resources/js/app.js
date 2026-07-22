@@ -1,5 +1,7 @@
 import './bootstrap';
 import './sortable-tables';
+import './animated-content';
+import './expandable-bento';
 import { createIcons } from 'lucide';
 import * as icons from 'lucide';
 

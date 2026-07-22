@@ -70,7 +70,17 @@
         wordSets.push({ el: p, words });
     });
 
-    if (!bands.length && !threads.length && !wordSets.length) return;
+    // [data-fx-card] → cinematic card handoff (easemize cinematic-landing-hero,
+    // GSAP "main-card takeover" ported to the scrub idiom): the section after
+    // the hero arrives lifted, slightly scaled and rounded — a card — and
+    // settles to full bleed as it climbs. Its surface/shadow live on a CSS
+    // ::before driven by --fx-card, so nothing lingers at rest.
+    const cards = [];
+    document.querySelectorAll('[data-fx-card]').forEach((el) => {
+        cards.push({ el, done: false });
+    });
+
+    if (!bands.length && !threads.length && !wordSets.length && !cards.length) return;
 
     // ── Frame updates ───────────────────────────────────────────────
 
@@ -121,6 +131,28 @@
         }
     }
 
+    function updateCard(item) {
+        const r = item.el.getBoundingClientRect();
+        // 0 → section top at the fold; 1 → top has climbed 62% of the viewport
+        const p = smooth((viewH - r.top) / (viewH * 0.62));
+        if (p >= 1) {
+            // Settled: hand back a plain, unclipped, untransformed section
+            if (!item.done) {
+                item.el.style.transform = '';
+                item.el.style.borderRadius = '';
+                item.el.style.setProperty('--fx-card', '0');
+                item.done = true;
+            }
+            return;
+        }
+        item.done = false;
+        const inv = 1 - p;
+        item.el.style.transform =
+            'translate3d(0,' + (inv * 64).toFixed(1) + 'px,0) scale(' + (1 - inv * 0.05).toFixed(4) + ')';
+        item.el.style.borderRadius = (inv * 32).toFixed(1) + 'px';
+        item.el.style.setProperty('--fx-card', inv.toFixed(3));
+    }
+
     // ── Loop (scroll-armed rAF, idle when still) ────────────────────
     let ticking = false;
     let dead = false;
@@ -131,6 +163,7 @@
         for (const b of bands) updateBand(b);
         for (const t of threads) updateThread(t);
         for (const w of wordSets) updateWords(w);
+        for (const c of cards) updateCard(c);
     }
 
     function requestTick() {
@@ -154,6 +187,11 @@
     reduceMQ.addEventListener('change', (e) => {
         if (!e.matches) return;
         dead = true;
+        for (const c of cards) {
+            c.el.style.transform = '';
+            c.el.style.borderRadius = '';
+            c.el.style.setProperty('--fx-card', '0');
+        }
         for (const b of bands) b.el.style.clipPath = '';
         for (const t of threads) {
             t.path.style.strokeDasharray = '';

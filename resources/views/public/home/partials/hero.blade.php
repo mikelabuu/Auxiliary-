@@ -16,18 +16,56 @@
         <div class="absolute inset-x-0 top-0 h-44 bg-linear-to-b from-night/70 to-transparent"></div>
         <!-- The hero melts into the page instead of ending at an edge -->
         <div class="absolute inset-x-0 bottom-0 h-72 bg-linear-to-b from-transparent to-night"></div>
+        <!-- Drifting gold fireflies (digital-serenity port) — living on this layer
+             means the cursor drift moves them with the night scene -->
+        <div class="hero-fireflies" aria-hidden="true">
+            <span style="--fx:14%; --fy:62%; --fd:15s; --fdel:0s"></span>
+            <span style="--fx:27%; --fy:38%; --fd:19s; --fdel:2.2s"></span>
+            <span style="--fx:44%; --fy:70%; --fd:17s; --fdel:4.5s"></span>
+            <span style="--fx:63%; --fy:30%; --fd:21s; --fdel:1.4s"></span>
+            <span style="--fx:78%; --fy:56%; --fd:16s; --fdel:6s"></span>
+            <span style="--fx:88%; --fy:40%; --fd:18s; --fdel:3.2s"></span>
+            <span style="--fx:55%; --fy:48%; --fd:23s; --fdel:8s"></span>
+        </div>
     </div>
 
     <!-- Headline: vertically centered, left-anchored on the scrim; lines
          rise out of clipped masks (reveal-line reserves italic descenders) -->
     <div class="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pt-28 pb-8 text-left text-bone prlx-hero-content">
-        <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s">Inside CLSU since 1998</span></p>
+        <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold sm:text-[11px] sm:tracking-[0.5em]"><span style="--rise-delay:.1s"><span class="shiny-text">Inside CLSU since 1998</span></span></p>
+        {{-- FlipFadeText (vengenceui.com/components/flip-fade-text) ported to
+             vanilla: every character flips up into place (rotateX 90°→0 + blur
+             8px→0) on the hero's own load clock, staggered character-by-character
+             via --i (see .flip-char in app.css). Words are wrapped in inline-block
+             .split-word so they never break mid-word. The plain text is the
+             no-JS / reduced-motion fallback. --}}
+        @php $fi = 0; @endphp
         <h1 id="heroTitle" class="mt-5 font-display leading-[1.1] text-bone" style="font-size:clamp(2.75rem, 6.2vw, 5.5rem)">
-            <span class="reveal-line"><span style="--rise-delay:.28s">The <span class="italic text-gold">quietest</span></span></span>
-            <span class="reveal-line"><span style="--rise-delay:.46s">address on campus</span></span>
+            <span class="block">
+                <span class="split-word">@foreach (str_split('The') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
+                {{-- Rotating superlative — FlipFadeText cycler in home.js. The visible
+                     "quietest" flips in with the line via .flip-char; home.js reuses
+                     those same characters (.rt-char) and cycles the words with the
+                     same flip. The static word is the no-JS / reduced-motion fallback. --}}
+                <span class="split-word">
+                    <span id="heroWordRotate" class="word-rotate italic text-gold" aria-label="quietest" data-words="quietest,greenest,calmest,warmest">
+                        <span class="word-rotate-track" aria-hidden="true"><span class="word-rotate-word is-active">@foreach (str_split('quietest') as $ch)<span class="flip-char rt-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span></span>
+                    </span>
+                </span>
+            </span>
+            <span class="block">
+                <span class="split-word">@foreach (str_split('address') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
+                <span class="split-word">@foreach (str_split('on') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
+                <span class="split-word">@foreach (str_split('campus') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
+            </span>
         </h1>
-        <p class="text-pretty mt-6 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg animate-[fade-in-up_1s_ease-out_0.85s_both]">
-            A boutique hostel in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.
+        {{-- Word-by-word blur reveal (digital-serenity port) — replaces the old
+             single fade; per-word stagger via --w, all inside the CSS
+             no-preference gate so reduced motion reads it instantly. --}}
+        <p class="hero-sub text-pretty mt-6 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg">
+            @foreach (preg_split('/\s+/', 'A boutique hostel in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.') as $i => $word)
+                <span class="hero-sub-word" style="--w:{{ $i }}">{{ $word }}</span>
+            @endforeach
         </p>
     </div>
 

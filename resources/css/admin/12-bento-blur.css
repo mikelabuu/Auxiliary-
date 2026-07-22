@@ -1,0 +1,131 @@
+/* ============================================================
+   12 · Bento detail dialog + GradualBlur
+   - Bento: a grid of cards; clicking one fades a centered detail
+     dialog in over a dimmed backdrop (resources/js/expandable-bento.js).
+     The card never moves — no morph/reparent, so nothing glitches.
+   - GradualBlur: layered backdrop-filter edge fade
+     (components/admin/ui/gradual-blur.blade.php).
+   Loaded last in admin.css so these ride on top of the base cascade.
+   ============================================================ */
+
+/* ── GradualBlur ─────────────────────────────────────────── */
+.gradual-blur { pointer-events: none; }
+.gradual-blur-layer { position: absolute; inset: 0; will-change: backdrop-filter; }
+
+/* Optional tint: content also dissolves toward the surface/card colour at the
+   edge, not just blur. Painted above the blur layers. */
+.gradual-blur.gb-tint-card::after,
+.gradual-blur.gb-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.gradual-blur--bottom.gb-tint-card::after { background: linear-gradient(to top, var(--color-card, #fff) 2%, transparent 78%); }
+.gradual-blur--bottom.gb-page::after { background: linear-gradient(to top, var(--color-surface, #f4f7f4) 8%, transparent 88%); }
+@media print { .gb-page { display: none !important; } }
+
+/* ── Bento grid + cells ──────────────────────────────────── */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+@media (min-width: 640px)  { .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.875rem; } }
+@media (min-width: 1024px) { .bento-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; } }
+
+/* A cell reveals it is interactive; the actual look comes from the element's
+   own classes (.card / room tile) so we don't clobber their colours. Targeted
+   by attribute so room tiles need no extra class. */
+[data-bento-item] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+[data-bento-item][aria-expanded="true"] { cursor: default; }
+
+@media (prefers-reduced-motion: no-preference) {
+    [data-bento-item] { transition: transform 200ms var(--ease-out, ease), box-shadow 200ms var(--ease-out, ease); }
+    [data-bento-item]:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -14px rgba(9, 60, 38, 0.35); }
+}
+
+/* Detail content lives inside the card only as a source to copy into the dialog;
+   it never shows in the grid. */
+[data-bento-item] [data-bento-detail] { display: none; }
+
+/* ── Detail dialog ───────────────────────────────────────── */
+/* z-index 400: above the app modals (z-300) because Insights/Calendar grids
+   live inside those modals and the dialog must sit over them. Toggled to
+   display:flex by JS; the fade/scale is a plain CSS transition. */
+.bento-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh 4vw;
+    background: color-mix(in oklch, var(--color-night, #0b1a12) 55%, transparent);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+}
+.bento-backdrop.is-active { opacity: 1; }
+html.bento-lock { overflow: hidden; }
+
+.bento-dialog {
+    position: relative;
+    width: min(940px, 94vw);
+    max-width: 94vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-card, #fff);
+    color: var(--color-ink, #14201a);
+    border: 1px solid var(--color-stone-200, #e7e5e4);
+    border-radius: 22px;
+    box-shadow: 0 40px 90px -24px rgba(9, 60, 38, 0.45);
+    overflow: hidden;
+    text-align: left;
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+}
+.bento-backdrop.is-active .bento-dialog { opacity: 1; transform: none; }
+.bento-dialog--narrow { width: min(560px, 94vw); }
+
+@media (prefers-reduced-motion: no-preference) {
+    .bento-backdrop { transition: opacity 200ms var(--ease-out, ease); }
+    .bento-dialog { transition: opacity 200ms var(--ease-out, ease), transform 240ms var(--ease-spring, cubic-bezier(0.22, 1, 0.36, 1)); }
+}
+
+.bento-dialog-body { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+.bento-dialog-head { padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-stone-100, #f5f5f4); flex: none; }
+.bento-dialog-detail {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem 2rem;
+    /* Bottom mask fade — content dissolves under the edge. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.25rem), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 2.25rem), transparent);
+    scrollbar-width: thin;
+}
+.bento-dialog-detail::-webkit-scrollbar { width: 6px; }
+.bento-dialog-detail::-webkit-scrollbar-thumb { background: var(--color-stone-300, #d6d3d1); border-radius: 9999px; }
+
+.bento-detail-state { padding: 1rem 0; font-size: 0.8125rem; color: var(--color-stone-500, #78716c); }
+
+/* Floating close button (top-right of the viewport while the dialog is open). */
+.bento-close {
+    position: fixed;
+    top: max(1rem, 4vh);
+    right: max(1rem, 4vw);
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    cursor: pointer;
+    z-index: 1;
+}
+.bento-close svg { width: 18px; height: 18px; }
+.bento-close:hover { background: rgba(255, 255, 255, 0.22); }
+.bento-backdrop:not(.is-active) .bento-close { display: none; }

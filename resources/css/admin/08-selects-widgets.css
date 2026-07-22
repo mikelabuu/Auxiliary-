@@ -144,15 +144,6 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
 }
 .room-map-btn:active { transform: scale(.93); }
 
-/* Occupancy popover (built by dashboard JS): scale in from the tile it
-   belongs to; hides instantly — dismissal should never lag. */
-#roomMapPopover {
-    transform-origin: top center;
-    opacity: 1; transform: scale(1) translateY(0);
-    transition: opacity 160ms var(--ease-out), transform 180ms var(--ease-spring);
-    @starting-style { opacity: 0; transform: scale(.97) translateY(-4px); }
-}
-
 /* ── Legend swatches ── */
 .map-key {
     display: inline-block;

@@ -29,6 +29,81 @@
 
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // ── BlurText (reactbits.dev/text-animations/blur-text port) ──────
+    // Split [data-blur-text] elements into word spans (recursing through
+    // inline markup like the italic gold spans, so styling is preserved).
+    // The cascade itself is pure CSS, keyed off the ancestor's .aos-animate
+    // reveal — same trigger, no second observer. Skipped under reduced
+    // motion and without JS the markup stays untouched and fully visible.
+    if (!reduceMotion) {
+        document.querySelectorAll('[data-blur-text]').forEach(function (root) {
+            var i = 0;
+            (function split(el) {
+                Array.prototype.slice.call(el.childNodes).forEach(function (node) {
+                    if (node.nodeType === 3) {
+                        var frag = document.createDocumentFragment();
+                        node.textContent.split(/(\s+)/).forEach(function (part) {
+                            if (!part) return;
+                            if (/^\s+$/.test(part)) {
+                                frag.appendChild(document.createTextNode(part));
+                            } else {
+                                var s = document.createElement('span');
+                                s.className = 'bt-word';
+                                s.style.setProperty('--bt-i', i++);
+                                s.textContent = part;
+                                frag.appendChild(s);
+                            }
+                        });
+                        el.replaceChild(frag, node);
+                    } else if (node.nodeType === 1) {
+                        split(node);
+                    }
+                });
+            })(root);
+            root.classList.add('bt-on'); // arms the hidden state in app.css
+        });
+    }
+
+    // ── SplitText (reactbits.dev/text-animations/split-text port) ────
+    // Split [data-split-text] elements into per-character spans, grouped in
+    // inline-block .split-word wrappers so words never break mid-line. Recurses
+    // through inline markup (italic gold spans) so styling survives. The reveal
+    // is pure CSS keyed off the ancestor's .aos-animate — same trigger as
+    // BlurText. Skipped under reduced motion; without JS the text stays plain.
+    if (!reduceMotion) {
+        document.querySelectorAll('[data-split-text]').forEach(function (root) {
+            var i = 0;
+            (function split(el) {
+                Array.prototype.slice.call(el.childNodes).forEach(function (node) {
+                    if (node.nodeType === 3) {
+                        var frag = document.createDocumentFragment();
+                        node.textContent.split(/(\s+)/).forEach(function (part) {
+                            if (!part) return;
+                            if (/^\s+$/.test(part)) {
+                                frag.appendChild(document.createTextNode(part));
+                            } else {
+                                var word = document.createElement('span');
+                                word.className = 'split-word';
+                                Array.from(part).forEach(function (ch) {
+                                    var c = document.createElement('span');
+                                    c.className = 'split-char';
+                                    c.style.setProperty('--i', i++);
+                                    c.textContent = ch;
+                                    word.appendChild(c);
+                                });
+                                frag.appendChild(word);
+                            }
+                        });
+                        el.replaceChild(frag, node);
+                    } else if (node.nodeType === 1) {
+                        split(node);
+                    }
+                });
+            })(root);
+            root.classList.add('st-on'); // arms the hidden state in app.css
+        });
+    }
+
     // Elements the parallax engine also drives — after their entrance we hand
     // transform/opacity control back to it cleanly.
     function hasParallax(el) {
