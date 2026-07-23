@@ -1,8 +1,10 @@
 @extends('layouts.public.base')
 @section('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')
-{{-- Light CLSU redesign: the landing now rides the light theme-boutique tokens
-     (ivory canvas, warm ink, green + palay-gold accents) instead of the dark
-     Night Estate. nav stays light (nav-glass-solid). --}}
+{{-- Light CLSU redesign on light theme-boutique tokens (ivory canvas, warm ink,
+     green + palay-gold accents). nav_dark: the hero is now a full-bleed photo
+     panel, so the nav rides transparent/white over it and swaps to the solid
+     light skin on scroll. --}}
+@section('nav_dark', '1')
 
 @section('content')
 
