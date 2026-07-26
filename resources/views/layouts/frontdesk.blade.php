@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
   {{-- Chart.js is loaded per-page (dashboard @push) — not every desk page charts --}}
 
   {{-- Same design-system bundle as the admin console: Fresh Meadow tokens,
@@ -23,11 +23,15 @@
 </head>
 <body class="bg-surface text-ink antialiased">
 
+  {{-- Keyboard users land here first: one Tab jumps past the band's pill nav
+       to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   {{-- Meadow Nightfall band: greeting, clock, pill nav (Finexa format) --}}
   <x-frontdesk.hero />
 
   {{-- Workspace: light Fresh Meadow cards overlapping the band --}}
-  <main class="fd-main">
+  <main id="main-content" class="fd-main" tabindex="-1">
     <div class="stagger-enter space-y-6">
       @yield('content')
     </div>

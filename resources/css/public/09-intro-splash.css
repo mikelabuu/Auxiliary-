@@ -1,0 +1,287 @@
+/* Part 09 of the public bundle — Cinematic intro splash — once per tab session.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Cinematic intro splash — landing page, once per tab session.
+   An inline head snippet (welcome.blade.php) adds `html.intro-hold`
+   before first paint when the intro should play; without it the
+   splash never displays and the hero animates as usual. The splash
+   is a cream card with drifting emerald auras and a gradient that
+   pans through the wordmark; on exit the curtain wipes up while the
+   wordmark FLIP-flies into the hero headline (JS in welcome.blade)
+   and a gold gradient band sweeps across the title as it lands.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Lock scroll and hold every hero entrance behind the curtain; both
+   release when the exit timeline drops the gate class. */
+html.intro-hold,
+html.intro-hold body {
+    overflow: hidden;
+}
+
+html.intro-hold #firstsection * {
+    animation-play-state: paused !important;
+}
+
+/* The pill nav starts retreated and glides in with the reveal
+   (#navWrap already transitions transform) */
+html.intro-hold #navWrap {
+    transform: translateY(-170%);
+}
+
+#introSplash {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+}
+
+/* Repeat visits: the gate class never lands, splash stays inert
+   (JS removes it from the DOM). :not(.is-exiting) keeps the exit
+   visible after the gate class is dropped mid-animation. */
+html:not(.intro-hold) #introSplash:not(.is-exiting) {
+    display: none;
+}
+
+.intro-curtain {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--color-cream-warm);
+    clip-path: inset(0 0 0 0);
+}
+
+/* Soft green auras, top-left and bottom-right */
+.intro-curtain::before,
+.intro-curtain::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle at center, color-mix(in oklch, var(--color-clsu-300) 80%, white), transparent 70%);
+    filter: blur(64px);
+    opacity: 0.55;
+    will-change: transform;
+}
+
+.intro-curtain::before {
+    width: 46vmax;
+    height: 46vmax;
+    top: -18vmax;
+    left: -14vmax;
+    animation: intro-blob-drift 9s ease-in-out infinite alternate;
+}
+
+.intro-curtain::after {
+    width: 40vmax;
+    height: 40vmax;
+    bottom: -16vmax;
+    right: -10vmax;
+    animation: intro-blob-drift 11s ease-in-out 0.8s infinite alternate-reverse;
+}
+
+@keyframes intro-blob-drift {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        transform: translate3d(4vmax, 2.5vmax, 0) scale(1.12);
+    }
+}
+
+/* Same grain recipe as .film-grain, tuned for the cream card */
+.intro-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.9  0 0 0 0 0.75  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.intro-center {
+    position: relative;
+    z-index: 1;
+    padding: 0 1.25rem;
+    text-align: center;
+}
+
+/* Wordmark — Lora caps with an emerald→gold gradient panning through
+   the glyphs (background-clip: text on the parent; per-char spans
+   only animate transform/opacity so the clip stays coherent) */
+.intro-wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 5.4vw, 4.35rem);
+    line-height: 1.14;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    background: linear-gradient(100deg,
+            oklch(30% 0.07 160) 12%,
+            oklch(46% 0.1 158) 34%,
+            oklch(58% 0.13 140) 48%,
+            var(--color-gold) 60%,
+            oklch(32% 0.06 160) 82%);
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Staggered feel without per-char spans (descendant compositor
+       animations break background-clip:text in Chromium): the element
+       rises while a soft-edged mask wipes the glyphs in left→right. */
+    -webkit-mask-image: linear-gradient(105deg, #000 45%, transparent 65%);
+    mask-image: linear-gradient(105deg, #000 45%, transparent 65%);
+    -webkit-mask-size: 300% 100%;
+    mask-size: 300% 100%;
+    animation:
+        intro-word-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) 0.15s both,
+        intro-gradient-pan 3.2s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes intro-word-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(0.35em);
+        -webkit-mask-position: 100% 0;
+        mask-position: 100% 0;
+    }
+
+    55% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        -webkit-mask-position: 0% 0;
+        mask-position: 0% 0;
+    }
+}
+
+@keyframes intro-gradient-pan {
+    from {
+        background-position: 0% 50%;
+    }
+
+    to {
+        background-position: 100% 50%;
+    }
+}
+
+/* Tagline with drawing hairlines, mirroring the reference lockup */
+.intro-tagline {
+    margin-top: clamp(1.1rem, 2.5vw, 1.6rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.46em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--color-emerald-deep) 62%, var(--color-cream));
+    opacity: 0;
+    animation: intro-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards;
+}
+
+.intro-rule {
+    height: 1px;
+    width: clamp(2rem, 6vw, 3.4rem);
+    flex: none;
+    background: color-mix(in oklch, var(--color-gold) 75%, transparent);
+    transform: scaleX(0);
+    animation: hairline-draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+}
+
+.intro-rule:first-child {
+    transform-origin: 100% 50%;
+}
+
+.intro-rule:last-child {
+    transform-origin: 0 50%;
+}
+
+/* Narrow screens: tighter tracking so the tagline holds one line */
+@media (max-width: 480px) {
+    .intro-tagline {
+        gap: 0.6rem;
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        white-space: nowrap;
+    }
+
+    .intro-rule {
+        width: 1.4rem;
+    }
+}
+
+@keyframes intro-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Exit — curtain wipes up-and-away; tagline lets go first. The
+   wordmark's flight into the hero title is driven by WAAPI in
+   welcome.blade.php so it can measure the real headline position. */
+#introSplash.is-exiting .intro-curtain {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.95s cubic-bezier(0.76, 0, 0.24, 1) 0.12s;
+}
+
+#introSplash.is-exiting .intro-tagline {
+    animation: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Gradient hand-off: a gold light band sweeps once across the hero
+   headline as the flying wordmark lands (class added/removed by the
+   intro timeline) */
+#heroTitle {
+    position: relative;
+}
+
+#heroTitle.title-gradient-pass::after {
+    content: "";
+    position: absolute;
+    inset: -12% -4%;
+    pointer-events: none;
+    background: linear-gradient(100deg,
+            transparent 24%,
+            color-mix(in oklch, var(--color-gold) 75%, white) 47%,
+            oklch(93% 0.05 150) 53%,
+            transparent 76%);
+    mix-blend-mode: overlay;
+    opacity: 0.55;
+    transform: translateX(-108%);
+    animation: title-gradient-pass 1.35s cubic-bezier(0.25, 1, 0.5, 1) 0.45s forwards;
+}
+
+@keyframes title-gradient-pass {
+    to {
+        transform: translateX(108%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    /* The head gate never arms the intro under reduced motion; this
+       is a hard backstop in case markup renders anyway. */
+    #introSplash {
+        display: none !important;
+    }
+
+    #heroTitle.title-gradient-pass::after {
+        animation: none;
+        opacity: 0;
+    }
+}

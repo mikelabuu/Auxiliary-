@@ -2,11 +2,6 @@ import './bootstrap';
 import './sortable-tables';
 import './animated-content';
 import './expandable-bento';
-import { createIcons } from 'lucide';
-import * as icons from 'lucide';
-
-// Initialize Lucide icons globally
-createIcons({ icons });
 
 // ── Unified toast notifications (admin + frontdesk consoles) ──
 // window.toast(message, type?, { duration? }) — types: success (default),

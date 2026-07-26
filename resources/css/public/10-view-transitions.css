@@ -1,0 +1,32 @@
+/* Part 10 of the public bundle — Cross-document view transitions.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Cross-document view transitions — public pages soft-crossfade
+   into each other (landing ↔ checkout ↔ auth). Progressive: both
+   documents load this sheet, unsupported browsers get instant
+   navigation. Opacity-only, so it stays calm under reduced motion.
+   ═══════════════════════════════════════════════════════════════ */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root) {
+    animation: vt-fade-out 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-new(root) {
+    animation: vt-fade-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes vt-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-fade-in {
+    from {
+        opacity: 0;
+    }
+}

@@ -1,0 +1,605 @@
+/* Part 08 of the public bundle — Public "Elevated Nature" booking site — shared utilities.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Public "Elevated Nature" booking site — shared utilities
+   (previously duplicated as inline <style> in welcome / checkout)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hero landscape slow zoom */
+@keyframes slow-zoom {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.12);
+    }
+}
+
+.animate-slow-zoom {
+    animation: slow-zoom 22s ease-in-out infinite alternate;
+}
+
+/* Section entrance used by the landing hero */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Occasional gold sheen sweep — hero primary CTA only */
+.cta-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, color-mix(in oklch, var(--color-gold) 60%, white) 50%, transparent 58%);
+    opacity: 0.3;
+    transform: translateX(-100%);
+    animation: cta-shine-sweep 3s cubic-bezier(0.22, 1, 0.36, 1) 1.2s infinite;
+}
+
+@keyframes cta-shine-sweep {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    30%,
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cta-shine::after {
+        animation: none;
+        opacity: 0;
+    }
+}
+
+/* Per-character 3D flip-fade loop — used with x-booking.ui.flip-fade-text
+   (ported from vengence-ui flip-fade-text) */
+.flip-fade-wrapper {
+    perspective: 900px;
+}
+
+@keyframes flip-fade-char {
+    0% {
+        opacity: 0;
+        transform: rotateX(90deg) translateY(0.18em);
+        filter: blur(8px);
+    }
+
+    12% {
+        opacity: 1;
+        transform: rotateX(0) translateY(0);
+        filter: blur(0px);
+    }
+
+    74% {
+        opacity: 1;
+        transform: rotateX(0) translateY(0);
+        filter: blur(0px);
+    }
+
+    86%,
+    100% {
+        opacity: 0;
+        transform: rotateX(-90deg) translateY(-0.18em);
+        filter: blur(8px);
+    }
+}
+
+.flip-fade-char {
+    display: inline-block;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, opacity, filter;
+    animation: flip-fade-char var(--ff-duration, 4.5s) cubic-bezier(0.2, 0.65, 0.3, 0.9) var(--ff-delay, 0s) var(--ff-iteration, infinite) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flip-fade-char {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+}
+
+/* Odometer-style rolling counter — hero guests stepper
+   (ported from vengence-ui animated-number; welcome.blade.php drives it via WAAPI) */
+.anim-number {
+    display: inline-grid;
+    overflow: hidden;
+    vertical-align: bottom;
+}
+
+.anim-number>span {
+    grid-area: 1 / 1;
+}
+
+/* Progressive bottom-edge blur — public pages soft-exit under the viewport
+   (ported from reactbits gradual-blur: stacked backdrop-filter layers, each
+   masked to its own band so the blur ramps up toward the edge) */
+.gradual-blur {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6.5rem;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.gradual-blur>div {
+    position: absolute;
+    inset: 0;
+}
+
+.gradual-blur>div:nth-child(1) {
+    -webkit-backdrop-filter: blur(0.6px);
+    backdrop-filter: blur(0.6px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+}
+
+.gradual-blur>div:nth-child(2) {
+    -webkit-backdrop-filter: blur(1.2px);
+    backdrop-filter: blur(1.2px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+    mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+}
+
+.gradual-blur>div:nth-child(3) {
+    -webkit-backdrop-filter: blur(2.4px);
+    backdrop-filter: blur(2.4px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+    mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+}
+
+.gradual-blur>div:nth-child(4) {
+    -webkit-backdrop-filter: blur(4.8px);
+    backdrop-filter: blur(4.8px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+    mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+}
+
+.gradual-blur>div:nth-child(5) {
+    -webkit-backdrop-filter: blur(9px);
+    backdrop-filter: blur(9px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+    mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+}
+
+.gradual-blur>div:nth-child(6) {
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
+}
+
+/* Soft legibility glow for the hero headline over the photo backdrop */
+.hero-text-glow {
+    text-shadow: 0 1px 3px rgba(9, 20, 16, 0.45), 0 10px 40px rgba(9, 20, 16, 0.6);
+}
+
+/* ── Scroll reveal (local AOS replacement) ───────────────────────
+   reveal.js observes [data-aos] and adds .aos-animate on entry.
+   Gated behind .js-reveal on <html> (set by an inline head snippet)
+   so content is never hidden when JS is unavailable. parallax.js
+   keys off the same .aos-animate class for its entrance handoff. */
+.js-reveal [data-aos] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+        opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.js-reveal [data-aos].aos-animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js-reveal [data-aos] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* ── Reading-progress hairline ───────────────────────────────────
+   Driven by the --scroll-progress custom property that parallax.js
+   writes each frame; costs nothing extra. Sits above the pill nav.
+   Stays at scaleX(0) — invisible — under reduced motion or when
+   parallax.js isn't loaded, since the variable never updates. */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 60;
+    pointer-events: none;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-gold-soft));
+    box-shadow: 0 0 8px color-mix(in oklch, var(--color-gold) 55%, transparent);
+    transform-origin: 0 50%;
+    transform: scaleX(var(--scroll-progress, 0));
+}
+
+/* Interactive room-number tiles on the checkout availability picker */
+.room-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.room-tile {
+    position: relative;
+    padding: 11px 6px;
+    text-align: center;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid var(--color-stone-200);
+    background-color: var(--color-stone-50);
+    color: var(--color-stone-500);
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.18s ease;
+    user-select: none;
+    /* staggered entrance — booking.js sets --i per tile */
+    animation: popIn .28s cubic-bezier(.16, 1, .3, 1) both;
+    animation-delay: calc(var(--i, 0) * 24ms);
+}
+
+/* Silent (Reverb/live) re-renders skip the entrance cascade —
+   background updates shouldn't blink the grid mid-selection */
+.room-tiles.no-anim .room-tile {
+    animation: none;
+}
+
+.room-tile:hover {
+    border-color: var(--color-stone-300);
+    background-color: var(--color-stone-100);
+}
+
+.room-tile.available {
+    border-color: var(--color-clsu-200);
+    background-color: var(--color-clsu-50);
+    color: var(--color-clsu-700);
+}
+
+.room-tile.available:hover {
+    background-color: var(--color-clsu-100);
+    border-color: var(--color-clsu-300);
+}
+
+.room-tile.selected {
+    background-color: var(--color-clsu-700) !important;
+    color: #ffffff !important;
+    border-color: var(--color-clsu-800) !important;
+    box-shadow: 0 6px 16px -4px rgba(17, 78, 40, 0.45);
+    transform: translateY(-1px);
+}
+
+.room-tile.booked {
+    background-color: var(--color-ember-50);
+    color: var(--color-ember-700);
+    border-color: var(--color-ember-200);
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.room-tile.cleaning {
+    background-color: var(--color-palay-50);
+    color: var(--color-palay-700);
+    border-color: var(--color-palay-200);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.room-tile.maintenance,
+.room-tile.unavailable {
+    background-color: var(--color-stone-100);
+    color: var(--color-stone-400);
+    border-color: var(--color-stone-200);
+    cursor: not-allowed;
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+/* Checkout progress rail — booking.js toggles .done per step */
+.checkout-step.done .step-dot {
+    background: var(--color-emerald-deep);
+    border-color: var(--color-emerald-deep);
+    color: var(--color-cream);
+}
+
+.checkout-step.done .step-num {
+    display: none;
+}
+
+.checkout-step.done .step-check {
+    display: block;
+    /* the display swap restarts the keyframes, so the check pops in
+       each time a step completes */
+    animation: popIn 0.18s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.checkout-step.done .step-bar {
+    background: var(--color-emerald-deep);
+}
+
+/* Checkout room-type picker card in its chosen state (classes toggled by booking.js) */
+.type-card.selected {
+    border-color: var(--color-emerald-deep);
+    box-shadow: 0 0 0 2px var(--color-emerald-deep), 0 14px 30px -18px rgba(6, 40, 30, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Flatpickr calendar polish */
+.flatpickr-calendar {
+    box-shadow: var(--shadow-card-lg) !important;
+    border: 1px solid var(--color-stone-100) !important;
+    border-radius: 1rem !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--color-clsu-700) !important;
+    border-color: var(--color-clsu-700) !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--color-palay-400) !important;
+}
+
+/* Boutique flatpickr: emerald selection, gold today ring, cream chrome */
+body.theme-boutique .flatpickr-calendar {
+    background: var(--color-cream-warm) !important;
+    border: 1px solid oklch(90% 0.015 90) !important;
+    box-shadow: var(--shadow-capsule) !important;
+}
+
+body.theme-boutique .flatpickr-day.selected,
+body.theme-boutique .flatpickr-day.selected:hover {
+    background: var(--color-emerald-deep) !important;
+    border-color: var(--color-emerald-deep) !important;
+}
+
+body.theme-boutique .flatpickr-day:hover {
+    background: oklch(93% 0.02 90);
+    border-color: oklch(93% 0.02 90);
+}
+
+body.theme-boutique .flatpickr-day.today {
+    border-color: var(--color-gold) !important;
+}
+
+/* Boutique room tiles: emerald selection, gold hover ring */
+body.theme-boutique .room-tile {
+    border-radius: 12px;
+    background-color: var(--color-cream-warm);
+    border-color: oklch(90% 0.015 90);
+}
+
+body.theme-boutique .room-tile.available {
+    border-color: color-mix(in oklch, var(--color-emerald) 30%, transparent);
+    background-color: color-mix(in oklch, var(--color-emerald) 7%, var(--color-cream-warm));
+    color: var(--color-emerald-deep);
+}
+
+body.theme-boutique .room-tile.available:hover {
+    border-color: var(--color-gold);
+    background-color: color-mix(in oklch, var(--color-gold) 12%, var(--color-cream-warm));
+}
+
+body.theme-boutique .room-tile.selected {
+    background-color: var(--color-emerald-deep) !important;
+    border-color: var(--color-emerald-deep) !important;
+    box-shadow: 0 6px 16px -4px oklch(32% 0.06 160 / 0.45);
+}
+
+/* Boutique availability pills */
+body.theme-boutique .avail-pill--open {
+    background: color-mix(in oklch, var(--color-cream-warm) 95%, transparent);
+    color: var(--color-emerald-deep);
+    border-color: color-mix(in oklch, var(--color-emerald) 30%, transparent);
+}
+
+body.theme-boutique .avail-pill--low {
+    background: color-mix(in oklch, var(--color-gold) 18%, var(--color-cream-warm));
+    color: oklch(45% 0.09 75);
+    border-color: color-mix(in oklch, var(--color-gold) 55%, transparent);
+}
+
+/* Legacy display helper still referenced by booking.js */
+.d-none {
+    display: none !important;
+}
+
+/* ── Live availability pills (landing page search) ─────────────── */
+.avail-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px -4px rgba(8, 36, 20, 0.35);
+    animation: popIn .25s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.avail-pill--open {
+    background: rgba(240, 251, 242, 0.95);
+    color: var(--color-clsu-800);
+    border: 1px solid var(--color-clsu-200);
+}
+
+.avail-pill--low {
+    background: rgba(255, 251, 234, 0.95);
+    color: var(--color-palay-800);
+    border: 1px solid var(--color-palay-200);
+}
+
+.avail-pill--full {
+    background: rgba(254, 242, 242, 0.95);
+    color: var(--color-ember-700);
+    border: 1px solid var(--color-ember-200);
+}
+
+.avail-pill--loading {
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-stone-500);
+    border: 1px solid var(--color-stone-200);
+    overflow: hidden;
+    position: relative;
+}
+
+.avail-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(18, 99, 47, 0.08) 50%, transparent 70%);
+    animation: shimmer-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes shimmer-slide {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* Attention shake for the hero widget when dates are missing */
+@keyframes gentle-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-7px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(3px);
+    }
+}
+
+.animate-shake {
+    animation: gentle-shake .45s ease-in-out both;
+}
+
+/* Skeleton shimmer block (generic loading placeholder) */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-stone-100);
+    border-radius: 12px;
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.65) 50%, transparent 70%);
+    animation: shimmer-slide 1.2s ease-in-out infinite;
+}
+
+/* Success checkmark draw-on (booking confirmation) */
+.success-check-circle {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: draw-stroke .7s cubic-bezier(.65, 0, .45, 1) forwards;
+}
+
+.success-check-tick {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: draw-stroke .4s cubic-bezier(.65, 0, .45, 1) .55s forwards;
+}
+
+@keyframes draw-stroke {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes success-pop {
+    0% {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.04);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-success-pop {
+    animation: success-pop .5s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .avail-pill,
+    .animate-shake,
+    .skeleton::after,
+    .avail-shimmer,
+    .success-check-circle,
+    .success-check-tick,
+    .animate-success-pop {
+        animation: none;
+    }
+
+    .success-check-circle,
+    .success-check-tick {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Thin custom scrollbar for modal bodies */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-stone-300);
+    border-radius: 9999px;
+}

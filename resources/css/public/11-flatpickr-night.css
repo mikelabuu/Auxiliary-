@@ -1,0 +1,160 @@
+/* Part 11 of the public bundle — Night-glass flatpickr calendar popover.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Night-glass flatpickr — the calendar popover joins the Night
+   Estate tier on dark pages (landing widget + checkout). Cream
+   boutique pages keep the light calendar rules defined earlier.
+   Flatpickr appends to <body>, so the body.theme-night scope holds.
+   ═══════════════════════════════════════════════════════════════ */
+body.theme-night .flatpickr-calendar {
+    background: color-mix(in oklch, var(--color-night-2) 94%, transparent) !important;
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    border: 1px solid oklch(100% 0 0 / 0.12) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.07), var(--shadow-night-float) !important;
+}
+
+/* Drop the little pointer arrow — it can't take the glass border */
+body.theme-night .flatpickr-calendar::before,
+body.theme-night .flatpickr-calendar::after {
+    display: none;
+}
+
+body.theme-night .flatpickr-months .flatpickr-month,
+body.theme-night .flatpickr-current-month,
+body.theme-night .flatpickr-current-month input.cur-year,
+body.theme-night .flatpickr-monthDropdown-months {
+    color: var(--color-bone);
+    fill: var(--color-bone);
+    background: transparent;
+}
+
+body.theme-night .flatpickr-monthDropdown-months option {
+    background: var(--color-night-2);
+    color: var(--color-bone);
+}
+
+body.theme-night .flatpickr-months .flatpickr-prev-month,
+body.theme-night .flatpickr-months .flatpickr-next-month {
+    fill: var(--color-bone);
+}
+
+body.theme-night .flatpickr-months .flatpickr-prev-month:hover svg,
+body.theme-night .flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--color-gold);
+}
+
+body.theme-night span.flatpickr-weekday {
+    color: color-mix(in oklch, var(--color-bone) 45%, transparent);
+}
+
+body.theme-night .flatpickr-day {
+    color: color-mix(in oklch, var(--color-bone) 85%, transparent);
+    border-color: transparent;
+}
+
+body.theme-night .flatpickr-day:hover,
+body.theme-night .flatpickr-day.prevMonthDay:hover,
+body.theme-night .flatpickr-day.nextMonthDay:hover {
+    background: oklch(100% 0 0 / 0.08);
+    border-color: oklch(100% 0 0 / 0.08);
+}
+
+body.theme-night .flatpickr-day.today {
+    border-color: color-mix(in oklch, var(--color-gold) 65%, transparent) !important;
+    color: var(--color-gold);
+}
+
+body.theme-night .flatpickr-day.selected,
+body.theme-night .flatpickr-day.selected:hover {
+    background: var(--color-gold) !important;
+    border-color: var(--color-gold) !important;
+    color: var(--color-night) !important;
+    font-weight: 700;
+    box-shadow: 0 10px 24px -10px color-mix(in oklch, var(--color-gold) 65%, transparent);
+}
+
+body.theme-night .flatpickr-day.flatpickr-disabled,
+body.theme-night .flatpickr-day.flatpickr-disabled:hover,
+body.theme-night .flatpickr-day.prevMonthDay,
+body.theme-night .flatpickr-day.nextMonthDay {
+    color: color-mix(in oklch, var(--color-bone) 22%, transparent);
+}
+
+body.theme-night .numInputWrapper:hover {
+    background: oklch(100% 0 0 / 0.06);
+}
+
+body.theme-night .numInputWrapper span.arrowUp::after {
+    border-bottom-color: var(--color-bone);
+}
+
+body.theme-night .numInputWrapper span.arrowDown::after {
+    border-top-color: var(--color-bone);
+}
+
+/* ── Room-card glare sweep — a soft light band crosses the photo
+   once on hover (span.card-shine sits over the image) ──────────── */
+.card-shine {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.card-shine::before {
+    content: "";
+    position: absolute;
+    inset: -20% 0;
+    width: 55%;
+    background: linear-gradient(105deg, transparent, oklch(100% 0 0 / 0.14) 50%, transparent);
+    transform: translateX(-160%) skewX(-16deg);
+    transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .group:hover .card-shine::before {
+        transform: translateX(320%) skewX(-16deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card-shine::before {
+        transition: none;
+        opacity: 0;
+    }
+}
+
+/* ── Booking capsule nights summary — appears under the fields once
+   both dates are chosen (driven by availability-search.js) ──────── */
+.capsule-nights {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    padding: 0.7rem 1rem 0.4rem;
+    border-top: 1px solid color-mix(in oklch, var(--color-ink) 10%, transparent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--color-ink) 55%, transparent);
+    animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.capsule-nights[hidden] {
+    display: none;
+}
+
+.capsule-nights-dot {
+    width: 5px;
+    height: 5px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--color-clsu-500);
+    box-shadow: 0 0 10px color-mix(in oklch, var(--color-clsu-500) 70%, transparent);
+}

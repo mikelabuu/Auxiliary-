@@ -1,0 +1,418 @@
+/* Part 05 of the public bundle — Site header / nav — edge-to-edge, condensing pill, drawers.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ══════════════════════════════════════════════════════════════════
+   HEADER — spans the viewport edge-to-edge and transparent at rest,
+   then condenses into a narrower dark-glass pill past the fold.
+   #navWrap owns position/width/top (and the read-down retreat);
+   #siteNav owns the skin (padding/background/radius) so the two
+   transforms never fight over the same property.
+   ══════════════════════════════════════════════════════════════════ */
+/* Anchored with left/right rather than a percentage width: for a fixed
+   element `100%` resolves against the layout viewport *including* the
+   scrollbar, which pushed the bar 16px off the right edge on phones.
+   left:0/right:0 spans the visible area exactly, and margin-inline:auto
+   centres the narrower condensed pill. Full-bleed at rest so the brand
+   lines up with the hero's gutter — #siteNav repeats .fh-hero-stage's
+   padding, putting the logo on the same left edge as FARMERS. */
+#navWrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    margin-inline: auto;
+    max-width: none;
+    z-index: 50;
+    transition:
+        max-width 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        top 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#navWrap.is-condensed {
+    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
+    top: clamp(10px, 1.2vw, 18px);
+}
+
+#navWrap.nav-hidden {
+    transform: translateY(-170%);
+}
+
+#siteNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px clamp(16px, 2vw, 28px);
+    /* Horizontal padding mirrors .fh-hero-stage so brand and wordmark share
+       a left edge. */
+    padding: 22px clamp(20px, 3.4vw, 56px) 0;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    transition:
+        padding 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        background 0.55s,
+        border-radius 0.55s,
+        box-shadow 0.55s,
+        border-color 0.55s,
+        color 0.55s,
+        -webkit-backdrop-filter 0.55s,
+        backdrop-filter 0.55s;
+}
+
+#navWrap.is-condensed #siteNav {
+    padding: 9px 10px 9px 16px;
+    background: rgba(9, 20, 34, 0.74);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    backdrop-filter: blur(18px) saturate(1.1);
+    border-radius: 999px;
+    border-color: rgba(255, 255, 255, 0.13);
+    box-shadow: 0 18px 44px rgba(4, 18, 36, 0.36);
+}
+
+/* Pages with no dark hero (checkout, account, auth) never sit over a
+   photo, so they skip the transparent rest state entirely and wear a
+   light glass pill from the first paint. */
+#navWrap.is-static {
+    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
+    top: clamp(10px, 1.2vw, 18px);
+}
+
+#navWrap.is-static #siteNav {
+    padding: 9px 10px 9px 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.5) 100%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    border-radius: 999px;
+    border-color: rgba(16, 22, 28, 0.08);
+    color: var(--color-ink);
+    box-shadow: 0 18px 44px -18px rgba(6, 40, 30, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Night-theme pages (checkout, booking detail) keep a dark pill — the
+   light `is-static` skin would sit as a bright slab on a near-black page. */
+body.theme-night #navWrap.is-static #siteNav {
+    background: linear-gradient(135deg, rgba(30, 40, 50, 0.62) 0%, rgba(10, 15, 25, 0.44) 100%);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--color-bone);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 18px 50px -20px oklch(0% 0 0 / 0.65);
+}
+
+body.theme-night #navWrap.is-static .fh-nav-link {
+    color: rgba(255, 255, 255, 0.84);
+}
+
+body.theme-night #navWrap.is-static .fh-nav-link:hover,
+body.theme-night #navWrap.is-static .fh-nav-link.is-active {
+    color: #fff;
+    border-color: #edd39b;
+}
+
+body.theme-night #navWrap.is-static .fh-hdr-ghost {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Brand lockup ─────────────────────────────────────────────────── */
+.fh-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: inherit;
+    min-width: 0;
+}
+
+/* The hostel's sunflower mark. It carries its own colour and silhouette, so
+   it stands free rather than sitting in the monogram ring the design used —
+   a bordered disc would just fight the petals. */
+.fh-brand-mark {
+    width: 46px;
+    height: 46px;
+    flex: none;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(4, 18, 36, 0.45));
+    transition: width 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.45s;
+}
+
+#navWrap.is-condensed .fh-brand-mark,
+#navWrap.is-static .fh-brand-mark {
+    width: 38px;
+    height: 38px;
+}
+
+#navWrap.is-static .fh-brand-mark {
+    filter: drop-shadow(0 1px 4px rgba(4, 18, 36, 0.2));
+}
+
+.fh-brand-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: inherit;
+}
+
+/* Tagline collapses (not display:none) so the lockup height eases
+   rather than snapping when the header condenses. */
+.fh-brand-tag {
+    display: block;
+    overflow: hidden;
+    margin-top: 3px;
+    max-height: 14px;
+    opacity: 1;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 9.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.6);
+    transition: max-height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.3s, margin-top 0.45s;
+}
+
+#navWrap.is-condensed .fh-brand-tag,
+#navWrap.is-static .fh-brand-tag {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+}
+
+/* Centre nav — a glass capsule at rest that dissolves into the
+   header's own pill once condensed (no pill-inside-a-pill). */
+.fh-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 1.6vw, 26px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 11px clamp(16px, 1.6vw, 24px) 8px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    transition: background 0.5s, border-color 0.5s, padding 0.5s, -webkit-backdrop-filter 0.5s, backdrop-filter 0.5s;
+}
+
+#navWrap.is-condensed .fh-nav,
+#navWrap.is-static .fh-nav {
+    background: transparent;
+    border-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.fh-nav-link {
+    padding-bottom: 5px;
+    border-bottom: 1px solid transparent;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 13.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.84);
+    transition: color 0.35s, border-color 0.35s;
+}
+
+.fh-nav-link:hover,
+.fh-nav-link.is-active {
+    color: #fff;
+    border-color: #edd39b;
+}
+
+#navWrap.is-static .fh-nav-link {
+    color: color-mix(in oklch, var(--color-ink) 78%, transparent);
+}
+
+#navWrap.is-static .fh-nav-link:hover,
+#navWrap.is-static .fh-nav-link.is-active {
+    color: var(--color-ink);
+    border-color: var(--color-gold);
+}
+
+/* Header CTA / account trigger — cream pill with a dark arrow disc
+   that widens its gap on hover. */
+.fh-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 9px 10px 9px 22px;
+    font-family: var(--font-label);
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #10161c;
+    box-shadow: 0 12px 34px rgba(4, 18, 36, 0.26);
+    transition: background 0.4s, color 0.4s, gap 0.4s, box-shadow 0.4s, border-color 0.4s;
+}
+
+.fh-cta:hover {
+    background: #edd39b;
+    gap: 18px;
+    color: #10161c;
+    box-shadow: 0 18px 40px rgba(4, 18, 36, 0.34);
+}
+
+.fh-cta-disc {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: #10161c;
+    color: #fff;
+}
+
+/* Ghost variant for the signed-in account trigger */
+.fh-hdr-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 14px 6px 6px;
+    font-family: var(--font-label);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    transition: background 0.4s, border-color 0.4s;
+}
+
+.fh-hdr-ghost:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #edd39b;
+    color: inherit;
+}
+
+#navWrap.is-static .fh-hdr-ghost {
+    border-color: color-mix(in oklch, var(--color-ink) 14%, transparent);
+    background: color-mix(in oklch, var(--color-ink) 4%, transparent);
+}
+
+#navWrap.is-static .fh-hdr-ghost:hover {
+    background: color-mix(in oklch, var(--color-ink) 8%, transparent);
+    border-color: var(--color-gold);
+}
+
+/* Phones: the brand lockup + menu button don't fit a 375px bar once the
+   nowrap tagline is in there, so the tagline drops and the lockup shrinks. */
+@media (max-width: 640px) {
+    .fh-brand-tag {
+        display: none;
+    }
+
+    .fh-brand-name {
+        font-size: 17px;
+    }
+
+    .fh-brand-mark,
+    #navWrap.is-condensed .fh-brand-mark,
+    #navWrap.is-static .fh-brand-mark {
+        width: 36px;
+        height: 36px;
+    }
+
+    #siteNav {
+        gap: 10px;
+        padding: 14px 14px 0;
+    }
+
+    #navWrap.is-condensed #siteNav,
+    #navWrap.is-static #siteNav {
+        padding: 8px 8px 8px 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #navWrap,
+    #siteNav,
+    .fh-brand-mark,
+    .fh-brand-tag,
+    .fh-nav {
+        transition: none;
+    }
+}
+
+/* ── Mobile drawer ────────────────────────────────────────────────
+   Backdrop fades, panel slides on the iOS drawer curve. Closed state
+   uses opacity + pointer-events (not display) so the transition can
+   actually play and retarget mid-flight. Enter 350ms, exit 250ms. */
+#mobileDrawer {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+#mobileDrawer .drawer-panel {
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#mobileDrawer.drawer-open {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s;
+}
+
+#mobileDrawer.drawer-open .drawer-panel {
+    transform: translateX(0);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #mobileDrawer .drawer-panel,
+    #mobileDrawer.drawer-open .drawer-panel {
+        transition: none;
+        transform: translateX(0);
+    }
+}
+
+/* ── Mobile drawer ────────────────────────────────────────────────
+   Backdrop fades, panel slides on the iOS drawer curve. Closed state
+   uses opacity + pointer-events (not display) so the transition can
+   actually play and retarget mid-flight. Enter 350ms, exit 250ms. */
+#mobileDrawer {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+#mobileDrawer .drawer-panel {
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#mobileDrawer.drawer-open {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s;
+}
+
+#mobileDrawer.drawer-open .drawer-panel {
+    transform: translateX(0);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #mobileDrawer .drawer-panel,
+    #mobileDrawer.drawer-open .drawer-panel {
+        transition: none;
+        transform: translateX(0);
+    }
+}

@@ -1,0 +1,129 @@
+/* Part 01 of the public bundle — Design tokens (@theme) — fonts, CLSU green ramp, shadows.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+@theme {
+    /* Fonts */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+    --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    /* Condensed uppercase voice for eyebrows, nav and micro-labels.
+       Re-pointed to Oswald under body.theme-boutique. */
+    --font-label: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+
+    /* CLSU Green Theme */
+    --color-clsu-50: #F0FBF2;
+    --color-clsu-100: #DCF4E1;
+    --color-clsu-200: #B7E8C2;
+    --color-clsu-300: #86D69B;
+    --color-clsu-400: #4CB86D;
+    --color-clsu-500: #239B48;
+    --color-clsu-600: #167C39;
+    --color-clsu-700: #12632F;
+    --color-clsu-800: #114E28;
+    --color-clsu-900: #0F4022;
+    --color-clsu-950: #082414;
+
+    /* Palay Gold Theme */
+    --color-palay-50: #FFFBEA;
+    --color-palay-100: #FFF3C4;
+    --color-palay-200: #FFE58A;
+    --color-palay-300: #FFD24D;
+    --color-palay-400: #FDBB1F;
+    --color-palay-500: #F0A400;
+    --color-palay-600: #C6820B;
+    --color-palay-700: #99630E;
+    --color-palay-800: #714A11;
+    --color-palay-900: #4E3410;
+
+    /* Ember Attention Theme */
+    --color-ember-50: #FEF2F2;
+    --color-ember-100: #FEE2E2;
+    --color-ember-200: #FECACA;
+    --color-ember-500: #EF4444;
+    --color-ember-600: #DC2626;
+    --color-ember-700: #B91C1C;
+    --color-ember-800: #991B1B;
+
+    /* ─────────────────────────────────────────────────────────────
+       Elevated Nature — public booking site palette
+       Warm ivory canvas + forest green (clsu) + palay gold, warm ink.
+       Pairs with Tailwind's built-in warm-neutral `stone` ramp.
+       ───────────────────────────────────────────────────────────── */
+    --color-canvas: #FAF7EF;
+    /* warm ivory page background */
+    --color-canvas-deep: #F3EDDF;
+    /* deeper ivory for alternating sections */
+    --color-ink: #1C1917;
+    /* warm near-black (stone-900) */
+
+    /* ─────────────────────────────────────────────────────────────
+       Boutique Farmstead — editorial palette for the public site
+       Deep emerald + brass gold + warm cream, Lora/Nunito pairing.
+       Activated on public pages via `body.theme-boutique`, which
+       re-points canvas/ink/fonts at these values. Admin unaffected.
+       ───────────────────────────────────────────────────────────── */
+    --color-emerald-deep: oklch(32% 0.06 160);
+    --color-emerald: oklch(44% 0.09 160);
+    --color-gold: oklch(75% 0.12 85);
+    --color-gold-soft: oklch(86% 0.09 85);
+    --color-cream: oklch(96.5% 0.02 90);
+    --color-cream-warm: oklch(98% 0.012 85);
+
+    --shadow-capsule: 0 24px 60px -20px oklch(15% 0.05 160 / 0.35), 0 8px 24px -12px oklch(15% 0.05 160 / 0.2);
+    --shadow-boutique-card: 0 18px 40px -22px oklch(15% 0.05 160 / 0.25);
+    --shadow-boutique-modal: 0 40px 80px -30px oklch(10% 0.05 160 / 0.5);
+
+    /* ─────────────────────────────────────────────────────────────
+       Night Estate — dark evening tier of the Boutique Farmstead
+       palette. Evergreen near-black surfaces + bone type; gold stays
+       the single accent. Activated per-page via `body.theme-night`
+       (landing page only); the cream Boutique tokens stay untouched
+       for checkout / auth / account pages.
+       ───────────────────────────────────────────────────────────── */
+    --color-night: oklch(17.5% 0.02 165);
+    --color-night-2: oklch(20.5% 0.024 163);
+    --color-night-3: oklch(24.5% 0.027 162);
+    --color-bone: oklch(93.5% 0.014 90);
+
+    --shadow-night-card: 0 24px 60px -24px oklch(5% 0.02 165 / 0.8);
+    --shadow-night-float: 0 34px 90px -30px oklch(4% 0.02 165 / 0.9), 0 12px 30px -18px oklch(4% 0.02 165 / 0.7);
+
+    /* Legacy alias tokens — the public views were authored against a
+       palette that was never defined (nautical-teal, brand, accent,
+       portrait-ink, white-canvas…). Mapping those names onto the real
+       Elevated-Nature colors repairs every existing reference at once,
+       and keeps working while views are progressively rebuilt. */
+    --color-brand: #114E28;
+    /* clsu-800 */
+    --color-brand-light: #167C39;
+    /* clsu-600 */
+    --color-brand-dark: #0F4022;
+    /* clsu-900 */
+    --color-brand-muted: #F0FBF2;
+    /* clsu-50  */
+    --color-accent: #FDBB1F;
+    /* palay-400 */
+    --color-accent-dark: #F0A400;
+    /* palay-500 */
+    --color-nautical-teal: #12632F;
+    /* remapped teal → clsu-700 */
+    --color-cobalt-pop: #167C39;
+    /* clsu-600 (keeps gradients green) */
+    --color-sky-wash: #F0FBF2;
+    /* clsu-50 */
+    --color-mint-wash: #DCF4E1;
+    /* clsu-100 */
+    --color-portrait-ink: #1C1917;
+    /* warm ink */
+    --color-white-canvas: #FAF7EF;
+    /* ivory */
+    --color-cherry-red: #DC2626;
+    /* ember-600 */
+
+    /* Shadows */
+    --shadow-soft: 0px 4px 20px rgba(0, 0, 0, 0.03);
+    --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 1px 2px rgba(8, 36, 20, 0.04), 0 10px 30px -10px rgba(8, 36, 20, 0.10);
+    --shadow-card-lg: 0 4px 10px rgba(8, 36, 20, 0.05), 0 22px 45px -14px rgba(8, 36, 20, 0.18);
+    --shadow-glow: 0 1px 1px rgba(255, 255, 255, 0.06) inset, 0 18px 40px -14px rgba(8, 36, 20, 0.55);
+}

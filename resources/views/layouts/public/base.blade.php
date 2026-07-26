@@ -29,12 +29,10 @@
     <!-- Tailwind & Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Early connections for every CDN origin used below -->
+    <!-- Early connection for the font origins (the only remaining third party —
+         every library below is served from public/vendor on our own origin) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
 
     <!-- Google Fonts — Playfair Display (editorial display), Oswald (condensed
          uppercase labels/nav) and Manrope (running copy). Lora/Nunito Sans stay
@@ -44,20 +42,23 @@
     <!-- Material Icons (used by booking flow internals) -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    {{-- Everything below is self-hosted from public/vendor — see scripts/sync-vendor.mjs.
+         Versions are pinned in package.json; `npm run vendor:sync` refreshes them. --}}
+
     <!-- SweetAlert (deferred — only called from user-event handlers) -->
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js" defer></script>
+    <script src="{{ asset('vendor/sweetalert/sweetalert.min.js') }}" defer></script>
 
     <!-- LightBox for Gallery (deferred — activates on gallery clicks) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js" defer></script>
+    <link href="{{ asset('vendor/lightbox2/css/lightbox.min.css') }}" rel="stylesheet">
+    <script src="{{ asset('vendor/lightbox2/js/lightbox-plus-jquery.min.js') }}" defer></script>
 
     <!-- Flatpickr Datepicker (deferred — initialised on DOMContentLoaded) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
+    <script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}" defer></script>
 
     <!-- Swiper.js (deferred — initialised on DOMContentLoaded) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+    <link rel="stylesheet" href="{{ asset('vendor/swiper/swiper-bundle.min.css') }}" />
+    <script src="{{ asset('vendor/swiper/swiper-bundle.min.js') }}" defer></script>
 
     @livewireStyles
     @stack('styles')
@@ -68,6 +69,10 @@
 @endphp
 {{-- overflow-x-clip guards against pre-reveal translateX states (fade-left/right) widening the page --}}
 <body class="theme-boutique {{ $nightTheme ? 'theme-night' : '' }} antialiased font-sans bg-canvas text-ink flex flex-col min-h-screen overflow-x-clip selection:bg-gold-soft selection:text-ink">
+
+    {{-- Keyboard users land here first: one Tab jumps past the whole nav to the
+         page content. Off-screen until focused (see .skip-link in 01-tokens.css). --}}
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <!-- Reading-progress hairline (driven by --scroll-progress from parallax.js) -->
     <div class="scroll-progress" aria-hidden="true"></div>
@@ -218,7 +223,7 @@
     </div>
 
     <!-- Main Content wrapper -->
-    <main class="flex-grow">
+    <main id="main-content" class="flex-grow" tabindex="-1">
         @yield('content')
     </main>
 
@@ -366,7 +371,7 @@
 
     <!-- Lenis inertia scroll — the weighted, cinematic scroll feel. Desktop
          fine-pointer only; reduced-motion users keep native scrolling. -->
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="{{ asset('vendor/lenis/lenis.min.js') }}" defer></script>
     <script>
         // Scrolls to an element through Lenis when it's running, otherwise
         // falls back to native smooth scroll. Used by in-page CTAs.

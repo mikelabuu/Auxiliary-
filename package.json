@@ -3,25 +3,35 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "build": "npm run views:cache && vite build",
+        "build:only": "vite build",
+        "views:cache": "php artisan view:cache",
+        "dev": "vite",
+        "vendor:sync": "node scripts/sync-vendor.mjs",
+        "postinstall": "node scripts/sync-vendor.mjs"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "autoprefixer": "^10.4.24",
         "axios": "^1.8.2",
+        "chart.js": "^4.5.1",
         "concurrently": "^9.0.1",
+        "flatpickr": "^4.6.13",
+        "jquery": "^3.7.0",
         "laravel-echo": "^2.3.7",
         "laravel-vite-plugin": "^1.2.0",
+        "lenis": "^1.1.18",
+        "lightbox2": "^2.11.4",
         "postcss": "^8.5.6",
         "pusher-js": "^8.5.0",
         "shadcn": "^4.13.1",
+        "sweetalert": "^2.1.2",
+        "sweetalert2": "^11.26.25",
+        "swiper": "^11.2.10",
         "tailwindcss": "^4.2.1",
         "vite": "^6.2.4"
     },
     "dependencies": {
-        "gsap": "^3.15.0",
-        "lucide": "^0.544.0",
-        "motion": "^12.42.2"
+        "gsap": "^3.15.0"
     }
 }

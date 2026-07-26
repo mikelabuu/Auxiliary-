@@ -22,9 +22,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {{-- Self-hosted from public/vendor (see scripts/sync-vendor.mjs). These stay
+       synchronous and ahead of @vite: inline blocks in several admin views call
+       $(function(){…}) at parse time, which deferred module scripts would miss. --}}
+  <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
+  <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('vendor/chart.js/chart.umd.min.js') }}"></script>
   @vite(['resources/css/admin.css', 'resources/js/app.js'])
   @livewireStyles
   @stack('styles')
@@ -62,6 +65,10 @@
     })();
   </script>
 
+  {{-- Keyboard users land here first: one Tab jumps past the sidebar and topbar
+       to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <div class="grid-overlay"></div>
 
   {{-- Mobile overlay --}}
@@ -74,7 +81,7 @@
   {{-- .animate-children hands each top-level block to AnimatedContent
        (resources/js/animated-content.js) for a GSAP scroll-reveal, replacing
        the old CSS .stagger-enter load cascade. --}}
-  <main class="shell-main">
+  <main id="main-content" class="shell-main" tabindex="-1">
     <div class="shell-content-wrap animate-children space-y-6">
       @yield('content')
     </div>

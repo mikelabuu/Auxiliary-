@@ -1,0 +1,112 @@
+/* Part 04 of the public bundle — Night Estate scope — dark landing tier.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Night Estate scope — dark landing page tier.
+   Re-points the shared canvas/ink tokens at the night ramp so every
+   `bg-canvas` / `text-ink` utility on the page flips together. The
+   cream Boutique pages (checkout, auth, account) never carry this
+   class and are unaffected.
+   ═══════════════════════════════════════════════════════════════ */
+body.theme-night {
+    --color-canvas: var(--color-night);
+    --color-canvas-deep: var(--color-night-2);
+    --color-ink: var(--color-bone);
+}
+
+body.theme-night ::selection {
+    background: var(--color-gold);
+    color: oklch(18% 0.02 163);
+}
+
+body.theme-night .focus-ring:focus-visible {
+    outline-color: var(--color-gold);
+}
+
+/* Cinematic photo grade for full-bleed imagery on the night canvas */
+.img-night-grade {
+    filter: saturate(0.82) brightness(0.72) contrast(1.05);
+}
+
+/* Dark-tuned lift: on a near-black page the "shadow" is a deep pool,
+   not a grey smudge. */
+@media (hover: hover) and (pointer: fine) {
+    body.theme-night .hover-lift-premium:hover {
+        box-shadow: var(--shadow-night-float);
+    }
+}
+
+body.theme-night .custom-scrollbar::-webkit-scrollbar-thumb,
+body.theme-night ::-webkit-scrollbar-thumb {
+    background: oklch(100% 0 0 / 0.14);
+}
+
+/* Availability pills injected by availability-search.js */
+body.theme-night .avail-pill--open {
+    background: oklch(28% 0.05 160 / 0.9);
+    color: oklch(88% 0.07 150);
+    border-color: oklch(60% 0.1 155 / 0.35);
+}
+
+body.theme-night .avail-pill--low {
+    background: oklch(30% 0.05 85 / 0.92);
+    color: oklch(87% 0.1 88);
+    border-color: oklch(70% 0.11 85 / 0.4);
+}
+
+body.theme-night .avail-pill--full {
+    background: oklch(27% 0.06 25 / 0.92);
+    color: oklch(83% 0.09 25);
+    border-color: oklch(55% 0.12 25 / 0.4);
+}
+
+body.theme-night .avail-pill--loading {
+    background: oklch(22% 0.02 163 / 0.9);
+    color: oklch(80% 0.01 90);
+    border-color: oklch(100% 0 0 / 0.12);
+}
+
+/* Capacity filter pills (markup lives in room-filters component) */
+body.theme-night .room-filter-pill.active {
+    background: var(--color-bone);
+    border-color: var(--color-bone);
+    color: oklch(20% 0.02 163);
+    box-shadow: 0 14px 34px -16px oklch(0% 0 0 / 0.8);
+}
+
+/* True dark glass — blur + 1px hairline + inner top highlight for a
+   physical refractive edge (booking capsule, sticky bars, modal chrome) */
+.glass-night {
+    background: color-mix(in oklch, oklch(21% 0.022 163) 62%, transparent);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    border: 1px solid oklch(100% 0 0 / 0.1);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.08), var(--shadow-night-card);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .glass-night {
+        background: var(--color-night-2);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+/* Light frosted glass — the daytime sibling of .glass-night for the light
+   CLSU landing (booking capsule). Warm-cream tint + hairline green edge +
+   inner top highlight so it reads as a real refractive panel on the ivory page. */
+.glass-light {
+    background: color-mix(in oklch, var(--color-cream-warm) 76%, transparent);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep) 12%, transparent);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.6), 0 26px 60px -26px rgba(8, 36, 20, 0.28);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .glass-light {
+        background: var(--color-cream-warm);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}

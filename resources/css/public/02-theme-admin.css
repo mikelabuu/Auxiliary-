@@ -1,0 +1,157 @@
+/* Part 02 of the public bundle — Admin Console theme scope (body.theme-admin).
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Admin Console theme scope — staff/admin pages only.
+   The admin panel had inherited the public site's editorial look
+   (Fraunces serif, warm ivory stone, gold chrome). This scope
+   re-points the shared tokens at an operational green-and-white
+   CLSU system: IBM Plex Sans for UI, a cool green-cast neutral
+   ramp instead of warm stone, and boutique tokens remapped so any
+   leftover public classes degrade into the admin palette.
+   Activated via `body.theme-admin` in layouts/admin.blade.php.
+   ═══════════════════════════════════════════════════════════════ */
+body.theme-admin {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* Green-cast neutral ramp replacing the public site's warm stone.
+       Every existing `stone-*` utility in admin views re-points here. */
+    --color-stone-50: #F6F8F7;
+    --color-stone-100: #ECF0EE;
+    --color-stone-200: #DCE3DF;
+    --color-stone-300: #C1CCC5;
+    --color-stone-400: #93A399;
+    --color-stone-500: #6B7C71;
+    --color-stone-600: #54635A;
+    --color-stone-700: #43514A;
+    --color-stone-800: #2E3A33;
+    --color-stone-900: #202B25;
+    --color-stone-950: #131A16;
+
+    /* Boutique/public tokens that leaked into staff views (manual
+       booking board) — remapped to green & white. */
+    --color-emerald-deep: #114E28;
+    /* clsu-800 */
+    --color-emerald: #167C39;
+    /* clsu-600 */
+    --color-cream: #FFFFFF;
+    --color-cream-warm: #FBFDFC;
+    --color-canvas: #F6F8F7;
+    --color-canvas-deep: #ECF0EE;
+    --color-ink: #202B25;
+
+    /* Crisper, flatter shadows for a utilitarian console */
+    --shadow-card: 0 1px 2px rgba(19, 26, 22, 0.05);
+    --shadow-card-lg: 0 4px 6px -1px rgba(19, 26, 22, 0.07), 0 10px 24px -12px rgba(19, 26, 22, 0.14);
+    --shadow-glow: 0 1px 1px rgba(255, 255, 255, 0.05) inset, 0 12px 28px -14px rgba(8, 36, 20, 0.45);
+}
+
+/* Custom scrollbars for a minimal feel */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
+
+/* Modern Utilities */
+.bg-dot-pattern {
+    background-image: radial-gradient(rgba(107, 114, 128, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Field-row texture — updated to solid premium green to match design image */
+.field-rows {
+    background-color: #0a421b !important;
+    /* Premium CLSU dark green */
+    background-image: none !important;
+}
+
+/* Collapsed sidebar transitions and overrides */
+@media (min-width: 1024px) {
+    #shell[data-collapsed="true"] #sidebar .brand-header {
+        justify-content: center !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+}
+
+/* Top header and Main content layout rules to prevent overlap and z-index issues */
+#topheader {
+    height: 64px !important;
+    background-color: #ffffff !important;
+    z-index: 25 !important;
+    /* Ensure it stays on top of page content (z-10) but below sidebar drawer (z-30) */
+}
+
+#mainContent {
+    padding-top: 64px !important;
+}
+
+/* Timeline vertical line */
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: -20px;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(18, 99, 47, 0.20), rgba(18, 99, 47, 0.03));
+}
+
+/* Label fade transition */
+.label-fade {
+    transition: opacity .12s ease;
+}
+
+/* CSS-driven collapsible sidebar layout styles */
+@media (min-width: 1024px) {
+    #shell[data-collapsed="true"] #sidebar {
+        width: 76px !important;
+    }
+
+    #shell[data-collapsed="true"] #topheader {
+        left: 76px !important;
+    }
+
+    #shell[data-collapsed="true"] #mainContent {
+        margin-left: 76px !important;
+    }
+
+    #shell[data-collapsed="true"] .label-fade {
+        display: none !important;
+    }
+
+    #shell[data-collapsed="true"] #collapseToggle svg {
+        transform: rotate(180deg);
+    }
+}
+
+/* Tabular figures */
+.tabnum {
+    font-variant-numeric: tabular-nums;
+}
+
+.font-display {
+    font-family: var(--font-display);
+}
+
+.font-data {
+    font-family: var(--font-data);
+}

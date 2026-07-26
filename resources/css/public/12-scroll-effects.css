@@ -1,0 +1,45 @@
+/* Part 12 of the public bundle — Scroll-scrub effects (public/js/scroll-effects.js).
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════════
+   Scroll-scrub effects (public/js/scroll-effects.js)
+   Skiper-UI-derived: band mask reveal, story thread, manifesto words,
+   and the testimonial card deck. Everything here is progressive
+   enhancement — with no JS the page renders fully static and visible.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Band mask reveal: the clip is JS-driven; will-change keeps the
+   expanding frame on the compositor during the scrub. */
+[data-fx-band] {
+    will-change: clip-path;
+}
+
+/* Manifesto words become transform targets only once the script arms
+   the paragraph — a no-JS page keeps plain inline text. */
+.fx-words-on .fw {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+}
+
+/* ── Testimonial card deck (Swiper `cards` effect) ─────────────────
+   The deck needs to escape Swiper's default overflow clip so the fanned
+   cards behind the active one stay visible; width is capped so the deck
+   reads as a held stack rather than a full-bleed row. */
+.testimonials-swiper {
+    overflow: visible;
+    max-width: 36rem;
+    margin-inline: auto;
+}
+
+.testimonials-swiper .swiper-slide {
+    height: auto;
+    border-radius: 1.5rem;
+}
+
+/* Deck cards go near-opaque: with the stock 62% glass, the quotes on the
+   cards behind bleed through the active card's face and muddy the text.
+   The hairline border + inner highlight of .glass-night still carry the
+   glass read; only the fill turns solid. */
+.testimonials-swiper .glass-night {
+    background: color-mix(in oklch, var(--color-night-2) 96%, transparent);
+}

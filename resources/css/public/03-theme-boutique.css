@@ -1,0 +1,21 @@
+/* Part 03 of the public bundle — Boutique Farmstead theme scope — public pages.
+   Imported in strict order by resources/css/app.css; do not reorder. */
+
+/* ═══════════════════════════════════════════════════════════════
+   Boutique Farmstead theme scope — public pages only.
+   Overriding the shared tokens here re-skins every utility that
+   references them (bg-canvas, text-ink, font-display, …) without
+   touching the admin panel.
+   ═══════════════════════════════════════════════════════════════ */
+body.theme-boutique {
+    /* Farmers Hostel type system: Playfair for the editorial display
+       voice, Oswald for the condensed uppercase labels/eyebrows, and
+       Manrope for running copy. */
+    --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-label: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+    --color-canvas: var(--color-cream);
+    --color-canvas-deep: oklch(94.5% 0.025 90);
+    --color-ink: oklch(22% 0.02 160);
+    --ease-boutique: cubic-bezier(0.22, 1, 0.36, 1);
+}

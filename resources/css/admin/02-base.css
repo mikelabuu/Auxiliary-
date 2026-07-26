@@ -75,3 +75,36 @@ body {
     -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 100%);
     mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 100%);
 }
+
+/* ============================================================
+   SKIP-TO-CONTENT — first stop in the tab order
+   Lets keyboard users jump the sidebar + topbar instead of tabbing
+   every nav item on every page. Kept off-screen (not display:none,
+   which would drop it from the tab order) until it takes focus.
+   ============================================================ */
+.skip-link {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    z-index: 200;
+    transform: translate(-50%, -120%);
+    padding: 12px 24px;
+    border-radius: 0 0 12px 12px;
+    background: var(--color-clsu-700, #14663c);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, .45);
+    transition: transform 180ms cubic-bezier(.32, .72, 0, 1);
+}
+
+.skip-link:focus-visible {
+    transform: translate(-50%, 0);
+    outline: 2px solid var(--color-clsu-300, #86D69B);
+    outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skip-link { transition: none; }
+}

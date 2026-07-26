@@ -153,7 +153,7 @@
 </x-admin.ui.modal>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('vendor/chart.js/chart.umd.min.js') }}"></script>
 <script>
 // Booking Insights combo chart — lazy-initialised on first modal open
 // (a hidden canvas sizes to 0). Shared partial: admin + front desk.

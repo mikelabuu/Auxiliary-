@@ -113,7 +113,8 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+{{-- axios is already bundled and exposed as window.axios by resources/js/bootstrap.js,
+     which has run by the time this DOM-ready block fires — no CDN copy needed. --}}
 <script>
 $(function () {
     // Active/inactive appearance is applied as full class-string swaps (not a
