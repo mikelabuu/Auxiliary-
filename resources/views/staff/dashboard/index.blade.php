@@ -14,40 +14,15 @@ $.ajaxSetup({
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    <x-admin.ui.page-header subtitle="Here's what's happening at Farmers Hostel today.">
-        Welcome back, <span class="text-clsu-700">{{ explode(' ', Auth::guard('staff')->user()->name)[0] }}</span>
-        <x-slot:actions>
-            <x-admin.ui.button variant="secondary" type="button" id="openInsightsBtn">
-                <x-admin.ui.icon name="chart-bar" class="w-4 h-4" />
-                Booking insights
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" type="button" id="openCalendarBtn">
-                <x-admin.ui.icon name="calendar" class="w-4 h-4" />
-                Calendar
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" :href="route('staff.reports.index')">
-                <x-admin.ui.icon name="calendar" class="w-4 h-4" />
-                View Reports
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="primary" :href="route('staff.manualbooking')">
-                <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
-                New Booking
-            </x-admin.ui.button>
-        </x-slot:actions>
-    </x-admin.ui.page-header>
+    {{-- Top row: welcome panel (today's ops at a glance + the four actions that
+         start a task) beside the gross-revenue hero. Replaces the old
+         page-header — its buttons live in the panel now — and the quick-action
+         tile grid, which repeated those same destinations a second time. --}}
+    <livewire:dashboard.hero />
 
     {{-- Stat cards + secondary strip: live Livewire component (polls + follows
-         the same broadcast pushes as the room map). KPIs lead the page — the
-         numbers are what a manager scans first; actions follow. --}}
+         the same broadcast pushes as the room map). --}}
     <livewire:dashboard.stat-cards />
-
-    <!-- Quick Actions Grid — each tile lands on the page where the task is actually completed -->
-    <div class="animate-in grid grid-cols-2 lg:grid-cols-4 gap-3" style="animation-delay:20ms">
-        <x-admin.ui.quick-action icon="plus" title="New Booking" subtitle="Walk-in or phone" :href="route('staff.manualbooking')" />
-        <x-admin.ui.quick-action icon="log-in" title="Arrivals & Departures" subtitle="Check guests in / out" :href="route('staff.bookings.index') . '#arrivals'" />
-        <x-admin.ui.quick-action icon="bed" title="Room Status" subtitle="Block or free rooms" :href="route('staff.rooms')" />
-        <x-admin.ui.quick-action icon="credit-card" title="Payments" subtitle="Review the ledger" :href="route('staff.paymentlogs.index')" />
-    </div>
 
     {{-- Booking Insights + Calendar modals (opened from the header buttons)
          Pushed to the body level so they aren't trapped in the animated content flow --}}

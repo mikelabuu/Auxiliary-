@@ -17,6 +17,9 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Fraunces', ui-serif, Georgia, serif;
     --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    /* Condensed uppercase voice for eyebrows, nav and micro-labels.
+       Re-pointed to Oswald under body.theme-boutique. */
+    --font-label: 'Oswald', ui-sans-serif, system-ui, sans-serif;
 
     /* CLSU Green Theme */
     --color-clsu-50: #F0FBF2;
@@ -209,7 +212,8 @@ body.theme-admin {
 
 /* Field-row texture — updated to solid premium green to match design image */
 .field-rows {
-    background-color: #0a421b !important; /* Premium CLSU dark green */
+    background-color: #0a421b !important;
+    /* Premium CLSU dark green */
     background-image: none !important;
 }
 
@@ -297,8 +301,12 @@ body.theme-admin {
    touching the admin panel.
    ═══════════════════════════════════════════════════════════════ */
 body.theme-boutique {
-    --font-display: 'Lora', ui-serif, Georgia, serif;
-    --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+    /* Farmers Hostel type system: Playfair for the editorial display
+       voice, Oswald for the condensed uppercase labels/eyebrows, and
+       Manrope for running copy. */
+    --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-label: 'Oswald', ui-sans-serif, system-ui, sans-serif;
     --color-canvas: var(--color-cream);
     --color-canvas-deep: oklch(94.5% 0.025 90);
     --color-ink: oklch(22% 0.02 160);
@@ -415,43 +423,344 @@ body.theme-night .room-filter-pill.active {
     }
 }
 
-/* ── Floating pill nav skins ─────────────────────────────────────
-   The inline nav script swaps these two classes; the theme scope
-   decides what "solid" looks like, so the same JS serves both the
-   cream pages and the night landing. */
-#siteNav.nav-glass-dark {
-    border-color: transparent;
-    background: transparent;
-    color: var(--color-bone);
-}
-
-#siteNav.nav-glass-solid {
-    border-color: color-mix(in oklch, var(--color-emerald-deep) 10%, transparent);
-    background: color-mix(in oklch, var(--color-cream-warm) 85%, transparent);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    color: var(--color-ink);
-    box-shadow: 0 10px 40px -16px rgba(6, 40, 30, 0.25);
-}
-
-body.theme-night #siteNav.nav-glass-solid {
-    border-color: oklch(100% 0 0 / 0.09);
-    background: color-mix(in oklch, var(--color-night-2) 80%, transparent);
-    color: var(--color-bone);
-    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.06), 0 18px 50px -20px oklch(0% 0 0 / 0.65);
-}
-
-/* Nav retreats while reading down, returns on the first upward scroll */
+/* ══════════════════════════════════════════════════════════════════
+   HEADER — spans the viewport edge-to-edge and transparent at rest,
+   then condenses into a narrower dark-glass pill past the fold.
+   #navWrap owns position/width/top (and the read-down retreat);
+   #siteNav owns the skin (padding/background/radius) so the two
+   transforms never fight over the same property.
+   ══════════════════════════════════════════════════════════════════ */
+/* Anchored with left/right rather than a percentage width: for a fixed
+   element `100%` resolves against the layout viewport *including* the
+   scrollbar, which pushed the bar 16px off the right edge on phones.
+   left:0/right:0 spans the visible area exactly, and margin-inline:auto
+   centres the narrower condensed pill. Full-bleed at rest so the brand
+   lines up with the hero's gutter — #siteNav repeats .fh-hero-stage's
+   padding, putting the logo on the same left edge as FARMERS. */
 #navWrap {
-    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    margin-inline: auto;
+    max-width: none;
+    z-index: 50;
+    transition:
+        max-width 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        top 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#navWrap.is-condensed {
+    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
+    top: clamp(10px, 1.2vw, 18px);
 }
 
 #navWrap.nav-hidden {
-    transform: translateY(-140%);
+    transform: translateY(-170%);
+}
+
+#siteNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px clamp(16px, 2vw, 28px);
+    /* Horizontal padding mirrors .fh-hero-stage so brand and wordmark share
+       a left edge. */
+    padding: 22px clamp(20px, 3.4vw, 56px) 0;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    transition:
+        padding 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+        background 0.55s,
+        border-radius 0.55s,
+        box-shadow 0.55s,
+        border-color 0.55s,
+        color 0.55s,
+        -webkit-backdrop-filter 0.55s,
+        backdrop-filter 0.55s;
+}
+
+#navWrap.is-condensed #siteNav {
+    padding: 9px 10px 9px 16px;
+    background: rgba(9, 20, 34, 0.74);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    backdrop-filter: blur(18px) saturate(1.1);
+    border-radius: 999px;
+    border-color: rgba(255, 255, 255, 0.13);
+    box-shadow: 0 18px 44px rgba(4, 18, 36, 0.36);
+}
+
+/* Pages with no dark hero (checkout, account, auth) never sit over a
+   photo, so they skip the transparent rest state entirely and wear a
+   light glass pill from the first paint. */
+#navWrap.is-static {
+    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
+    top: clamp(10px, 1.2vw, 18px);
+}
+
+#navWrap.is-static #siteNav {
+    padding: 9px 10px 9px 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.5) 100%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    border-radius: 999px;
+    border-color: rgba(16, 22, 28, 0.08);
+    color: var(--color-ink);
+    box-shadow: 0 18px 44px -18px rgba(6, 40, 30, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Night-theme pages (checkout, booking detail) keep a dark pill — the
+   light `is-static` skin would sit as a bright slab on a near-black page. */
+body.theme-night #navWrap.is-static #siteNav {
+    background: linear-gradient(135deg, rgba(30, 40, 50, 0.62) 0%, rgba(10, 15, 25, 0.44) 100%);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--color-bone);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 18px 50px -20px oklch(0% 0 0 / 0.65);
+}
+
+body.theme-night #navWrap.is-static .fh-nav-link {
+    color: rgba(255, 255, 255, 0.84);
+}
+
+body.theme-night #navWrap.is-static .fh-nav-link:hover,
+body.theme-night #navWrap.is-static .fh-nav-link.is-active {
+    color: #fff;
+    border-color: #edd39b;
+}
+
+body.theme-night #navWrap.is-static .fh-hdr-ghost {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Brand lockup ─────────────────────────────────────────────────── */
+.fh-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: inherit;
+    min-width: 0;
+}
+
+/* The hostel's sunflower mark. It carries its own colour and silhouette, so
+   it stands free rather than sitting in the monogram ring the design used —
+   a bordered disc would just fight the petals. */
+.fh-brand-mark {
+    width: 46px;
+    height: 46px;
+    flex: none;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(4, 18, 36, 0.45));
+    transition: width 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.45s;
+}
+
+#navWrap.is-condensed .fh-brand-mark,
+#navWrap.is-static .fh-brand-mark {
+    width: 38px;
+    height: 38px;
+}
+
+#navWrap.is-static .fh-brand-mark {
+    filter: drop-shadow(0 1px 4px rgba(4, 18, 36, 0.2));
+}
+
+.fh-brand-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: inherit;
+}
+
+/* Tagline collapses (not display:none) so the lockup height eases
+   rather than snapping when the header condenses. */
+.fh-brand-tag {
+    display: block;
+    overflow: hidden;
+    margin-top: 3px;
+    max-height: 14px;
+    opacity: 1;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 9.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.6);
+    transition: max-height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.3s, margin-top 0.45s;
+}
+
+#navWrap.is-condensed .fh-brand-tag,
+#navWrap.is-static .fh-brand-tag {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+}
+
+/* Centre nav — a glass capsule at rest that dissolves into the
+   header's own pill once condensed (no pill-inside-a-pill). */
+.fh-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 1.6vw, 26px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 11px clamp(16px, 1.6vw, 24px) 8px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    transition: background 0.5s, border-color 0.5s, padding 0.5s, -webkit-backdrop-filter 0.5s, backdrop-filter 0.5s;
+}
+
+#navWrap.is-condensed .fh-nav,
+#navWrap.is-static .fh-nav {
+    background: transparent;
+    border-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.fh-nav-link {
+    padding-bottom: 5px;
+    border-bottom: 1px solid transparent;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 13.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.84);
+    transition: color 0.35s, border-color 0.35s;
+}
+
+.fh-nav-link:hover,
+.fh-nav-link.is-active {
+    color: #fff;
+    border-color: #edd39b;
+}
+
+#navWrap.is-static .fh-nav-link {
+    color: color-mix(in oklch, var(--color-ink) 78%, transparent);
+}
+
+#navWrap.is-static .fh-nav-link:hover,
+#navWrap.is-static .fh-nav-link.is-active {
+    color: var(--color-ink);
+    border-color: var(--color-gold);
+}
+
+/* Header CTA / account trigger — cream pill with a dark arrow disc
+   that widens its gap on hover. */
+.fh-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 9px 10px 9px 22px;
+    font-family: var(--font-label);
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #10161c;
+    box-shadow: 0 12px 34px rgba(4, 18, 36, 0.26);
+    transition: background 0.4s, color 0.4s, gap 0.4s, box-shadow 0.4s, border-color 0.4s;
+}
+
+.fh-cta:hover {
+    background: #edd39b;
+    gap: 18px;
+    color: #10161c;
+    box-shadow: 0 18px 40px rgba(4, 18, 36, 0.34);
+}
+
+.fh-cta-disc {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: #10161c;
+    color: #fff;
+}
+
+/* Ghost variant for the signed-in account trigger */
+.fh-hdr-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 14px 6px 6px;
+    font-family: var(--font-label);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    transition: background 0.4s, border-color 0.4s;
+}
+
+.fh-hdr-ghost:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #edd39b;
+    color: inherit;
+}
+
+#navWrap.is-static .fh-hdr-ghost {
+    border-color: color-mix(in oklch, var(--color-ink) 14%, transparent);
+    background: color-mix(in oklch, var(--color-ink) 4%, transparent);
+}
+
+#navWrap.is-static .fh-hdr-ghost:hover {
+    background: color-mix(in oklch, var(--color-ink) 8%, transparent);
+    border-color: var(--color-gold);
+}
+
+/* Phones: the brand lockup + menu button don't fit a 375px bar once the
+   nowrap tagline is in there, so the tagline drops and the lockup shrinks. */
+@media (max-width: 640px) {
+    .fh-brand-tag {
+        display: none;
+    }
+
+    .fh-brand-name {
+        font-size: 17px;
+    }
+
+    .fh-brand-mark,
+    #navWrap.is-condensed .fh-brand-mark,
+    #navWrap.is-static .fh-brand-mark {
+        width: 36px;
+        height: 36px;
+    }
+
+    #siteNav {
+        gap: 10px;
+        padding: 14px 14px 0;
+    }
+
+    #navWrap.is-condensed #siteNav,
+    #navWrap.is-static #siteNav {
+        padding: 8px 8px 8px 12px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #navWrap {
+
+    #navWrap,
+    #siteNav,
+    .fh-brand-mark,
+    .fh-brand-tag,
+    .fh-nav {
         transition: none;
     }
 }
@@ -527,6 +836,647 @@ body.theme-night #siteNav.nav-glass-solid {
     #mobileDrawer.drawer-open .drawer-panel {
         transition: none;
         transform: translateX(0);
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HERO — daylight sky gradient, an out-of-focus wash of the building
+   for atmosphere, and the cut-out façade rising into place behind a
+   giant two-line wordmark. Everything here is desktop-first; the
+   stacked/quieter phone variant lives at the bottom of the block.
+   ══════════════════════════════════════════════════════════════════ */
+.fh-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Full-bleed, full-viewport panel. dvh keeps mobile browser chrome from
+       cropping the capsule; vh is the fallback for engines without dvh. */
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Centres the stage/note/capsule group in whatever height the viewport
+       gives us, rather than letting it pile up under the header. */
+    justify-content: center;
+    /* The vh terms only bind on short screens; on tall ones the vw terms win
+       and the composition returns to the design's full scale. Together they
+       keep the whole hero — wordmark, façade, copy and capsule — on one
+       screen instead of pushing the capsule past the fold. */
+    padding: clamp(80px, min(8.4vw, 9vh), 124px) 0 clamp(20px, 2.4vw, 34px);
+    background: linear-gradient(177deg, #2a6496 0%, #3878ac 15%, #5d94c0 34%, #8eb4d1 56%, #b9ccd8 78%, #d9dcd4 100%);
+}
+
+/* Defocused copy of the façade — pure atmosphere, never read as an image. */
+.fh-hero-wash {
+    position: absolute;
+    left: -12%;
+    top: -12%;
+    width: 124%;
+    /* Preflight's `img { max-width: 100% }` would clamp this back to 100%
+       while the -12% offset stayed, dragging the wash off-centre. */
+    max-width: none;
+    height: 124%;
+    z-index: 0;
+    object-fit: cover;
+    opacity: 0.52;
+    filter: blur(66px) saturate(0.88) brightness(1.06);
+}
+
+/* Stacked radial lights: two warm suns top-left/top-right, a broad
+   sky bloom, and darker corner falloff to keep the frame from
+   flattening out. */
+.fh-hero-lights {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(58% 36% at 27% 19%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 74%),
+        radial-gradient(42% 28% at 77% 22%, rgba(255, 238, 203, 0.32) 0%, rgba(255, 238, 203, 0) 74%),
+        radial-gradient(115% 66% at 64% 4%, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 62%),
+        radial-gradient(40% 13% at 24% 20%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 72%),
+        radial-gradient(30% 9% at 79% 13%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 74%),
+        radial-gradient(66% 62% at -8% 0%, rgba(3, 16, 32, 0.26) 0%, rgba(3, 16, 32, 0.1) 46%, transparent 74%),
+        radial-gradient(62% 64% at 104% 102%, rgba(3, 16, 32, 0.3) 0%, transparent 72%),
+        radial-gradient(76% 48% at 50% 103%, rgba(214, 222, 206, 0.8) 0%, rgba(214, 222, 206, 0) 62%);
+}
+
+/* Soft horizon band so the cut-out doesn't float on a bare gradient. */
+.fh-hero-horizon {
+    position: absolute;
+    left: -4%;
+    right: -4%;
+    bottom: -2%;
+    height: 27%;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 32%, #000 72%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 32%, #000 72%);
+}
+
+.fh-hero-horizon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 94%;
+    filter: blur(14px) saturate(1.06);
+    transform: scale(1.1);
+}
+
+/* Scroll-driven dusk wash — opacity is written by home.js as the hero
+   leaves, so the marquee below emerges out of a darker frame. */
+.fh-hero-deepen {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(4, 18, 36, 0.62) 0%, rgba(4, 18, 36, 0.34) 46%, rgba(4, 18, 36, 0.12) 100%);
+}
+
+.fh-hero-stage {
+    position: relative;
+    z-index: 1;
+    margin-top: clamp(4px, 1.2vw, 24px);
+    padding: 0 clamp(20px, 3.4vw, 56px);
+}
+
+/* Giant wordmark ───────────────────────────────────────────────── */
+.fh-wordmark {
+    will-change: transform;
+}
+
+.fh-wordmark-line {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    /* Width-driven on purpose, and deliberately uncapped. At ~12.4vw the two
+       lines together over-span the column, so left-aligned FARMERS and
+       right-aligned HOSTEL interlock as one block. A fixed px ceiling breaks
+       that on wide screens — the column keeps growing past the frozen type
+       and the words drift apart (147px of dead air at 1920). Everything else
+       in the stage is a % of the same column, so letting this scale keeps the
+       whole composition proportional at any width. The vh term is only a
+       guard for unusually short windows; 420px is a sanity stop, not a look. */
+    font-size: clamp(58px, min(12.4vw, 34vh), 420px);
+    line-height: 0.8;
+    /* Tighter than the design's -0.045em to offset the ~2.75% the word gains
+       from being split into inline-block spans, which drops Playfair's kerning
+       pairs. Nets out to roughly the original set width. */
+    letter-spacing: -0.058em;
+    color: #fff;
+    text-shadow: 0 3px 16px rgba(4, 20, 40, 0.5), 0 24px 62px rgba(8, 40, 74, 0.32);
+}
+
+.fh-wordmark-line--end {
+    text-align: right;
+    /* HOSTEL's cascade starts after FARMERS has mostly landed. */
+    --d0: 0.34s;
+}
+
+/* Per-letter entrance: each character swings up into place on a stagger, so
+   the wordmark assembles itself rather than arriving as one slab.
+
+   fill is `backwards`, not `both`, on purpose — a finished fill:both animation
+   outranks inline styles in the cascade and would freeze out the per-letter
+   transforms the proximity effect writes in home.js. With `backwards` the
+   animation stops applying once it ends, and the resting CSS (opacity 1,
+   no transform) already matches its final frame, so nothing jumps. */
+.fh-wm-char {
+    display: inline-block;
+    transform-origin: 50% 88%;
+    will-change: transform;
+    animation: fh-char-rise 1.15s cubic-bezier(0.2, 0.75, 0.2, 1) backwards;
+    animation-delay: calc(var(--d0, 0s) + var(--i, 0) * 55ms);
+    /* Lets the proximity lift ease in and trail off rather than snapping to
+       the cursor — the lag is what makes it read as a wave. */
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.3s ease;
+}
+
+@keyframes fh-char-rise {
+    from {
+        opacity: 0;
+        transform: translateY(0.4em) rotate(4deg) scale(0.92);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Contact shadow pooling under the building's base. */
+.fh-hero-pool {
+    position: absolute;
+    left: 7%;
+    right: 7%;
+    bottom: -1.5%;
+    height: 8%;
+    pointer-events: none;
+    filter: blur(14px);
+    background: radial-gradient(52% 50% at 50% 50%, rgba(10, 32, 56, 0.36) 0%, rgba(10, 32, 56, 0.14) 46%, rgba(10, 32, 56, 0) 74%);
+}
+
+/* Cut-out façade: rises on load, then breathes on a 40s drift so the
+   frame is never completely still. Bottom edge is masked out so it
+   dissolves into the copy block instead of ending on a hard line. */
+.fh-hero-build {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: max(104%, 560px);
+    /* Same preflight clamp as .fh-hero-wash — without this the width caps at
+       100% but the negative margin below still offsets it, so the façade sits
+       visibly left of centre. */
+    max-width: none;
+    margin-left: calc((100% - max(104%, 560px)) / 2);
+    /* How far the roofline rides up over the HOSTEL line. The design's -5.6%
+       swallowed most of the word at desktop widths; this keeps a slight
+       overlap for depth while leaving the lettering readable. */
+    margin-top: -2.5%;
+    filter:
+        saturate(1.07) contrast(1.04) brightness(1.02)
+        drop-shadow(0 20px 30px rgba(6, 26, 45, 0.32))
+        drop-shadow(0 0 52px rgba(198, 218, 236, 0.34));
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 84%, rgba(0, 0, 0, 0.45) 94%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 84%, rgba(0, 0, 0, 0.45) 94%, transparent 100%);
+    animation:
+        fh-build-rise 1.8s cubic-bezier(0.2, 0.75, 0.2, 1) both,
+        fh-drift 40s ease-in-out 2s infinite alternate;
+}
+
+@keyframes fh-build-rise {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(1.015);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes fh-drift {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.03);
+    }
+}
+
+/* Legibility scrim raked in from the left so the copy column reads
+   over the façade without darkening the whole picture. */
+.fh-hero-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -30%;
+    bottom: -38%;
+    z-index: 2;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.14) 22%, rgba(0, 0, 0, 0.66) 40%, #000 54%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.14) 22%, rgba(0, 0, 0, 0.66) 40%, #000 54%);
+    /* Lighter and shorter than the design's rake: it clears the façade by 60%
+       instead of 92%, so the building stays visible behind the copy. The type
+       keeps its own text-shadows, which carry legibility from here. */
+    background:
+        linear-gradient(100deg, rgba(4, 18, 36, 0.74) 0%, rgba(4, 18, 36, 0.58) 22%, rgba(4, 18, 36, 0.36) 38%, rgba(4, 18, 36, 0.16) 50%, rgba(4, 18, 36, 0.04) 60%, transparent 72%),
+        radial-gradient(70% 56% at -6% 104%, rgba(3, 14, 30, 0.42) 0%, transparent 70%);
+}
+
+/* Copy row: pitch column left, review badge right, both pulled up
+   over the building's lower third. */
+.fh-hero-copy {
+    position: relative;
+    z-index: 3;
+    /* Pulls the copy row up over the façade's lower third. Deeper than the
+       design's -30% to buy back the height the full-size wordmark and the
+       reduced roofline overlap cost, so the capsule still lands above the
+       fold on a 900px-tall laptop. */
+    margin-top: -35%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.fh-hero-pitch {
+    max-width: 442px;
+    animation: fh-hero-rise 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.25s both;
+}
+
+.fh-hero-title {
+    font-size: clamp(30px, 3.5vw, 50px);
+}
+
+/* Desktop only: the design's copy scale was drawn against a 1560px frame, so
+   next to a now-uncapped wordmark it reads undersized on a wide monitor.
+   Tablet and phone keep the original sizing — the max-width: 900px block
+   below owns those and is deliberately untouched. */
+@media (min-width: 901px) {
+    .fh-hero-pitch {
+        max-width: min(540px, 38vw);
+    }
+
+    .fh-hero-title {
+        font-size: clamp(36px, 3.8vw, 60px);
+    }
+
+    .fh-hero-pitch .hero-sub {
+        max-width: 400px;
+        font-size: 17px;
+    }
+
+    .fh-hero-pitch .fh-btn {
+        font-size: 13px;
+        padding: 9px 9px 9px 24px;
+    }
+
+    .fh-hero-pitch .fh-btn-disc {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Tighten the gaps between the copy elements by a few px each to pay for
+       the larger type, so the capsule still clears the fold at 1440x900.
+       Overrides the Tailwind margin utilities in the markup (this sheet is
+       unlayered, so it wins over the utilities layer). */
+    .fh-hero-pitch .fh-rule {
+        margin-bottom: 14px;
+    }
+
+    .fh-hero-pitch .reveal-line {
+        margin-bottom: 14px;
+    }
+
+    .fh-hero-pitch .hero-sub {
+        margin-top: 16px;
+        margin-bottom: 22px;
+    }
+}
+
+@keyframes fh-hero-rise {
+    from {
+        opacity: 0;
+        transform: translateY(28px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.fh-rule {
+    display: block;
+    width: 46px;
+    height: 1px;
+    margin-bottom: 20px;
+    transform-origin: left;
+    background: linear-gradient(90deg, #e8c98a 0%, rgba(232, 201, 138, 0) 100%);
+    animation: fh-rule-grow 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+}
+
+@keyframes fh-rule-grow {
+    from {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+/* Hero buttons ─────────────────────────────────────────────────── */
+.fh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    border: 0;
+    border-radius: 999px;
+    padding: 8px 8px 8px 21px;
+    font-family: var(--font-label);
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.4s, color 0.4s, gap 0.4s, box-shadow 0.4s, border-color 0.4s;
+}
+
+.fh-btn-disc {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    flex: none;
+    border-radius: 50%;
+}
+
+.fh-btn--light {
+    background: #fdfbf6;
+    color: #10161c;
+    box-shadow: 0 12px 32px rgba(4, 18, 36, 0.26);
+}
+
+.fh-btn--light:hover {
+    background: #edd39b;
+    gap: 20px;
+    color: #10161c;
+    box-shadow: 0 20px 44px rgba(4, 18, 36, 0.36);
+}
+
+.fh-btn--light .fh-btn-disc {
+    background: #10161c;
+    color: #fff;
+}
+
+.fh-btn--ghost {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.fh-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #edd39b;
+    gap: 20px;
+    color: #fff;
+}
+
+.fh-btn--ghost .fh-btn-disc {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+/* Review badge ─────────────────────────────────────────────────── */
+.fh-badge {
+    background: linear-gradient(168deg, #fffdf8 0%, #fbf7ef 100%);
+    border: 1px solid rgba(16, 22, 28, 0.07);
+    border-radius: 26px;
+    padding: 20px 28px 22px;
+    min-width: 244px;
+    box-shadow: 0 2px 4px rgba(6, 26, 45, 0.06), 0 30px 66px rgba(4, 18, 36, 0.3);
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.5s;
+    animation: fh-hero-rise 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.45s both;
+}
+
+.fh-badge:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 80px rgba(4, 18, 36, 0.36);
+}
+
+/* Direct-booking reassurance line under the hero copy. */
+.fh-hero-note {
+    position: relative;
+    z-index: 7;
+    margin: clamp(12px, min(2vw, 2.4vh), 30px) auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 10.5px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    text-shadow: 0 1px 12px rgba(3, 16, 32, 0.6);
+    animation: fh-hero-rise 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.55s both;
+}
+
+.fh-hero-note-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #edd39b;
+}
+
+/* Booking capsule ──────────────────────────────────────────────── */
+.fh-capsule {
+    position: relative;
+    z-index: 7;
+    width: min(1100px, calc(100% - 44px));
+    margin: clamp(12px, 1.4vw, 20px) auto 0;
+    background: linear-gradient(172deg, #fffefb 0%, #fbf8f2 100%);
+    border: 1px solid rgba(16, 22, 28, 0.07);
+    border-radius: 26px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 4px rgba(6, 26, 45, 0.05), 0 24px 56px rgba(4, 18, 36, 0.24);
+    animation: fh-hero-rise 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.6s both;
+}
+
+.fh-field {
+    border-radius: 14px;
+    padding: 6px 18px 6px 12px;
+    transition: background 0.3s;
+}
+
+.fh-field:hover {
+    background: rgba(16, 22, 28, 0.045);
+}
+
+.fh-field + .fh-field {
+    border-left: 1px solid rgba(16, 22, 28, 0.12);
+}
+
+.fh-field-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-label);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6c7480;
+}
+
+.fh-field-dot {
+    width: 5px;
+    height: 5px;
+    flex: none;
+    border-radius: 50%;
+    background: #b8654a;
+}
+
+.fh-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex: none;
+    border: 0;
+    cursor: pointer;
+    border-radius: 999px;
+    background: #10161c;
+    color: #fff;
+    padding: 10px 12px 10px 26px;
+    font-family: var(--font-label);
+    font-size: 12.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    box-shadow: 0 12px 30px rgba(4, 18, 36, 0.28);
+    transition: background 0.4s, gap 0.4s, box-shadow 0.4s;
+}
+
+.fh-search:hover {
+    background: #1f3a2b;
+    gap: 21px;
+    box-shadow: 0 18px 38px rgba(4, 18, 36, 0.34);
+}
+
+.fh-search-disc {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 50%;
+    background: #edd39b;
+    color: #10161c;
+}
+
+/* ── Feature marquee ─────────────────────────────────────────────
+   Two identical tracks scroll as one; translating the pair by -50%
+   lands the second copy exactly where the first began, so the loop
+   is seamless without cloning at runtime. */
+.fh-marquee {
+    background: #10161c;
+    overflow: hidden;
+    padding: 15px 0;
+}
+
+.fh-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: fh-marquee 34s linear infinite;
+}
+
+.fh-marquee:hover .fh-marquee-track {
+    animation-play-state: paused;
+}
+
+.fh-marquee-run {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+    padding-right: 34px;
+    font-family: var(--font-label);
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.fh-marquee-star {
+    color: #b8654a;
+}
+
+@keyframes fh-marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fh-marquee-track {
+        animation: none;
+    }
+
+    .fh-hero-build,
+    .fh-wordmark-line,
+    .fh-wm-char,
+    .fh-hero-pitch,
+    .fh-badge,
+    .fh-hero-note,
+    .fh-capsule,
+    .fh-rule {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* ── Hero below desktop ──────────────────────────────────────────
+   The design is desktop-first: the -30% copy overlap and the
+   oversized wordmark both need the width. Narrower viewports get the
+   same parts stacked in normal flow. */
+@media (max-width: 900px) {
+    .fh-hero {
+        min-height: 0;
+        padding-top: clamp(104px, 22vw, 132px);
+    }
+
+    .fh-hero-build {
+        width: 118%;
+        margin-left: -9%;
+        margin-top: -2%;
+    }
+
+    .fh-hero-copy {
+        margin-top: -14%;
+        gap: 26px;
+    }
+
+    .fh-hero-pitch {
+        max-width: none;
+    }
+
+    .fh-badge {
+        display: none;
     }
 }
 
@@ -536,7 +1486,8 @@ body.theme-night #siteNav.nav-glass-solid {
 .reveal-line {
     display: block;
     overflow: hidden;
-    padding-bottom: 0.08em; /* italic descender reserve */
+    padding-bottom: 0.08em;
+    /* italic descender reserve */
 }
 
 .reveal-line>span {
@@ -573,12 +1524,10 @@ body.theme-night #siteNav.nav-glass-solid {
         /* Base stays gold but semi-transparent so the band shines
            through it — the reactbits ShinyText trick, palette-swapped. */
         color: color-mix(in oklch, var(--color-gold) 70%, transparent);
-        background-image: linear-gradient(
-            110deg,
-            transparent 38%,
-            color-mix(in oklch, var(--color-cream) 90%, white) 50%,
-            transparent 62%
-        );
+        background-image: linear-gradient(110deg,
+                transparent 38%,
+                color-mix(in oklch, var(--color-cream) 90%, white) 50%,
+                transparent 62%);
         background-size: 220% 100%;
         background-repeat: no-repeat;
         -webkit-background-clip: text;
@@ -588,8 +1537,13 @@ body.theme-night #siteNav.nav-glass-solid {
 }
 
 @keyframes shiny-sweep {
-    0%   { background-position: 150% 0; }
-    100% { background-position: -50% 0; }
+    0% {
+        background-position: 150% 0;
+    }
+
+    100% {
+        background-position: -50% 0;
+    }
 }
 
 /* ── Hero rotating superlative (reactbits.dev rotating-text port) ──
@@ -617,8 +1571,12 @@ body.theme-night #siteNav.nav-glass-solid {
 .word-rotate-word {
     display: inline-block;
     white-space: nowrap;
-    /* perspective for the per-character rotateX flip (both entrance + cycling) */
-    perspective: 640px;
+    /* Perspective for the per-character rotateX flip (entrance + cycling).
+       Deliberately shallow-angled: at 640px a steeply rotated 55-60px glyph
+       projects far enough below its own line box to overlap the next line,
+       which reads as the word having jumped rather than flipped. Keeping the
+       vanishing point distant holds the flip inside its line. */
+    perspective: 1500px;
 }
 
 /* Live: word boxes stack absolutely so the swaps overlap; the per-character
@@ -681,7 +1639,9 @@ body.theme-night #siteNav.nav-glass-solid {
    break mid-word. Hidden state sits inside the no-preference gate so reduced
    motion / no-JS render the plain headline instantly; it also inherits the
    intro-curtain pause (html.intro-hold #firstsection *). */
-#heroTitle { perspective: 900px; }
+#heroTitle {
+    perspective: 900px;
+}
 
 @media (prefers-reduced-motion: no-preference) {
     .flip-char {
@@ -712,7 +1672,14 @@ body.theme-night #siteNav.nav-glass-solid {
    word's characters on one line so they never wrap mid-word. Perspective lives
    here (the flip-char's direct parent) so each character's rotateX reads as a
    real 3D flip; it's inert for the section SplitText (translateY only). */
-.split-word { display: inline-block; white-space: nowrap; perspective: 640px; }
+.split-word {
+    display: inline-block;
+    white-space: nowrap;
+    /* Matches .word-rotate-word — the headline's entrance flip runs through
+       this perspective, and at the larger desktop type 640px projected the
+       rotating characters past their own line. */
+    perspective: 1500px;
+}
 
 /* ── BlurText (reactbits.dev blur-text port) ─────────────────────
    reveal.js splits [data-blur-text] headlines into .bt-word spans and
@@ -1253,7 +2220,7 @@ html.lenis body {
     opacity: 0;
 }
 
-[data-closing].pub-modal > div {
+[data-closing].pub-modal>div {
     transition:
         opacity 140ms cubic-bezier(0.22, 1, 0.36, 1),
         transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1927,7 +2894,7 @@ html.intro-hold #firstsection * {
 /* The pill nav starts retreated and glides in with the reveal
    (#navWrap already transitions transform) */
 html.intro-hold #navWrap {
-    transform: translateY(-140%);
+    transform: translateY(-170%);
 }
 
 #introSplash {
@@ -2374,6 +3341,7 @@ body.theme-night .numInputWrapper span.arrowDown::after {
     background: var(--color-clsu-500);
     box-shadow: 0 0 10px color-mix(in oklch, var(--color-clsu-500) 70%, transparent);
 }
+
 /* ═══════════════════════════════════════════════════════════════════
    Scroll-scrub effects (public/js/scroll-effects.js)
    Skiper-UI-derived: band mask reveal, story thread, manifesto words,
@@ -2482,9 +3450,17 @@ body.theme-night .numInputWrapper span.arrowDown::after {
 }
 
 @keyframes selectPop {
-    0% { scale: .94; }
-    60% { scale: 1.04; }
-    100% { scale: 1; }
+    0% {
+        scale: .94;
+    }
+
+    60% {
+        scale: 1.04;
+    }
+
+    100% {
+        scale: 1;
+    }
 }
 
 /* Summary room rows deep-link back to their reservation block */
@@ -2529,6 +3505,7 @@ body.theme-night .numInputWrapper span.arrowDown::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .co-enter,
     .type-card.selected,
     .room-tile.selected,

@@ -31,7 +31,6 @@ class StatCards extends Component
         $roomsUnderMaintenance = Room::where('status', 'maintenance')->count();
         $totalBookings = Booking::count();
         $totalUsers = User::count();
-        $totalRevenue = Payment::where('status', 'success')->sum('amount');
         $newUsersThisWeek = User::where('created_at', '>=', Carbon::now()->subDays(7))->count();
 
         // Percent changes vs last month
@@ -42,31 +41,9 @@ class StatCards extends Component
             ? (($bookingsThisMonth - $bookingsLastMonth) / $bookingsLastMonth) * 100
             : ($bookingsThisMonth > 0 ? 100 : 0);
 
-        $revenueThisMonth = Payment::where('status', 'success')->whereYear('created_at', $now->year)->whereMonth('created_at', $now->month)->sum('amount');
-        $revenueLastMonth = Payment::where('status', 'success')->whereYear('created_at', $lastMonth->year)->whereMonth('created_at', $lastMonth->month)->sum('amount');
-        $revenuePercentChange = $revenueLastMonth > 0
-            ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
-            : ($revenueThisMonth > 0 ? 100 : 0);
-
-        // Sparkline for the revenue card (Jan → current month, 70x24 viewBox)
-        $revenuePerMonth = Payment::select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('SUM(amount) as total')
-            )
-            ->where('status', 'success')
-            ->whereYear('created_at', $now->year)
-            ->groupBy(DB::raw('MONTH(created_at)'))
-            ->pluck('total', 'month');
-
-        $spark = collect(range(1, max($now->month, 2)))
-            ->map(fn ($m) => (float) ($revenuePerMonth[$m] ?? 0));
-        $sparkMax = max($spark->max(), 1);
-        $sparkCount = $spark->count();
-        $revenueSparkline = $spark->map(function ($v, $i) use ($sparkMax, $sparkCount) {
-            $x = $sparkCount > 1 ? round($i * (70 / ($sparkCount - 1)), 1) : 0;
-            $y = round(21 - ($v / $sparkMax) * 18, 1);
-            return "{$x},{$y}";
-        })->implode(' ');
+        // Revenue moved to the hero card (App\Livewire\Dashboard\Hero), which
+        // owns the gross total, the month-on-month delta and the 12-month
+        // chart — computing any of it here again would just be duplicate SQL.
 
         // Secondary strip — availableCount uses the shared RoomBoard state so
         // it always matches the Room Status Map legend.
@@ -75,6 +52,54 @@ class StatCards extends Component
         $checkoutsThisWeek = DB::table('checkouts')->where('checked_out_at', '>=', Carbon::now()->subDays(7))->count();
         $pendingDiscounts = Discount::where('status', 'pending')->count();
 
+        // ── Share-of-total for each card's meter ─────────────────────────
+        // Each bar has a real denominator; none of them are decoration.
+        $roomsServiceablePct = $totalRooms > 0
+            ? (($totalRooms - $roomsUnderMaintenance) / $totalRooms) * 100 : 0;
+
+        $bookingsFulfilled = Booking::whereIn('status', ['active', 'completed'])->count();
+        $bookingsFulfilledPct = $totalBookings > 0 ? ($bookingsFulfilled / $totalBookings) * 100 : 0;
+
+        $usersWithBooking = Booking::whereNotNull('user_id')->distinct()->count('user_id');
+        $usersActivePct = $totalUsers > 0 ? ($usersWithBooking / $totalUsers) * 100 : 0;
+
+        $sellablePct = $totalRooms > 0 ? ($availableCount / $totalRooms) * 100 : 0;
+
+        // ── 12-week trend glyphs ─────────────────────────────────────────
+        // Bookings and signups are cumulative all-time counts, so the headline
+        // number never moves much and says nothing about direction. The
+        // sparkline shows the weekly intake behind it. One grouped query each;
+        // YEARWEEK mode 3 is ISO, matching Carbon's 'oW'.
+        $weeksAgo = Carbon::now('Asia/Manila')->subWeeks(11)->startOfWeek();
+
+        $weeklySeries = function ($rows) use ($now) {
+            $out = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $key = (int) $now->copy()->subWeeks($i)->format('oW');
+                $out[] = (int) ($rows[$key] ?? 0);
+            }
+            return $out;
+        };
+
+        $bookingSpark = $weeklySeries(
+            Booking::where('created_at', '>=', $weeksAgo)
+                ->selectRaw('YEARWEEK(created_at, 3) as yw, COUNT(*) as c')
+                ->groupBy('yw')->pluck('c', 'yw')
+        );
+
+        $userSpark = $weeklySeries(
+            User::where('created_at', '>=', $weeksAgo)
+                ->selectRaw('YEARWEEK(created_at, 3) as yw, COUNT(*) as c')
+                ->groupBy('yw')->pluck('c', 'yw')
+        );
+
+        // Revenue for the current month — the hero card shows all-time gross,
+        // so without this the dashboard never states what this month earned.
+        $revenueThisMonth = (float) Payment::where('status', 'success')
+            ->whereYear('created_at', $now->year)
+            ->whereMonth('created_at', $now->month)
+            ->sum('amount');
+
         return view('livewire.dashboard.stat-cards', compact(
             'totalRooms',
             'roomsUnderMaintenance',
@@ -82,13 +107,19 @@ class StatCards extends Component
             'bookingPercentChange',
             'totalUsers',
             'newUsersThisWeek',
-            'totalRevenue',
-            'revenuePercentChange',
-            'revenueSparkline',
             'availableCount',
             'checkinsThisWeek',
             'checkoutsThisWeek',
-            'pendingDiscounts'
+            'pendingDiscounts',
+            'roomsServiceablePct',
+            'bookingsFulfilled',
+            'bookingsFulfilledPct',
+            'usersWithBooking',
+            'usersActivePct',
+            'sellablePct',
+            'bookingSpark',
+            'userSpark',
+            'revenueThisMonth'
         ));
     }
 }

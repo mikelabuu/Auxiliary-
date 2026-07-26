@@ -57,7 +57,7 @@
             // wordmark flies home to the nav brand label instead. On phones
             // that label is hidden — fall back to a fade-in-place.
             if (wordmark && wordmark.animate) {
-                var target = document.querySelector('#siteNav .font-display');
+                var target = document.querySelector('#siteNav .fh-brand-name');
                 var from = wordmark.getBoundingClientRect();
                 var to = target ? target.getBoundingClientRect() : null;
                 if (to && to.width > 8) {

@@ -1,47 +1,66 @@
-<header id="firstsection" class="relative isolate bg-canvas px-3 pt-20 pb-10 sm:px-5 sm:pt-24">
-    {{-- Blurred campus backdrop behind the panel (Kordex "city behind the card"). --}}
-    <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        <img src="{{ asset('image/hostel1.jpg') }}" alt="" class="h-full w-full scale-125 object-cover object-center opacity-30 blur-2xl saturate-[.85]">
-        <div class="absolute inset-0 bg-canvas/55"></div>
+{{-- Farmers Hostel hero: daylight sky gradient, a defocused wash of the façade
+     for atmosphere, and the cut-out building rising behind a giant two-line
+     wordmark. The headline keeps the existing FlipFadeText + rotating-word
+     treatment (home.js drives #heroWordRotate), and the capsule keeps every
+     functional id used by booking.js / availability-search.js. --}}
+<header id="firstsection" class="fh-hero">
+    {{-- Atmosphere: an out-of-focus copy of the building tints the whole sky. --}}
+    <img src="{{ asset('image/farmers-hostel-wide.png') }}" alt="" aria-hidden="true"
+         decoding="async" class="fh-hero-wash">
+
+    {{-- Stacked radial suns + corner falloff. --}}
+    <div class="fh-hero-lights" aria-hidden="true"></div>
+
+    {{-- Soft horizon band so the cut-out never floats on a bare gradient. --}}
+    <div class="fh-hero-horizon" aria-hidden="true">
+        <img src="{{ asset('image/farmers-hostel-wide.png') }}" alt="" decoding="async">
     </div>
 
-    {{-- ── Hero panel: full-bleed campus photo, white type over legibility scrims ── --}}
-    <div class="relative mx-auto flex min-h-[86vh] max-w-7xl flex-col overflow-hidden rounded-[2.25rem] shadow-[0_50px_120px_-45px_rgba(8,36,20,0.55)] sm:rounded-[2.75rem]">
-        {{-- Photo bg (kept fairly bright; scrims below carry the text legibility). --}}
-        <img src="{{ asset('image/hostel1.jpg') }}" alt="Farmers Hostel exterior inside the CLSU campus"
-             fetchpriority="high" decoding="async"
-             class="absolute inset-0 -z-10 h-full w-full animate-ken-burns object-cover object-center brightness-[.82] saturate-[.96]">
-        {{-- Scrims: darker at the bottom-left where the copy sits, a touch at the top
-             for the wordmark; the centre stays bright so the building reads. --}}
-        <div class="absolute inset-0 -z-10 bg-gradient-to-t from-ink/70 via-ink/15 to-ink/35"></div>
-        <div class="absolute inset-0 -z-10 bg-gradient-to-r from-ink/45 via-transparent to-transparent"></div>
+    {{-- Dusk wash — opacity driven by scroll in home.js as the hero leaves. --}}
+    <div class="fh-hero-deepen" data-hero-deepen aria-hidden="true"></div>
 
-        {{-- Content column: giant wordmark up top, copy pinned to the bottom. --}}
-        <div class="relative flex flex-1 flex-col p-6 sm:p-9 lg:p-11">
-            {{-- Giant brand wordmark — prominent cream, the photo sits behind it. --}}
-            <div class="pt-4 sm:pt-6">
-                <span class="block font-display font-semibold leading-[0.9] tracking-tight text-cream drop-shadow-[0_4px_28px_rgba(8,36,20,0.5)]" style="font-size:clamp(3rem, 10.5vw, 8.5rem)">
-                    <span class="block">Farmers</span>
-                    <span class="block italic text-gold-soft">Hostel</span>
-                </span>
-            </div>
+    <div class="fh-hero-stage">
+        {{-- Giant wordmark. Parallaxes up and fades out on scroll, and each
+             letter lifts/warms as the cursor passes it (home.js). Split into
+             per-character spans for both effects; the sr-only copy keeps it
+             from being announced letter by letter. --}}
+        <div class="fh-wordmark" data-hero-word>
+            <p class="fh-wordmark-line">
+                <span class="sr-only">Farmers</span>
+                <span aria-hidden="true">@foreach (str_split('FARMERS') as $i => $ch)<span class="fh-wm-char" style="--i:{{ $i }}">{{ $ch }}</span>@endforeach</span>
+            </p>
+            <p class="fh-wordmark-line fh-wordmark-line--end">
+                <span class="sr-only">Hostel</span>
+                <span aria-hidden="true">@foreach (str_split('HOSTEL') as $i => $ch)<span class="fh-wm-char" style="--i:{{ $i }}">{{ $ch }}</span>@endforeach</span>
+            </p>
+        </div>
 
-            <div class="flex-1"></div>
+        {{-- Contact shadow pooling under the building's base. --}}
+        <div class="fh-hero-pool" aria-hidden="true"></div>
 
-            {{-- Copy: eyebrow + flip-fade headline + subtitle + CTAs, in white. --}}
-            <div class="max-w-xl">
-                <p class="reveal-line text-[10px] font-semibold uppercase tracking-[0.32em] text-gold-soft sm:text-[11px] sm:tracking-[0.42em]">
+        <img src="{{ asset('image/hostel-front.png') }}"
+             alt="Farmers Hostel building inside the CLSU campus"
+             fetchpriority="high" decoding="async" class="fh-hero-build">
+
+        {{-- Raked legibility scrim — darkens the copy column, not the picture. --}}
+        <div class="fh-hero-scrim" aria-hidden="true"></div>
+
+        <div class="fh-hero-copy">
+            <div class="fh-hero-pitch">
+                <span class="fh-rule" aria-hidden="true"></span>
+
+                <p class="reveal-line mb-5 font-label text-[12px] uppercase tracking-[0.26em] text-gold-soft [text-shadow:0_1px_14px_rgba(3,16,32,0.7)]">
                     <span style="--rise-delay:.1s">Inside CLSU since 1998</span>
                 </p>
 
-                {{-- FlipFadeText headline (crisp flip + fade, no blur); cream over the
-                     photo, the rotating superlative in warm palay-gold. --}}
+                {{-- FlipFadeText headline: each character flips up into place on
+                     load, and the superlative keeps cycling through data-words. --}}
                 @php $fi = 0; @endphp
-                <h1 id="heroTitle" class="mt-4 font-display leading-[1.05] text-cream drop-shadow-[0_2px_16px_rgba(8,36,20,0.45)]" style="font-size:clamp(1.9rem, 3.6vw, 3rem)">
+                <h1 id="heroTitle" class="fh-hero-title font-display font-normal leading-[1.1] tracking-[-0.012em] text-white [text-shadow:0_2px_22px_rgba(3,16,32,0.6)]">
                     <span class="block">
                         <span class="split-word">@foreach (str_split('The') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
                         <span class="split-word">
-                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" aria-label="quietest" data-words="quietest,greenest,calmest,warmest">
+                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" aria-label="quietest" data-words="quietest,greenest,calmest">
                                 <span class="word-rotate-track" aria-hidden="true"><span class="word-rotate-word is-active">@foreach (str_split('quietest') as $ch)<span class="flip-char rt-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span></span>
                             </span>
                         </span>
@@ -51,82 +70,108 @@
                     </span>
                 </h1>
 
-                <p class="hero-sub text-pretty mt-5 max-w-md text-base leading-relaxed text-cream/80">
+                <p class="hero-sub text-pretty mt-5 mb-7 max-w-[330px] text-[15.5px] leading-[1.64] text-white/90 [text-shadow:0_1px_16px_rgba(3,16,32,0.7)]">
                     @foreach (preg_split('/\s+/', 'A boutique hostel in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.') as $i => $word)
                         <span class="hero-sub-word" style="--w:{{ $i }}">{{ $word }}</span>
                     @endforeach
                 </p>
 
-                <div class="mt-7 flex flex-wrap items-center gap-3 animate-[fade-in-up_1s_ease-out_1.1s_both]">
-                    <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))"
-                            class="press focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-cream px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink cursor-pointer transition hover:bg-white hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-cream)_28%,transparent)]">
-                        Start exploring <x-booking.ui.icon name="arrow-right" class="h-4 w-4" />
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" data-magnetic
+                            onclick="smoothScrollTo(document.getElementById('rooms'))"
+                            class="fh-btn fh-btn--light focus-ring">
+                        Check availability <span class="fh-btn-disc" aria-hidden="true">↗</span>
                     </button>
-                    <button type="button" onclick="smoothScrollTo(document.getElementById('gallery'))"
-                            class="press focus-ring inline-flex min-h-12 items-center gap-2 rounded-full border border-cream/40 bg-cream/10 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream backdrop-blur-sm cursor-pointer transition hover:bg-cream/20">
-                        View gallery
+                    <button type="button" data-magnetic
+                            onclick="smoothScrollTo(document.getElementById('gallery'))"
+                            class="fh-btn fh-btn--ghost focus-ring">
+                        Take a tour <span class="fh-btn-disc" aria-hidden="true">↗</span>
                     </button>
                 </div>
             </div>
-        </div>
 
-        {{-- Floating review card (inspo's "1200+ customer review"). --}}
-        <div class="absolute right-6 bottom-32 z-20 hidden items-center gap-3 rounded-2xl border border-ink/5 bg-white/95 px-4 py-3 shadow-[0_22px_50px_-24px_rgba(8,36,20,0.5)] backdrop-blur-sm sm:flex">
-            <div class="flex -space-x-2.5">
-                <span class="grid h-8 w-8 place-items-center rounded-full bg-clsu-100 text-[11px] font-bold text-clsu-700 ring-2 ring-white">JS</span>
-                <span class="grid h-8 w-8 place-items-center rounded-full bg-palay-100 text-[11px] font-bold text-palay-700 ring-2 ring-white">MR</span>
-                <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-deep text-[11px] font-bold text-cream ring-2 ring-white">+</span>
-            </div>
-            <div class="leading-tight">
-                <p class="flex items-center gap-1 font-display text-lg text-ink">4.9
-                    <x-booking.ui.icon name="star" class="h-4 w-4 fill-palay-400 text-palay-400" />
-                </p>
-                <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/50">Loved by guests</p>
-            </div>
-        </div>
-
-        {{-- Booking capsule — frosted white, spans the bottom of the panel.
-             Functional IDs preserved for booking.js / availability-search.js / home.js. --}}
-        <div class="relative z-20 px-4 pb-4 sm:px-9 sm:pb-8 lg:px-11">
-            <div id="bookingCapsule" class="glass-light rounded-3xl p-3 md:p-2.5">
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
-                    <div class="px-4 py-2.5 text-left md:px-5 md:py-3">
-                        <p class="mb-0.5 text-[10px] font-bold uppercase tracking-[0.26em] text-ink/45">Check in</p>
-                        <input type="text" id="widget_check_in" aria-label="Check in date" placeholder="Select date"
-                               class="focus-ring w-full min-h-10 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/35">
-                    </div>
-                    <div class="px-4 py-2.5 text-left md:border-l md:border-ink/10 md:px-5 md:py-3">
-                        <p class="mb-0.5 text-[10px] font-bold uppercase tracking-[0.26em] text-ink/45">Check out</p>
-                        <input type="text" id="widget_check_out" aria-label="Check out date" placeholder="Select date"
-                               class="focus-ring w-full min-h-10 cursor-pointer bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/35">
-                    </div>
-                    <div class="px-4 py-2.5 text-left md:border-l md:border-ink/10 md:px-5 md:py-3">
-                        <p class="mb-0.5 text-[10px] font-bold uppercase tracking-[0.26em] text-ink/45">Guests</p>
-                        <div class="flex min-h-10 items-center justify-between">
-                            <span class="text-sm font-medium text-ink"><span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span></span>
-                            <input type="hidden" id="widget_guests" value="1">
-                            <div class="flex items-center gap-1">
-                                <button type="button" id="btn_minus_guests" aria-label="Decrease guests" class="focus-ring press grid h-8 w-8 place-items-center rounded-full border border-ink/15 bg-ink/5 text-ink transition hover:border-clsu-500/60 hover:bg-clsu-50 cursor-pointer">
-                                    <x-booking.ui.icon name="minus" class="h-3 w-3" />
-                                </button>
-                                <button type="button" id="btn_plus_guests" aria-label="Increase guests" class="focus-ring press grid h-8 w-8 place-items-center rounded-full border border-ink/15 bg-ink/5 text-ink transition hover:border-clsu-500/60 hover:bg-clsu-50 cursor-pointer">
-                                    <x-booking.ui.icon name="plus" class="h-3 w-3" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" id="btnSearchRooms"
-                            class="focus-ring press cta-shine group relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream cursor-pointer transition hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-clsu-500)_28%,transparent),0_18px_44px_-18px_rgba(8,36,20,0.5)]">
-                        <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-2">Search <x-booking.ui.icon name="arrow-right" class="h-4 w-4" /></span>
-                    </button>
+            {{-- Social-proof badge. Hidden below 900px (see app.css). --}}
+            <div class="fh-badge">
+                <p class="mb-3 text-[12px] tracking-[0.28em] text-[#c9a24a]" aria-label="Rated 4.8 out of 5">★★★★★</p>
+                <div class="mb-3.5 flex items-center">
+                    <span class="grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#d8c39c] text-[13px] font-semibold text-[#4a3a20]">JR</span>
+                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#a9bfa2] text-[13px] font-semibold text-[#2f4029]">MA</span>
+                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#b8654a] text-[13px] font-semibold text-[#fff4ec]">LC</span>
+                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#10161c] text-[15px] text-white">+</span>
                 </div>
-
-                <!-- Nights summary — filled by availability-search.js once both dates are set -->
-                <div id="capsuleNights" class="capsule-nights" hidden>
-                    <span class="capsule-nights-dot" aria-hidden="true"></span>
-                    <span id="capsuleNightsText"></span>
-                </div>
+                <p class="font-display text-[40px] leading-none tracking-[-0.02em] text-[#10161c]">1,200<span class="text-[#c9a24a]">+</span></p>
+                <p class="mt-1.5 font-label text-[11.5px] font-light uppercase tracking-[0.2em] text-[#7c8288]">Guest reviews · 4.8 / 5</p>
             </div>
         </div>
     </div>
+
+    <p class="fh-hero-note">
+        <span class="fh-hero-note-dot" aria-hidden="true"></span>
+        Best rate when you book direct · no service fees
+        <span class="fh-hero-note-dot" aria-hidden="true"></span>
+    </p>
+
+    {{-- Booking capsule — functional ids preserved for booking.js /
+         availability-search.js / home.js. --}}
+    <div id="bookingCapsule" class="fh-capsule">
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_1.15fr_auto] md:items-center">
+            <label class="fh-field block cursor-pointer">
+                <span class="fh-field-label"><span class="fh-field-dot" aria-hidden="true"></span>Check in</span>
+                <input type="text" id="widget_check_in" aria-label="Check in date" placeholder="Select date"
+                       class="focus-ring mt-1 w-full cursor-pointer border-0 bg-transparent text-[16px] text-[#10161c] outline-none placeholder:text-[#9aa1aa]">
+            </label>
+
+            <label class="fh-field block cursor-pointer">
+                <span class="fh-field-label"><span class="fh-field-dot" aria-hidden="true"></span>Check out</span>
+                <input type="text" id="widget_check_out" aria-label="Check out date" placeholder="Select date"
+                       class="focus-ring mt-1 w-full cursor-pointer border-0 bg-transparent text-[16px] text-[#10161c] outline-none placeholder:text-[#9aa1aa]">
+            </label>
+
+            <div class="fh-field">
+                <span class="fh-field-label"><span class="fh-field-dot" aria-hidden="true"></span>Guests</span>
+                <div class="mt-1 flex items-center justify-between gap-2">
+                    <span class="text-[16px] text-[#10161c]">
+                        <span id="guests_display" class="anim-number"><span>1</span></span> guest<span id="guests_plural" class="hidden">s</span>
+                    </span>
+                    <input type="hidden" id="widget_guests" value="1">
+                    <div class="flex items-center gap-1">
+                        <button type="button" id="btn_minus_guests" aria-label="Decrease guests"
+                                class="focus-ring press grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
+                            <x-booking.ui.icon name="minus" class="h-3 w-3" />
+                        </button>
+                        <button type="button" id="btn_plus_guests" aria-label="Increase guests"
+                                class="focus-ring press grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
+                            <x-booking.ui.icon name="plus" class="h-3 w-3" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="btnSearchRooms" data-magnetic class="fh-search focus-ring">
+                <span id="btnSearchRoomsLabel" class="inline-flex items-center gap-3">Search <span class="fh-search-disc" aria-hidden="true">↗</span></span>
+            </button>
+        </div>
+
+        <!-- Nights summary — filled by availability-search.js once both dates are set -->
+        <div id="capsuleNights" class="capsule-nights" hidden>
+            <span class="capsule-nights-dot" aria-hidden="true"></span>
+            <span id="capsuleNightsText"></span>
+        </div>
+    </div>
 </header>
+
+{{-- Feature marquee — two identical runs translated by -50% for a seamless loop. --}}
+<div class="fh-marquee" aria-hidden="true">
+    <div class="fh-marquee-track">
+        @foreach ([1, 2] as $pass)
+            <div class="fh-marquee-run">
+                <span>Air-conditioned rooms</span><span class="fh-marquee-star">✳</span>
+                <span>Farm-fresh breakfast</span><span class="fh-marquee-star">✳</span>
+                <span>Function &amp; training halls</span><span class="fh-marquee-star">✳</span>
+                <span>24/7 front desk</span><span class="fh-marquee-star">✳</span>
+                <span>Free parking</span><span class="fh-marquee-star">✳</span>
+                <span>Fibre Wi-Fi</span><span class="fh-marquee-star">✳</span>
+            </div>
+        @endforeach
+    </div>
+</div>

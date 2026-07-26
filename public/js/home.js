@@ -235,6 +235,26 @@ document.addEventListener('DOMContentLoaded', function () {
     let idx = 0;
     let timer = null;
 
+    // The word boxes are taken out of flow, so the track has to *reserve* their
+    // size inline — which means that reservation goes stale the moment the type
+    // metrics change under it (crossing the desktop breakpoint, a late italic
+    // webfont swapping in, browser zoom). A stale slot leaves the absolutely
+    // positioned word rendering at its new natural size over a slot sized for
+    // the old one, so it spills across the neighbouring words. Re-measure
+    // instead of measuring once.
+    function measure() {
+        if (!boxes.length) return;
+        widths = boxes.map(function (b) { return b.offsetWidth; });
+        // Snap rather than glide: the width transition is for word swaps, not
+        // for a resize the user is dragging through.
+        const prevTransition = track.style.transition;
+        track.style.transition = 'none';
+        track.style.width = widths[idx] + 'px';
+        track.style.height = boxes[idx].offsetHeight + 'px';
+        void track.offsetWidth;
+        track.style.transition = prevTransition;
+    }
+
     function start() {
         widths = boxes.map(function (b) { return b.offsetWidth; });
         track.style.height = first.offsetHeight + 'px';
@@ -249,26 +269,40 @@ document.addEventListener('DOMContentLoaded', function () {
             b.style.top = '0';
             b.style.visibility = '';
             // First word flat at rest; the rest parked flipped-up + invisible.
-            setChars(b.__chars, i === 0 ? 'rotateX(0deg)' : 'rotateX(90deg) translateY(20px)', i === 0 ? '1' : '0');
+            setChars(b.__chars, i === 0 ? 'rotateX(0deg)' : 'rotateX(62deg) translateY(10px)', i === 0 ? '1' : '0');
         });
         host.classList.add('is-live');
+
+        window.addEventListener('resize', measure);
+        // Watches a static sibling word rather than the track itself, so the
+        // writes in measure() can't feed back into the observer.
+        const ref = document.querySelector('#heroTitle .split-word');
+        if (ref && window.ResizeObserver) new ResizeObserver(measure).observe(ref);
+
         timer = setInterval(function () { if (!document.hidden) swap(); }, INTERVAL);
     }
 
     function swap() {
+        // Belt and braces: re-measure on the way in as well as from the
+        // observers, so the slot self-corrects on the next cycle even if a
+        // metrics change slipped past them.
+        measure();
+
         const leaving = boxes[idx];
         idx = (idx + 1) % boxes.length;
         const entering = boxes[idx];
 
+        // 62deg, not 88: a near-edge-on glyph spends most of the flip as an
+        // unreadable sliver and its projection reaches into the line below.
         roll(entering.__chars,
-            { transform: 'rotateX(88deg) translateY(16px)', opacity: 0 },
+            { transform: 'rotateX(62deg) translateY(10px)', opacity: 0 },
             { transform: 'rotateX(0deg) translateY(0px)', opacity: 1 },
             FLIP, 'rotateX(0deg)', '1');
 
         roll(leaving.__chars,
             { transform: 'rotateX(0deg)', opacity: 1 },
-            { transform: 'rotateX(-88deg) translateY(-16px)', opacity: 0 },
-            FLIP, 'rotateX(88deg) translateY(16px)', '0'); // park flipped-up, ready to re-enter
+            { transform: 'rotateX(-62deg) translateY(-10px)', opacity: 0 },
+            FLIP, 'rotateX(62deg) translateY(10px)', '0'); // park flipped-up, ready to re-enter
 
         track.style.width = widths[idx] + 'px';
     }
@@ -311,5 +345,149 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         track.style.width = '';
         track.style.height = '';
+    });
+})();
+
+// ── Hero scroll parallax + magnetic buttons ──────────────────────
+// The giant wordmark drifts up and dissolves as the hero leaves, while a
+// dusk wash fades in over the sky — so the marquee below emerges out of a
+// darkening frame rather than a hard cut. Both are written straight to
+// style in a rAF-coalesced scroll handler (no layout reads per frame).
+(function () {
+    const word = document.querySelector('[data-hero-word]');
+    const deepen = document.querySelector('[data-hero-deepen]');
+    const hero = document.getElementById('firstsection');
+    if (!hero || (!word && !deepen)) return;
+
+    const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let ticking = false;
+    let heroH = hero.offsetHeight || 800;
+
+    function paint() {
+        ticking = false;
+        const y = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const p = Math.min(1, y / Math.max(heroH, 1));
+        if (word) {
+            word.style.transform = 'translate3d(0, ' + (-p * 96).toFixed(1) + 'px, 0)';
+            word.style.opacity = String(Math.max(0, 1 - p * 1.15));
+        }
+        if (deepen) deepen.style.opacity = Math.min(1, p * 1.15).toFixed(3);
+    }
+
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(paint);
+    }
+
+    function measure() {
+        heroH = hero.offsetHeight || 800;
+        onScroll();
+    }
+
+    if (reduceMQ.matches) return;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    measure();
+})();
+
+// ── Wordmark proximity wave ──────────────────────────────────────
+// Ported from reactbits VariableProximity (reactbits.dev/text-animations/
+// variable-proximity): per-letter distance to the cursor, run through a
+// gaussian falloff, drives an interpolated value on each character.
+//
+// One deliberate change from the original: reactbits interpolates
+// font-variation-settings ('wght'). Playfair Display's weight axis changes
+// glyph *advance*, so at 178-238px every mouse move would reflow the line and
+// the letters would visibly jitter. This drives transform + colour instead —
+// same falloff maths, but composited, so nothing reflows: letters lift and
+// warm toward the brand gold as the cursor sweeps past.
+(function () {
+    const wrap = document.querySelector('[data-hero-word]');
+    if (!wrap) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
+    const chars = Array.prototype.slice.call(wrap.querySelectorAll('.fh-wm-char'));
+    if (!chars.length) return;
+
+    const RADIUS = 340;   // px of influence around the cursor
+    const LIFT = 18;      // px a letter rises at full strength
+    const GROW = 0.06;    // extra scale at full strength
+    const GOLD = [237, 211, 155];
+    const WHITE = [255, 255, 255];
+
+    // Letter centres are cached: re-reading 13 rects per mousemove would be a
+    // layout thrash, and the cached values only go stale when the line moves
+    // (scroll parallax, resize) — not when we write transforms.
+    let centres = null;
+    const invalidate = () => { centres = null; };
+    function measure() {
+        centres = chars.map(function (c) {
+            const r = c.getBoundingClientRect();
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        });
+        return centres;
+    }
+
+    window.addEventListener('resize', invalidate);
+    window.addEventListener('scroll', invalidate, { passive: true });
+
+    window.addEventListener('mousemove', function (e) {
+        const cs = centres || measure();
+        for (let i = 0; i < chars.length; i++) {
+            const dx = e.clientX - cs[i].x;
+            const dy = e.clientY - cs[i].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist >= RADIUS) {
+                if (chars[i].__lit) {
+                    chars[i].style.transform = '';
+                    chars[i].style.color = '';
+                    chars[i].__lit = false;
+                }
+                continue;
+            }
+
+            // gaussian falloff, as in the reactbits original
+            const f = Math.exp(-Math.pow(dist / (RADIUS / 2), 2) / 2);
+            chars[i].style.transform =
+                'translate3d(0,' + (-f * LIFT).toFixed(2) + 'px,0) scale(' + (1 + f * GROW).toFixed(4) + ')';
+            chars[i].style.color = 'rgb('
+                + Math.round(WHITE[0] + (GOLD[0] - WHITE[0]) * f) + ','
+                + Math.round(WHITE[1] + (GOLD[1] - WHITE[1]) * f) + ','
+                + Math.round(WHITE[2] + (GOLD[2] - WHITE[2]) * f) + ')';
+            chars[i].__lit = true;
+        }
+    }, { passive: true });
+})();
+
+// ── Magnetic buttons ─────────────────────────────────────────────
+// [data-magnetic] controls lean a few pixels toward the cursor and spring
+// back on leave. Pointer-coarse devices skip it — there's no cursor to
+// follow, and the transform would fight the tap highlight.
+(function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
+    // The hover transitions (gap/background/shadow) have to be restated here —
+    // setting style.transition wholesale would otherwise drop them and the
+    // buttons would snap instead of easing on hover.
+    const REST = ', background .4s, color .4s, gap .4s, box-shadow .4s, border-color .4s';
+    const EASE_IN = 'transform .18s cubic-bezier(.2,.7,.2,1)' + REST;
+    const EASE_OUT = 'transform .5s cubic-bezier(.2,.7,.2,1)' + REST;
+
+    document.querySelectorAll('[data-magnetic]').forEach(function (el) {
+        el.addEventListener('mousemove', function (e) {
+            const r = el.getBoundingClientRect();
+            const dx = ((e.clientX - (r.left + r.width / 2)) / Math.max(r.width, 1)) * 15;
+            const dy = ((e.clientY - (r.top + r.height / 2)) / Math.max(r.height, 1)) * 9 - 3;
+            el.style.transform = 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px)';
+            el.style.transition = EASE_IN;
+        });
+        el.addEventListener('mouseleave', function () {
+            el.style.transform = 'translate(0, 0)';
+            el.style.transition = EASE_OUT;
+        });
     });
 })();

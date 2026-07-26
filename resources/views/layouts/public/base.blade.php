@@ -36,8 +36,10 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
 
-    <!-- Google Fonts — Lora (editorial serif) + Nunito Sans (body, upright only) -->
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts — Playfair Display (editorial display), Oswald (condensed
+         uppercase labels/nav) and Manrope (running copy). Lora/Nunito Sans stay
+         loaded as the fallback stack for views still authored against them. -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Material Icons (used by booking flow internals) -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -70,24 +72,29 @@
     <!-- Reading-progress hairline (driven by --scroll-progress from parallax.js) -->
     <div class="scroll-progress" aria-hidden="true"></div>
 
-    <!-- Floating Pill Nav (transparent over hero, glass after scroll; retreats
-         while reading down and returns on the first upward scroll) -->
-    <div id="navWrap" class="fixed inset-x-0 top-4 z-50 px-4 sm:top-6 sm:px-6">
-        <nav id="siteNav" aria-label="Primary" data-dark="{{ $navDark ? '1' : '0' }}"
-             class="mx-auto flex max-w-6xl items-center justify-between rounded-full border px-4 py-3 sm:px-6 transition-[background-color,border-color,box-shadow,color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] {{ $navDark ? 'nav-glass-dark' : 'nav-glass-solid' }}">
-            <!-- Logo -->
-            <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="focus-ring flex min-w-0 items-center gap-3 rounded-full">
-                <x-booking.ui.logo-mark class="h-9 w-9" />
-                <span class="hidden truncate font-display text-lg tracking-tight sm:block">Farmers <span class="italic text-clsu-600">Hostel</span></span>
+    <!-- Header: spans the frame edge-to-edge and transparent over the hero,
+         then condenses into a dark-glass pill past the fold. Pages with no
+         dark hero start in the light `is-static` pill instead. Retreats while
+         reading down and returns on the first upward scroll. -->
+    <div id="navWrap" class="{{ $navDark ? '' : 'is-static' }}">
+        <nav id="siteNav" aria-label="Primary" data-dark="{{ $navDark ? '1' : '0' }}">
+            <!-- Brand lockup -->
+            <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="fh-brand focus-ring rounded-full">
+                <img src="{{ asset('image/fh-mark.png') }}" alt="" aria-hidden="true"
+                     width="512" height="512" decoding="async" class="fh-brand-mark">
+                <span class="grid min-w-0">
+                    <span class="fh-brand-name truncate">Farmers Hostel</span>
+                    <span class="fh-brand-tag">CLSU · Science City of Muñoz</span>
+                </span>
             </a>
 
             <!-- Center Nav Links -->
-            <div class="hidden items-center gap-8 md:flex">
-                <a href="{{ route('home') }}" class="gold-underline focus-ring rounded text-[13px] font-medium uppercase tracking-[0.18em] {{ request()->routeIs('home') ? 'text-gold active' : '' }}">Home</a>
-                <a href="{{ route('home') }}#rooms" class="gold-underline focus-ring rounded text-[13px] font-medium uppercase tracking-[0.18em]">Rooms</a>
-                <a href="{{ route('home') }}#gallery" class="gold-underline focus-ring rounded text-[13px] font-medium uppercase tracking-[0.18em]">Gallery</a>
+            <div class="fh-nav hidden md:flex">
+                <a href="{{ route('home') }}" class="fh-nav-link focus-ring {{ request()->routeIs('home') ? 'is-active' : '' }}">Home</a>
+                <a href="{{ route('home') }}#rooms" class="fh-nav-link focus-ring">Rooms</a>
+                <a href="{{ route('home') }}#gallery" class="fh-nav-link focus-ring">Gallery</a>
                 @auth
-                    <a href="{{ route('settings.bookings') }}" class="gold-underline focus-ring rounded text-[13px] font-medium uppercase tracking-[0.18em]">My Bookings</a>
+                    <a href="{{ route('settings.bookings') }}" class="fh-nav-link focus-ring">My Bookings</a>
                 @endauth
             </div>
 
@@ -96,11 +103,11 @@
                 <div class="hidden md:block">
                     @auth
                         <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                            <button @click="open = !open" class="press focus-ring flex items-center gap-2.5 rounded-full border border-current/15 py-1.5 pl-2 pr-3 cursor-pointer select-none transition-colors hover:border-gold/60">
+                            <button @click="open = !open" class="fh-hdr-ghost press focus-ring cursor-pointer select-none">
                                 <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-deep font-display text-sm italic text-cream">
                                     {{ strtoupper(substr(auth()->user()->username ?? 'U', 0, 1)) }}
                                 </span>
-                                <span class="text-[12px] font-semibold uppercase tracking-[0.14em]">{{ $username ?? auth()->user()->username ?? 'Account' }}</span>
+                                <span class="truncate">{{ $username ?? auth()->user()->username ?? 'Account' }}</span>
                                 <x-booking.ui.icon name="chevron-right" class="h-3.5 w-3.5 transition-transform duration-200" ::class="open ? 'rotate-90' : ''" />
                             </button>
 
@@ -133,14 +140,17 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="press focus-ring inline-flex items-center gap-2 rounded-full bg-emerald-deep px-5 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_20%,transparent)]">
-                            Sign in
-                        </a>
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('login') }}" class="fh-nav-link focus-ring">Sign in</a>
+                            <a href="{{ route('home') }}#rooms" class="fh-cta focus-ring">
+                                Book a stay <span class="fh-cta-disc" aria-hidden="true">↗</span>
+                            </a>
+                        </div>
                     @endauth
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="focus-ring press grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/20 md:hidden cursor-pointer" aria-label="Open navigation menu">
+                <button id="mobileMenuBtn" class="focus-ring press grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/30 bg-current/10 md:hidden cursor-pointer" aria-label="Open navigation menu">
                     <x-booking.ui.icon name="menu" class="h-4 w-4" />
                 </button>
             </div>
@@ -153,7 +163,8 @@
             <div>
                 <div class="flex items-center justify-between pb-6 border-b border-ink/10">
                     <div class="flex items-center gap-2.5">
-                        <x-booking.ui.logo-mark class="h-9 w-9" />
+                        <img src="{{ asset('image/fh-mark.png') }}" alt="" aria-hidden="true"
+                             width="512" height="512" decoding="async" class="h-9 w-9 object-contain">
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-clsu-600">Hostel</span></span>
                     </div>
                     <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">
@@ -288,17 +299,19 @@
     <!-- Nav, drawer & footer behaviours -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Scroll-aware nav skin: transparent over the hero, glass once
-            // scrolled (what "glass" looks like is decided per-theme in CSS)
+            // Header condense: full-width and transparent over the hero, then
+            // narrower with a dark-glass pill past the fold. Pages with no dark
+            // hero carry `is-static` from Blade and opt out entirely — they
+            // wear the light pill from first paint.
             const nav = document.getElementById('siteNav');
-            if (nav && nav.dataset.dark === '1') {
-                let overHero = true;
+            const navWrap = document.getElementById('navWrap');
+            if (navWrap && nav && nav.dataset.dark === '1') {
+                let condensed = null;
                 const applyNavState = () => {
-                    const wantOver = window.scrollY < 80;
-                    if (wantOver === overHero) return;
-                    overHero = wantOver;
-                    nav.classList.toggle('nav-glass-dark', wantOver);
-                    nav.classList.toggle('nav-glass-solid', !wantOver);
+                    const want = window.scrollY > 36;
+                    if (want === condensed) return;
+                    condensed = want;
+                    navWrap.classList.toggle('is-condensed', want);
                 };
                 applyNavState();
                 window.addEventListener('scroll', applyNavState, { passive: true });
@@ -307,7 +320,6 @@
             // Nav retreats while reading down, returns on the first upward
             // scroll. Large single-frame jumps (anchor landings, page
             // restores) are ignored so arriving at /#rooms keeps the nav.
-            const navWrap = document.getElementById('navWrap');
             if (navWrap) {
                 let lastY = window.scrollY;
                 window.addEventListener('scroll', () => {
@@ -398,5 +410,6 @@
             });
         });
     </script>
+
 </body>
 </html>

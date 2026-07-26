@@ -1,0 +1,594 @@
+/* ============================================================
+   DASHBOARD HERO — welcome panel + gross-revenue card
+   The dashboard's top row. Card language follows the reference
+   set (soft neutral page, white cards, generous radii, roomy
+   padding); the palette stays CLSU green so it still reads as
+   Farmers Hostel. Typography inherits the console's Geist/Sora
+   tokens — no new families.
+   ============================================================ */
+
+.dash-hero-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    align-items: stretch;
+}
+
+/* The revenue card is the smaller column — it's one number, while the
+   welcome panel carries a sentence, four counts and four actions. */
+@media (min-width: 1100px) {
+    .dash-hero-row {
+        grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
+    }
+}
+
+/* ── Welcome panel ─────────────────────────────────────────── */
+.dash-welcome {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+    border-radius: var(--radius-xl);
+    padding: clamp(1.25rem, 2vw, 1.9rem);
+    box-shadow: 0 1px 2px rgba(9, 60, 36, 0.04), 0 18px 40px -28px rgba(9, 60, 36, 0.24);
+}
+
+.dash-welcome__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.15rem;
+}
+
+/* "Live" pill — the pulsing dot is the only always-on motion up here, so
+   it reads as a heartbeat rather than decoration. */
+.dash-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--color-clsu-50);
+    border: 1px solid var(--color-clsu-100);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-clsu-700);
+}
+
+/* The halo is a pseudo-element scaling out, not an animated box-shadow
+   spread — spread repaints the dot every frame, transform+opacity composite.
+   This one runs forever, so it has to be free. */
+.dash-live__dot {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--color-clsu-500);
+}
+
+.dash-live__dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--color-clsu-500);
+    animation: dash-live-pulse 2.4s var(--ease-out) infinite;
+}
+
+@keyframes dash-live-pulse {
+    0% {
+        opacity: 0.55;
+        transform: scale(1);
+    }
+
+    70%,
+    100% {
+        opacity: 0;
+        transform: scale(2.6);
+    }
+}
+
+.dash-welcome__date {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7c72);
+}
+
+.dash-welcome__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 2.4vw, 2.15rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+}
+
+.dash-welcome__title em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-clsu-700);
+}
+
+.dash-welcome__summary {
+    margin: 0.7rem 0 0;
+    max-width: 56ch;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-muted, #6b7c72);
+    text-wrap: pretty;
+}
+
+/* ── Today's ops counts ────────────────────────────────────── */
+.dash-ops {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1.35rem;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+    border-radius: var(--radius-lg);
+    background: var(--color-surface, #f4f8f5);
+    overflow: hidden;
+}
+
+@media (min-width: 640px) {
+    .dash-ops {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.dash-ops__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.85rem 1.1rem;
+    border-top: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+    border-left: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+}
+
+/* Only draw the interior rules — the container already has an outer border. */
+.dash-ops__item:nth-child(-n + 2) {
+    border-top: 0;
+}
+
+.dash-ops__item:nth-child(odd) {
+    border-left: 0;
+}
+
+@media (min-width: 640px) {
+    .dash-ops__item {
+        border-top: 0;
+    }
+
+    .dash-ops__item:first-child {
+        border-left: 0;
+    }
+
+    .dash-ops__item:nth-child(odd) {
+        border-left: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+    }
+
+    .dash-ops__item:first-child {
+        border-left: 0;
+    }
+}
+
+.dash-ops__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-muted, #6b7c72);
+}
+
+.dash-ops__dot {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+}
+
+.dash-ops__dot--green {
+    background: var(--color-clsu-500);
+}
+
+.dash-ops__dot--gold {
+    background: var(--color-palay-400);
+}
+
+.dash-ops__dot--slate {
+    background: #94a3a0;
+}
+
+.dash-ops__dot--red {
+    background: #dc2626;
+}
+
+.dash-ops__value {
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--color-ink);
+}
+
+/* Red is reserved for "someone must decide today" — a zero stays neutral. */
+.dash-ops__value.is-alert {
+    color: #dc2626;
+}
+
+/* ── Action row ────────────────────────────────────────────── */
+.dash-welcome__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1.35rem;
+}
+
+.dash-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.12));
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition),
+        box-shadow var(--transition),
+        transform 140ms var(--ease-out);
+}
+
+/* Gated: touch devices fire :hover on tap and then keep it stuck. */
+@media (hover: hover) and (pointer: fine) {
+    .dash-btn:hover {
+        background: var(--color-clsu-50);
+        border-color: var(--color-clsu-200);
+        color: var(--color-clsu-800);
+    }
+
+    .dash-btn--primary:hover {
+        background: var(--color-clsu-700);
+        border-color: var(--color-clsu-700);
+        color: #fff;
+    }
+}
+
+/* Matches .btn:active elsewhere in the console — press feedback should feel
+   identical everywhere, and scale reads as "pressed" better than a nudge. */
+.dash-btn:active {
+    transform: scale(0.97);
+}
+
+.dash-btn--primary {
+    background: var(--color-clsu-800);
+    border-color: var(--color-clsu-800);
+    color: #fff;
+    box-shadow: 0 10px 22px -12px rgba(8, 92, 55, 0.7);
+}
+
+/* ── Gross revenue card ────────────────────────────────────── */
+.dash-revenue {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+    color: #eaf6ef;
+    background:
+        radial-gradient(120% 80% at 85% 8%, rgba(60, 203, 127, 0.22) 0%, rgba(60, 203, 127, 0) 60%),
+        linear-gradient(158deg, #0b5133 0%, #08402a 45%, #052e1c 100%);
+    box-shadow: 0 1px 2px rgba(5, 46, 28, 0.2), 0 26px 54px -30px rgba(5, 46, 28, 0.8);
+}
+
+.dash-revenue__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.dash-revenue__eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(234, 246, 239, 0.62);
+}
+
+.dash-revenue__badge {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #a7e9c4;
+}
+
+.dash-revenue__value {
+    margin: 0.75rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #fff;
+}
+
+/* Centavos ride smaller and dimmer so the peso figure reads first. */
+.dash-revenue__cents {
+    font-size: 0.55em;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.dash-revenue__delta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.85rem;
+}
+
+.dash-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.dash-chip--up {
+    background: rgba(60, 203, 127, 0.18);
+    color: #7ff0b0;
+}
+
+.dash-chip--down {
+    background: rgba(248, 113, 113, 0.16);
+    color: #fca5a5;
+}
+
+.dash-revenue__delta-note {
+    font-size: 0.78rem;
+    color: rgba(234, 246, 239, 0.58);
+}
+
+/* Chart fills the slack between the figure and the footer, so the card
+   matches the welcome panel's height without a hardcoded number. */
+.dash-revenue__chart {
+    flex: 1 1 auto;
+    min-height: 82px;
+    margin: 1rem -0.35rem 0;
+}
+
+.dash-revenue__chart svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 82px;
+}
+
+.dash-revenue__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.78rem;
+    color: rgba(234, 246, 239, 0.6);
+}
+
+.dash-revenue__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 700;
+    color: #a7e9c4;
+    transition: color var(--transition);
+}
+
+/* The chevron slides on transform rather than the row animating `gap`, which
+   would re-lay-out the footer on every hover frame. */
+.dash-revenue__link svg {
+    transition: transform 180ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .dash-revenue__link:hover {
+        color: #fff;
+    }
+
+    .dash-revenue__link:hover svg {
+        transform: translateX(3px);
+    }
+}
+
+/* ── Stat-card meter ───────────────────────────────────────── */
+/* Gives each KPI its denominator: the bar is the share the number
+   represents of its own total. */
+.stat-meter {
+    height: 4px;
+    margin-top: 0.85rem;
+    border-radius: 999px;
+    background: rgba(20, 32, 26, 0.08);
+    overflow: hidden;
+}
+
+/* scaleX off a --meter ratio rather than an animated width: the card repolls
+   every 30s, and width would put a layout + paint on the main thread each
+   time. transform is composited, so the bar re-settles for free. */
+.stat-meter__fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-clsu-500);
+    transform: scaleX(var(--meter, 0));
+    transform-origin: left center;
+    transition: transform 600ms var(--ease-out);
+}
+
+.stat-meter__fill--palay {
+    background: var(--color-palay-400);
+}
+
+.stat-meter__fill--sky {
+    background: #60a5fa;
+}
+
+.stat-meter__fill--ember {
+    background: #f87171;
+}
+
+/* ── KPI trend glyph ───────────────────────────────────────── */
+/* 12 weekly bars beside the value. Heights are static inline styles, so this
+   costs nothing to render — it isn't animated, it's just information. */
+.stat-value-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.stat-spark {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 30px;
+    flex: none;
+    padding-bottom: 0.35rem;
+}
+
+.stat-spark__bar {
+    width: 3px;
+    height: var(--h, 20%);
+    border-radius: 1.5px;
+    background: var(--color-clsu-500);
+    opacity: 0.28;
+}
+
+/* The most recent weeks read stronger, so the eye lands on "now" first. */
+.stat-spark__bar:nth-last-child(-n + 4) {
+    opacity: 0.55;
+}
+
+.stat-spark__bar:last-child {
+    opacity: 1;
+}
+
+.stat-spark__bar--palay {
+    background: var(--color-palay-400);
+}
+
+.stat-spark__bar--sky {
+    background: #60a5fa;
+}
+
+.stat-spark__bar--ember {
+    background: #f87171;
+}
+
+/* ── Navigable KPI cards ───────────────────────────────────── */
+/* A number is more useful when it's a door. The chevron sits at 0 opacity
+   until hover so the card stays calm at rest but still reads as clickable
+   the moment the pointer lands. */
+.stat-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.stat-card-link .stat-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.stat-card-go {
+    opacity: 0;
+    transform: translateX(-3px);
+    transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+    .stat-card-link:hover .stat-card-go,
+    .stat-card-link:focus-visible .stat-card-go {
+        opacity: 0.75;
+        transform: translateX(0);
+    }
+}
+
+/* Keyboard users get it unconditionally — they have no hover to reveal it. */
+.stat-card-link:focus-visible .stat-card-go {
+    opacity: 0.75;
+    transform: translateX(0);
+}
+
+.stat-card-link:active {
+    transform: scale(0.995);
+}
+
+/* Footnote line under each KPI */
+.stat-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-muted, #6b7c72);
+}
+
+.stat-foot.is-up {
+    color: var(--color-clsu-600);
+    font-weight: 600;
+}
+
+.stat-foot.is-down {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* Reduced motion keeps colour and opacity cues, drops movement — the live dot
+   stays visible as a solid dot, the meters still show their value. */
+@media (prefers-reduced-motion: reduce) {
+
+    .dash-live__dot::after {
+        animation: none;
+        opacity: 0;
+    }
+
+    .stat-meter__fill,
+    .dash-btn,
+    .dash-revenue__link svg,
+    .stat-card-link {
+        transition: none;
+    }
+
+    .dash-btn:active {
+        transform: none;
+    }
+}
