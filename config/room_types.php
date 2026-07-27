@@ -9,7 +9,13 @@ return [
     |
     | Single source of truth for the room types shown on the public booking
     | page: the room grid cards, the reservation "room type" select options,
-    | and the mobile sticky bar's "starting from" price.
+    | the mobile sticky bar's "starting from" price, and the dedicated room
+    | detail page at /rooms/{slug}.
+    |
+    | `image` is the hero/card shot. `gallery` is the detail page's photo
+    | mosaic — the hero is prepended automatically by RoomCatalog, so list
+    | only the *additional* shots here. `tags` are the short descriptive
+    | chips under the room title on the detail page.
     |
     | IMPORTANT: The `id` and `beds` values must stay in sync with the
     | `$capacityMap` defined in App\Http\Controllers\BookingController, since
@@ -25,6 +31,8 @@ return [
         'beds'        => 2,
         'price'       => 1600,
         'image'       => 'image/double.jpg',
+        'gallery'     => ['image/gallery/1.jpg', 'image/gallery/2.jpg', 'image/gallery/3.jpg'],
+        'tags'        => ['Twin Beds', 'Ground Floor', 'Best Value'],
         'capacity'    => '2 Single Beds (2pax)',
         'includes'    => ['Free Breakfast (2 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower'],
         'amenities'   => [
@@ -41,6 +49,8 @@ return [
         'beds'        => 3,
         'price'       => 2100,
         'image'       => 'image/triple.jpg',
+        'gallery'     => ['image/gallery/4.jpg', 'image/gallery/5.jpg', 'image/gallery/6.jpg'],
+        'tags'        => ['Three Singles', 'Ground Floor', 'Small Groups'],
         'capacity'    => '3 Single Beds (3pax)',
         'includes'    => ['Free Breakfast (3 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower'],
         'amenities'   => [
@@ -57,6 +67,8 @@ return [
         'beds'        => 4,
         'price'       => 2400,
         'image'       => 'image/quadruple.jpg',
+        'gallery'     => ['image/gallery/7.jpg', 'image/gallery/8.jpg', 'image/gallery/9.jpg'],
+        'tags'        => ['Family Friendly', 'Bunk Bed', 'Mini Fridge'],
         'capacity'    => '1 Bunk Bed & 2 Single Beds (4pax)',
         'badge'       => 'Popular',
         'includes'    => ['Free Breakfast (4 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower', 'Mini Refrigerator'],
@@ -75,6 +87,8 @@ return [
         'beds'        => 2,
         'price'       => 2500,
         'image'       => 'image/deluxe.jpg',
+        'gallery'     => ['image/gallery/10.jpg', 'image/gallery/11.jpg', 'image/gallery/12.jpg'],
+        'tags'        => ['Queen Bed', 'Air-Conditioned', 'Private Stay'],
         'capacity'    => '1 Queen Size Bed (2pax)',
         'badge'       => 'Premium',
         'includes'    => ['Free Breakfast (2 pax)', 'Premium Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower', 'Air-Conditioning', 'Mini Refrigerator'],
@@ -93,6 +107,8 @@ return [
         'beds'        => 5,
         'price'       => 2500,
         'image'       => 'image/dormitory1.jpg',
+        'gallery'     => ['image/gallery/2.jpg', 'image/gallery/6.jpg', 'image/gallery/9.jpg'],
+        'tags'        => ['Bunk Beds', 'Dormitory Wing', 'Student Groups'],
         'capacity'    => '2 Bunk Beds & 1 Single Bed (5pax)',
         'includes'    => ['Free Breakfast (5 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower'],
         'amenities'   => [
@@ -109,6 +125,8 @@ return [
         'beds'        => 6,
         'price'       => 3000,
         'image'       => 'image/dormitory2.jpg',
+        'gallery'     => ['image/gallery/3.jpg', 'image/gallery/7.jpg', 'image/gallery/11.jpg'],
+        'tags'        => ['Largest Room', 'Dormitory Wing', 'Delegations'],
         'capacity'    => '3 Bunk Beds (6pax)',
         'includes'    => ['Free Breakfast (6 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower'],
         'amenities'   => [

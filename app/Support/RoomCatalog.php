@@ -47,6 +47,19 @@ class RoomCatalog
             }
         }
 
+        // Normalise the presentation keys the detail page relies on, so a type
+        // with no config entry still renders a gallery (its hero shot alone)
+        // instead of an empty mosaic.
+        foreach ($catalog as $slug => $type) {
+            $catalog[$slug]['tags'] = $type['tags'] ?? [];
+            $catalog[$slug]['gallery'] = collect([$type['image'] ?? null])
+                ->merge($type['gallery'] ?? [])
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
         return $catalog;
     }
 

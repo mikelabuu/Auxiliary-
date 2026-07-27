@@ -182,5 +182,13 @@ $(function() {
         applyRoomFilters();
     });
 });
+
+// Real-time push: the board reflects check-ins, check-outs and housekeeping
+// flips made anywhere else (admin console, another desk) without staff having
+// to refresh. Deferred while a modal or filter is in use — see live-refresh.js.
+window.liveRefresh([
+    { channel: 'rooms',    event: 'RoomStatusChanged' },
+    { channel: 'bookings', event: 'BookingChanged' },
+]);
 </script>
 @endpush

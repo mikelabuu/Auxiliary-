@@ -25,6 +25,28 @@ class BookingController extends Controller
         return view('public.home', compact('username', 'roomTypes', 'minPrice'));
     }
 
+    // Show one room type's dedicated detail page (/rooms/{slug})
+    public function showRoomType(string $slug)
+    {
+        $roomType = RoomCatalog::find($slug);
+
+        abort_if($roomType === null, 404);
+
+        $user = Auth::user();
+
+        // Sibling types power the "other rooms" strip at the foot of the page.
+        $otherTypes = collect(RoomCatalog::all())
+            ->except($slug)
+            ->values()
+            ->all();
+
+        return view('public.rooms.show', [
+            'username'   => $user ? $user->username : null,
+            'roomType'   => $roomType,
+            'otherTypes' => $otherTypes,
+        ]);
+    }
+
     // Show checkout form
     public function showCheckoutForm(Request $request)
     {

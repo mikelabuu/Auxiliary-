@@ -12,10 +12,14 @@
 
 {{--
     Modal shell (AAIS .modal): blurred backdrop + centered animated panel with
-    an AAIS .modal-header. Mechanics unchanged — works with the existing jQuery
-    openModal('id') / closeModal('id') hidden/flex toggle and
-    [data-modal-close] buttons, or Livewire via `always-visible` +
-    `close-action="closeModal"`.
+    an AAIS .modal-header.
+
+    Driven by resources/js/admin-modals.js, which owns open/close, the scroll
+    lock, Escape, and the focus trap. Pages still call the same
+    openModal('id') / closeModal('id') globals and mark dismiss controls with
+    [data-modal-close="id"]; Livewire-owned modals pass `always-visible` +
+    `close-action="closeModal"` and the engine animates the exit before
+    calling that method.
 
     <x-admin.ui.modal id="addRoomModal" icon="plus" title="Add New Room">
         <form ...>...fields + footer buttons...</form>
@@ -29,6 +33,8 @@
         'lg' => '620px',
         'xl' => '680px',
         '2xl' => '860px',
+        // Dossier width: two readable columns side by side (booking detail).
+        '3xl' => '1140px',
     ];
     $maxWidthCss = $maxWidthMap[$maxWidth] ?? $maxWidthMap['md'];
 
@@ -39,9 +45,16 @@
 @endphp
 
 {{-- z-[300]: above the sidebar/topbar (z-50/40) and the dashboard room-map
-     popover (z-[210]) so the backdrop dims the whole shell. --}}
-<div id="{{ $id }}" class="{{ $alwaysVisible ? 'flex' : 'hidden' }} fixed inset-0 z-[300] items-center justify-center p-5">
-    <div class="modal-backdrop-tint" @if($closeAction) wire:click="{{ $closeAction }}" @else data-modal-close="{{ $id }}" @endif></div>
+     popover (z-[210]) so the backdrop dims the whole shell. The engine
+     (resources/js/admin-modals.js) raises it further per stack depth.
+
+     `data-modal` is how the engine finds these; `data-modal-close-action`
+     marks the Livewire-owned variant, whose close must animate out first and
+     then call the component method rather than toggling `hidden` here. --}}
+<div id="{{ $id }}" data-modal
+     @if($closeAction) data-modal-close-action="{{ $closeAction }}" @endif
+     class="{{ $alwaysVisible ? 'flex' : 'hidden' }} fixed inset-0 z-[300] items-center justify-center p-5">
+    <div class="modal-backdrop-tint" data-modal-close="{{ $id }}"></div>
     <div {{ $attributes->merge(['class' => $panelClass]) }} style="max-width:{{ $maxWidthCss }};" role="dialog" aria-modal="true" @if($resolvedTitleId) aria-labelledby="{{ $resolvedTitleId }}" @endif tabindex="-1">
         @if($title)
             <div class="modal-header">
@@ -51,7 +64,7 @@
                     @endif
                     <span id="{{ $resolvedTitleId }}">{{ $title }}</span>
                 </h3>
-                <button type="button" class="btn btn-ghost btn-sm btn-icon" @if($closeAction) wire:click="{{ $closeAction }}" @else data-modal-close="{{ $id }}" @endif aria-label="Close">
+                <button type="button" class="btn btn-ghost btn-sm btn-icon" data-modal-close="{{ $id }}" aria-label="Close">
                     <x-admin.ui.icon name="x" class="w-4 h-4" stroke-width="2" />
                 </button>
             </div>

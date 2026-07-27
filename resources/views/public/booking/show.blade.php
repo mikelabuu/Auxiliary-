@@ -281,6 +281,33 @@
 </div>
 
 @push('scripts')
+@auth
+<script>
+    // Real-time push: this page is where a guest waits on a decision they
+    // can't make themselves — a Senior/PWD discount being reviewed, or a
+    // payment being confirmed. Until now the only way to learn the outcome was
+    // to refresh by hand.
+    //
+    // Private channel: unlike the staff-facing broadcasts (payload-free, public
+    // channels), this one reaches a guest's browser, so subscription is
+    // authorised in routes/channels.php against the booking's owner and the
+    // payload carries only the new status.
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.Echo) return;
+
+        window.Echo.private('booking.{{ $booking->id }}')
+            .listen('.BookingStatusChanged', function (payload) {
+                if (payload && payload.status === '{{ $booking->status }}') return;
+
+                // Re-render server-side: the status banner, payable amount,
+                // discount panel and payment CTA are all computed in Blade, so
+                // reloading is both the simplest and the only consistent way
+                // to show the new state.
+                window.location.reload();
+            });
+    });
+</script>
+@endauth
 <script>
     // Success-hero step 1 → glide to the payment CTA and flash its card
     // (same reduced-motion-aware scroll + block-flash contract as checkout).

@@ -12,6 +12,6 @@
 --}}
 {{-- $modalId lets a second caller (the global guest-name handler) inject this
      modal on a page that may already have #bookingModal in its own container. --}}
-<x-admin.ui.modal :id="$modalId ?? 'bookingModal'" icon="clipboard" :title="'Booking #' . $booking->id" max-width="lg">
+<x-admin.ui.modal :id="$modalId ?? 'bookingModal'" icon="clipboard" :title="'Booking #' . $booking->id" max-width="3xl">
     @include('staff.partials.booking-detail-body', ['booking' => $booking])
 </x-admin.ui.modal>

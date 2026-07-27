@@ -1,0 +1,97 @@
+/* ============================================================
+   BOOKING DOSSIER — the staff booking-detail modal
+   (staff/partials/booking-detail-body.blade.php)
+
+   Only the pieces Tailwind utilities can't express cleanly live
+   here: the facility photo hover affordance and the fullscreen
+   lightbox, which must be appended to <body>. The .modal panel
+   carries a transform, so it becomes the containing block for any
+   position:fixed descendant — a lightbox rendered inside the modal
+   would be trapped in the panel instead of covering the viewport.
+   ============================================================ */
+
+/* ── Facility tile: reveal a "View fullscreen" scrim on hover ── */
+.facility-tile { position: relative; overflow: hidden; }
+.facility-tile-scrim {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 6px;
+    background: rgba(10, 22, 15, .55);
+    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+    color: #fff; opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+}
+.facility-tile-scrim span {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.facility-tile:hover .facility-tile-scrim,
+.facility-tile:focus-visible .facility-tile-scrim { opacity: 1; }
+
+/* Coarse pointers get no hover state — show the affordance permanently
+   at a lower weight so the tile still reads as tappable. */
+@media (hover: none) {
+    .facility-tile-scrim {
+        opacity: 1;
+        background: linear-gradient(to top, rgba(10, 22, 15, .6), transparent 55%);
+        justify-content: flex-end; padding-bottom: 8px;
+        backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
+}
+
+/* ── Fullscreen viewer (built by JS, appended to <body>) ── */
+.fh-lightbox {
+    position: fixed; inset: 0; z-index: 400;
+    display: none; align-items: center; justify-content: center;
+    padding: 40px 24px;
+    background: rgba(6, 16, 11, .82);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.fh-lightbox.is-open { display: flex; }
+.fh-lightbox figure {
+    max-width: min(1100px, 100%); max-height: 100%;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+    animation: fh-lightbox-in 260ms var(--ease-spring) both;
+}
+.fh-lightbox img {
+    max-width: 100%; max-height: calc(100vh - 130px);
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 32px 80px -24px rgba(0, 0, 0, .7);
+}
+.fh-lightbox figcaption {
+    color: #eaf3ed; font-size: 12px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+}
+.fh-lightbox-close {
+    position: absolute; top: 18px; right: 20px;
+    width: 40px; height: 40px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; line-height: 1;
+    color: #fff; background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .2);
+    cursor: pointer;
+    transition: background 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.fh-lightbox-close:hover { background: rgba(255, 255, 255, .22); }
+.fh-lightbox-close:active { transform: scale(.94); }
+
+@keyframes fh-lightbox-in {
+    from { opacity: 0; transform: scale(.96); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fh-lightbox figure { animation: none; }
+    .facility-tile-scrim { transition: none; }
+}
+
+/* ── Stay progress: how far through the stay an active booking is ── */
+.stay-progress-track {
+    height: 6px; border-radius: 999px;
+    background: var(--color-g-100); overflow: hidden;
+}
+.stay-progress-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-g-500), var(--color-g-600));
+    transition: width 400ms var(--ease-out);
+}

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Events\BookingChanged;
+use App\Events\DiscountChanged;
 use App\Models\Booking;
 use App\Models\Discount;
 use App\Models\DiscountFile;
+use App\Support\Realtime;
 use Illuminate\Support\Facades\DB;
 
 class DiscountController extends Controller
@@ -91,6 +94,10 @@ class DiscountController extends Controller
             ->with('success');
         }
         
+        // The staff queue is worked live — a guest who has just uploaded IDs is
+        // waiting on a decision — but it only refreshed on a 60s poll.
+        Realtime::emit(new DiscountChanged());
+
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Discount request submitted successfully! Staff will review it.');
     }
@@ -135,6 +142,11 @@ class DiscountController extends Controller
                 'status' => 'pending_payment',
             ]);
         });
+
+        // Withdrawn requests must leave the staff queue as promptly as they
+        // entered it, and the booking is back to pending_payment.
+        Realtime::emit(new DiscountChanged());
+        Realtime::emit(new BookingChanged());
 
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Discount request cancelled. You may now proceed to payment.');

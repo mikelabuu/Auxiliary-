@@ -173,7 +173,7 @@
     @endif
 
     @if($selectedBooking)
-        <x-admin.ui.modal id="bookingDetailModal" icon="clipboard" :title="'Booking #' . $selectedBooking->id" max-width="lg" always-visible close-action="closeModal">
+        <x-admin.ui.modal id="bookingDetailModal" icon="clipboard" :title="'Booking #' . $selectedBooking->id" max-width="3xl" always-visible close-action="closeModal">
             @include('staff.partials.booking-detail-body', ['booking' => $selectedBooking])
         </x-admin.ui.modal>
     @endif

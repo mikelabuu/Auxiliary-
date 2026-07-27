@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use App\Services\AuditLogger;
 use App\Events\RoomStatusChanged;
 use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
 use App\Support\Realtime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -138,6 +139,11 @@ class BookingsTable extends Component
             $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
             Realtime::emit(new RoomStatusChanged());
             Realtime::emit(new BookingChanged());
+            // A staff cancellation is not something the guest initiated, so
+            // push it to their booking page too.
+            if (BookingStatusChanged::shouldEmitFor($booking)) {
+                Realtime::emit(new BookingStatusChanged($booking->id, 'cancelled'));
+            }
         }
     }
 
@@ -181,6 +187,9 @@ class BookingsTable extends Component
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         Realtime::emit(new RoomStatusChanged());
         Realtime::emit(new BookingChanged());
+        if (BookingStatusChanged::shouldEmitFor($booking)) {
+            Realtime::emit(new BookingStatusChanged($booking->id, 'completed'));
+        }
     }
 
     // Search + date, but deliberately not the status pill — the pill counts are

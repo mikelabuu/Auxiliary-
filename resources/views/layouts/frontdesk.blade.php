@@ -38,46 +38,11 @@
   </main>
 
   <script>
-    // ── Shared modal helpers (same contract as the admin console) ──
-    window.__lastModalFocus = null;
-    window.openModal = function (id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      window.__lastModalFocus = document.activeElement;
-      el.removeAttribute('data-closing');
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-      const focusable = el.querySelector('input:not([type="hidden"]), select, textarea, button:not([data-modal-close]):not([aria-label="Close"])')
-        || el.querySelector('[role="dialog"]');
-      if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
-    };
-    window.closeModal = function (id) {
-      const el = document.getElementById(id);
-      if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
-      el.setAttribute('data-closing', '');
-      setTimeout(function () {
-        el.classList.add('hidden');
-        el.classList.remove('flex');
-        el.removeAttribute('data-closing');
-        if (window.__lastModalFocus) {
-          try { window.__lastModalFocus.focus({ preventScroll: true }); } catch (e) {}
-          window.__lastModalFocus = null;
-        }
-      }, 150);
-    };
-
-    // Any [data-modal-close="id"] dismisses its modal (backdrop + X buttons)
-    document.addEventListener('click', function (e) {
-      const closer = e.target.closest && e.target.closest('[data-modal-close]');
-      if (closer) window.closeModal(closer.getAttribute('data-modal-close'));
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape') return;
-      document.querySelectorAll('.fixed.inset-0.flex [role="dialog"]').forEach(function (dlg) {
-        const wrap = dlg.closest('.fixed.inset-0');
-        if (wrap && wrap.id && !wrap.classList.contains('hidden')) window.closeModal(wrap.id);
-      });
-    });
+    // Modal open/close, [data-modal-close] dismissal, Escape, the scroll lock
+    // and focus trapping all come from resources/js/admin-modals.js (bundled
+    // into the app.js this layout already loads). This file used to carry its
+    // own byte-for-byte copy of those helpers; two implementations meant the
+    // frontdesk console quietly missed every fix made on the admin side.
 
     // Entrance keyframes fill forwards and would trap page-level fixed
     // modals inside a stale stacking context — clear them once done.

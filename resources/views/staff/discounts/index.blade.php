@@ -33,4 +33,18 @@
 </div>
 @endsection
 
+@push('scripts')
+<script>
+// Real-time push: the queue reflects a new or withdrawn request the moment it
+// happens, instead of up to 60s later on the wire:poll fallback. A guest who
+// has just uploaded their IDs is actively waiting on this review.
+document.addEventListener('DOMContentLoaded', function () {
+    if (!window.Echo) return;
+    window.Echo.channel('discounts').listen('.DiscountChanged', function () {
+        if (window.Livewire) Livewire.dispatch('refreshDiscountList');
+    });
+});
+</script>
+@endpush
+
 {{-- Password re-auth removed — the .review-discount links now navigate directly. --}}

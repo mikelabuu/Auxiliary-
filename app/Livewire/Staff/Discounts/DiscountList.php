@@ -13,6 +13,14 @@ class DiscountList extends Component
     public $status = '';
     public $sort = '';
 
+    /**
+     * Pushed by the Echo listener on the discounts index when a
+     * DiscountChanged broadcast lands — a guest submitting or withdrawing a
+     * request, or another staff member reviewing one. The wire:poll on the
+     * view stays as the fallback for when Reverb isn't running.
+     */
+    protected $listeners = ['refreshDiscountList' => '$refresh'];
+
     protected $updatesQueryString = ['status', 'sort'];
 
     protected $paginationTheme = 'tailwind'; // or 'bootstrap' depending on your setup

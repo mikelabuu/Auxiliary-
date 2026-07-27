@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Events\BookingChanged;
+use App\Events\RoomStatusChanged;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\CancellationLog;
+use App\Support\Realtime;
 use Carbon\Carbon;
 
 class SettingsController extends Controller
@@ -214,6 +217,12 @@ class SettingsController extends Controller
         // Update last cancel timestamp
         $user->last_cancelled_at = now();
         $user->save();
+
+        // A guest cancelling drops the booking out of BLOCKING_STATUSES, which
+        // frees its rooms for everyone else — but no console was being told,
+        // so the freed rooms stayed spoken-for until the next poll.
+        Realtime::emit(new BookingChanged());
+        Realtime::emit(new RoomStatusChanged());
 
         return back()->with('status', 'Booking cancelled successfully.');
     }

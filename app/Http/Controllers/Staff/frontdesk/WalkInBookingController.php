@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Staff\frontdesk;
 
+use App\Events\BookingChanged;
+use App\Events\RoomStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Payment;
+use App\Support\Realtime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -249,6 +252,14 @@ class WalkInBookingController extends Controller
             \Log::error('Walk-in booking failed: '.$e->getMessage());
             return back()->with('error', 'Failed to create booking: ' . $e->getMessage())->withInput();
         }
+
+        // Post-commit, and only on the success path — a rolled-back booking
+        // must never announce itself. The admin manual-booking flow already
+        // emitted these; the walk-in flow creating the same rows did not, so
+        // rooms taken at the desk stayed "available" on every other console
+        // until its next poll.
+        Realtime::emit(new BookingChanged());
+        Realtime::emit(new RoomStatusChanged());
 
         return redirect()->route('frontdesk.walkin.show', $booking->id)
                         ->with('success', "Walk-in booking created successfully. Status: {$status}");

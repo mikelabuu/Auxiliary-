@@ -58,3 +58,29 @@
 @include('partials.dashboard.calendar-modal')
 
 @endsection
+
+@push('scripts')
+<script>
+// Real-time push: this dashboard is built from Livewire panels, so a broadcast
+// refreshes those in place rather than reloading the page (the panels keep
+// their own wire:poll as the fallback when Reverb is down). Mirrors the
+// listener on the admin dashboard.
+document.addEventListener('DOMContentLoaded', function () {
+    if (!window.Echo) return;
+
+    let timer = null;
+    function scheduleRefresh() {
+        clearTimeout(timer);
+        // One desk action emits several events; coalesce them into one refresh.
+        timer = setTimeout(function () {
+            if (!window.Livewire) return;
+            Livewire.dispatch('refreshArrivalsDepartures');
+            Livewire.dispatch('refreshOccupancy');
+        }, 400);
+    }
+
+    window.Echo.channel('rooms').listen('.RoomStatusChanged', scheduleRefresh);
+    window.Echo.channel('bookings').listen('.BookingChanged', scheduleRefresh);
+});
+</script>
+@endpush

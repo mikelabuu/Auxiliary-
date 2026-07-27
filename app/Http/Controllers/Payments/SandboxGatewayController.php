@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Support\Realtime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +52,14 @@ class SandboxGatewayController extends Controller
                 'payment_mode' => 'card',
             ]);
 
+            // A guest paying is the one booking change staff never trigger
+            // themselves, so without this every staff console sat on its poll
+            // interval before the booking left "pending payment".
+            Realtime::emit(new BookingChanged());
+            if (BookingStatusChanged::shouldEmitFor($booking)) {
+                Realtime::emit(BookingStatusChanged::for($booking->refresh()));
+            }
+
             try {
                 Mail::to($booking->user->email)
                     ->send(new BookingPaidMail($booking, $payment));
@@ -77,6 +88,10 @@ class SandboxGatewayController extends Controller
             'status' => 'success',
             'webhook_verified' => true,
         ]);
+
+        // The booking status is untouched here, but the payment panel staff
+        // read in the booking dossier is not — nudge the consoles to re-query.
+        Realtime::emit(new BookingChanged());
 
         return response()->json(['message' => 'Webhook processed', 'status' => 'success']);
     }

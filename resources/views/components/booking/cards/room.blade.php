@@ -19,8 +19,11 @@
 @endphp
 
 <article data-room-card="{{ $typeId }}" class="group flex h-full flex-col" data-aos="fade-up" data-aos-delay="{{ $revealDelay }}">
-    <!-- Portrait image -->
-    <div class="hover-lift-premium relative aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep ring-1 ring-white/10 sm:aspect-[4/5]">
+    <!-- Portrait image — also the crawlable route into the full room page.
+         Every JS hook below is attribute-based (data-card-image, data-avail-slot),
+         so the anchor swap is invisible to availability-search.js. -->
+    <a href="{{ route('rooms.show', $typeId) }}" aria-label="View the {{ $title }} page"
+       class="hover-lift-premium !no-underline relative block aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep ring-1 ring-white/10 sm:aspect-[4/5]">
         {{-- Zoom rides the slow editorial curve; filter/opacity (the fully-booked
              dim toggled by availability-search.js) read as one 400ms state change --}}
         <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy" decoding="async"
@@ -48,7 +51,7 @@
             <x-booking.ui.icon name="users" class="h-3.5 w-3.5 text-gold" />
             {{ $capacity }}
         </div>
-    </div>
+    </a>
 
     <!-- Body -->
     <div class="mt-6 flex flex-1 flex-col">
@@ -57,7 +60,9 @@
         @endif
 
         <div class="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-            <h3 class="text-balance font-display text-2xl leading-tight text-ink">{{ $title }}</h3>
+            <h3 class="text-balance font-display text-2xl leading-tight text-ink">
+                <a href="{{ route('rooms.show', $typeId) }}" class="focus-ring !no-underline rounded transition-colors hover:text-clsu-700">{{ $title }}</a>
+            </h3>
             <div class="shrink-0 text-right">
                 <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-ink/50">From</p>
                 <p class="font-display text-xl leading-none text-ink">₱{{ $formattedPrice }}</p>

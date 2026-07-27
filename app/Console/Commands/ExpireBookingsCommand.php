@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\ExpiryLog;
 use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
 use App\Events\RoomStatusChanged;
 use App\Support\Realtime;
 use Carbon\Carbon;
@@ -64,6 +65,14 @@ class ExpireBookingsCommand extends Command
         // so both the booking panels and the room map need a push.
         Realtime::emit(new BookingChanged());
         Realtime::emit(new RoomStatusChanged());
+
+        // Losing a reservation to the payment window is the change a guest is
+        // least likely to be expecting, so tell whoever is sitting on the page.
+        foreach ($expiredBookings as $booking) {
+            if (BookingStatusChanged::shouldEmitFor($booking)) {
+                Realtime::emit(new BookingStatusChanged($booking->id, 'expired'));
+            }
+        }
 
         $this->info(" Marked {$expiredBookings->count()} bookings as expired and logged them.");
     }

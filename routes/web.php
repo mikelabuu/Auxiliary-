@@ -54,6 +54,10 @@ Route::get('/', [BookingController::class, 'welcome'])->name('home');
 Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
 Route::post('/rooms/availability-summary', [BookingController::class, 'availabilitySummary'])->name('rooms.availability_summary');
 
+// Public room detail page. Declared after the POST availability endpoints so
+// the literal /rooms/* paths above always win over this wildcard.
+Route::get('/rooms/{slug}', [BookingController::class, 'showRoomType'])->name('rooms.show');
+
 Route::middleware('guest')->group(function () {
     // Login form
     Route::get('/login', function () {

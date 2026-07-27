@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Staff\frontdesk;
 
+use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
+use App\Events\RoomStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Checkout;
 use App\Models\Reservation;
+use App\Support\Realtime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -86,6 +90,17 @@ class BookingsController extends Controller{
                 "Booking #{$booking->id} checked out by {$staff->name}"
             );
         });
+
+        // Emitted after the transaction commits, so every console that
+        // re-queries on this signal reads the freed rooms rather than racing
+        // an open transaction. The admin-side checkout already did this; the
+        // front desk doing the same work did not, which is why the dashboard
+        // room map lagged behind desk activity.
+        Realtime::emit(new BookingChanged());
+        Realtime::emit(new RoomStatusChanged());
+        if (BookingStatusChanged::shouldEmitFor($booking)) {
+            Realtime::emit(BookingStatusChanged::for($booking->refresh()));
+        }
 
         return back()->with('success', "Booking #{$booking->id} checked out.");
     }

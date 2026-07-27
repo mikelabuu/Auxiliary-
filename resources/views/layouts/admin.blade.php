@@ -98,35 +98,11 @@
   </button>
 
   <script>
-    // ── Shared modal helpers (animated open/close) ──
-    // Pages call openModal(id)/closeModal(id); the wrapper toggles hidden/flex
-    // while [data-closing] lets the CSS run a fast exit before display:none.
-    window.__lastModalFocus = null;
-    window.openModal = function (id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      window.__lastModalFocus = document.activeElement;
-      el.removeAttribute('data-closing');
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-      const focusable = el.querySelector('input:not([type="hidden"]), select, textarea, button:not([data-modal-close]):not([aria-label="Close"])')
-        || el.querySelector('[role="dialog"]');
-      if (focusable) { try { focusable.focus({ preventScroll: true }); } catch (e) {} }
-    };
-    window.closeModal = function (id) {
-      const el = document.getElementById(id);
-      if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
-      el.setAttribute('data-closing', '');
-      setTimeout(function () {
-        el.classList.add('hidden');
-        el.classList.remove('flex');
-        el.removeAttribute('data-closing');
-        if (window.__lastModalFocus) {
-          try { window.__lastModalFocus.focus({ preventScroll: true }); } catch (e) {}
-          window.__lastModalFocus = null;
-        }
-      }, 150);
-    };
+    // Modal open/close, scroll lock, Escape and focus trapping all live in
+    // resources/js/admin-modals.js, bundled into the app.js this layout
+    // already loads. It defines the same window.openModal(id) /
+    // window.closeModal(id) globals this layout and the staff views have
+    // always called, so nothing here needs to change.
 
     // Entrance keyframes (fadeInUp/popIn/rowIn) run with fill:forwards, and a
     // filled opacity/transform animation keeps a stacking context forever —
@@ -243,13 +219,9 @@
           .catch(function () {});
       }
 
+      // Dismissing this modal ([data-modal-close] and Escape) is handled
+      // generically by the modal engine — nothing modal-specific here.
       document.addEventListener('click', function (e) {
-        const closer = e.target.closest && e.target.closest('[data-modal-close="guestBookingModal"]');
-        if (closer) {
-          window.closeModal('guestBookingModal');
-          return;
-        }
-
         const link = e.target.closest && e.target.closest('.guest-history-link');
         if (!link) return;
         const bookingId = link.getAttribute('data-booking-id');
@@ -258,13 +230,6 @@
 
         // Guest history is read-only — open it directly (no password re-auth).
         openGuestBookingModal(bookingId);
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key !== 'Escape') return;
-        const dlg = document.getElementById('guestBookingModal');
-        if (dlg && !dlg.classList.contains('hidden')) {
-          window.closeModal('guestBookingModal');
-        }
       });
     })();
   </script>

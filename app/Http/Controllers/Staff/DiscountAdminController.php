@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
+use App\Events\DiscountChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Discount;
 use App\Models\DiscountFile;
 use App\Models\Balance;
 use App\Services\DiscountService;
+use App\Support\Realtime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -77,6 +81,9 @@ class DiscountAdminController extends Controller
             "Staff {$staff->name} approved a discount ID file (ID: {$file->id}) for booking #{$discount->booking->id}"
         );
 
+        // Per-file reviews move the request's progress bar in the queue.
+        Realtime::emit(new DiscountChanged());
+
         return back()->with('success', 'File approved for reservation #' . ($file->reservation->room_number ?? 'N/A'));
     }
 
@@ -104,6 +111,8 @@ class DiscountAdminController extends Controller
             ['status' => 'rejected'],
             "Staff {$staff->name} rejected a discount ID file (ID: {$file->id}) for booking #{$discount->booking->id}"
         );
+
+        Realtime::emit(new DiscountChanged());
 
         return back()->with('success', 'File rejected for reservation #' . ($file->reservation->room_number ?? 'N/A'));
     }
@@ -158,6 +167,11 @@ class DiscountAdminController extends Controller
             );
         });
 
+        // This is the decision the guest is sitting on their booking page
+        // waiting for: the payable amount just changed and payment is now
+        // unblocked. Emitted post-commit so subscribers read the new figures.
+        $this->announceDecision($discount);
+
         return redirect()->route('staff.discounts.index')->with('success', 'Discount approved successfully.');
     }
 
@@ -205,7 +219,24 @@ class DiscountAdminController extends Controller
             );
         });
 
+        $this->announceDecision($discount);
+
         return redirect()->route('staff.discounts.index')->with('success', 'Discount request rejected.');
+    }
+
+    /**
+     * Push an approve/reject outcome to everyone watching: the staff queue, the
+     * booking consoles, and the guest's own booking page.
+     */
+    private function announceDecision(Discount $discount): void
+    {
+        Realtime::emit(new DiscountChanged());
+        Realtime::emit(new BookingChanged());
+
+        $booking = $discount->booking()->first();
+        if (BookingStatusChanged::shouldEmitFor($booking)) {
+            Realtime::emit(BookingStatusChanged::for($booking));
+        }
     }
 
     public function previewFile(DiscountFile $file)

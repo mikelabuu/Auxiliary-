@@ -17,6 +17,10 @@
                 this.isOpen = false;
                 document.body.style.overflow = '';
             },
+            // The modal is the quick peek; the full page lives at /rooms/{slug}.
+            detailUrl() {
+                return this.room ? '{{ url('/rooms') }}/' + this.room.id : '#';
+            },
             isFullyBooked() {
                 if (!this.room) return false;
                 const data = window.LAST_AVAILABILITY;
@@ -172,7 +176,10 @@
 
             <!-- Sticky footer CTAs -->
             <div class="sticky bottom-0 z-20 flex gap-3 border-t border-ink/10 bg-cream-warm/95 px-6 py-5 backdrop-blur-xl">
-                <button type="button" @click="close()" class="press focus-ring flex-1 rounded-full border border-ink/15 bg-ink/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-ink/10 cursor-pointer">Close</button>
+                <a :href="detailUrl()" class="press focus-ring !no-underline flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/70 hover:bg-ink/10 hover:text-ink cursor-pointer">
+                    Full details
+                    <x-booking.ui.icon name="arrow-right" class="h-3.5 w-3.5" />
+                </a>
                 <button type="button" @click="bookThis()" :disabled="isFullyBooked()" :class="isFullyBooked() ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''" class="press focus-ring flex-[2] inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-clsu-500)_28%,transparent)]">
                     <x-booking.ui.icon name="calendar" class="h-4 w-4" />
                     <span x-text="isFullyBooked() ? 'Fully Booked' : 'Book this room'">Book this room</span>

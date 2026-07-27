@@ -519,6 +519,20 @@
     transition: opacity 140ms var(--ease-out), transform 140ms var(--ease-out);
 }
 [data-closing] .modal-backdrop-tint { opacity: 0; transition-duration: 140ms; }
+
+/* The engine (admin-modals.js) skips waiting for transitionend under reduced
+   motion and hides immediately — so drop the animation here to match, or the
+   panel would be yanked away mid-transition. */
+@media (prefers-reduced-motion: reduce) {
+    .modal,
+    .modal-backdrop-tint,
+    [data-closing] .modal,
+    [data-closing] .modal-backdrop-tint {
+        transition: none;
+    }
+    .modal { @starting-style { opacity: 1; transform: none; } }
+    .modal-backdrop-tint { @starting-style { opacity: 1; } }
+}
 .modal-header {
     padding: 22px 28px; border-bottom: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: space-between;
