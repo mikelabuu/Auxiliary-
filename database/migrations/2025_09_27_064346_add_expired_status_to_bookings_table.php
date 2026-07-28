@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
+        // MySQL-only DDL; see 2026_07_20_000001 for the same guard.
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Update enum to include "expired"
         DB::statement("
             ALTER TABLE bookings 
@@ -27,6 +32,10 @@ return new class extends Migration {
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Rollback: remove "expired"
         DB::statement("
             ALTER TABLE bookings 

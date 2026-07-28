@@ -64,10 +64,15 @@ Route::middleware('guest')->group(function () {
         return view('public.auth.login');
     })->name('login');
 
-    // User Login actions
-    Route::post('/login/user', [AuthController::class, 'loginUser'])->name('login.user');
+    // User Login actions. The controller also runs a per-email limiter; this
+    // is the per-IP backstop that stops one host spraying many accounts.
+    Route::post('/login/user', [AuthController::class, 'loginUser'])
+        ->middleware('throttle:20,1')
+        ->name('login.user');
     // Signup
-    Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
+    Route::post('/signup', [AuthController::class, 'signup'])
+        ->middleware('throttle:registration')
+        ->name('signup');
 
     // TEMP-DEV-LOGIN (remove before commit)
     Route::get('/__dev-login', function () {
@@ -78,7 +83,9 @@ Route::middleware('guest')->group(function () {
 
     // Staff Login Form
     Route::get('/staff/login', [StaffAuthController::class, 'showLoginForm'])->name('staff.login');
-    Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])->name('staff.login.submit');
+    Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])
+        ->middleware('throttle:20,1')
+        ->name('staff.login.submit');
      // OTP verification
     Route::get('/staff/otp', [StaffAuthController::class, 'showOtpForm'])->name('staff.otp.form');
     Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])->name('staff.otp.verify');
@@ -87,9 +94,13 @@ Route::middleware('guest')->group(function () {
 
     // Password reset
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:password-reset')
+        ->name('password.email');
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('password.update');
 });
 
 /*
@@ -134,7 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Staff Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(function () {
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'])->group(function () {
 
     // Home and Dashboard
     Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
@@ -149,7 +160,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     Route::post('/staff/rooms/store', [RoomController::class, 'store'])->name('staff.rooms.store');
 
     // Verify staff password before delete (AJAX)
-    Route::post('/staff/rooms/{room}/verify-password', [RoomController::class, 'verifyPassword'])->name('staff.rooms.verifyPassword');
+    Route::post('/staff/rooms/{room}/verify-password', [RoomController::class, 'verifyPassword'])
+        ->middleware('throttle:staff-password')
+        ->name('staff.rooms.verifyPassword');
 
     Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
     Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
@@ -170,6 +183,7 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
             ->name('staff.completedbookings.index');
 
         Route::post('/completed-bookings/verify-password', [CompletedBookingsController::class, 'verifyPassword'])
+            ->middleware('throttle:staff-password')
             ->name('staff.completedbookings.verify-password');
 
         Route::get('/completed-bookings/{id}/details', [CompletedBookingsController::class, 'showDetails'])
@@ -180,7 +194,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 
         Route::get('/user-records', [UserRecordsController::class, 'index'])->name('staff.userrecords.index');
         // Verify staff password
-        Route::post('/user-records/verify-password', [UserRecordsController::class, 'verifyPassword'])->name('staff.userrecords.verify-password');
+        Route::post('/user-records/verify-password', [UserRecordsController::class, 'verifyPassword'])
+            ->middleware('throttle:staff-password')
+            ->name('staff.userrecords.verify-password');
 
         // Perform suspend/unsuspend action (only called after password verified)
         Route::post('/user-records/{user}/suspend', [UserRecordsController::class, 'suspend'])->name('staff.userrecords.suspend');
@@ -194,7 +210,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
         Route::post('/staff/create', [StaffRecordsController::class, 'createStaff'])->name('staff.create-staff');
         Route::put('/staff/{staff}/update', [StaffRecordsController::class, 'update'])->name('staff.update');
 
-        Route::post('/staff-records/verify-password', [StaffRecordsController::class, 'verifyPassword'])->name('staff.staffrecords.verify-password');
+        Route::post('/staff-records/verify-password', [StaffRecordsController::class, 'verifyPassword'])
+            ->middleware('throttle:staff-password')
+            ->name('staff.staffrecords.verify-password');
 
         // Perform suspend/unsuspend action (only called after password verified)
         Route::post('/staff-records/{staff}/suspend', [StaffRecordsController::class, 'suspend'])->name('staff.staffrecords.suspend');
@@ -231,7 +249,9 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
     Route::post('/staff/discounts/{discount}/file/{file}/reject', [DiscountAdminController::class, 'rejectFile'])->name('staff.discounts.file.reject');
 
     //verify password before review
-    Route::post('/staff/discounts/verify-password', [DiscountAdminController::class, 'verifyPassword'])->name('staff.discounts.verify-password');
+    Route::post('/staff/discounts/verify-password', [DiscountAdminController::class, 'verifyPassword'])
+        ->middleware('throttle:staff-password')
+        ->name('staff.discounts.verify-password');
 
     // Secure preview for file (stream private storage)
     Route::get('/staff/discounts/file/{file}/preview', [DiscountAdminController::class, 'previewFile'])->name('staff.discounts.file.preview');
@@ -272,7 +292,7 @@ Route::middleware(['auth:staff', 'staff.role:admin,master_admin'])->group(functi
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:staff')->group(function () {
+Route::middleware(['auth:staff', 'staff.active'])->group(function () {
     Route::post('/staff/logout', function (Request $request) {
         Auth::guard('staff')->logout();
         $request->session()->invalidate();
@@ -280,7 +300,9 @@ Route::middleware('auth:staff')->group(function () {
         return redirect('/staff/login');
     })->name('staff.logout');
 
-    Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])->name('staff.bookings.verify-password');
+    Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])
+        ->middleware('throttle:staff-password')
+        ->name('staff.bookings.verify-password');
     Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
     
@@ -295,7 +317,7 @@ Route::middleware('auth:staff')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:staff', 'staff.role:frontdesk,master_admin'])
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,master_admin'])
     ->prefix('front-desk')
     ->group(function () {
 

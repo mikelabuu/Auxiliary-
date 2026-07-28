@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'staff.role' => \App\Http\Middleware\StaffRoleMiddleware::class,
+            'staff.active' => \App\Http\Middleware\EnsureStaffNotSuspended::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -9,8 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // SQLite has no ENUM and cannot MODIFY a column, so this DDL is
+        // MySQL-only — same guard the 2026_07_20 migrations use.
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Update the enum definition
-        DB::statement("ALTER TABLE bookings 
+        DB::statement("ALTER TABLE bookings
             MODIFY COLUMN status ENUM(
                 'pending_discount',
                 'pending_payment',
@@ -25,8 +31,12 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Rollback to old enum definition
-        DB::statement("ALTER TABLE bookings 
+        DB::statement("ALTER TABLE bookings
             MODIFY COLUMN status ENUM(
                 'pending',
                 'booked',

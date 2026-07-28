@@ -8,6 +8,7 @@ use App\Models\Staff;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -15,28 +16,52 @@ class AuthController extends Controller
     public function loginUser(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
+        // This endpoint had no throttling at all, which made every customer
+        // account brute-forceable. Mirrors the staff limiter: 5 tries, then a
+        // 15-minute cooldown, keyed on email + IP so one attacker can't lock
+        // out unrelated guests.
+        $email = strtolower($credentials['email']);
+        $key = 'login-attempt:user:' . $email . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            return back()->withErrors([
+                'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ])->onlyInput('email');
+        }
+
         // Attempt login
-        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+        if (Auth::attempt(['email' => $email, 'password' => $credentials['password']])) {
             $user = Auth::user();
 
             // Check if suspended
             if ($user->is_suspended) {
-                Auth::logout();
+                Auth::guard('web')->logout();
+                // logout() alone leaves the session record intact; without
+                // this the suspended user keeps a usable session cookie.
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
                 return redirect()->route('login')->withErrors([
                     'email' => 'Your account has been suspended. Please contact support.'
                 ])->onlyInput('email');
             }
+
+            RateLimiter::clear($key);
 
             // Update last login timestamp
             $user->update(['last_login_at' => now()]);
 
             $request->session()->regenerate();
             return redirect()->intended('/checkout');
-        } 
+        }
+
+        RateLimiter::hit($key, 900);
 
         return back()->withErrors([
             'email' => 'Invalid email or password',
