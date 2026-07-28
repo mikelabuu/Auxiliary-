@@ -22,12 +22,37 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!--
+            Tests run against a real MySQL/MariaDB database, not SQLite.
+
+            Two reasons, both specific to this system:
+
+            1. Four migrations issue raw `ALTER TABLE ... MODIFY` (MySQL-only
+               DDL) with no driver guard, so SQLite cannot build the schema at
+               all. See 2025_09_13_010449, 2025_09_27_064346,
+               2025_10_12_125103 and 2026_07_20_000002.
+
+            2. The double-booking guard in BookingController::store() relies on
+               lockForUpdate(). SQLite has no row-level locking, so concurrency
+               tests would pass there without proving anything.
+
+            Create the database once before the first run:
+                mysql -u root -e "CREATE DATABASE aux_system_test"
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="aux_system_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value=""/>
+
+        <!-- Never reach for a live Reverb socket or mail server during tests. -->
+        <env name="BROADCAST_CONNECTION" value="log"/>
         <env name="MAIL_MAILER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+
+        <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
     </php>
 </phpunit>

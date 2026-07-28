@@ -230,14 +230,27 @@ class BookingController extends Controller
                         ->lockForUpdate()
                         ->get();
 
-                $overlappingRooms = $lockedRooms->filter(function($room) use ($request) {
-                    return $room->bookings()->where(function($q) use ($request) {
-                            $q->whereDate('check_in', '<', $request->check_out)
-                            ->whereDate('check_out', '>', $request->check_in);
-                        })
+                // Occupancy is read from `reservations`, the same authoritative
+                // per-room source the availability endpoints use.
+                //
+                // This previously queried the booking_room pivot, which is
+                // written *after* this transaction commits — so a booking in
+                // that window held its rooms in `reservations` but not yet in
+                // the pivot, and was invisible to this guard. Two concurrent
+                // guests could each be told the room was free. The pivot attach
+                // now happens inside this transaction too (see below), but the
+                // guard reads reservations regardless so there is only ever one
+                // source of truth for "is this room taken".
+                $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
+                    ->whereHas('booking', fn ($q) => $q
                         ->whereIn('status', Booking::BLOCKING_STATUSES)
-                        ->exists();
-                })->pluck('room_number')->toArray();
+                        ->whereDate('check_in', '<', $request->check_out)
+                        ->whereDate('check_out', '>', $request->check_in))
+                    ->pluck('room_number')
+                    ->map(fn ($n) => trim($n))
+                    ->unique()
+                    ->values()
+                    ->all();
 
                 if (!empty($overlappingRooms)) {
                     throw new \Exception('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
@@ -300,7 +313,15 @@ class BookingController extends Controller
                         }
                     }
                 }
-                
+
+                // Inside the transaction, while the room rows are still locked.
+                // Attaching after the commit left a window in which the booking
+                // existed and held rooms but the pivot did not say so.
+                $roomIds = $lockedRooms->pluck('id')->all();
+                if (!empty($roomIds)) {
+                    $booking->rooms()->attach($roomIds);
+                }
+
                 return $booking;
             });
         }
@@ -312,12 +333,6 @@ class BookingController extends Controller
             return back()->withErrors([
                 'reservations' => $e->getMessage()
             ])->withInput();
-        }
-
-        // pivot attach
-        $roomIds = Room::whereIn('room_number', $allRoomNumbers)->pluck('id')->toArray();
-        if (!empty($roomIds)) {
-            $booking->rooms()->attach($roomIds);
         }
 
         \App\Support\Realtime::emit(new \App\Events\BookingChanged());

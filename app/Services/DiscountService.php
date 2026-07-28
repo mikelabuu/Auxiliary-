@@ -3,55 +3,58 @@
 namespace App\Services;
 
 use App\Models\Discount;
-use App\Models\Room;
 
 class DiscountService
 {
     /**
-     * Calculate total discount amount based on approved files.
+     * Statutory senior-citizen / PWD discount on a guest's share of the room.
+     */
+    private const RATE = 0.20;
+
+    /**
+     * Calculate the total discount from the approved ID files.
      *
-     * @param  \App\Models\Discount  $discount
-     * @return float
+     * Everything comes from the reservation rows, which record what the guest
+     * was actually quoted: `price` is the nightly rate at the time of booking
+     * and `capacity` the bed count it was priced against. Reading them here
+     * means a later admin edit to rates or capacity cannot retroactively change
+     * the discount on a booking that has already been sold.
+     *
+     * This previously read the live `rooms.price` alongside a capacity
+     * hardcoded in a `match` expression, so the per-head figure drifted from
+     * the price the guest was charged as soon as either was edited — and an
+     * unrecognised room type fell through to a capacity of 1, inflating the
+     * per-head rate to the entire room rate.
      */
     public function calculate(Discount $discount): float
     {
         $booking = $discount->booking;
-        $nights = $booking->check_in->diffInDays($booking->check_out);
+        $nights  = max(1, $booking->check_in->diffInDays($booking->check_out));
 
-        $discountAmount = 0;
+        $discountAmount = 0.0;
 
         foreach ($booking->reservations as $reservation) {
-            $room = Room::where('room_number', $reservation->room_number)->first();
+            $capacity = max(1, (int) $reservation->capacity);
+            $perHead  = ((float) $reservation->price / $capacity) * $nights;
 
-            if (!$room) {
-                continue;
-            }
-
-            // Room capacity
-            $capacity = match (strtolower(trim($room->room_type))) {
-                'double' => 2,
-                'triple' => 3,
-                'quadruple' => 4,
-                'deluxe' => 2,
-                'dormitory1' => 5,
-                'dormitory2' => 6,
-                default => 1,
-            };
-
-            // Per-head price for this room
-            $perHead = ($room->price / $capacity) * $nights;
-
-            // Count approved seniors tied to this reservation
             $approvedSeniors = $discount->files()
                 ->where('reservation_id', $reservation->id)
                 ->where('status', 'approved')
                 ->count();
 
-            // Clamp to max seniors assigned in this reservation
-            $maxAllowed = min($approvedSeniors, $reservation->num_guests);
+            // Never grant more discounted heads than the guest declared as
+            // seniors for this room. The clamp used to be `num_guests`, which
+            // left the declared senior count — validated at booking against
+            // both room capacity and total guests — with no effect at all, so
+            // a booking declaring one senior could collect two discounts.
+            //
+            // If the intended rule is the reverse (staff verify reality at the
+            // desk and the declared figure is only an estimate), change
+            // `num_seniors` to `num_guests` here: that one word is the whole
+            // policy.
+            $eligible = min($approvedSeniors, (int) $reservation->num_seniors);
 
-            // Apply discount per approved senior
-            $discountAmount += $perHead * 0.20 * $maxAllowed;
+            $discountAmount += $perHead * self::RATE * $eligible;
         }
 
         return $discountAmount;

@@ -65,31 +65,38 @@ Route::middleware('guest')->group(function () {
     })->name('login');
 
     // User Login actions
-    Route::post('/login/user', [AuthController::class, 'loginUser'])->name('login.user');
+    Route::post('/login/user', [AuthController::class, 'loginUser'])
+        ->middleware('throttle:login')
+        ->name('login.user');
     // Signup
-    Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
-
-    // TEMP-DEV-LOGIN (remove before commit)
-    Route::get('/__dev-login', function () {
-        abort_unless(app()->environment('local'), 404);
-        auth('staff')->login(\App\Models\Staff::first());
-        return redirect()->route('staff.bookings.index');
-    });
+    Route::post('/signup', [AuthController::class, 'signup'])
+        ->middleware('throttle:signup')
+        ->name('signup');
 
     // Staff Login Form
     Route::get('/staff/login', [StaffAuthController::class, 'showLoginForm'])->name('staff.login');
-    Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])->name('staff.login.submit');
+    Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])
+        ->middleware('throttle:staff-login')
+        ->name('staff.login.submit');
      // OTP verification
     Route::get('/staff/otp', [StaffAuthController::class, 'showOtpForm'])->name('staff.otp.form');
-    Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])->name('staff.otp.verify');
-    // Resend OTP
-    Route::post('/staff/otp/resend', [StaffAuthController::class, 'resendOtp'])->name('staff.otp.resend');
+    Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])
+        ->middleware('throttle:otp')
+        ->name('staff.otp.verify');
+    // Resend OTP — each call sends an outbound message.
+    Route::post('/staff/otp/resend', [StaffAuthController::class, 'resendOtp'])
+        ->middleware('throttle:otp-resend')
+        ->name('staff.otp.resend');
 
     // Password reset
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:password-reset')
+        ->name('password.email');
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:password-reset')
+        ->name('password.update');
 });
 
 /*
@@ -102,7 +109,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Checkout page
     Route::get('/checkout', [BookingController::class, 'showCheckoutForm'])->name('checkout.form');
     Route::get('/booking/{booking}', [BookingController::class, 'show'])->name('booking.show');
-    Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+    Route::post('/booking', [BookingController::class, 'store'])
+        ->middleware('throttle:bookings')
+        ->name('booking.store');
 
     //discount
     Route::get('discount/{booking}/create', [DiscountController::class, 'create'])->name('discount.create');
@@ -342,17 +351,29 @@ Route::post('/email/verification-notification', function (Request $request) {
 ----------------------------------------------
 ----------------------------------------------
 */
-//fake sandbox routes
-Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])->name('bookings.pay');
+// Stand-in gateway until a provider is chosen. These routes previously sat
+// outside every middleware group: an anonymous caller could POST to /process
+// with a guessed payment id and flip a stranger's booking to `paid`. They
+// mutate real booking rows, so they are behind the same guard as the rest of
+// the booking flow regardless of being placeholder.
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])
+        ->middleware('throttle:payments')
+        ->name('bookings.pay');
 
-Route::prefix('sandbox')->name('sandbox.')->group(function () {
-    Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');
-    Route::post('/process/{payment}', [SandboxGatewayController::class, 'processPayment'])->name('process');
-    Route::get('/result/{status}/{payment}', [SandboxGatewayController::class, 'result'])->name('result');
-    Route::get('/status/{payment}', [SandboxGatewayController::class, 'status'])->name('status');
+    Route::prefix('sandbox')->name('sandbox.')->group(function () {
+        Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');
+        Route::post('/process/{payment}', [SandboxGatewayController::class, 'processPayment'])
+            ->middleware('throttle:payments')
+            ->name('process');
+        Route::get('/result/{status}/{payment}', [SandboxGatewayController::class, 'result'])->name('result');
+        Route::get('/status/{payment}', [SandboxGatewayController::class, 'status'])->name('status');
+    });
 });
 
-//sandbox route for testing
+// Server-to-server callback, so it cannot sit behind session auth or CSRF.
+// Authentication is an HMAC signature over the raw body instead — see
+// SandboxGatewayController::webhook(). Fails closed when no secret is set.
 Route::post('sandbox/webhook/{payment}', [SandboxGatewayController::class, 'webhook'])
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('sandbox.webhook');
