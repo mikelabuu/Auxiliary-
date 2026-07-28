@@ -1,0 +1,105 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes an in-flight run obsolete.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.2 is the floor declared in composer.json; 8.4 is what the project
+        # is developed against. Both are checked so the floor stays honest.
+        php: ['8.2', '8.4']
+
+    services:
+      # The suite runs against real MySQL, not SQLite: four migrations use raw
+      # `ALTER TABLE ... MODIFY` that SQLite cannot execute, and the
+      # double-booking guard depends on lockForUpdate(), which SQLite does not
+      # implement. See tests/README.md.
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: aux_system_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # gd is needed by the discount upload tests (fake image fixtures);
+          # zip by phpspreadsheet for the report exports.
+          extensions: pdo, pdo_mysql, mbstring, bcmath, gd, zip, intl
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run migrations
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: aux_system_test
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+        run: php artisan migrate --force
+
+      - name: Run tests
+        run: php artisan test
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    # Advisory only: a newly published CVE should raise a flag, not block a
+    # merge that has nothing to do with it.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: composer audit
+        run: composer audit
+
+      - name: npm audit
+        run: npm audit --omit=dev

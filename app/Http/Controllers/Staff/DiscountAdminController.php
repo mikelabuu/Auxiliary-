@@ -130,10 +130,14 @@ class DiscountAdminController extends Controller
         DB::transaction(function () use ($discount) {
 
             $staff = Auth::guard('staff')->user();
-            $discount->lockForUpdate();
 
-            // Recheck inside transaction (safety)
-            if ($discount->status !== 'pending') {
+            // Lock and re-read the row. `$discount->lockForUpdate()` on the
+            // model instance built a query and threw it away without executing
+            // it, so nothing was ever locked, and the recheck below then
+            // compared the already-loaded in-memory status against itself.
+            $locked = Discount::whereKey($discount->getKey())->lockForUpdate()->first();
+
+            if (!$locked || $locked->status !== 'pending') {
                 throw new \Exception('Concurrent update detected.');
             }
 
@@ -185,9 +189,11 @@ class DiscountAdminController extends Controller
 
         DB::transaction(function () use ($discount) {
             $staff = Auth::guard('staff')->user();
-            $discount->lockForUpdate();
 
-            if ($discount->status !== 'pending') {
+            // See approve(): the previous lockForUpdate() call was a no-op.
+            $locked = Discount::whereKey($discount->getKey())->lockForUpdate()->first();
+
+            if (!$locked || $locked->status !== 'pending') {
                 throw new \Exception('Concurrent update detected.');
             }
 

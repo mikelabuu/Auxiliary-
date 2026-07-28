@@ -63,6 +63,23 @@ class DiscountController extends Controller
             'discount_files.*.*' => "required|image|mimes:jpeg,png,jpg|max:2048",
         ]);
 
+        // The array keys are reservation ids supplied by the form. They were
+        // written straight into discount_files.reservation_id, so a guest could
+        // tag a document with any integer — including a reservation belonging
+        // to someone else's booking.
+        $ownReservationIds = $booking->reservations->pluck('id')->all();
+
+        $foreignKeys = array_diff(
+            array_map('intval', array_keys($request->file('discount_files', []))),
+            $ownReservationIds,
+        );
+
+        if (!empty($foreignKeys)) {
+            return back()->withErrors([
+                'discount_files' => 'One or more files were submitted against a room that is not part of this booking.',
+            ])->withInput();
+        }
+
         // Create discount record
         $discount = $booking->discount()->create([
             'status'       => 'pending',

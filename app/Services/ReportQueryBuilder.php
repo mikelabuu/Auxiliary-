@@ -141,7 +141,10 @@ class ReportQueryBuilder
             'booking_status' => 'bookings.status',
             'payment_status' => 'payments.status',
             'gateway' => 'payments.gateway',
-            'mode' => 'bookings.mode',
+            // `bookings.mode` does not exist — the booking's payment channel is
+            // `payment_mode`. Any report filtered by mode (an option the UI
+            // offers) reached MySQL as an unknown column and failed outright.
+            'mode' => 'bookings.payment_mode',
             default => null
         };
     }

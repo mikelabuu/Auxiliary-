@@ -66,7 +66,9 @@ class WalkInBookingController extends Controller
             'reservations'    => 'required|array|min:1',
             'reservations.*.room_type'     => 'required|string',
             'reservations.*.room_number'   => 'required|string',
-            'reservations.*.price_per_night' => 'required|numeric|min:0',
+            // posted for display continuity only — the nightly rate is
+            // recomputed from the rooms table below, never trusted from JS
+            'reservations.*.price_per_night' => 'nullable|numeric|min:0',
             'reservations.*.num_guests'    => 'required|integer|min:1',
             'reservations.*.num_seniors'   => 'nullable|integer|min:0',
             'discount_amount'               => 'nullable|numeric|min:0',
@@ -97,14 +99,35 @@ class WalkInBookingController extends Controller
         $totalGuests    = 0;
         $totalSeniors   = 0;
         $totalPrice     = 0;
+        $roomPrices     = []; // room_number => authoritative nightly rate
+
+        // Authoritative room records — price and type ownership come from here,
+        // not from whatever the client posted. This path previously multiplied
+        // out the submitted `price_per_night`, so a stale form or a modified
+        // request wrote its own total straight into the books.
+        $dbRooms = Room::whereIn(
+            'room_number',
+            collect($request->reservations)->pluck('room_number')->all()
+        )->get()->keyBy('room_number');
 
         // Validate reservations & calculate totals
         foreach ($request->reservations as $block) {
             $roomType   = strtolower($block['room_type']);
             $roomNumber = $block['room_number'];
-            $price      = (float) $block['price_per_night'];
             $numGuests  = (int) $block['num_guests'];
             $numSeniors = (int) ($block['num_seniors'] ?? 0);
+
+            // The room must exist and actually be of the claimed type, or a
+            // triple can be sold and recorded at the double rate.
+            $room = $dbRooms->get($roomNumber);
+            if (!$room || strtolower($room->room_type) !== $roomType) {
+                return back()->withErrors([
+                    'reservations' => "Room {$roomNumber} does not exist or is not a {$roomType} room."
+                ])->withInput();
+            }
+
+            $price = (float) $room->price;
+            $roomPrices[$roomNumber] = $price;
 
             // Check room capacity
             $capacity = $typeCapacities[$roomType] ?? $roomCapacityMap[$roomType] ?? 1;
@@ -142,33 +165,59 @@ class WalkInBookingController extends Controller
             ])->withInput();
         }
 
-        $allRoomNumbers = collect($request->reservations)
-            ->pluck('room_number')
-            ->toArray();
-
-        // Check if any of these rooms are already booked for the selected range.
-        // Uses the shared BLOCKING_STATUSES constant: the old hand-rolled list
-        // omitted pending_discount, so a discount-pending booking's room could
-        // be double-booked by a walk-in.
-        $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
-            ->whereHas('booking', function ($q) use ($request) {
-                $q->whereIn('status', Booking::BLOCKING_STATUSES)
-                ->where('check_in', '<', $request->check_out)
-                ->where('check_out', '>', $request->check_in);
-            })
-            ->pluck('room_number')
-            ->toArray();
-
-        if (!empty($overlappingRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
-            ])->withInput();
-        }
-
         $status = 'paid';
 
         DB::beginTransaction();
         try {
+            // Lock the room rows for the life of this transaction. The
+            // occupancy and status checks below used to run before the
+            // transaction opened, with no lock, so two desks booking the same
+            // room in the same moment could both pass them and both insert.
+            // Locking here serialises those requests: the second one waits,
+            // then re-reads and sees the first booking's reservation rows.
+            $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
+                ->lockForUpdate()
+                ->get();
+
+            // Check if any of these rooms are already booked for the selected
+            // range. Uses the shared BLOCKING_STATUSES constant: the old
+            // hand-rolled list omitted pending_discount, so a discount-pending
+            // booking's room could be double-booked by a walk-in.
+            $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
+                ->whereHas('booking', function ($q) use ($request) {
+                    $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                    ->where('check_in', '<', $request->check_out)
+                    ->where('check_out', '>', $request->check_in);
+                })
+                ->pluck('room_number')
+                ->toArray();
+
+            if (!empty($overlappingRooms)) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'reservations' => 'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
+                ])->withInput();
+            }
+
+            // Authoritative status guard: reject rooms that are in maintenance,
+            // being cleaned, or already occupied. Both the public flow and
+            // ManualBookingController have always done this; the walk-in path
+            // did not, so the desk could hand out a room that was out of
+            // service. Read from the locked rows, not a fresh query.
+            $unavailableRooms = $lockedRooms
+                ->filter(fn ($room) => $room->status !== 'available')
+                ->pluck('room_number')
+                ->toArray();
+
+            if (!empty($unavailableRooms)) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'reservations' => 'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
+                ])->withInput();
+            }
+
             // Create main booking
             $booking = Booking::create([
                 'user_id'         => null,
@@ -197,7 +246,7 @@ class WalkInBookingController extends Controller
                     'room_number' => $block['room_number'],
                     'room_type'   => $block['room_type'],
                     'capacity'    => $capacity,
-                    'price'       => (float) $block['price_per_night'],
+                    'price'       => $roomPrices[$block['room_number']],
                     'num_guests'  => (int) $block['num_guests'],
                     'num_seniors' => (int) ($block['num_seniors'] ?? 0),
                 ]);
@@ -222,15 +271,9 @@ class WalkInBookingController extends Controller
                 ]);
             }
 
-            
-            $roomIds = collect($request->reservations)
-                ->map(function ($res) {
-                    $room = \App\Models\Room::where('room_number', $res['room_number'])->first();
-                    if (!$room) {
-                        throw new \Exception("Room {$res['room_number']} not found in database");
-                    }
-                    return $room->id;
-                })->toArray();
+            // Reuse the rows already locked above rather than re-querying each
+            // room; existence was proved during validation.
+            $roomIds = $lockedRooms->pluck('id')->all();
 
             // Attach rooms to booking (pivot)
             if (!empty($roomIds)) {

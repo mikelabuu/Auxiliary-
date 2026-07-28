@@ -161,40 +161,54 @@ class ManualBookingController extends Controller
             ->pluck('room_number')
             ->toArray();
 
-        // Check if any of these rooms are already booked for the selected range
-        $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
-            ->whereHas('booking', function ($q) use ($request) {
-                $q->whereIn('status', Booking::BLOCKING_STATUSES)
-                ->where('check_in', '<', $request->check_out)
-                ->where('check_out', '>', $request->check_in);
-            })
-            ->pluck('room_number')
-            ->toArray();
-
-        if (!empty($overlappingRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
-            ])->withInput();
-        }
-
-        // Authoritative status guard: reject rooms the front desk just closed
-        // (maintenance/cleaning/occupied) even if this page still showed them as
-        // open. The live board is a convenience; this is the guarantee.
-        $unavailableRooms = Room::whereIn('room_number', $allRoomNumbers)
-            ->where('status', '!=', 'available')
-            ->pluck('room_number')
-            ->toArray();
-
-        if (!empty($unavailableRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
-            ])->withInput();
-        }
-
         $status = 'paid';
 
         DB::beginTransaction();
         try {
+            // Lock the room rows for the life of this transaction. The checks
+            // below used to run before the transaction opened, with no lock, so
+            // two concurrent bookings for the same room could both pass them
+            // and both insert. Locking serialises those requests: the second
+            // waits, then re-reads and sees the first booking's reservations.
+            $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
+                ->lockForUpdate()
+                ->get();
+
+            // Check if any of these rooms are already booked for the selected range
+            $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
+                ->whereHas('booking', function ($q) use ($request) {
+                    $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                    ->where('check_in', '<', $request->check_out)
+                    ->where('check_out', '>', $request->check_in);
+                })
+                ->pluck('room_number')
+                ->toArray();
+
+            if (!empty($overlappingRooms)) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'reservations' => 'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
+                ])->withInput();
+            }
+
+            // Authoritative status guard: reject rooms the front desk just closed
+            // (maintenance/cleaning/occupied) even if this page still showed them as
+            // open. The live board is a convenience; this is the guarantee.
+            // Read from the locked rows, not a fresh query.
+            $unavailableRooms = $lockedRooms
+                ->filter(fn ($room) => $room->status !== 'available')
+                ->pluck('room_number')
+                ->toArray();
+
+            if (!empty($unavailableRooms)) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'reservations' => 'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
+                ])->withInput();
+            }
+
             // Create main booking
             $booking = Booking::create([
                 'user_id'         => null,
@@ -248,15 +262,9 @@ class ManualBookingController extends Controller
                 ]);
             }
 
-            
-            $roomIds = collect($request->reservations)
-                ->map(function ($res) {
-                    $room = \App\Models\Room::where('room_number', $res['room_number'])->first();
-                    if (!$room) {
-                        throw new \Exception("Room {$res['room_number']} not found in database");
-                    }
-                    return $room->id;
-                })->toArray();
+            // Reuse the rows already locked above rather than re-querying each
+            // room; existence was proved during validation.
+            $roomIds = $lockedRooms->pluck('id')->all();
 
             // Attach rooms to booking (pivot)
             if (!empty($roomIds)) {

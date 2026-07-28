@@ -62,14 +62,26 @@ class BookingPaidMail extends Mailable
         // Compute SHA256 hash
         $sha = hash('sha256', Storage::disk('local')->get($filename));
 
-        // Create receipt record
-        $receipt = Receipt::create([
-            'booking_id' => $booking->id,
-            'receipt_number' => $receiptNumber,
-            'generated_by' => 'system',
-            'file_path' => $filename,
-            'sha256_hash' => $sha,
-        ]);
+        // One official receipt per booking, re-issuable.
+        //
+        // The number is a pure function of the booking id and receipt_number is
+        // UNIQUE, so a plain create() threw an integrity violation the second
+        // time this ran for a booking — a re-sent confirmation, a queued
+        // mailable retried after a transient failure, or a second settled
+        // payment. The send site catches \Exception and only logs, so the guest
+        // silently received no receipt.
+        //
+        // updateOrCreate keeps the number stable while refreshing the digest to
+        // match the PDF actually on disk; a stale hash would fail verification.
+        $receipt = Receipt::updateOrCreate(
+            ['receipt_number' => $receiptNumber],
+            [
+                'booking_id'   => $booking->id,
+                'generated_by' => 'system',
+                'file_path'    => $filename,
+                'sha256_hash'  => $sha,
+            ]
+        );
 
         // Send email with PDF attached
         return $this->subject('Booking Confirmation & Official Receipt')
