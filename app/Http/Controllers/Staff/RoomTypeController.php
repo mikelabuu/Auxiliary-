@@ -12,15 +12,27 @@ use Illuminate\Support\Str;
 
 class RoomTypeController extends Controller
 {
+    /**
+     * The type name is rendered as the section heading on the manual-booking
+     * and walk-in room boards, which build their markup as HTML strings. Those
+     * views escape it now, but a type name has no business containing markup.
+     * The slug is safe already — Str::slug() produces [a-z0-9-] only.
+     */
+    private const SAFE_NAME = 'regex:/^[\pL\pN][\pL\pN \-&]*$/u';
+
+    private const NAME_MESSAGES = [
+        'name.regex' => 'Room type name may only contain letters, numbers, spaces, hyphens and ampersands.',
+    ];
+
     public function store(Request $request)
     {
         $staff = Auth::guard('staff')->user();
 
         $validated = $request->validate([
-            'name'       => 'required|string|max:100|unique:room_types,name',
+            'name'       => ['required', 'string', 'max:100', self::SAFE_NAME, 'unique:room_types,name'],
             'base_price' => 'required|numeric|min:0',
             'capacity'   => 'required|integer|min:1|max:255',
-        ]);
+        ], self::NAME_MESSAGES);
 
         $slug = Str::slug($validated['name'], '');
         if ($slug === '') {
@@ -70,10 +82,10 @@ class RoomTypeController extends Controller
         $staff = Auth::guard('staff')->user();
 
         $validated = $request->validate([
-            'name'       => 'required|string|max:100|unique:room_types,name,' . $roomType->id,
+            'name'       => ['required', 'string', 'max:100', self::SAFE_NAME, 'unique:room_types,name,' . $roomType->id],
             'base_price' => 'required|numeric|min:0',
             'capacity'   => 'required|integer|min:1|max:255',
-        ]);
+        ], self::NAME_MESSAGES);
 
         $oldValues = $roomType->getOriginal();
 

@@ -73,8 +73,18 @@ class DiscountController extends Controller
         // Save uploaded files
         $discountFiles = $request->file('discount_files');
 
+        // The array KEY carries the reservation id and is entirely
+        // attacker-controlled — it was previously written straight to the
+        // column, so a guest could file their IDs against someone else's
+        // reservation. Only ids belonging to this booking are accepted.
+        $ownReservationIds = $booking->reservations()->pluck('id')->all();
+
         if (!empty($discountFiles)) {
             foreach ($discountFiles as $reservationId => $files) {
+                if (!in_array((int) $reservationId, $ownReservationIds, true)) {
+                    continue;
+                }
+
                 foreach ($files as $file) {
                     if (!$file->isValid()) continue;
 

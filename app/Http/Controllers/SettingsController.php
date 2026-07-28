@@ -139,11 +139,20 @@ class SettingsController extends Controller
             if (!Hash::check($request->current_password, $user->password)) {
                 return back()->withErrors(['current_password' => 'The current password is incorrect.']);
             }
-            
+
             $user->password = Hash::make($request->password);
             $user->save();
 
+            // Return here. This used to fall through to the profile block
+            // below, which requires username and email — so a password-only
+            // submission changed the password and *then* failed validation,
+            // reporting an error for a change that had already happened.
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Password updated. Please sign in again.');
         }
 
         // Otherwise: profile update
@@ -166,8 +175,15 @@ class SettingsController extends Controller
 
         $user->save();
 
+        // Changing the email clears verification, so the session has to go
+        // with it — and logout() alone leaves the session record usable.
         if ($logout) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Email updated. Please sign in again to verify it.');
         }
 
         return back()->with('status', 'Profile updated successfully.');

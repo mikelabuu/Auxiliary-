@@ -19,6 +19,23 @@ use App\Support\Realtime;
 
 class RoomController extends Controller
 {
+    /**
+     * Room number, type and wing are typed by staff and end up interpolated
+     * into the booking-board markup. Escaping at render time is the real
+     * defence (see the room board views), but there is no legitimate reason
+     * for a room label to contain markup, so keep it out of the column too.
+     *
+     * Deliberately permissive about what a room may be *called* — letters,
+     * digits, spaces, hyphens, underscores covers "101", "A-12", "chev_re".
+     */
+    private const SAFE_LABEL = 'regex:/^[A-Za-z0-9][A-Za-z0-9 _\-]*$/';
+
+    private const LABEL_MESSAGES = [
+        'room_number.regex' => 'Room number may only contain letters, numbers, spaces, hyphens and underscores.',
+        'room_type.regex'   => 'Room type may only contain letters, numbers, spaces, hyphens and underscores.',
+        'wing.regex'        => 'Wing may only contain letters, numbers, spaces, hyphens and underscores.',
+    ];
+
     public function index()
     {
         // Business dates are Manila; the app timezone is UTC, so a bare
@@ -175,13 +192,13 @@ public function occupancyForRoom(Room $room)
         $staff = Auth::guard('staff')->user();
 
         $validated = $request->validate([
-            'room_number' => 'required|unique:rooms,room_number',
-            'room_type'   => 'required|string|max:255',
-            'wing'        => 'required|string|max:255',
+            'room_number' => ['required', 'string', 'max:50', self::SAFE_LABEL, 'unique:rooms,room_number'],
+            'room_type'   => ['required', 'string', 'max:100', self::SAFE_LABEL],
+            'wing'        => ['required', 'string', 'max:100', self::SAFE_LABEL],
             'price'       => 'required|numeric|min:0',
             'status'      => ['nullable', Rule::in(Room::SETTABLE_STATUSES)],
             'notes'       => 'nullable|string|max:2000',
-        ]);
+        ], self::LABEL_MESSAGES);
 
         $room = Room::create([
             'room_number' => $validated['room_number'],
@@ -211,13 +228,13 @@ public function occupancyForRoom(Room $room)
         $staff = Auth::guard('staff')->user();
 
         $validated = $request->validate([
-            'room_number' => 'required|string|max:50|unique:rooms,room_number,' . $room->id,
-            'room_type'   => 'required|string',
-            'wing'        => 'required|string',
+            'room_number' => ['required', 'string', 'max:50', self::SAFE_LABEL, 'unique:rooms,room_number,' . $room->id],
+            'room_type'   => ['required', 'string', 'max:100', self::SAFE_LABEL],
+            'wing'        => ['required', 'string', 'max:100', self::SAFE_LABEL],
             'price'       => 'required|numeric|min:0',
             'status'      => ['nullable', Rule::in(Room::SETTABLE_STATUSES)],
             'notes'       => 'nullable|string|max:2000',
-        ]);
+        ], self::LABEL_MESSAGES);
 
         // The edit form omits status for an occupied room. Drop the key rather
         // than let a missing/blank value overwrite a status the booking owns.

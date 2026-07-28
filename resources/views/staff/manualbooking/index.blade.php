@@ -373,6 +373,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const peso = n => '₱' + Number(n).toLocaleString('en-PH', { maximumFractionDigits: 2 });
     const wingLabel = w => (w || '').toString().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
+    // Room numbers, types and wings are free-text fields an admin types in,
+    // and they get built into HTML strings below. Without this, a room named
+    // `" onfocus=alert(1) autofocus x="` runs script in every front desk
+    // browser that loads the board. Same helper the dashboard calendar uses.
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
     function toast(message, icon = 'success') {
         window.toast(message, icon); // unified console toasts (resources/js/app.js)
     }
@@ -579,8 +585,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function pillHtml(slug, label, openCount) {
         const active = state.activeType === slug;
-        return `<button type="button" data-type-pill="${slug}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-emerald-deep hover:border-clsu-400 hover:bg-clsu-50'}">
-            ${label}
+        return `<button type="button" data-type-pill="${esc(slug)}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-emerald-deep hover:border-clsu-400 hover:bg-clsu-50'}">
+            ${esc(label)}
             <span class="rounded-full px-1.5 py-0.5 font-data text-[9px] leading-none ${active ? 'bg-cream/15 text-cream' : 'bg-clsu-50 text-clsu-700'}">${openCount}</span>
         </button>`;
     }
@@ -601,10 +607,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const cap = rooms[0].capacity || 1;
 
             html += `
-            <section data-board-section="${slug}">
+            <section data-board-section="${esc(slug)}">
                 <header class="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
                     <div class="flex items-baseline gap-2.5">
-                        <h5 class="text-xs font-bold uppercase tracking-[0.18em] text-ink/80">${rooms[0].type_name || slug}</h5>
+                        <h5 class="text-xs font-bold uppercase tracking-[0.18em] text-ink/80">${esc(rooms[0].type_name || slug)}</h5>
                         <span class="text-[11px] font-semibold text-stone-400">${priceLabel} · sleeps ${cap}</span>
                     </div>
                     <span class="text-[10px] font-bold uppercase tracking-wider ${open ? 'text-clsu-600' : 'text-ember-500'}">${open ? open + ' open' : 'Fully booked'}</span>
@@ -631,14 +637,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const cls = TILE_STYLES[styleKey] || TILE_STYLES.maintenance;
         const tag = !isSelected && TILE_TAGS[room.status]
             ? `<span class="mt-0.5 text-[8px] font-black uppercase tracking-[0.14em]">${TILE_TAGS[room.status]}</span>`
-            : `<span class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide ${isSelected ? 'text-cream/70' : 'text-stone-400'}">${wingLabel(room.wing) || '&nbsp;'}</span>`;
+            : `<span class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide ${isSelected ? 'text-cream/70' : 'text-stone-400'}">${esc(wingLabel(room.wing)) || '&nbsp;'}</span>`;
         const check = isSelected
             ? '<span class="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-emerald-deep"><svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
             : '';
         const anim = room.status === 'available' || isSelected ? `style="animation:popIn .28s cubic-bezier(.16,1,.3,1) both;animation-delay:${Math.min(i, 20) * 18}ms"` : '';
-        return `<button type="button" data-room-tile="${room.room_number}" ${anim} class="${TILE_BASE} ${cls}" ${room.status !== 'available' ? 'disabled' : ''} aria-pressed="${isSelected}">
+        return `<button type="button" data-room-tile="${esc(room.room_number)}" ${anim} class="${TILE_BASE} ${cls}" ${room.status !== 'available' ? 'disabled' : ''} aria-pressed="${isSelected}">
             ${check}
-            <span class="font-data text-sm font-extrabold tabnum">${room.room_number}</span>
+            <span class="font-data text-sm font-extrabold tabnum">${esc(room.room_number)}</span>
             ${tag}
         </button>`;
     }
@@ -664,9 +670,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Hidden fields the backend contract expects per reservation block
         card.querySelector('[data-slot="hidden-inputs"]').innerHTML = `
-            <input type="hidden" data-name="room_type" value="${room.room_type}">
-            <input type="hidden" data-name="room_number" value="${room.room_number}">
-            <input type="hidden" data-name="price_per_night" value="${room.price}">`;
+            <input type="hidden" data-name="room_type" value="${esc(room.room_type)}">
+            <input type="hidden" data-name="room_number" value="${esc(room.room_number)}">
+            <input type="hidden" data-name="price_per_night" value="${esc(room.price)}">`;
 
         guestsInput.addEventListener('input', () => {
             let v = parseInt(guestsInput.value, 10) || 1;
@@ -839,7 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
             lines += `
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="font-semibold text-ink">Room ${room.room_number} <span class="font-normal capitalize text-muted">· ${room.type_name || room.room_type}</span></p>
+                        <p class="font-semibold text-ink">Room ${esc(room.room_number)} <span class="font-normal capitalize text-muted">· ${esc(room.type_name || room.room_type)}</span></p>
                         <p class="text-xs text-faint">${peso(price)} × ${nights} night${nights === 1 ? '' : 's'} · ${g} guest${g === 1 ? '' : 's'}</p>
                     </div>
                     <span class="whitespace-nowrap font-semibold tabnum text-ink">${peso(lineTotal)}</span>

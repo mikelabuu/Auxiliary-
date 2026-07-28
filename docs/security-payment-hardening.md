@@ -329,7 +329,15 @@ What must change:
 
 ## 9. Follow-ups
 
-Still outstanding from the audit — **batch 3**:
+### Batch 3 ✅ done
+
+Fixed and documented in
+[`security-input-hardening.md`](security-input-hardening.md). It covered the
+four items below.
+
+<details>
+<summary>Original list</summary>
+
 
 - **Stored XSS in the room boards.** `room_number`, `room_type`, `wing` and
   `type_name` are interpolated raw into `innerHTML` in
@@ -345,6 +353,8 @@ Still outstanding from the audit — **batch 3**:
 - **`SettingsController::update()`** changes the password and then falls
   through to profile validation, so a password-only submission can change the
   password and still return a validation error.
+
+</details>
 
 Deployment checklist items (`APP_DEBUG`, `SESSION_SECURE_COOKIE`,
 `/__dev-login`, the 6-character password minimum) are listed in
