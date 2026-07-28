@@ -17,6 +17,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.role' => \App\Http\Middleware\StaffRoleMiddleware::class,
             'staff.active' => \App\Http\Middleware\EnsureStaffNotSuspended::class,
         ]);
+
+        // The gateway callback has no session to carry a token. This has to be
+        // declared here: the route-level withoutMiddleware() it used to rely on
+        // named App\Http\Middleware\VerifyCsrfToken, which is a leftover from
+        // the Laravel 10 layout and is not the class actually in the web group,
+        // so the exclusion silently did nothing and the webhook always 419'd.
+        $middleware->validateCsrfTokens(except: [
+            'sandbox/webhook/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

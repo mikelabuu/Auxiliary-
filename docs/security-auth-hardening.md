@@ -395,13 +395,12 @@ supersedes by converting those columns to `VARCHAR`. **MySQL behaviour is
 completely unchanged** — the guard only affects non-MySQL drivers, where the
 statements could never have run anyway.
 
-> ⚠️ One caveat for future test authors: on SQLite, `bookings.status` keeps the
-> CHECK constraint from the original `enum('pending','booked','cancelled')`
-> definition, because the migrations that widen it are MySQL-only. Tests that
-> create bookings with a modern status (`pending_payment`, `paid`, …) will fail
-> on SQLite. The auth tests avoid this by never touching the bookings table. If
-> you need booking coverage, point the suite at a dedicated MySQL test database
-> instead.
+> ⚠️ ~~One caveat for future test authors: on SQLite, `bookings.status` keeps
+> the CHECK constraint from the original `enum('pending','booked','cancelled')`
+> definition.~~ **Resolved in batch 2** by
+> `2026_07_28_000001_relax_status_check_constraints_on_sqlite.php`, which
+> converts those columns to plain strings on non-MySQL drivers. Booking-touching
+> tests now run on SQLite.
 
 ---
 
@@ -490,16 +489,24 @@ supervision.
 
 Carried over from the audit, **not** addressed in this batch:
 
-### Batch 2 — payment routes (high priority)
+### Batch 2 — payment routes ✅ done
 
-- `booking/{booking}/pay` and all `sandbox/*` routes have **no middleware at
-  all**. An anonymous request to `POST /sandbox/process/{payment}` flips a
-  booking to `paid`. The gateway is a simulation, but the routing and ownership
-  pattern needs fixing regardless of which gateway ships.
-- `sandbox/webhook/*` is CSRF-exempt with no signature verification. The real
-  gateway will need signature verification rather than an exemption.
-- `SandboxGatewayController::result()` calls `view("sandbox.$status")` with an
-  unvalidated route parameter.
+Fixed and documented in
+[`security-payment-hardening.md`](security-payment-hardening.md).
+
+Two claims made here originally were corrected once the running application was
+probed rather than only read:
+
+- `POST /sandbox/process/{payment}` did **not** work as a single anonymous
+  request — the `web` group's CSRF middleware returned `419`. But an anonymous
+  session is issued a valid token, so one extra `GET /` was enough. The
+  conclusion stood; the mechanism took two requests.
+- `sandbox/webhook/*` was **not** CSRF-exempt. Its `withoutMiddleware()` call
+  named `App\Http\Middleware\VerifyCsrfToken`, a Laravel 10 leftover that is not
+  the class in the web group, so the exclusion matched nothing and the endpoint
+  returned `419` to everyone. It was non-functional rather than exposed — and
+  would have become an open endpoint the moment someone corrected the
+  exemption.
 
 ### Batch 3 — input handling
 

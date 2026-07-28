@@ -41,7 +41,6 @@ use App\Http\Controllers\Staff\frontdesk\BookingsController;
 //for simulation only
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Payments\SandboxGatewayController;
-use App\Http\Middleware\VerifyCsrfToken;
 use App\Http\Controllers\ReceiptController;
 /*
 |--------------------------------------------------------------------------
@@ -364,19 +363,32 @@ Route::post('/email/verification-notification', function (Request $request) {
 ----------------------------------------------
 ----------------------------------------------
 */
-//fake sandbox routes
-Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])->name('bookings.pay');
+// Guest-facing payment flow. These sit behind auth+verified like the rest of
+// the booking journey — they were previously wide open, so anyone could drive
+// a payment for a booking they did not own. Per-payment ownership is enforced
+// in the controllers; the middleware only establishes who is asking.
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::prefix('sandbox')->name('sandbox.')->group(function () {
-    Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');
-    Route::post('/process/{payment}', [SandboxGatewayController::class, 'processPayment'])->name('process');
-    Route::get('/result/{status}/{payment}', [SandboxGatewayController::class, 'result'])->name('result');
-    Route::get('/status/{payment}', [SandboxGatewayController::class, 'status'])->name('status');
+    Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])->name('bookings.pay');
+
+    Route::prefix('sandbox')->name('sandbox.')->group(function () {
+        Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');
+        Route::post('/process/{payment}', [SandboxGatewayController::class, 'processPayment'])->name('process');
+
+        // {status} is interpolated into a view name, so constrain it here as
+        // well as in the controller.
+        Route::get('/result/{status}/{payment}', [SandboxGatewayController::class, 'result'])
+            ->where('status', 'success|failed')
+            ->name('result');
+
+        Route::get('/status/{payment}', [SandboxGatewayController::class, 'status'])->name('status');
+    });
 });
 
-//sandbox route for testing
+// Server-to-server callback: no session exists, so it carries no auth
+// middleware and is exempt from CSRF (see bootstrap/app.php). It is
+// authenticated instead by an HMAC signature over the raw request body.
 Route::post('sandbox/webhook/{payment}', [SandboxGatewayController::class, 'webhook'])
-    ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('sandbox.webhook');
 
 
