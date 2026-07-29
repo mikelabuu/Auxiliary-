@@ -12,7 +12,7 @@ class StaffRoleMiddleware
     {
         // Must be authenticated as staff
         if (!auth('staff')->check()) {
-            return redirect()->route('staff.login');
+            return redirect()->route('login');
         }
 
         $staff = auth('staff')->user();

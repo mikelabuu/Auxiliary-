@@ -1,135 +1,302 @@
-@extends('layouts.public.auth')
-@section('title', 'Farmers Hostel | Book Now')
+@extends('layouts.public.auth-desk')
+@section('title', 'Farmers Hostel · Sign in')
+
+{{-- ═══════════════════════════════════════════════════════════════════
+     DIRECTION CONTRACT — The Key Board
+
+     THESIS: The board behind the desk, not a card on a photograph. This
+     surface owns the moment a staffer lifts their tag at shift start. It
+     refuses the centred glass card floating on a hostel photo — the
+     arrangement this page shipped before and every login template ships.
+
+     OWN-WORLD: Boutique Farmstead, inherited from the public site. Cream
+     paper, deep evergreen, brass. Playfair 400 display, Oswald wide-tracked
+     signage, Manrope copy. A brass rail, hooks, grommeted fob tags, warm
+     green-shifted daylight shadow. No monospace, no glass, no glow, no
+     invented proof.
+
+     STORY: A returning operator recognises their own front desk, takes the
+     right tag and is through in seconds. A first-time guest sees a real
+     property with a real institution behind it.
+
+     FIRST VIEWPORT: Cream board left, photograph right. A brass rail across
+     the upper board carries two tags — SIGN IN and REGISTER; the chosen one
+     hangs square and bright, the other tilts and recedes. Fields below it,
+     primary action at the foot. The plate right states what actually happens
+     after this form.
+
+     FORM: The Key Board — candidate 6 of 7, seed 248843db (--scope surface
+     --mode operate). Staging: the world's own; the dealt tension-commit
+     staging was rejected on task grounds (drag-to-commit taxes a shift-start
+     routine and breaks keyboard and password-manager flow).
+     ═══════════════════════════════════════════════════════════════════ --}}
+
 @section('content')
-    <x-booking.ui.auth-card>
-        <!-- Dual Tabs -->
-        <div class="flex p-1.5 gap-1.5 bg-stone-100/70 -mt-1 mb-6 rounded-2xl border border-stone-200/50">
-            <button id="loginTab" class="flex-1 py-3 text-sm font-bold rounded-xl transition-[color,background-color,border-color,box-shadow] bg-white text-clsu-800 shadow-sm border border-stone-200 cursor-pointer">Log In</button>
-            <button id="signupTab" class="flex-1 py-3 text-sm font-bold rounded-xl transition-[color,background-color,border-color,box-shadow] text-stone-500 hover:text-clsu-800 cursor-pointer">Sign Up</button>
-        </div>
+<main class="fha-desk-shell">
 
-        <!-- Log In Form -->
-        <div id="loginForm">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-semibold text-ink leading-tight tracking-tight font-display">Welcome back!</h2>
-                <p class="text-sm font-medium text-stone-500 mt-1">Please enter your credentials to log in.</p>
+    {{-- ─────────────────────────── The board ─────────────────────────── --}}
+    <section class="fha-board">
+        <div class="fha-board-inner">
 
-                @if ($errors->any())
-                    @foreach ($errors->all() as $error)
-                        <div id="error-alert" class="error-alert mt-4 text-left">
-                            <x-booking.ui.alert type="danger" :message="$error" />
-                        </div>
-                    @endforeach
-                @endif
+            @include('public.auth.partials.house')
 
-                @if (session('error'))
-                    <div id="error-alert" class="error-alert mt-4 text-left">
-                        <x-booking.ui.alert type="danger" :message="session('error')" />
+            {{-- The rail. Both tags stay hooked so the tablist keeps normal
+                 semantics and both destinations stay visible; the selected one
+                 lifts square to the rail, the other hangs tilted. --}}
+            <div class="fha-rail" role="tablist" aria-label="Sign in or register">
+                <button type="button" id="signinTab" role="tab" aria-selected="true"
+                        aria-controls="signinPanel" class="fha-tag">
+                    <span class="fha-tag-ring" aria-hidden="true"></span>
+                    <span class="fha-tag-body">Sign in</span>
+                </button>
+                <button type="button" id="registerTab" role="tab" aria-selected="false"
+                        aria-controls="registerPanel" tabindex="-1" class="fha-tag">
+                    <span class="fha-tag-ring" aria-hidden="true"></span>
+                    <span class="fha-tag-body">Register</span>
+                </button>
+            </div>
+
+            @include('public.auth.partials.notes')
+
+            {{-- ───────────────── Sign in ───────────────── --}}
+            <div id="signinPanel" role="tabpanel" aria-labelledby="signinTab" class="fha-fob" tabindex="-1">
+
+                <h1 class="fha-panel-title">Take your key.</h1>
+                <p class="fha-panel-lede">
+                    One door for guests, the front desk and administration —
+                    your account decides where it opens.
+                </p>
+
+                <form method="POST" action="{{ route('login.attempt') }}" class="fha-form" novalidate data-busy-form>
+                    @csrf
+
+                    <div class="fha-field">
+                        <input type="email" id="email" name="email" required autocomplete="email"
+                               placeholder=" " value="{{ old('email') }}" class="fha-input" autofocus>
+                        <label for="email" class="fha-label">Email address</label>
+                        <span class="fha-rule" aria-hidden="true"></span>
                     </div>
-                @endif
+
+                    <div>
+                        <div class="fha-field">
+                            <input type="password" id="password" name="password" required
+                                   autocomplete="current-password" placeholder=" " class="fha-input fha-input--pw"
+                                   data-caps-for="signinCaps">
+                            <label for="password" class="fha-label">Password</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                            <button type="button" class="fha-reveal" data-reveal="password"
+                                    aria-label="Show password" aria-pressed="false">
+                                @include('public.auth.partials.eye')
+                            </button>
+                        </div>
+                        @include('public.auth.partials.caps', ['id' => 'signinCaps'])
+                    </div>
+
+                    <div class="fha-forgot-row">
+                        <a href="{{ route('password.request') }}" class="fha-link">Forgot your password?</a>
+                    </div>
+
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Sign in
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                <p class="fha-switch">
+                    No account yet? <button type="button" data-goto="register" class="fha-link">Register as a guest</button>
+                </p>
             </div>
 
-            <form class="space-y-4" method="POST" action="{{ route('login.user') }}">
-                @csrf
-                <input type="email" placeholder="Email address" name="email" required
-                       class="w-full px-5 py-4 bg-stone-50/60 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] placeholder:text-stone-400 font-medium text-sm text-stone-800">
+            {{-- ───────────────── Register ───────────────── --}}
+            <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" class="fha-fob hidden-form" tabindex="-1">
 
-                <input type="password" placeholder="Password" name="password" required
-                       class="w-full px-5 py-4 bg-stone-50/60 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] placeholder:text-stone-400 font-medium text-sm text-stone-800">
+                <h1 class="fha-panel-title">Cut a new key.</h1>
+                {{-- True and worth saying: staff rows are provisioned by an admin
+                     through staff management, never through this form. --}}
+                <p class="fha-panel-lede">
+                    For guests booking a room. Staff keys are issued by an administrator,
+                    never from this form.
+                </p>
 
-                <div class="flex justify-end">
-                    <a href="{{ route('password.request') }}" class="text-xs font-bold text-clsu-700 hover:text-clsu-900 transition-colors hover:underline">Forgot Password?</a>
-                </div>
+                <form method="POST" action="{{ route('signup') }}" class="fha-form" novalidate data-busy-form>
+                    @csrf
 
-                <button class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] cursor-pointer">
-                    Log In
-                </button>
-            </form>
-        </div>
+                    <div class="fha-row">
+                        <div class="fha-field">
+                            <input type="text" id="first_name" name="first_name" required placeholder=" "
+                                   value="{{ old('first_name') }}" class="fha-input" autocomplete="given-name">
+                            <label for="first_name" class="fha-label">First name</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                        </div>
+                        <div class="fha-field fha-field--mi">
+                            <input type="text" id="middle_initial" name="middle_initial" required maxlength="2"
+                                   placeholder=" " value="{{ old('middle_initial') }}" class="fha-input">
+                            <label for="middle_initial" class="fha-label">M.I.</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                        </div>
+                    </div>
 
-        <!-- Sign Up Form -->
-        <div id="signupForm" class="hidden-form">
-            <div class="text-center mb-5">
-                <h2 class="text-2xl font-semibold text-ink leading-tight tracking-tight font-display">Start Booking</h2>
-                <p class="text-sm font-medium text-stone-500 mt-1">Join us at Farmers Hostel</p>
-            </div>
+                    <div class="fha-field">
+                        <input type="text" id="last_name" name="last_name" required placeholder=" "
+                               value="{{ old('last_name') }}" class="fha-input" autocomplete="family-name">
+                        <label for="last_name" class="fha-label">Last name</label>
+                        <span class="fha-rule" aria-hidden="true"></span>
+                    </div>
 
-            <form class="space-y-3.5" method="POST" action="{{ route('signup') }}">
-                @csrf
+                    <div class="fha-row">
+                        <div>
+                            <div class="fha-field">
+                                <input type="text" id="username" name="username" required placeholder=" "
+                                       value="{{ old('username') }}" class="fha-input" autocomplete="username"
+                                       aria-describedby="usernameHelp">
+                                <label for="username" class="fha-label">Username</label>
+                                <span class="fha-rule" aria-hidden="true"></span>
+                            </div>
+                            {{-- The server enforces min:3|alpha_num. Saying so here
+                                 removes a whole failed round-trip. --}}
+                            <p id="usernameHelp" class="fha-help">3+ characters, letters and numbers only.</p>
+                        </div>
+                        <div>
+                            <div class="fha-field">
+                                <input type="email" id="register_email" name="email" required placeholder=" "
+                                       value="{{ old('email') }}" class="fha-input" autocomplete="email">
+                                <label for="register_email" class="fha-label">Email address</label>
+                                <span class="fha-rule" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Name Row -->
-                <div class="flex gap-2">
-                    <input type="text" placeholder="First Name" name="first_name" required
-                        class="w-2/5 px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-                    <input type="text" placeholder="M.I." name="middle_initial" maxlength="2"
-                        class="w-1/5 px-3 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white text-center outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-                    <input type="text" placeholder="Last Name" name="last_name" required
-                        class="w-2/5 px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-                </div>
+                    <div>
+                        <div class="fha-field">
+                            <input type="password" id="register_password" name="password" required placeholder=" "
+                                   autocomplete="new-password" class="fha-input fha-input--pw"
+                                   data-caps-for="registerCaps" aria-describedby="registerPwHelp"
+                                   data-confirm-source="password_confirmation">
+                            <label for="register_password" class="fha-label">Password</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                            <button type="button" class="fha-reveal" data-reveal="register_password"
+                                    aria-label="Show password" aria-pressed="false">
+                                @include('public.auth.partials.eye')
+                            </button>
+                        </div>
+                        @include('public.auth.partials.caps', ['id' => 'registerCaps'])
+                        <p id="registerPwHelp" class="fha-help">At least 6 characters.</p>
+                    </div>
 
-                <!-- Account Details Row -->
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Username" name="username" required
-                        class="w-1/2 px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-                    <input type="email" placeholder="Email Address" name="email" required
-                        class="w-1/2 px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-                </div>
+                    <div>
+                        <div class="fha-field">
+                            <input type="password" id="password_confirmation" name="password_confirmation" required
+                                   placeholder=" " autocomplete="new-password" class="fha-input"
+                                   data-confirm-of="register_password" aria-describedby="confirmError">
+                            <label for="password_confirmation" class="fha-label">Confirm password</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                        </div>
+                        {{-- Checked on blur, never on keystroke — flagging a mismatch
+                             while someone is still typing the word is just noise. --}}
+                        <p id="confirmError" class="fha-field-error" role="alert">Both passwords must match.</p>
+                    </div>
 
-                <!-- Passwords -->
-                <input type="password" placeholder="Password" name="password" required
-                    class="w-full px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-
-                <input type="password" placeholder="Confirm Password" name="password_confirmation" required
-                    class="w-full px-4 py-3.5 bg-stone-50/60 border border-stone-200 rounded-xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] text-sm font-medium text-stone-800">
-
-                <!-- Terms -->
-                <div class="flex items-start gap-2.5 px-1 pt-1">
-                    <input type="checkbox" id="terms" class="mt-1 h-4 w-4 rounded border-stone-300 text-clsu-600 focus:ring-clsu-300 cursor-pointer" name="terms" required>
-                    <label for="terms" class="text-xs font-medium text-stone-500 leading-tight cursor-pointer">
-                        I agree to the <span class="text-clsu-700 font-bold hover:underline">Terms of Use</span> and privacy policies.
+                    <label class="fha-terms">
+                        <input type="checkbox" name="terms" required>
+                        {{-- No Terms page exists yet, so this is plain text rather than a
+                             link to "#". Point it at a real URL once one is published. --}}
+                        <span>I agree to the Terms of Use and Privacy Policy.</span>
                     </label>
-                </div>
 
-                <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] mt-2 cursor-pointer">
-                    Create Account
-                </button>
-            </form>
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Create account
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                <p class="fha-switch">
+                    Already have a key? <button type="button" data-goto="signin" class="fha-link">Sign in</button>
+                </p>
+            </div>
         </div>
-    </x-booking.ui.auth-card>
+    </section>
 
-    <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider flex items-center gap-1.5">
-        <span>&copy; {{ date('Y') }} Farmers Hostel.</span>
-        <span>&middot;</span>
-        <a href="{{ route('staff.login') }}" class="hover:text-white transition-colors flex items-center gap-0.5">
-            <span class="material-icons text-[12px]">lock</span> Staff Login
-        </a>
-    </p>
+    {{-- ─────────────────────────── The plate ─────────────────────────── --}}
+    @include('public.auth.partials.plate', [
+        'title' => 'One desk, inside the university.',
+        'lede'  => 'A working university, and a place to stay inside it.',
+    ])
+</main>
 @endsection
+
 @push('scripts')
+@include('public.auth.partials.form-js')
 <script>
-    const loginTab = document.getElementById('loginTab');
-    const signupTab = document.getElementById('signupTab');
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
+(() => {
+    'use strict';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const activeTab = "flex-1 py-3 text-sm font-bold rounded-xl transition-[color,background-color,border-color,box-shadow] bg-white text-clsu-800 shadow-sm border border-stone-200 cursor-pointer";
-    const inactiveTab = "flex-1 py-3 text-sm font-bold rounded-xl transition-[color,background-color,border-color,box-shadow] text-stone-500 hover:text-clsu-800 cursor-pointer";
+    /* ── The rail ─────────────────────────────────────────────
+       Two tags on two hooks. Selecting one lifts it square to the rail and
+       lets the other hang. Standard tablist keyboard model: arrows move,
+       Home/End jump, and only the selected tab is in the tab order. */
+    const tabs = [
+        { tab: document.getElementById('signinTab'),   panel: document.getElementById('signinPanel'),   key: 'signin' },
+        { tab: document.getElementById('registerTab'), panel: document.getElementById('registerPanel'), key: 'register' },
+    ];
 
-    function showSignup() {
-        signupTab.className = activeTab;
-        loginTab.className = inactiveTab;
-        loginForm.classList.add('hidden-form');
-        signupForm.classList.remove('hidden-form');
+    function show(key, { focusPanel = true, animate = true } = {}) {
+        tabs.forEach(({ tab, panel, key: k }) => {
+            const on = k === key;
+            tab.setAttribute('aria-selected', on ? 'true' : 'false');
+            tab.tabIndex = on ? 0 : -1;
+            panel.classList.toggle('hidden-form', !on);
+            if (!on) panel.classList.remove('is-entering');
+        });
+
+        const current = tabs.find(t => t.key === key);
+        if (!current) return;
+
+        // Put the panel at its offset for exactly one frame, then release it.
+        // Because .fha-fob transitions rather than runs a keyframe, switching
+        // again mid-flight retargets from the current position instead of
+        // snapping back to the start.
+        if (animate && !reduced) {
+            current.panel.classList.add('is-entering');
+            void current.panel.offsetWidth;
+            current.panel.classList.remove('is-entering');
+        }
+
+        if (focusPanel) {
+            const first = current.panel.querySelector('input:not([type=hidden])');
+            (first || current.panel).focus({ preventScroll: true });
+        }
     }
 
-    function showLogin() {
-        loginTab.className = activeTab;
-        signupTab.className = inactiveTab;
-        signupForm.classList.add('hidden-form');
-        loginForm.classList.remove('hidden-form');
-    }
+    tabs.forEach(({ tab, key }, i) => {
+        tab.addEventListener('click', () => show(key));
+        tab.addEventListener('keydown', (e) => {
+            let next = null;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % tabs.length;
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + tabs.length) % tabs.length;
+            else if (e.key === 'Home') next = 0;
+            else if (e.key === 'End') next = tabs.length - 1;
+            if (next === null) return;
+            e.preventDefault();
+            show(tabs[next].key, { focusPanel: false });
+            tabs[next].tab.focus();
+        });
+    });
 
-    signupTab.onclick = showSignup;
-    loginTab.onclick = showLogin;
+    document.querySelectorAll('[data-goto]').forEach(btn =>
+        btn.addEventListener('click', () => show(btn.dataset.goto)));
+
+    {{-- A failed signup re-renders this page; reopen the panel the user was in.
+         `username` only exists on the register form, so it identifies the source. --}}
+    @if ($errors->any() && old('username'))
+        show('register', { focusPanel: false, animate: false });
+    @endif
+})();
 </script>
 @endpush

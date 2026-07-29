@@ -1,38 +1,87 @@
-@extends('layouts.public.auth')
-@section('title', 'Reset Password')
+@extends('layouts.public.auth-desk')
+@section('title', 'Farmers Hostel · Set a new password')
+
 @section('content')
-    <x-booking.ui.auth-card
-        title="Reset Password"
-        subtitle="Please enter your email and set a new password."
-    >
-        @if ($errors->any())
-            @foreach ($errors->all() as $error)
-                <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.ui.alert type="danger" :message="$error" />
-                </div>
-            @endforeach
-        @endif
+<main class="fha-desk-shell">
+    <section class="fha-board">
+        <div class="fha-board-inner">
 
-        <form class="space-y-4" method="POST" action="{{ route('password.update') }}">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
+            @include('public.auth.partials.house')
+            @include('public.auth.partials.notes')
 
-            <input type="email" placeholder="Email address" name="email" value="{{ old('email', $email) }}" required readonly
-                   class="w-full px-5 py-4 bg-stone-100 border border-stone-200 rounded-2xl outline-none font-medium text-sm text-stone-500 cursor-not-allowed">
+            <div class="fha-fob">
+                <span class="fha-eyebrow">Account recovery</span>
+                <h1 class="fha-panel-title">A new key.</h1>
+                <p class="fha-panel-lede">
+                    Choose something you don't use anywhere else. This replaces your old
+                    password everywhere you sign in.
+                </p>
 
-            <input type="password" placeholder="New Password" name="password" required
-                   class="w-full px-5 py-4 bg-stone-50/60 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] placeholder:text-stone-400 font-medium text-sm text-stone-800">
+                <form method="POST" action="{{ route('password.update') }}" class="fha-form" novalidate data-busy-form>
+                    @csrf
+                    <input type="hidden" name="token" value="{{ $token }}">
 
-            <input type="password" placeholder="Confirm New Password" name="password_confirmation" required
-                   class="w-full px-5 py-4 bg-stone-50/60 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] placeholder:text-stone-400 font-medium text-sm text-stone-800">
+                    <div class="fha-field">
+                        {{-- Fixed by the reset link. Read-only rather than disabled, so it
+                             still posts and is still announced by screen readers. --}}
+                        <input type="email" id="email" name="email" required readonly
+                               placeholder=" " value="{{ old('email', $email) }}"
+                               class="fha-input" autocomplete="email">
+                        <label for="email" class="fha-label">Email address</label>
+                    </div>
 
-            <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] cursor-pointer">
-                Reset Password
-            </button>
-        </form>
-    </x-booking.ui.auth-card>
+                    <div>
+                        <div class="fha-field">
+                            <input type="password" id="password" name="password" required
+                                   placeholder=" " autocomplete="new-password"
+                                   class="fha-input fha-input--pw" data-caps-for="resetCaps" autofocus
+                                   aria-describedby="resetPwHelp" data-confirm-source="password_confirmation">
+                            <label for="password" class="fha-label">New password</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                            <button type="button" class="fha-reveal" data-reveal="password"
+                                    aria-label="Show password" aria-pressed="false">
+                                @include('public.auth.partials.eye')
+                            </button>
+                        </div>
+                        @include('public.auth.partials.caps', ['id' => 'resetCaps'])
+                        <p id="resetPwHelp" class="fha-help">At least 6 characters.</p>
+                    </div>
 
-    <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
-        &copy; {{ date('Y') }} Farmers Hostel.
-    </p>
+                    <div>
+                        <div class="fha-field">
+                            <input type="password" id="password_confirmation" name="password_confirmation" required
+                                   placeholder=" " autocomplete="new-password" class="fha-input"
+                                   data-confirm-of="password" aria-describedby="confirmError">
+                            <label for="password_confirmation" class="fha-label">Confirm new password</label>
+                            <span class="fha-rule" aria-hidden="true"></span>
+                        </div>
+                        <p id="confirmError" class="fha-field-error" role="alert">Both passwords must match.</p>
+                    </div>
+
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Save new password
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                <p class="fha-meta">
+                    You'll use the new password on every device from now on.
+                    <a href="{{ route('login') }}" class="fha-link">Back to sign in</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    @include('public.auth.partials.plate', [
+        'title' => 'One new key, everywhere.',
+        'lede'  => 'Rooms for guests and visitors, run by the Auxiliary Services Program.',
+    ])
+</main>
 @endsection
+
+@push('scripts')
+@include('public.auth.partials.form-js')
+@endpush

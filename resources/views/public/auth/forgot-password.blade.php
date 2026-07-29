@@ -1,43 +1,56 @@
-@extends('layouts.public.auth')
-@section('title', 'Forgot Password')
+@extends('layouts.public.auth-desk')
+@section('title', 'Farmers Hostel · Reset your password')
+
 @section('content')
-    <x-booking.ui.auth-card
-        title="Forgot Password?"
-        subtitle="No worries! Enter your registered email and we'll send you a password reset link."
-    >
-        @if ($errors->any())
-            @foreach ($errors->all() as $error)
-                <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.ui.alert type="danger" :message="$error" />
-                </div>
-            @endforeach
-        @endif
+<main class="fha-desk-shell">
+    <section class="fha-board">
+        <div class="fha-board-inner">
 
-        @if (session('status'))
-            <div id="success-alert" class="mb-4">
-                <x-booking.ui.alert type="success" :message="session('status')" />
+            @include('public.auth.partials.house')
+            @include('public.auth.partials.notes')
+
+            <div class="fha-fob">
+                <span class="fha-eyebrow">Account recovery</span>
+                <h1 class="fha-panel-title">Lost your key.</h1>
+                <p class="fha-panel-lede">
+                    It happens. Give us the address on your account and we'll send a link
+                    to set a new password.
+                </p>
+
+                <form method="POST" action="{{ route('password.email') }}" class="fha-form" novalidate data-busy-form>
+                    @csrf
+
+                    <div class="fha-field">
+                        <input type="email" id="email" name="email" required autocomplete="email"
+                               placeholder=" " value="{{ old('email') }}" class="fha-input" autofocus>
+                        <label for="email" class="fha-label">Email address</label>
+                        <span class="fha-rule" aria-hidden="true"></span>
+                    </div>
+
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Email me a reset link
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                <p class="fha-meta">
+                    The link is single-use. If it doesn't arrive, check your spam folder before
+                    requesting another. <a href="{{ route('login') }}" class="fha-link">Back to sign in</a>
+                </p>
             </div>
-        @endif
-
-        <form class="space-y-4" method="POST" action="{{ route('password.email') }}">
-            @csrf
-            <input type="email" placeholder="Email address" name="email" required
-                   class="w-full px-5 py-4 bg-stone-50/60 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-clsu-200 focus:border-clsu-400 focus:bg-white outline-none transition-[color,background-color,border-color,box-shadow] placeholder:text-stone-400 font-medium text-sm text-stone-800">
-
-            <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] cursor-pointer">
-                Email Password Reset Link
-            </button>
-        </form>
-
-        <div class="text-center mt-6">
-            <a href="{{ route('login') }}" class="text-xs font-bold text-clsu-700 hover:text-clsu-900 transition-colors flex items-center justify-center gap-1">
-                <span class="material-icons text-[14px]">arrow_back</span>
-                Back to login
-            </a>
         </div>
-    </x-booking.ui.auth-card>
+    </section>
 
-    <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
-        &copy; {{ date('Y') }} Farmers Hostel.
-    </p>
+    @include('public.auth.partials.plate', [
+        'title' => 'Every key can be cut again.',
+        'lede'  => 'Rooms for guests and visitors, run by the Auxiliary Services Program.',
+    ])
+</main>
 @endsection
+
+@push('scripts')
+@include('public.auth.partials.form-js')
+@endpush

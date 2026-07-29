@@ -55,9 +55,18 @@ class StaffRecordsController extends Controller
         // Validate input
         $request->validate([
             'name'     => 'required|string|min:3|max:50',
-            'email'    => 'required|email|unique:staff,email',
+            'email'    => [
+                'required',
+                'email',
+                'unique:staff,email',
+                // Guests and staff share one login, so an address can only
+                // resolve to one identity. Mirrors the check in signup().
+                Rule::unique('users', 'email'),
+            ],
             'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
             'password' => 'required|string|min:6|confirmed', // add confirmation if you want
+        ], [
+            'email.unique' => 'That email address is already in use by a guest or staff account.',
         ]);
 
         // Create the staff account

@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \App\Http\Middleware\Authenticate::class,
             'staff.role' => \App\Http\Middleware\StaffRoleMiddleware::class,
             'staff.active' => \App\Http\Middleware\EnsureStaffNotSuspended::class,
+            // The app's own version understands the staff guard and sends each
+            // role to its own dashboard. It was never registered, so Laravel's
+            // default ran instead and only ever checked `web` — an authenticated
+            // admin opening /login was served the login form.
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
 
         // The gateway callback has no session to carry a token. This has to be

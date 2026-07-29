@@ -34,8 +34,8 @@ class EnsureStaffNotSuspended
                 ], 403);
             }
 
-            return redirect()->route('staff.login')->withErrors([
-                'staff_email' => 'Your account has been suspended. Please contact support.',
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account has been suspended. Please contact support.',
             ]);
         }
 

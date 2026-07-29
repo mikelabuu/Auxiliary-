@@ -1,43 +1,61 @@
-@extends('layouts.public.auth')
-@section('title', 'Verify Email')
+@extends('layouts.public.auth-desk')
+@section('title', 'Farmers Hostel · Verify your email')
+
 @section('content')
-    <x-booking.ui.auth-card
-        title="Email Verification Required"
-        subtitle="Thanks for signing up! Before accessing the site, please verify your email by clicking the link we just emailed you."
-    >
-        @if ($errors->any())
-            @foreach ($errors->all() as $error)
-                <div id="error-alert" class="error-alert mb-4">
-                    <x-booking.ui.alert type="danger" :message="$error" />
-                </div>
-            @endforeach
-        @endif
+<main class="fha-desk-shell">
+    <section class="fha-board">
+        <div class="fha-board-inner">
 
-        @if (session('message'))
-            <div id="success-alert" class="mb-4">
-                <x-booking.ui.alert type="success" :message="session('message')" />
+            @include('public.auth.partials.house')
+            @include('public.auth.partials.notes')
+
+            <div class="fha-fob">
+                <span class="fha-eyebrow">One step left</span>
+                <h1 class="fha-panel-title">Check your inbox.</h1>
+                <p class="fha-panel-lede">
+                    We've sent a verification link to your address. Open it to finish setting
+                    up your account, then come back and book your room.
+                </p>
+
+                <form method="POST" action="{{ route('verification.send') }}" class="fha-form" data-busy-form>
+                    @csrf
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Send the link again
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
+
+                {{-- Signing out is a real exit from a half-finished state, but it is
+                     not this screen's primary action, so it stays quiet. --}}
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="fha-ghost">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>
+                        </svg>
+                        Sign out
+                    </button>
+                </form>
+
+                <p class="fha-meta">
+                    Not in your inbox? Check the spam folder before sending another.
+                </p>
             </div>
-        @endif
-
-        <form class="space-y-4" method="POST" action="{{ route('verification.send') }}">
-            @csrf
-            <p class="text-xs font-bold text-stone-400 text-center">Didn't receive the email? Click below to request another.</p>
-            <button type="submit" class="w-full bg-gradient-to-b from-clsu-600 to-clsu-800 text-white font-bold py-4 rounded-2xl shadow-[0_10px_24px_-8px_rgba(17,78,40,0.5)] hover:shadow-[0_14px_30px_-8px_rgba(17,78,40,0.6)] transition-[transform,color,background-color,border-color,box-shadow] active:scale-[0.98] cursor-pointer">
-                Resend Verification Email
-            </button>
-        </form>
-
-        <div class="text-center mt-6">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="text-xs font-bold text-ember-600 hover:text-ember-700 hover:underline cursor-pointer">
-                    Log Out
-                </button>
-            </form>
         </div>
-    </x-booking.ui.auth-card>
+    </section>
 
-    <p class="mt-10 text-white/60 text-xs font-semibold tracking-wider">
-        &copy; {{ date('Y') }} Farmers Hostel.
-    </p>
+    @include('public.auth.partials.plate', [
+        'title' => 'A room needs a real address.',
+        'lede'  => 'A working university, and a place to stay inside it.',
+    ])
+</main>
 @endsection
+
+@push('scripts')
+@include('public.auth.partials.form-js')
+@endpush

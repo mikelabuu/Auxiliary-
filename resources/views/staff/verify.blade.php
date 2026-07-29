@@ -1,69 +1,167 @@
-@extends('layouts.public.auth')
-@section('content')
-        <div class="glass-card w-full max-w-[550px] rounded-[40px] shadow-2xl overflow-hidden">
-            <div class="mt-6 flex justify-center transition-transform duration-300 ease-out hover:scale-105">
-                <img src="{{ asset('image/FHLogo2.png') }}" alt="FH" class="h-20 w-auto drop-shadow-2xl">
-            </div>
-            
-            <div class="px-8 pb-10">
-                <div>
-                    <div class="text-center mb-8">
-                        <h2 class="text-3xl font-extrabold text-slate-900 leading-tight">Staff OTP Verification</h2>
-                        <p class="text-slate-600 mt-2">Enter 6-digit OTP</p>
-                        @if ($errors->any())
-                            @foreach ($errors->all() as $error)
-                                <div id="error-alert" class=" error-alert mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
-                                    <div class="flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        <div class="flex-1">
-                                            <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
-                                            <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ $error }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @endif
+@extends('layouts.public.auth-desk')
+@section('title', 'Farmers Hostel · Verification code')
 
-                        {{-- Session Error --}}
-                        @if (session('error'))
-                            <div id="error-alert" class="error-alert mt-3 p-3 rounded-xl bg-red-100 border border-red-300 backdrop-blur-sm transition-opacity duration-500">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    <div class="flex-1">
-                                        <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-1">Error</p>
-                                        <p class="text-[11px] text-red-600 font-medium leading-relaxed">{{ session('error') }}</p>
-                                    </div>
-                                </div>
+@section('content')
+<main class="fha-desk-shell">
+    <section class="fha-board">
+        <div class="fha-board-inner">
+
+            @include('public.auth.partials.house')
+            @include('public.auth.partials.notes')
+
+            <div class="fha-fob">
+                <span class="fha-eyebrow">Step two of two</span>
+                <h1 class="fha-panel-title">Enter your code.</h1>
+                <p class="fha-panel-lede">
+                    Your password checked out. We've emailed a six-digit code
+                    @if (!empty($maskedEmail))
+                        to <span class="fha-nowrap">{{ $maskedEmail }}</span> —
+                    @else
+                        to your registered address —
+                    @endif
+                    it's good for five minutes.
+                </p>
+
+                <form method="POST" action="{{ route('staff.otp.verify') }}" class="fha-form" data-busy-form>
+                    @csrf
+
+                    <div>
+                        {{-- One real input carries the value, so paste, password
+                             managers and iOS one-time-code autofill all keep
+                             working. The six cells are a presentation layer
+                             mirrored from it and hidden from the a11y tree. --}}
+                        <div class="fha-otp">
+                            <label for="otp_code" class="sr-only">Six-digit verification code</label>
+                            <input type="text" id="otp_code" name="otp_code" required
+                                   inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                                   autocomplete="one-time-code" autofocus
+                                   aria-describedby="otpHint"
+                                   class="fha-otp-input" data-otp>
+                            <div class="fha-otp-cells" aria-hidden="true">
+                                @for ($i = 0; $i < 6; $i++)
+                                    <span class="fha-otp-cell" data-otp-cell="{{ $i }}"></span>
+                                @endfor
                             </div>
-                        @endif
+                        </div>
+
+                        <p id="otpHint" class="fha-hint">
+                            Six digits, numbers only.
+                            <span data-otp-countdown hidden>Expires in <b data-otp-remaining></b>.</span>
+                        </p>
                     </div>
 
-                    <form class="space-y-4" method="POST" action="{{ route('staff.otp.verify') }}">
-                        @csrf
-                        <input type="text" placeholder="••••••" name="otp_code" id="otp_code" maxlength="6" required autofocus
-                               inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
-                               class="w-full px-5 py-4 bg-white/70 border border-slate-200 rounded-2xl text-center text-2xl font-bold tracking-[0.45em] tabular-nums focus:ring-2 focus:ring-brand-light/60 focus:border-brand-light focus:bg-white outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-slate-300 placeholder:tracking-[0.45em]">
+                    <button type="submit" class="fha-submit" data-busy-btn>
+                        <span class="fha-submit-label">
+                            @include('public.auth.partials.key-icon')
+                            Verify and continue
+                        </span>
+                        <span class="fha-submit-spin" aria-hidden="true"></span>
+                    </button>
+                </form>
 
-                        <button type="submit" class="w-full bg-brand hover:bg-brand-light text-white font-bold py-4 rounded-2xl shadow-xl transition-[background-color,transform,box-shadow] duration-200 ease-out active:scale-[0.98] mt-2">
-                            Verify OTP
-                        </button>
-                    </form>
-                    {{-- Secondary action stays quiet — one primary CTA per screen --}}
-                    <form method="POST" action="{{ route('staff.otp.resend') }}">
-                        @csrf
-                        <button type="submit" class="w-full text-sm font-bold text-brand py-3 mt-2 rounded-2xl hover:bg-brand-muted transition-[background-color,transform] duration-200 ease-out active:scale-[0.99]">
-                            Didn’t get the code? Resend OTP
-                        </button>
-                    </form>
-                </div>
+                {{-- Secondary action stays quiet — one primary CTA per screen. --}}
+                <form method="POST" action="{{ route('staff.otp.resend') }}">
+                    @csrf
+                    <button type="submit" class="fha-ghost">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/>
+                        </svg>
+                        Send a new code
+                    </button>
+                </form>
+
+                {{-- No resend threshold quoted here either. This screen is behind a
+                     proven password, so it is far less exposed than the login — but
+                     the limit is still a detail worth keeping out of the UI. If it
+                     is reached, the server's own message names the wait. --}}
+                <p class="fha-meta">
+                    Didn't get it? Check your spam folder, or send another.
+                    <a href="{{ route('login') }}" class="fha-link">Back to sign in</a>
+                </p>
             </div>
         </div>
+    </section>
 
-        <p class="mt-10 text-white/60 text-xs font-medium tracking-wide">
-            &copy; 2026 Farmers Hostel.
-        </p>
+    @include('public.auth.partials.plate', [
+        'title' => 'A second key, sent to you.',
+        'lede'  => 'The front desk of Farmers Hostel, inside the CLSU campus.',
+    ])
+</main>
 @endsection
+
+@push('scripts')
+@include('public.auth.partials.form-js')
+<script>
+(() => {
+    'use strict';
+
+    /* ── Six paper wells, mirrored from the real input ───────────
+       The input owns the value and the focus; the cells only render it. */
+    const input = document.querySelector('[data-otp]');
+    const cells = [...document.querySelectorAll('[data-otp-cell]')];
+
+    if (input && cells.length) {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let previous = '';
+
+        const paint = () => {
+            const v = input.value.replace(/\D/g, '').slice(0, 6);
+            if (v !== input.value) input.value = v;
+            const focused = document.activeElement === input;
+
+            cells.forEach((cell, i) => {
+                const had = Boolean(previous[i]);
+                const has = Boolean(v[i]);
+                cell.textContent = v[i] || '';
+                cell.classList.toggle('is-filled', has);
+                cell.classList.toggle('is-active', focused && i === Math.min(v.length, 5));
+
+                // Acknowledge only the digit that just landed — re-adding the
+                // class on every repaint would keep every cell pulsing.
+                if (has && !had && !reduced) {
+                    cell.classList.remove('just-filled');
+                    void cell.offsetWidth;
+                    cell.classList.add('just-filled');
+                }
+            });
+
+            previous = v;
+        };
+
+        ['input', 'focus', 'blur', 'click', 'keyup'].forEach(evt =>
+            input.addEventListener(evt, paint));
+        paint();
+
+        // A complete code submits itself — the extra click is pure friction on
+        // a step staff pass through at the start of every shift.
+        input.addEventListener('input', () => {
+            if (input.value.length === 6) input.form.requestSubmit();
+        });
+    }
+
+    /* ── Expiry countdown ────────────────────────────────────
+       Driven by the real expiry on the issued OTP row, not a decorative timer. */
+    @if (!empty($expiresAt))
+        const expiresAt = new Date(@json(\Illuminate\Support\Carbon::parse($expiresAt)->toIso8601String()));
+        const wrap = document.querySelector('[data-otp-countdown]');
+        const out = document.querySelector('[data-otp-remaining]');
+
+        if (wrap && out) {
+            const tick = () => {
+                const left = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+                wrap.removeAttribute('hidden');
+                if (left <= 0) {
+                    out.textContent = 'expired — request a new one';
+                    clearInterval(timer);
+                    return;
+                }
+                out.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+            };
+            const timer = setInterval(tick, 1000);
+            tick();
+        }
+    @endif
+})();
+</script>
+@endpush

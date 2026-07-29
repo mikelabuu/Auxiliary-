@@ -62,6 +62,7 @@
 @import './public/11-flatpickr-night.css';
 @import './public/12-scroll-effects.css';
 @import './public/13-booking-night-v3.css';
+@import './public/14-auth.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 

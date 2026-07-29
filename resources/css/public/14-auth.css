@@ -1,0 +1,1245 @@
+/* ============================================================
+   Part 14 of the public bundle — The Key Board (auth surfaces)
+   Farmers Hostel · CLSU Auxiliary Services
+
+   One world for all five auth screens: sign in / register, forgot
+   password, reset password, email verification, and the staff OTP.
+
+   THESIS: the board behind the front desk, not a card on a photo.
+   A brass rail carries the tags; the paper below takes the writing.
+   The category ships a centred translucent card floating on a hotel
+   photograph — this ships the desk itself.
+
+   OWN-WORLD: Boutique Farmstead, inherited from the public site.
+   Cream paper, deep evergreen, brass. Playfair 400 display, Oswald
+   wide-tracked signage, Manrope copy. Warm green-shifted daylight
+   shadow. No monospace, no glass, no glow, no invented proof.
+
+   Imported in strict order by resources/css/app.css; do not reorder.
+   ============================================================ */
+
+/* ═══════════════════════ Tokens ═══════════════════════ */
+
+.fha-desk-body {
+    /* Text ramp — green-shifted, never neutral gray (DESIGN.md).
+       ink-soft ≈ 5.4:1 and ink-faint ≈ 4.7:1 on the cream ground. */
+    --fha-ink: var(--color-ink, oklch(22% 0.02 160));
+    --fha-ink-soft: oklch(42% 0.025 160);
+    --fha-ink-faint: oklch(46% 0.022 160);
+
+    /* Brass. --fha-brass is ornament only (1.8:1 on cream — never text).
+       --fha-brass-ink is the readable brass for accent copy (≈4.9:1). */
+    --fha-brass: var(--color-gold, oklch(75% 0.12 85));
+    --fha-brass-deep: oklch(62% 0.12 78);
+    --fha-brass-ink: oklch(45% 0.09 70);
+
+    --fha-paper: var(--color-cream-warm, oklch(98% 0.012 85));
+    --fha-paper-deep: var(--color-canvas-deep, oklch(94.5% 0.025 90));
+    --fha-hairline: oklch(22% 0.02 160 / 0.14);
+    --fha-hairline-strong: oklch(22% 0.02 160 / 0.26);
+
+    /* One curve, inherited from the boutique theme rather than redeclared. */
+    --fha-ease: var(--ease-boutique, cubic-bezier(0.22, 1, 0.36, 1));
+
+    /* A longer tail for arrivals only. Interaction feedback keeps --fha-ease;
+       things that travel a distance decelerate for longer, which is what reads
+       as "smooth" rather than merely fast. */
+    --fha-ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* GSAP's power3.out, expressed as a bezier. Split Text uses it for exactly
+       this kind of masked type reveal, and it is gentler at the start than the
+       arrive curve — which is what keeps a long rise from looking like a jump. */
+    --fha-ease-rise: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+    /* Two duration steps carry the whole surface. Press and dismissal are
+       fast because the system is responding; everything the user waits on
+       sits at base, under the 300ms UI ceiling. */
+    --fha-fast: 160ms;
+    --fha-base: 220ms;
+
+    /* Warm, green-shifted daylight shadow — never neutral black. Every
+       shadow mixes from this one tint so the hue has a single source. */
+    --fha-shadow-tint: oklch(15% 0.05 160);
+    --fha-shadow-rest: 0 18px 40px -22px color-mix(in oklab, var(--fha-shadow-tint) 25%, transparent);
+    --fha-shadow-lift: 0 24px 60px -20px color-mix(in oklab, var(--fha-shadow-tint) 35%, transparent),
+                      0 8px 24px -12px color-mix(in oklab, var(--fha-shadow-tint) 20%, transparent);
+
+    /* Feedback families — the only place a non-brand hue is allowed. */
+    --fha-ember-surface: oklch(95% 0.03 25);
+    --fha-ember-edge: oklch(58% 0.16 25 / 0.4);
+    --fha-ember-ink: oklch(41% 0.15 25);
+    --fha-ok-surface: oklch(95% 0.035 155);
+    --fha-ok-ink: oklch(35% 0.08 158);
+
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-cream, oklch(96.5% 0.02 90));
+    color: var(--fha-ink);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+}
+
+/* ═══════════════════════ The room ═══════════════════════ */
+
+.fha-desk-room {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Daylight from the upper left. One soft source, no orbs, no mesh. */
+.fha-desk-daylight {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(120% 90% at 12% -10%, oklch(99% 0.02 88) 0%, transparent 58%),
+        radial-gradient(90% 70% at 92% 108%, oklch(93% 0.03 150 / 0.5) 0%, transparent 62%);
+}
+
+/* Same grain recipe as .film-grain — the paper texture the whole site uses. */
+.fha-desk-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.9  0 0 0 0 0.75  0 0 0 0.9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ═══════════════════════ Shell ═══════════════════════ */
+
+.fha-desk-shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1080px) {
+    /* Paper left, photograph right. The board gets the larger share:
+       its occupant is here to work, not to look at the building. */
+    .fha-desk-shell {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    }
+}
+
+/* Top-anchored, not centred. Centring re-distributed the slack whenever the
+   panel changed height, so switching to Register yanked the mark and the rail
+   84px upward — the tag moved out from under the pointer that clicked it.
+   The rail is mounted at a fixed height on the wall; the form grows down. */
+.fha-board {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: clamp(2rem, 7vh, 4.5rem) 1.25rem 3rem;
+}
+
+@media (min-width: 640px) {
+    .fha-board { padding-inline: 2.5rem; }
+}
+
+@media (min-width: 1080px) {
+    .fha-board { padding-inline: clamp(2.5rem, 4vw, 4.5rem); }
+}
+
+/* Short desktop windows — 1280×720 is the common laptop. The two-column
+   layout promises the whole form without scrolling, so the vertical rhythm
+   compresses rather than letting the primary action fall below the fold. */
+@media (min-width: 1080px) and (max-height: 820px) {
+    .fha-board { padding-block: 2.5rem 2rem; }
+    .fha-house { margin-bottom: 1.75rem; }
+    .fha-rail { margin-bottom: 1.5rem; }
+    .fha-panel-lede { margin-bottom: 1.35rem; }
+    .fha-switch { margin-top: 1.15rem; }
+}
+
+.fha-board-inner {
+    width: 100%;
+    max-width: 32rem;
+    /* Centred in its column at every width. The page's asymmetry is already
+       carried by board-versus-plate. */
+    margin-inline: auto;
+}
+
+/* ═══════════════════════ Property line ═══════════════════════ */
+
+.fha-house {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 2.75rem;
+    text-decoration: none;
+    color: inherit;
+    width: fit-content;
+}
+
+.fha-house-mark { height: 30px; width: auto; }
+
+.fha-house-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    line-height: 1.1;
+    color: var(--fha-ink);
+    transition: color var(--fha-base) var(--fha-ease);
+}
+
+.fha-house-unit {
+    display: block;
+    margin-top: 0.15rem;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--fha-ink-faint);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-house:hover .fha-house-name { color: var(--color-emerald-deep); }
+}
+
+.fha-house:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════ The rail ═══════════════════════
+   A brass rail with two hooks, carrying the Sign in and Register tags.
+   Login only. The selected tag lifts square to the rail; the other hangs
+   tilted and quiet. Both stay hooked so the tablist keeps its semantics. */
+
+.fha-rail {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding-top: 1.15rem;
+    margin-bottom: 2.1rem;
+}
+
+/* The rail bar — a drawn brass edge, lit along its top. */
+.fha-rail::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -0.35rem;
+    right: -0.35rem;
+    height: 3px;
+    border-radius: 4px;
+    background: linear-gradient(
+        180deg,
+        oklch(88% 0.08 88) 0%,
+        var(--fha-brass) 42%,
+        var(--fha-brass-deep) 100%
+    );
+    box-shadow: 0 1px 3px oklch(15% 0.05 160 / 0.28);
+}
+
+.fha-tag {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transform-origin: 50% 0.35rem;
+    transition: transform var(--fha-base) var(--fha-ease);
+}
+
+.fha-tag-ring {
+    width: 0.72rem;
+    height: 0.72rem;
+    border: 2px solid var(--fha-brass-deep);
+    border-radius: 50%;
+    background: transparent;
+    margin-top: -0.42rem;
+    transition: border-color var(--fha-base) var(--fha-ease);
+}
+
+.fha-tag-body {
+    position: relative;
+    margin-top: -0.1rem;
+    /* Sized so the whole tag clears 44px — it is a touch target, not a label. */
+    padding: 0.75rem 1.05rem 0.7rem;
+    border: 1px solid var(--fha-hairline);
+    /* Fob silhouette: square at the head where the grommet punches through,
+       rounded at the foot where it hangs free. */
+    border-radius: 4px 4px 12px 12px;
+    background: var(--fha-paper-deep);
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+    color: var(--fha-ink-faint);
+    box-shadow: 0 4px 10px -8px color-mix(in oklab, var(--fha-shadow-tint) 50%, transparent);
+    transition:
+        background-color var(--fha-base) var(--fha-ease),
+        color var(--fha-base) var(--fha-ease),
+        border-color var(--fha-base) var(--fha-ease),
+        box-shadow var(--fha-base) var(--fha-ease),
+        transform var(--fha-fast) var(--fha-ease);
+}
+
+/* Press feedback on the body, so it composes with the hang rotation
+   instead of overwriting it. */
+.fha-tag:active .fha-tag-body { transform: scale(0.97); }
+
+.fha-tag[aria-selected="false"] { transform: rotate(-5deg) translateY(0.1rem); }
+.fha-tag[aria-selected="true"]  { transform: rotate(0deg) translateY(-0.1rem); }
+
+.fha-tag[aria-selected="true"] .fha-tag-ring { border-color: var(--fha-brass); }
+
+.fha-tag[aria-selected="true"] .fha-tag-body {
+    background: var(--fha-paper);
+    border-color: var(--fha-hairline-strong);
+    color: var(--fha-ink);
+    box-shadow: var(--fha-shadow-rest);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-tag[aria-selected="false"]:hover { transform: rotate(-2.5deg) translateY(0); }
+    .fha-tag[aria-selected="false"]:hover .fha-tag-body { color: var(--fha-ink-soft); }
+}
+
+.fha-tag:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════ Working surface ═══════════════════════ */
+
+.fha-fob { position: relative; }
+
+.fha-eyebrow {
+    display: block;
+    margin-bottom: 0.55rem;
+    font-family: var(--font-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--fha-brass-ink);
+}
+
+.fha-panel-title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1.35rem + 2.4vw, 3rem);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.018em;
+    color: var(--fha-ink);
+}
+
+.fha-panel-lede {
+    margin: 0 0 1.5rem;
+    max-width: 42ch;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--fha-ink-soft);
+}
+
+/* ═══════════════════════ Fields ═══════════════════════ */
+
+.fha-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.fha-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    /* Top-align, do not stretch. Grid's default `stretch` made a bare field
+       grow to match a taller sibling that carries helper text — and because
+       .fha-rule is anchored to the field's bottom, the brass rule then drew
+       tens of pixels below the input it belongs to. */
+    align-items: start;
+}
+
+.fha-row:has(.fha-field--mi) { grid-template-columns: 1fr 5.5rem; }
+
+/* On a phone a two-up row leaves ~160px per field, too little to type an
+   address into. Stack them — except the name/initial pair. */
+@media (max-width: 30rem) {
+    .fha-row:not(:has(.fha-field--mi)) { grid-template-columns: 1fr; }
+}
+
+.fha-field {
+    position: relative;
+    /* Nothing but the input contributes height here, so the field box hugs it
+       exactly. Anything taller detaches the absolutely-positioned rule and
+       reveal control from the input's real edges. */
+    line-height: 0;
+}
+
+.fha-input {
+    width: 100%;
+    /* Block, not the input default of inline-block: an inline-block input sits
+       on a text baseline and leaves ~12px of phantom descender space inside
+       .fha-field, which floated the brass rule below the box and pushed the
+       reveal button off centre. */
+    display: block;
+    line-height: 1.2;
+    padding: 1.55rem 0.9rem 0.55rem;
+    background: var(--fha-paper);
+    border: 1px solid var(--fha-hairline);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--fha-ink);
+    outline: none;
+    transition:
+        border-color var(--fha-base) var(--fha-ease),
+        background-color var(--fha-base) var(--fha-ease);
+}
+
+.fha-input--pw { padding-right: 3.1rem; }
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-input:hover { border-color: var(--fha-hairline-strong); }
+}
+
+.fha-input:focus {
+    border-color: var(--color-emerald);
+    background: var(--color-cream-warm, oklch(98% 0.012 85));
+}
+
+.fha-input:read-only {
+    color: var(--fha-ink-soft);
+    background: var(--fha-paper-deep);
+    cursor: not-allowed;
+}
+
+/* The brass rule engraves itself under the focused field. Offset+blur
+   shadow and a drawn line — not a glow. */
+.fha-rule {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, var(--fha-brass) 0%, var(--fha-brass-deep) 100%);
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+        transform var(--fha-fast) var(--fha-ease),
+        opacity var(--fha-fast) var(--fha-ease);
+    pointer-events: none;
+}
+
+.fha-input:focus ~ .fha-rule { transform: scaleX(1); opacity: 1; }
+
+.fha-label {
+    position: absolute;
+    left: 0.94rem;
+    top: 0.95rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 500;
+    /* .fha-field zeroes line-height so it can hug the input; the label needs
+       its own back or it collapses to a zero-height line box. */
+    line-height: 1.2;
+    color: var(--fha-ink-faint);
+    pointer-events: none;
+    transform-origin: left top;
+    transition:
+        transform var(--fha-base) var(--fha-ease),
+        color var(--fha-base) var(--fha-ease),
+        font-family 0s;
+}
+
+/* Floated: the label becomes signage — Oswald, uppercase, wide-tracked. */
+.fha-input:focus + .fha-label,
+.fha-input:not(:placeholder-shown) + .fha-label,
+.fha-input:read-only + .fha-label {
+    transform: translateY(-0.62rem) scale(0.62);
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--fha-brass-ink);
+}
+
+.fha-input:focus + .fha-label { color: var(--color-emerald-deep); }
+
+/* Browsers force their own autofill background; keep it on cream. */
+.fha-input:-webkit-autofill,
+.fha-input:-webkit-autofill:hover,
+.fha-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--fha-ink);
+    -webkit-box-shadow: 0 0 0 100px var(--fha-paper) inset;
+    caret-color: var(--fha-ink);
+}
+
+.fha-reveal {
+    position: absolute;
+    right: 0.4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border: 0;
+    background: transparent;
+    border-radius: 9999px;
+    color: var(--fha-ink-faint);
+    cursor: pointer;
+    transition:
+        color var(--fha-base) var(--fha-ease),
+        background-color var(--fha-base) var(--fha-ease),
+        transform var(--fha-fast) var(--fha-ease);
+}
+
+.fha-reveal svg { width: 18px; height: 18px; }
+
+/* translateY(-50%) is this control's centring, not a state — the press
+   scale has to compose with it or the button jumps to the field's top. */
+.fha-reveal:active { transform: translateY(-50%) scale(0.92); }
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-reveal:hover {
+        color: var(--fha-ink);
+        background: oklch(22% 0.02 160 / 0.06);
+    }
+}
+
+.fha-reveal:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 2px;
+}
+
+/* Caps Lock — held in flow at zero opacity so switching it on cannot push
+   the rest of the form down mid-password. */
+.fha-caps {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+    opacity: 0;
+    font-family: var(--font-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--fha-brass-ink);
+    transition: opacity var(--fha-fast) var(--fha-ease);
+}
+
+.fha-caps.is-on { opacity: 1; }
+.fha-caps svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.fha-hint {
+    margin: 0.55rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--fha-ink-faint);
+}
+
+.fha-hint b {
+    font-weight: 600;
+    color: var(--fha-brass-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.fha-nowrap { white-space: nowrap; }
+
+/* ═══════════════════════ OTP — six paper wells ═══════════════════════
+   One real input carries the value, so paste, password managers and iOS
+   one-time-code autofill keep working. The six cells are a presentation
+   layer mirrored from it and hidden from the accessibility tree. */
+
+.fha-otp { position: relative; }
+
+.fha-otp-cells {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+}
+
+@media (max-width: 24rem) {
+    .fha-otp-cells { gap: 0.35rem; }
+}
+
+.fha-otp-cell {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 4;
+    background: var(--fha-paper);
+    border: 1px solid var(--fha-hairline);
+    border-radius: 4px;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--fha-ink);
+    transition:
+        border-color var(--fha-fast) var(--fha-ease),
+        background-color var(--fha-fast) var(--fha-ease),
+        box-shadow var(--fha-fast) var(--fha-ease);
+}
+
+.fha-otp-cell.is-filled { border-color: var(--fha-hairline-strong); }
+
+.fha-otp-cell.is-active {
+    border-color: var(--color-emerald);
+    box-shadow: var(--fha-shadow-rest);
+}
+
+/* The real field sits over the cells, invisible but fully operable. */
+.fha-otp-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    /* 16px minimum stops iOS zooming the viewport on focus. */
+    font-size: 16px;
+    text-indent: -999em;
+    outline: none;
+    cursor: pointer;
+}
+
+.fha-otp-input:focus-visible ~ .fha-otp-cells {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════ Links & actions ═══════════════════════ */
+
+.fha-forgot-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -0.25rem;
+}
+
+.fha-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-emerald-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: oklch(32% 0.06 160 / 0.35);
+    cursor: pointer;
+    transition:
+        text-decoration-color var(--fha-base) var(--fha-ease),
+        color var(--fha-base) var(--fha-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-link:hover {
+        color: var(--color-emerald);
+        text-decoration-color: currentColor;
+    }
+}
+
+.fha-link:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.fha-terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--fha-ink-soft);
+    cursor: pointer;
+}
+
+.fha-terms input {
+    margin-top: 0.15rem;
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-emerald-deep);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+/* Primary action — pill, evergreen, Oswald signage. */
+.fha-submit {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 1.02rem 1.75rem;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+    font-family: var(--font-label);
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    cursor: pointer;
+    box-shadow: var(--fha-shadow-rest);
+    transition:
+        background-color var(--fha-base) var(--fha-ease),
+        box-shadow var(--fha-base) var(--fha-ease),
+        transform var(--fha-fast) var(--fha-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-submit:hover {
+        background: var(--color-emerald);
+        box-shadow: var(--fha-shadow-lift);
+        transform: translateY(-1px);
+    }
+}
+
+/* Previously this only cancelled the hover lift, which meant a touch device —
+   where there is no hover — got no response at all to pressing Sign in. */
+.fha-submit:active { transform: scale(0.97); }
+
+.fha-submit:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 3px;
+}
+
+.fha-submit-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity var(--fha-fast) var(--fha-ease);
+}
+
+.fha-submit-key {
+    width: 15px;
+    height: 15px;
+    color: var(--color-gold-soft);
+}
+
+.fha-submit-spin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 17px;
+    height: 17px;
+    margin: -8.5px 0 0 -8.5px;
+    border-radius: 50%;
+    border: 2px solid oklch(96.5% 0.02 90 / 0.3);
+    border-top-color: var(--color-cream);
+    opacity: 0;
+    transition: opacity var(--fha-fast) var(--fha-ease);
+}
+
+.fha-submit.is-busy { cursor: progress; }
+.fha-submit.is-busy .fha-submit-label { opacity: 0; }
+.fha-submit.is-busy .fha-submit-spin {
+    opacity: 1;
+    animation: fha-spin 620ms linear infinite;
+}
+
+@keyframes fha-spin { to { transform: rotate(360deg); } }
+
+/* Secondary action — quiet, so each screen keeps one primary CTA. */
+.fha-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--fha-hairline-strong);
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--fha-ink-soft);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        border-color var(--fha-base) var(--fha-ease),
+        color var(--fha-base) var(--fha-ease),
+        background-color var(--fha-base) var(--fha-ease),
+        transform var(--fha-fast) var(--fha-ease);
+}
+
+.fha-ghost svg { width: 15px; height: 15px; }
+.fha-ghost:active { transform: scale(0.97); }
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-ghost:hover {
+        border-color: var(--color-emerald);
+        color: var(--color-emerald-deep);
+        background: oklch(22% 0.02 160 / 0.03);
+    }
+}
+
+.fha-ghost:focus-visible {
+    outline: 2px solid var(--color-emerald);
+    outline-offset: 3px;
+}
+
+/* ═══════════════════════ Notes ═══════════════════════ */
+
+.fha-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    /* Server-rendered once per attempt, never re-triggered, so a keyframe is
+       safe here. This is the one moment where motion aids comprehension. */
+    animation: fha-note-in var(--fha-base) var(--fha-ease) both;
+}
+
+@keyframes fha-note-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.fha-note p { margin: 0; }
+.fha-note p + p { margin-top: 0.3rem; }
+.fha-note svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+
+.fha-note--bad {
+    background: var(--fha-ember-surface);
+    border-color: var(--fha-ember-edge);
+    color: var(--fha-ember-ink);
+}
+
+.fha-note--ok {
+    background: var(--fha-ok-surface);
+    border-color: oklch(44% 0.09 160 / 0.4);
+    color: var(--fha-ok-ink);
+}
+
+/* ═══════════════════════ Panels & meta ═══════════════════════
+   A transition, not a keyframe. Keyframes restart from zero, so toggling
+   Sign in / Register quickly re-played the entrance from scratch; a
+   transition retargets from wherever the panel currently is. */
+
+.fha-fob {
+    transition:
+        opacity var(--fha-base) var(--fha-ease),
+        transform var(--fha-base) var(--fha-ease);
+}
+
+.fha-fob.is-entering {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.fha-switch {
+    margin: 1.6rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--fha-ink-soft);
+}
+
+.fha-meta {
+    margin: 1.5rem 0 0;
+    padding-top: 1.35rem;
+    border-top: 1px solid var(--fha-hairline);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    color: var(--fha-ink-soft);
+}
+
+.fha-meta b {
+    font-weight: 600;
+    color: var(--fha-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════ The plate (right column) ═══════════════════════ */
+
+.fha-plate {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 22rem;
+    padding: 2.5rem 1.5rem 2.25rem;
+    overflow: hidden;
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+    isolation: isolate;
+}
+
+@media (min-width: 640px) {
+    .fha-plate { padding: 3rem 2.5rem 2.5rem; }
+}
+
+@media (min-width: 1080px) {
+    .fha-plate {
+        min-height: 100dvh;
+        padding: 3.5rem clamp(2.5rem, 3.5vw, 4rem) 3rem;
+    }
+}
+
+.fha-plate-photo {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Bottom-weighted scrim. The previous version laid an even wash over the whole
+   frame, which muddied the building; this keeps the façade legible at the top
+   and only darkens where type actually sits. */
+.fha-plate-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+        180deg,
+        oklch(22% 0.045 160 / 0.18) 0%,
+        oklch(20% 0.045 160 / 0.34) 42%,
+        oklch(16% 0.04 160 / 0.82) 76%,
+        oklch(13% 0.035 160 / 0.95) 100%
+    );
+}
+
+/* The photograph is matted, the way a print is — a brass hairline inset from
+   the edge rather than a full-bleed image running to the crop. */
+.fha-plate-mat {
+    position: absolute;
+    inset: clamp(0.85rem, 1.6vw, 1.5rem);
+    z-index: -1;
+    border: 1px solid oklch(86% 0.09 85 / 0.28);
+    pointer-events: none;
+}
+
+.fha-plate-eyebrow {
+    display: block;
+    margin-bottom: 1.15rem;
+    font-family: var(--font-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    color: var(--color-gold-soft);
+}
+
+.fha-plate-title {
+    margin: 0 0 1.6rem;
+    max-width: 16ch;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.1rem + 2.4vw, 3rem);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.018em;
+    color: var(--color-cream);
+}
+
+/* One editorial line. This panel used to list what the login does — that the
+   staff path issues an emailed code, and the exact attempt limit before a
+   lockout. Both are useful to an attacker and to nobody else: the threshold
+   tells them how far to push before backing off, and the code line confirms
+   which accounts carry a second factor. PRODUCT.md's own rule is that the
+   wrong person learns nothing from trying, so the panel now says nothing
+   about the mechanism at all. */
+.fha-plate-lede {
+    margin: 0 0 2.25rem;
+    max-width: 34ch;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: oklch(93.5% 0.014 90 / 0.82);
+}
+
+.fha-plate-seal {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid oklch(96.5% 0.02 90 / 0.18);
+}
+
+.fha-seal-img { height: 44px; width: auto; flex-shrink: 0; }
+
+.fha-seal-name {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-cream);
+}
+
+.fha-seal-place {
+    margin: 0.15rem 0 0;
+    font-family: var(--font-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: oklch(93.5% 0.014 90 / 0.66);
+}
+
+/* ═══════════════════════ Arrival ═══════════════════════
+   The one authored moment: the board is mounted. The rail draws across its
+   brackets, the tags drop onto their hooks, the paper settles under them, and
+   the building comes into focus behind. ~750ms, once, pure CSS — nothing here
+   gates interaction, and autofocus still lands on the first field immediately.
+
+   Every element animates from opacity 0 with `both`, so if these rules are
+   disabled the content sits at its natural visible state rather than vanishing. */
+
+.fha-house {
+    animation: fha-rise 380ms var(--fha-ease-arrive) both;
+}
+
+/* The rail goes up first — it is what everything else hangs from. */
+.fha-rail::before {
+    transform-origin: left center;
+    animation: fha-draw 460ms var(--fha-ease-arrive) 80ms both;
+}
+
+/* Two tags is a short list, so a 60ms stagger reads as sequence, not lag. */
+.fha-tag { animation: fha-fade 360ms var(--fha-ease-arrive) 240ms both; }
+.fha-tag:nth-of-type(2) { animation-delay: 300ms; }
+
+.fha-tag-body { animation: fha-hang 420ms var(--fha-ease-arrive) 240ms both; }
+.fha-tag:nth-of-type(2) .fha-tag-body { animation-delay: 300ms; }
+
+/* The working surface settles as one block. Form fields are not a list and
+   staggering seven of them would read as latency on a daily task. */
+.fha-fob { animation: fha-settle 420ms var(--fha-ease-arrive) 300ms both; }
+
+/* Behind the scrim the façade eases out of a slow push-in. Long, because it
+   is atmosphere rather than feedback, and it never blocks anything. */
+.fha-plate-photo { animation: fha-focus 1100ms var(--fha-ease-arrive) both; }
+.fha-plate-eyebrow,
+.fha-plate-title,
+.fha-plate-seal { animation: fha-fade 520ms var(--fha-ease-arrive) 200ms both; }
+
+@keyframes fha-rise {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fha-draw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+@keyframes fha-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fha-hang {
+    from { transform: translateY(-10px); }
+    to   { transform: translateY(0); }
+}
+
+@keyframes fha-settle {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fha-focus {
+    from { transform: scale(1.045); }
+    to   { transform: scale(1); }
+}
+
+/* ── The heading resolves word by word ──────────────────────
+   Technique ported from ReactBits "Blur Text" (text-animations), whose React
+   version needs framer-motion; this project has no React, so the same 3-step
+   keyframe — blur(10px) → blur(4px) at half opacity → sharp — is expressed in
+   plain CSS. Words are wrapped by partials/form-js and carry their index in
+   --i, so the stagger costs no JS timers.
+
+   Bounded on purpose: filter:blur is the one expensive property here, so it
+   runs on a handful of words, once, and never on scroll. */
+
+/* The mask each word rises out of. overflow:hidden crops the descender, so
+   the box is padded and the padding pulled back with a negative margin —
+   otherwise the tail of a "y" is sliced off mid-animation. */
+.fha-word {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: 0.16em;
+    margin-bottom: -0.16em;
+}
+
+.fha-word-in {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, opacity;
+    animation: fha-word-rise 900ms var(--fha-ease-rise) both;
+    animation-delay: calc(260ms + var(--i, 0) * 55ms);
+}
+
+/* Transform and opacity only — the earlier version animated filter:blur(),
+   which is not composited and was the source of the roughness. A long
+   duration with a tight stagger is what actually reads as smooth; a short
+   duration with a wide stagger reads as a stutter. */
+@keyframes fha-word-rise {
+    from { transform: translateY(110%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* will-change is a promise about the near future, not a standing hint —
+   release the layer as soon as the reveal finishes. */
+.fha-word-in.is-done { will-change: auto; }
+
+/* Headings stay hidden only while JS is available and has not split them yet,
+   so the split cannot be seen happening. partials/form-js always reveals,
+   even if the font promise never settles, so this can never strand a heading. */
+.fha-js .fha-panel-title { opacity: 0; }
+.fha-js .fha-panel-title.is-split { opacity: 1; }
+
+.fha-plate-lede { animation: fha-fact-in 560ms var(--fha-ease-arrive) 420ms both; }
+.fha-plate-mat  { animation: fha-fade 700ms var(--fha-ease-arrive) 260ms both; }
+
+@keyframes fha-fact-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* A digit landing in an OTP cell gets its own small acknowledgement. This is
+   the one moment on that screen where the system confirms it heard you. */
+@keyframes fha-cell-pop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+.fha-otp-cell.just-filled {
+    animation: fha-cell-pop 260ms var(--fha-ease) both;
+}
+
+/* The key turns in the lock on hover. World-specific, and the only decorative
+   flourish on the surface — it costs nothing and it means something. */
+.fha-submit-key { transition: transform var(--fha-base) var(--fha-ease); }
+
+@media (hover: hover) and (pointer: fine) {
+    .fha-submit:hover .fha-submit-key { transform: rotate(-25deg); }
+}
+
+/* ═══════════════════════ Helper & inline errors ═══════════════════════
+   The server enforces min-6 passwords and min-3 alphanumeric usernames.
+   Stating both up front costs one line and removes a whole failed round-trip. */
+
+.fha-help {
+    margin: 0.25rem 0 -0.2rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--fha-ink-faint);
+}
+
+.fha-field-error {
+    display: none;
+    margin: 0.4rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--fha-ember-ink);
+}
+
+.fha-field-error.is-on { display: block; }
+
+.fha-input[aria-invalid="true"] { border-color: var(--fha-ember-edge); }
+.fha-input[aria-invalid="true"] ~ .fha-rule {
+    background: linear-gradient(90deg, var(--fha-ember-ink), var(--fha-ember-edge));
+}
+
+/* ═══════════════════════ Reduced motion ═══════════════════════
+   Less movement, not less feedback. Colour and opacity transitions carry
+   meaning here — which field is focused, which control is hovered, that an
+   error arrived — so they are kept. Only position, rotation and scale go. */
+
+@media (prefers-reduced-motion: reduce) {
+
+    /* The whole arrival sequence is removed. Each of these animates from
+       opacity 0 with `both`, so cancelling leaves the element at its natural
+       visible state — the page arrives complete rather than blank. */
+    .fha-house,
+    .fha-rail::before,
+    .fha-tag,
+    .fha-tag-body,
+    .fha-fob,
+    .fha-plate-photo,
+    .fha-plate-eyebrow,
+    .fha-plate-title,
+    .fha-plate-lede,
+    .fha-plate-mat,
+    .fha-plate-seal,
+    .fha-word,
+    .fha-word-in,
+    .fha-otp-cell.just-filled {
+        animation: none;
+    }
+
+    /* Blur is the part that actually causes discomfort; without the animation
+       the words simply are, at full opacity and sharp. */
+    .fha-word { filter: none; opacity: 1; transform: none; }
+
+    .fha-submit:hover .fha-submit-key { transform: none; }
+
+    .fha-tag { transition: none; }
+
+    .fha-tag[aria-selected="false"],
+    .fha-tag[aria-selected="true"],
+    .fha-tag:active .fha-tag-body { transform: none; }
+
+    .fha-submit:hover,
+    .fha-submit:active,
+    .fha-ghost:active { transform: none; }
+
+    .fha-reveal:active { transform: translateY(-50%); }
+
+    /* The rule still appears on focus — it arrives instead of drawing. */
+    .fha-rule { transition: none; }
+
+    /* The label MUST keep its transform or it sits on top of the typed
+       value; only the tween is dropped, and its colour change is kept. */
+    .fha-label { transition: color var(--fha-base) var(--fha-ease); }
+
+    .fha-fob { transition: opacity var(--fha-base) var(--fha-ease); }
+    .fha-fob.is-entering { transform: none; }
+
+    .fha-note { animation: fha-note-fade var(--fha-base) var(--fha-ease) both; }
+
+    @keyframes fha-note-fade {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* Kept, slowed: a still spinner would read as a hung request. */
+    .fha-submit.is-busy .fha-submit-spin { animation-duration: 1.5s; }
+}
+
+@media (forced-colors: active) {
+    .fha-tag[aria-selected="true"] .fha-tag-body { border: 2px solid Highlight; }
+    .fha-otp-cell.is-active { outline: 2px solid Highlight; }
+    .fha-rule { display: none; }
+}

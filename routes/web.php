@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\StaffAuthController;
 use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\NewPasswordController;
@@ -57,17 +58,19 @@ Route::post('/rooms/availability-summary', [BookingController::class, 'availabil
 // the literal /rooms/* paths above always win over this wildcard.
 Route::get('/rooms/{slug}', [BookingController::class, 'showRoomType'])->name('rooms.show');
 
-Route::middleware('guest')->group(function () {
-    // Login form
-    Route::get('/login', function () {
-        return view('public.auth.login');
-    })->name('login');
+// Both guards: one login form serves guests and staff, so an already
+// authenticated session of EITHER kind should be sent to its home instead.
+Route::middleware('guest:web,staff')->group(function () {
+    // One login for guests, front desk and admins. LoginController resolves
+    // which guard the address belongs to and hands off from there.
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
 
-    // User Login actions. The controller also runs a per-email limiter; this
-    // is the per-IP backstop that stops one host spraying many accounts.
-    Route::post('/login/user', [AuthController::class, 'loginUser'])
+    // The controller also runs a per-email limiter; this is the per-IP
+    // backstop that stops one host spraying many accounts.
+    Route::post('/login', [LoginController::class, 'login'])
         ->middleware('throttle:20,1')
-        ->name('login.user');
+        ->name('login.attempt');
+
     // Signup
     Route::post('/signup', [AuthController::class, 'signup'])
         ->middleware('throttle:registration')
@@ -80,11 +83,10 @@ Route::middleware('guest')->group(function () {
         return redirect()->route('staff.bookings.index');
     });
 
-    // Staff Login Form
-    Route::get('/staff/login', [StaffAuthController::class, 'showLoginForm'])->name('staff.login');
-    Route::post('/staff/login', [StaffAuthController::class, 'loginStaff'])
-        ->middleware('throttle:20,1')
-        ->name('staff.login.submit');
+    // Staff now sign in through the same form as everyone else. The name is
+    // kept because middleware and older links still redirect to it.
+    Route::get('/staff/login', fn () => redirect()->route('login'))->name('staff.login');
+
      // OTP verification
     Route::get('/staff/otp', [StaffAuthController::class, 'showOtpForm'])->name('staff.otp.form');
     Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])->name('staff.otp.verify');
@@ -296,7 +298,7 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
         Auth::guard('staff')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/staff/login');
+        return redirect()->route('login');
     })->name('staff.logout');
 
     Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])

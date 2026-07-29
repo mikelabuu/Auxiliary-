@@ -141,9 +141,9 @@ class StaffAuthSecurityTest extends TestCase
         Notification::fake();
         $staff = $this->staff();
 
-        $this->post('/staff/login', [
-            'staff_email' => 'admin@example.test',
-            'staff_password' => 'correct-horse-battery',
+        $this->post('/login', [
+            'email' => 'admin@example.test',
+            'password' => 'correct-horse-battery',
         ])->assertRedirect(route('staff.otp.form'));
 
         Notification::assertSentTo($staff, StaffLoginOtpNotification::class);
@@ -157,9 +157,9 @@ class StaffAuthSecurityTest extends TestCase
         Notification::fake();
         $staff = $this->staff();
 
-        $this->post('/staff/login', [
-            'staff_email' => 'admin@example.test',
-            'staff_password' => 'correct-horse-battery',
+        $this->post('/login', [
+            'email' => 'admin@example.test',
+            'password' => 'correct-horse-battery',
         ]);
 
         $code = StaffOtp::where('staff_id', $staff->id)->value('otp_code');
@@ -177,9 +177,9 @@ class StaffAuthSecurityTest extends TestCase
         $dispatcher->shouldReceive('send')->andThrow(new \RuntimeException('smtp down'));
         $this->app->instance(NotificationDispatcher::class, $dispatcher);
 
-        $response = $this->post('/staff/login', [
-            'staff_email' => 'admin@example.test',
-            'staff_password' => 'correct-horse-battery',
+        $response = $this->post('/login', [
+            'email' => 'admin@example.test',
+            'password' => 'correct-horse-battery',
         ]);
 
         // Not a 500, and the session still knows who is mid-login so the
@@ -189,23 +189,23 @@ class StaffAuthSecurityTest extends TestCase
         $this->assertGuest('staff');
     }
 
-    public function test_unknown_staff_email_gets_the_same_error_as_a_bad_password(): void
+    public function test_unknown_email_gets_the_same_error_as_a_bad_password(): void
     {
         $this->staff();
 
         // Both cases must yield the identical message, or the response tells
         // an attacker which staff emails are real.
-        $this->post('/staff/login', [
-            'staff_email' => 'nobody@example.test',
-            'staff_password' => 'whatever',
-        ])->assertSessionHasErrors(['staff_email' => 'Invalid staff credentials']);
+        $this->post('/login', [
+            'email' => 'nobody@example.test',
+            'password' => 'whatever',
+        ])->assertSessionHasErrors(['email' => 'Invalid email or password.']);
 
         $this->flushSession();
 
-        $this->post('/staff/login', [
-            'staff_email' => 'admin@example.test',
-            'staff_password' => 'not-the-password',
-        ])->assertSessionHasErrors(['staff_email' => 'Invalid staff credentials']);
+        $this->post('/login', [
+            'email' => 'admin@example.test',
+            'password' => 'not-the-password',
+        ])->assertSessionHasErrors(['email' => 'Invalid email or password.']);
     }
 
     public function test_suspended_staff_session_is_terminated_mid_session(): void
@@ -220,7 +220,7 @@ class StaffAuthSecurityTest extends TestCase
 
         $this->actingAs($staff, 'staff')
             ->get('/staff/user-records')
-            ->assertRedirect(route('staff.login'));
+            ->assertRedirect(route('login'));
     }
 
     public function test_suspended_staff_gets_json_403_on_ajax_routes(): void
@@ -242,14 +242,14 @@ class StaffAuthSecurityTest extends TestCase
         ]);
 
         for ($i = 0; $i < 5; $i++) {
-            $this->post('/login/user', [
+            $this->post('/login', [
                 'email' => 'guest@example.test',
                 'password' => 'wrong',
             ]);
         }
 
         // Sixth attempt is refused even though the password is now correct.
-        $response = $this->post('/login/user', [
+        $response = $this->post('/login', [
             'email' => 'guest@example.test',
             'password' => 'correct-password',
         ]);
