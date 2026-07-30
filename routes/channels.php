@@ -17,3 +17,12 @@ Broadcast::channel('booking.{bookingId}', function ($user, $bookingId) {
 
     return $ownerId !== null && (int) $ownerId === (int) $user->id;
 });
+
+/*
+ * A guest's account-wide feed (App\Events\GuestBookingUpdated): anything that
+ * happens to any booking they own, delivered while they sit on My Bookings.
+ * Only the account itself may subscribe.
+ */
+Broadcast::channel('user.{userId}.bookings', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

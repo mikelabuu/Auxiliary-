@@ -125,6 +125,9 @@ class StaffDashboardController extends Controller
         $availableCount = $rooms->where('display_status', 'available')->count();
         $occupiedCount = $rooms->where('display_status', 'occupied')->count();
         $reservedCount = $rooms->where('display_status', 'reserved')->count();
+        // Rooms a guest has claimed but not paid for. Counted separately so
+        // the legend does not present provisional holds as confirmed business.
+        $pendingCount = $rooms->where('display_status', 'pending')->count();
         $cleaningCount = $rooms->where('display_status', 'cleaning')->count();
         $maintenanceCount = $rooms->where('display_status', 'maintenance')->count();
 
@@ -146,6 +149,7 @@ class StaffDashboardController extends Controller
             'availableCount',
             'occupiedCount',
             'reservedCount',
+            'pendingCount',
             'cleaningCount',
             'maintenanceCount'
         ));

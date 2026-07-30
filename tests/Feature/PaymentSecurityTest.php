@@ -6,8 +6,10 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -140,8 +142,15 @@ class PaymentSecurityTest extends TestCase
         $owner = $this->user('owner@example.test');
         $booking = $this->booking($owner);
 
+        // /pay is now the method choice — settle manually and upload a
+        // receipt, or run the simulated gateway. The card route is explicit.
         $this->actingAs($owner)
             ->get("/booking/{$booking->id}/pay")
+            ->assertOk()
+            ->assertSee('Pay online by card');
+
+        $this->actingAs($owner)
+            ->get("/booking/{$booking->id}/pay/sandbox")
             ->assertRedirectContains('/sandbox/pay/');
 
         $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
@@ -177,6 +186,146 @@ class PaymentSecurityTest extends TestCase
 
         $this->assertSame('failed', $payment->fresh()->status);
         $this->assertSame('pending_payment', $booking->fresh()->status);
+    }
+
+    // ---------------------------------------------------------------
+    // Manual proof of payment
+    // ---------------------------------------------------------------
+
+    public function test_anonymous_visitors_cannot_reach_the_proof_routes(): void
+    {
+        $booking = $this->booking($this->user('owner@example.test'));
+
+        $this->get("/booking/{$booking->id}/pay/proof")->assertRedirect('/login');
+        $this->post("/booking/{$booking->id}/pay/proof")->assertRedirect('/login');
+        $this->get("/booking/{$booking->id}/pay/sandbox")->assertRedirect('/login');
+    }
+
+    public function test_a_stranger_cannot_upload_proof_against_someone_elses_booking(): void
+    {
+        $booking = $this->booking($this->user('owner@example.test'));
+        $intruder = $this->user('intruder@example.test');
+
+        $this->actingAs($intruder)
+            ->get("/booking/{$booking->id}/pay/proof")->assertForbidden();
+
+        $this->actingAs($intruder)
+            ->post("/booking/{$booking->id}/pay/proof", [
+                'proof_method' => 'gcash',
+                'proof_reference' => '123456',
+                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            ])->assertForbidden();
+
+        $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_uploading_proof_queues_it_without_paying_the_booking(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner);
+
+        $this->actingAs($owner)
+            ->post("/booking/{$booking->id}/pay/proof", [
+                'proof_method' => 'gcash',
+                'proof_reference' => '9988776655',
+                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            ])
+            ->assertRedirect(route('booking.show', $booking->id));
+
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+
+        $this->assertSame(Payment::STATUS_AWAITING_VERIFICATION, $payment->status);
+        $this->assertNotNull($payment->proof_path);
+        Storage::disk('local')->assertExists($payment->proof_path);
+
+        // The claim is recorded; the money is not confirmed. Only a staff
+        // member may move the booking to paid.
+        $this->assertSame('pending_payment', $booking->fresh()->status);
+    }
+
+    public function test_proof_upload_rejects_a_non_image_and_an_unknown_method(): void
+    {
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner);
+
+        $this->actingAs($owner)
+            ->post("/booking/{$booking->id}/pay/proof", [
+                'proof_method' => 'gcash',
+                'proof_reference' => '123456',
+                'proof' => UploadedFile::fake()->create('payload.php', 12, 'application/x-php'),
+            ])->assertSessionHasErrors('proof');
+
+        $this->actingAs($owner)
+            ->post("/booking/{$booking->id}/pay/proof", [
+                'proof_method' => 'crypto',
+                'proof_reference' => '123456',
+                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            ])->assertSessionHasErrors('proof_method');
+
+        $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_a_second_proof_cannot_be_queued_while_one_is_pending(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner);
+
+        $upload = fn () => $this->actingAs($owner)->post("/booking/{$booking->id}/pay/proof", [
+            'proof_method' => 'gcash',
+            'proof_reference' => '9988776655',
+            'proof' => UploadedFile::fake()->image('receipt.jpg'),
+        ]);
+
+        $upload();
+        $upload()->assertSessionHas('info');
+
+        $this->assertSame(1, Payment::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_the_choice_page_is_closed_once_a_proof_is_queued(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner);
+
+        $this->actingAs($owner)->post("/booking/{$booking->id}/pay/proof", [
+            'proof_method' => 'gcash',
+            'proof_reference' => '9988776655',
+            'proof' => UploadedFile::fake()->image('receipt.jpg'),
+        ]);
+
+        // Both remaining doors close, so one booking cannot stack two claims.
+        $this->actingAs($owner)->get("/booking/{$booking->id}/pay")
+            ->assertRedirect(route('booking.show', $booking->id))
+            ->assertSessionHas('info');
+
+        $this->actingAs($owner)->get("/booking/{$booking->id}/pay/sandbox")
+            ->assertRedirect(route('booking.show', $booking->id))
+            ->assertSessionHas('info');
+    }
+
+    public function test_proof_cannot_be_uploaded_for_a_booking_not_awaiting_payment(): void
+    {
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner, 'paid');
+
+        $this->actingAs($owner)
+            ->get("/booking/{$booking->id}/pay/proof")
+            ->assertRedirect(route('booking.show', $booking->id));
+
+        $this->actingAs($owner)
+            ->post("/booking/{$booking->id}/pay/proof", [
+                'proof_method' => 'gcash',
+                'proof_reference' => '9988776655',
+                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            ])->assertRedirect(route('booking.show', $booking->id));
+
+        $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
     }
 
     // ---------------------------------------------------------------

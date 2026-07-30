@@ -2,6 +2,7 @@
 @php
   $pendingBookingsCount = \App\Models\Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count();
   $pendingDiscountsCount = \App\Models\Discount::where('status', 'pending')->count();
+  $pendingProofsCount = \App\Models\Payment::whereNotNull('proof_path')->awaitingVerification()->count();
   $staffUser = Auth::guard('staff')->user();
 @endphp
 
@@ -90,6 +91,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         </x-slot>
         Payments
+      </x-admin.layout.sidebar-link>
+
+      <x-admin.layout.sidebar-link :href="route('staff.paymentverification.index')" :active="request()->routeIs('staff.paymentverification.*')" :badge="$pendingProofsCount > 0 ? $pendingProofsCount : null">
+        <x-slot name="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.9 0 3.66.59 5.11 1.59"/></svg>
+        </x-slot>
+        Verify Payments
       </x-admin.layout.sidebar-link>
 
       <x-admin.layout.sidebar-link :href="route('staff.discounts.index')" :active="request()->routeIs('staff.discounts.*')" :badge="$pendingDiscountsCount > 0 ? $pendingDiscountsCount : null">

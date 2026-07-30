@@ -20,31 +20,23 @@
     $current = $stay['current'] ?? null;
     $next = $stay['next'] ?? null;
 
-    // One stay line with three variants; classes/data-kind/text are JS hooks
-    // kept in sync by the rooms page's live status poller.
-    if ($current) {
-        $stayKind  = 'current';
-        $stayIcon  = 'clock';
-        $stayClass = 'font-semibold text-clsu-700';
-        $stayLabel = 'In use · until ' . $current['until'];
-        $stayTitle = $current['guest'] . ' · until ' . $current['until'];
-    } elseif ($next) {
-        $stayKind  = 'next';
-        $stayIcon  = 'arrival';
-        $stayClass = 'font-semibold text-palay-700';
-        $stayLabel = 'Next stay · ' . $next['from'];
-        $stayTitle = $next['guest'] . ' arrives ' . $next['from'];
-    } else {
-        $stayKind  = 'none';
-        $stayIcon  = 'check';
-        $stayClass = 'font-medium text-stone-400';
-        $stayLabel = 'No upcoming stays';
-        $stayTitle = '';
-    }
+    // One stay line, five variants; classes/data-kind/text are JS hooks kept
+    // in sync by the rooms page's live status poller. The wording lives in
+    // App\Support\RoomHold so the poller and this card cannot drift.
+    $line = \App\Support\RoomHold::stayLine($current, $next);
+    $stayKind  = $line['kind'];
+    $stayIcon  = $line['icon'];
+    $stayClass = $line['class'];
+    $stayLabel = $line['label'];
+    $stayTitle = $line['title'];
+
+    // A hold with no money behind it yet. Worth calling out on the card:
+    // the room is correctly unavailable, but the booking can still lapse.
+    $holdPending = \App\Support\RoomHold::isPending($current['status'] ?? $next['status'] ?? null);
 @endphp
 
 <div {{ $attributes->merge(['class' => 'room-card group/card relative bg-white rounded-xl border border-stone-200 shadow-subtle hover:shadow-card-lg hover:border-clsu-200 cursor-pointer']) }}
-     data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}" @if($current) data-held="1" @endif>
+     data-room-id="{{ $room->id }}" data-status="{{ $room->status }}" data-type="{{ $room->room_type }}" data-wing="{{ $room->wing }}" data-room-number="{{ strtolower($room->room_number) }}" @if($current) data-held="1" @endif @if($holdPending) data-hold-pending="1" @endif>
     <div class="status-bar h-1 rounded-t-xl {{ $meta['bar'] }}"></div>
 
     <div class="absolute top-3 right-2.5 flex items-center gap-1 z-10">
@@ -83,10 +75,18 @@
             <p class="text-base font-extrabold text-stone-900 font-data tabnum">{{ $room->room_number }}</p>
             <p class="room-type-label text-stone-400 text-[10px] font-bold tracking-wide uppercase mt-0.5">{{ ucfirst($room->room_type) }}</p>
         </div>
-        <span class="room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $meta['badge'] }}">
-            <span class="room-status-dot w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
-            <span class="room-status-text">{{ $meta['label'] }}</span>
-        </span>
+        <div class="flex flex-wrap items-center justify-center gap-1.5">
+            <span class="room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $meta['badge'] }}">
+                <span class="room-status-dot w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
+                <span class="room-status-text">{{ $meta['label'] }}</span>
+            </span>
+            {{-- Housekeeping says the room is free; a booking says otherwise
+                 and has not been paid for. Both facts matter, so both show. --}}
+            <span class="room-hold-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border border-palay-200 bg-palay-50 text-palay-800 {{ $holdPending ? '' : 'hidden' }}">
+                <span class="w-1.5 h-1.5 rounded-full bg-palay-500"></span>
+                Unpaid hold
+            </span>
+        </div>
         <p class="room-stay-line flex items-center gap-1 text-[10px] {{ $stayClass }}" data-kind="{{ $stayKind }}" @if($stayTitle) title="{{ $stayTitle }}" @endif>
             <x-admin.ui.icon :name="$stayIcon" class="w-3 h-3 shrink-0" stroke-width="2" />
             <span class="room-stay-text">{{ $stayLabel }}</span>

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Booking;
 use App\Models\Room;
+use App\Support\RoomHold;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +22,27 @@ class RoomBoard
     {
         // Business dates are Manila; the app timezone is UTC, so bare
         // now()/today() are a day behind between midnight and 8 AM Manila.
-        $reservedRoomIds = DB::table('booking_room')
+        //
+        // This used to look only at 'paid'. A room held by a booking that had
+        // not been paid for yet therefore showed as AVAILABLE on the map while
+        // the booking engine was already refusing to sell it — the desk could
+        // promise a room the system would not give them. Pending holds now
+        // show too, in their own state, so the map matches reality.
+        $upcoming = DB::table('booking_room')
             ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
-            ->where('bookings.status', 'paid')
+            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
             ->where('bookings.check_in', '>', Carbon::now('Asia/Manila'))
-            ->pluck('booking_room.room_id')
-            ->toArray();
+            ->get(['booking_room.room_id', 'bookings.status']);
+
+        // A settled hold outranks a pending one on the same room, so a paid
+        // arrival is never downgraded to "awaiting payment" by a stale claim.
+        $upcomingByRoom = [];
+        foreach ($upcoming as $row) {
+            $roomId = $row->room_id;
+            if (! isset($upcomingByRoom[$roomId]) || ! RoomHold::isPending($row->status)) {
+                $upcomingByRoom[$roomId] = $row->status;
+            }
+        }
 
         // Who is actually in each room — 'occupied' with no booking behind it
         // gets an explicit "No guest on record" instead of implying a guest.
@@ -52,15 +68,19 @@ class RoomBoard
             }
         }
 
-        return Room::all()->map(function ($room) use ($reservedRoomIds, $currentByRoom, $nextByRoom) {
+        return Room::all()->map(function ($room) use ($upcomingByRoom, $currentByRoom, $nextByRoom) {
+            $upcomingStatus = $upcomingByRoom[$room->id] ?? null;
+
             if ($room->status === 'maintenance') {
                 $displayStatus = 'maintenance';
             } elseif ($room->status === 'cleaning') {
                 $displayStatus = 'cleaning';
             } elseif ($room->status === 'occupied') {
                 $displayStatus = 'occupied';
-            } elseif (in_array($room->id, $reservedRoomIds)) {
-                $displayStatus = 'reserved';
+            } elseif ($upcomingStatus !== null) {
+                // 'reserved' = paid and arriving. 'pending' = claimed but the
+                // money has not been verified, so it can still lapse.
+                $displayStatus = RoomHold::isPending($upcomingStatus) ? 'pending' : 'reserved';
             } else {
                 $displayStatus = 'available';
             }
@@ -70,7 +90,7 @@ class RoomBoard
 
             if ($displayStatus === 'occupied') {
                 $occupant = $current ?: 'No guest on record';
-            } elseif ($displayStatus === 'reserved') {
+            } elseif ($displayStatus === 'reserved' || $displayStatus === 'pending') {
                 $occupant = $next;
             } else {
                 $occupant = $current ?: $next;

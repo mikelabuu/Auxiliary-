@@ -9,6 +9,7 @@ use App\Models\Room;
 use App\Models\Booking;
 use App\Models\Reservation;
 use App\Support\RoomCatalog;
+use App\Support\RoomHold;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -171,12 +172,16 @@ class BookingController extends Controller
                 ])->withInput();
             }
 
+            // Breakfast is a complimentary extra, not part of the booking
+            // contract: a guest may take none, or fewer than one each. Only
+            // the upper bound is enforced — you cannot claim more breakfasts
+            // than there are guests to eat them.
             $meals = $block['meal'] ?? [];
             $mealTotal = array_sum($meals);
 
-            if ($mealTotal !== $blockGuests) {
+            if ($mealTotal > $blockGuests) {
                 return back()->withErrors([
-                    'reservations' => "Total meals selected ({$mealTotal}) must equal number of guests ({$blockGuests}) for {$roomType}."
+                    'reservations' => "Breakfasts selected ({$mealTotal}) cannot exceed the guests in the {$roomType} room ({$blockGuests})."
                 ])->withInput();
             }
 
@@ -323,6 +328,10 @@ class BookingController extends Controller
         \App\Support\Realtime::emit(new \App\Events\BookingChanged());
         \App\Support\Realtime::emit(new \App\Events\RoomStatusChanged());
 
+        // Tell the desk a room is now held. Wrapped internally — a mail
+        // failure must never cost the guest the booking they just made.
+        \App\Support\StaffAlert::newBooking($booking);
+
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Booking submitted! Review your Booking.');
     }
@@ -343,11 +352,20 @@ class BookingController extends Controller
         // Check if a discount request already exists
         $discountRequested = $booking->discount()->exists();
 
+        // Drives the payment panel: a guest who has uploaded a receipt is
+        // waiting on staff and must not be shown "Proceed to Payment" again,
+        // and one whose proof was rejected needs to see why.
+        $latestPayment = \App\Models\Payment::where('booking_id', $booking->id)
+            ->whereNotNull('proof_path')
+            ->latest('id')
+            ->first();
+
         return view('public.booking.show', [
             'username' => $username,
             'booking' => $booking,
             'discountRequested' => $discountRequested,
             'discount' => $discount,
+            'latestPayment' => $latestPayment,
         ]);
     }
 
@@ -370,17 +388,33 @@ class BookingController extends Controller
             ->get();
 
         // Room numbers held by any blocking booking that overlaps the range,
-        // read from reservations (the authoritative per-room source).
-        $bookedRoomNumbers = Reservation::whereHas('booking', fn ($q) =>
-                $q->whereIn('status', Booking::BLOCKING_STATUSES)
-                  ->where('check_in', '<', $checkOut)
-                  ->where('check_out', '>', $checkIn))
-            ->pluck('room_number')->map(fn ($n) => trim($n))->unique()->all();
+        // read from reservations (the authoritative per-room source). The
+        // holding booking's status comes along so an unpaid hold can be named
+        // honestly — it is every bit as unselectable, just not yet money.
+        $holds = Reservation::query()
+            ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
+            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+            ->where('bookings.check_in', '<', $checkOut)
+            ->where('bookings.check_out', '>', $checkIn)
+            ->get(['reservations.room_number', 'bookings.status as booking_status']);
+
+        // A room can carry several overlapping holds; a settled one wins, so
+        // a paid stay is never softened to "reserved" by a pending neighbour.
+        $holdByRoom = [];
+        foreach ($holds as $hold) {
+            $number = trim($hold->room_number);
+            if (! isset($holdByRoom[$number]) || ! RoomHold::isPending($hold->booking_status)) {
+                $holdByRoom[$number] = $hold->booking_status;
+            }
+        }
 
         // Map rooms to availability
-        $result = $rooms->map(function ($r) use ($bookedRoomNumbers) {
-            if (in_array(trim($r->room_number), $bookedRoomNumbers)) {
-                $status = 'booked'; // from booking overlap
+        $result = $rooms->map(function ($r) use ($holdByRoom) {
+            $number = trim($r->room_number);
+
+            if (array_key_exists($number, $holdByRoom)) {
+                // 'booked' (settled) or 'reserved' (awaiting payment).
+                $status = RoomHold::pickerStatus($holdByRoom[$number]);
             } elseif ($r->status !== 'available') {
                 $status = $r->status; // maintenance, cleaning, occupied
             } else {

@@ -40,6 +40,11 @@
     --color-border: #e2ebe4;
     --color-surface: #f4f8f5;
     --color-card:   #ffffff;
+    /* Text on an always-light surface. On the admin console this equals
+       --color-ink; it exists as its own token so shared components (toasts)
+       can be written once and stay legible on the public site too, where
+       --color-ink flips to bone under body.theme-night. */
+    --color-card-ink: var(--color-ink);
 
     /* ─────────────────────────────────────────────────────────
        Compat ramps — the existing admin views were written with

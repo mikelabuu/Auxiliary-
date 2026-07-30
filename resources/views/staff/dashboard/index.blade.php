@@ -42,6 +42,7 @@ $.ajaxSetup({
                         ['key' => 'available',   'label' => 'Available',   'count' => $availableCount,   'mod' => 'available'],
                         ['key' => 'occupied',    'label' => 'Occupied',    'count' => $occupiedCount,    'mod' => 'occupied'],
                         ['key' => 'reserved',    'label' => 'Reserved',    'count' => $reservedCount,    'mod' => 'reserved'],
+                        ['key' => 'pending',     'label' => 'Unpaid hold', 'count' => $pendingCount,     'mod' => 'pending'],
                         ['key' => 'cleaning',    'label' => 'Cleaning',    'count' => $cleaningCount,    'mod' => 'cleaning'],
                         ['key' => 'maintenance', 'label' => 'Maintenance', 'count' => $maintenanceCount, 'mod' => 'maintenance'],
                     ];
@@ -124,15 +125,18 @@ $.ajaxSetup({
 document.addEventListener('DOMContentLoaded', function () {
     if (!document.querySelector('.room-map-btn')) return;
 
+    // Must stay in step with the same maps in components/admin/rooms/map-tile.
     const CLASSES = {
         available:   'bg-clsu-50 text-clsu-800 border-clsu-200 hover:bg-clsu-100 hover:border-clsu-300 border-solid',
         occupied:    'bg-clsu-600 text-white border-clsu-700 hover:bg-clsu-700 border-solid',
         reserved:    'bg-palay-100 text-palay-800 border-palay-300 hover:bg-palay-200 border-dashed',
+        pending:     'bg-palay-50 text-palay-700 border-palay-400 hover:bg-palay-100 border-dashed',
         cleaning:    'bg-sky-50 text-sky-800 border-sky-300 hover:bg-sky-100 hover:border-sky-400 border-dotted',
         maintenance: 'bg-ember-50 text-ember-800 border-ember-300 hover:bg-ember-100 border-double border-[3px]',
     };
     const STATUS_LABELS = {
         available: 'Available', occupied: 'Occupied', reserved: 'Reserved',
+        pending: 'Reserved · awaiting payment',
         cleaning: 'Cleaning', maintenance: 'Maintenance',
     };
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -163,6 +167,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 dot.className += ' w-1.5 h-1.5 rounded-full bg-white';
             } else if (status === 'reserved') {
                 dot.className += ' w-1.5 h-1.5 rounded-full border border-dashed border-palay-500';
+            } else if (status === 'pending') {
+                dot.className += ' w-1.5 h-1.5 rounded-full border border-dashed border-palay-600';
             } else if (status === 'cleaning') {
                 dot.className += ' w-1.5 h-1.5 rounded-full border border-dotted border-sky-500';
             } else if (status === 'maintenance') {

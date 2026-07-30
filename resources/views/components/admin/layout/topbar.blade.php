@@ -235,15 +235,55 @@
     </button>
 
     {{-- Notifications --}}
+    {{--
+        Read state is per item, not one global "seen" line. The feed is derived
+        fresh on every request (see AppServiceProvider), so there is no row to
+        write to — instead each entry has a stable id and the ids that have been
+        opened live in localStorage. Opening one marks only that one.
+
+        `readIds` is pruned to the ids currently on screen, so the store cannot
+        grow without bound as old alerts fall out of the feed.
+    --}}
     <div class="user-menu-root"
          x-data="{
             open: false,
             stamps: {{ $notifStamps->toJson() }},
             seenAt: Number(localStorage.getItem('admin_notif_seen_at') || 0),
-            get unread() { return this.stamps.filter(t => t > this.seenAt).length },
-            markRead() {
+            readIds: [],
+
+            init() {
+                let stored = [];
+                try { stored = JSON.parse(localStorage.getItem('admin_notif_read_ids') || '[]'); } catch (e) { stored = []; }
+                const live = this.stamps.map(s => s.id);
+                this.readIds = stored.filter(id => live.includes(id));
+                this.persist();
+            },
+
+            persist() {
+                localStorage.setItem('admin_notif_read_ids', JSON.stringify(this.readIds));
+            },
+
+            isRead(id) {
+                if (this.readIds.includes(id)) return true;
+                const stamp = this.stamps.find(s => s.id === id);
+                // 'Mark all read' covers everything that existed at the time.
+                return !!stamp && stamp.at <= this.seenAt;
+            },
+
+            get unread() { return this.stamps.filter(s => !this.isRead(s.id)).length },
+
+            markOne(id) {
+                if (!this.readIds.includes(id)) {
+                    this.readIds.push(id);
+                    this.persist();
+                }
+            },
+
+            markAllRead() {
                 this.seenAt = Math.floor(Date.now() / 1000);
                 localStorage.setItem('admin_notif_seen_at', this.seenAt);
+                this.readIds = this.stamps.map(s => s.id);
+                this.persist();
             }
          }"
          @click.outside="open = false">
@@ -254,22 +294,31 @@
       <div x-show="open" x-transition:leave.opacity.duration.120ms x-cloak class="user-menu-panel user-menu-panel-wide">
         <div class="notif-head">
           <p class="notif-title">Notifications</p>
-          <button x-show="unread > 0" @click="markRead()" class="notif-mark-read">Mark all read</button>
+          <button x-show="unread > 0" @click="markAllRead()" class="notif-mark-read">Mark all read</button>
         </div>
         <div class="notif-list">
           @forelse($notifications as $notif)
-            <a href="{{ $notif['url'] }}" class="notif-row !no-underline">
+            {{-- @click fires before navigation, so the id is stored even
+                 though the browser leaves this page immediately after. --}}
+            <a href="{{ $notif['url'] }}"
+               class="notif-row !no-underline"
+               :class="isRead(@js($notif['id'])) && 'is-read'"
+               @click="markOne(@js($notif['id']))">
               @if($notif['type'] === 'discount')
                 <div class="notif-icon notif-icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12l9 9 10-10V2z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></div>
               @elseif($notif['type'] === 'maintenance')
                 <div class="notif-icon notif-icon-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+              @elseif($notif['type'] === 'payment')
+                <div class="notif-icon notif-icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m8.5 15 2 2 4-4"/></svg></div>
               @else
                 <div class="notif-icon notif-icon-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V9z"/></svg></div>
               @endif
-              <div class="min-w-0">
+              <div class="min-w-0 flex-1">
                 <p class="notif-text">{{ $notif['text'] }}</p>
                 <p class="notif-time">{{ $notif['time']?->diffForHumans() }}</p>
               </div>
+              {{-- The dot is the unread marker; it disappears on click. --}}
+              <span x-show="!isRead(@js($notif['id']))" x-cloak class="notif-unread-dot" aria-label="Unread"></span>
             </a>
           @empty
             <div class="notif-empty">

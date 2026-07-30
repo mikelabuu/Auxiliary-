@@ -20,6 +20,7 @@ use App\Http\Controllers\Staff\BookingHubController;
 use App\Http\Controllers\Staff\CompletedBookingsController;
 use App\Http\Controllers\Staff\BookingLogsController;
 use App\Http\Controllers\Staff\PaymentLogsController;
+use App\Http\Controllers\Staff\PaymentVerificationController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
@@ -314,6 +315,30 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Payment Verification — admin AND front desk
+|--------------------------------------------------------------------------
+| Guests settle over GCash or a bank transfer and upload the receipt. Whoever
+| is at the desk clears it, so this is deliberately not admin-only.
+*/
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,frontdesk'])
+    ->prefix('staff/payment-verification')
+    ->name('staff.paymentverification.')
+    ->group(function () {
+        Route::get('/', [PaymentVerificationController::class, 'index'])->name('index');
+
+        // Streams from the private disk — never a public storage URL.
+        Route::get('/{payment}/proof', [PaymentVerificationController::class, 'proof'])->name('proof');
+
+        Route::post('/{payment}/approve', [PaymentVerificationController::class, 'approve'])->name('approve');
+        Route::post('/{payment}/reject', [PaymentVerificationController::class, 'reject'])->name('reject');
+
+        Route::post('/verify-password', [PaymentVerificationController::class, 'verifyPassword'])
+            ->middleware('throttle:staff-password')
+            ->name('verify-password');
+    });
+
+/*
+|--------------------------------------------------------------------------
 | Front Desk Routes
 |--------------------------------------------------------------------------
 */
@@ -371,7 +396,16 @@ Route::post('/email/verification-notification', function (Request $request) {
 // in the controllers; the middleware only establishes who is asking.
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    // The fork: settle manually and prove it, or run the simulated gateway.
     Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])->name('bookings.pay');
+    Route::get('/booking/{booking}/pay/sandbox', [PaymentController::class, 'sandbox'])->name('bookings.pay.sandbox');
+
+    // Manual proof of payment. Throttled on the write: an upload costs disk
+    // and puts a row in front of a human, so it is not a free action to spam.
+    Route::get('/booking/{booking}/pay/proof', [PaymentController::class, 'proofForm'])->name('bookings.pay.proof');
+    Route::post('/booking/{booking}/pay/proof', [PaymentController::class, 'storeProof'])
+        ->middleware('throttle:10,1')
+        ->name('bookings.pay.proof.store');
 
     Route::prefix('sandbox')->name('sandbox.')->group(function () {
         Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');

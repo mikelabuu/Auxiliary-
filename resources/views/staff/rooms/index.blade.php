@@ -850,18 +850,25 @@ $(function () {
        Periodically refreshes each room's status + stay line from the server so
        the board reflects check-ins/check-outs/cleaning done elsewhere without a
        manual reload. Only touches cards whose state actually changed. */
+    /* The '-pending' kinds are unpaid holds: a booking owns the room but the
+       money has not been verified. Same icon as their settled twin, palay
+       (amber) rather than clsu (green). Wording comes from App\Support\RoomHold. */
     const STAY_ICON_PATHS = {
         current: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+        'current-pending': '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         next: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>',
+        'next-pending': '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>',
         none: '<polyline points="20 6 9 17 4 12"/>',
     };
     const STAY_LINE_CLASS = {
         current: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-clsu-700',
+        'current-pending': 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
         next: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
+        'next-pending': 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
         none: 'room-stay-line flex items-center gap-1 text-[10px] font-medium text-stone-400',
     };
 
-    function applyStayToCard(card, stay, held) {
+    function applyStayToCard(card, stay, held, pending) {
         const line = card.find('.room-stay-line');
         if (line.attr('data-kind') !== stay.kind) {
             line.attr('data-kind', stay.kind);
@@ -871,6 +878,9 @@ $(function () {
         line.find('.room-stay-text').text(stay.label);
         if (stay.title) line.attr('title', stay.title); else line.removeAttr('title');
         if (held) card.attr('data-held', '1'); else card.removeAttr('data-held');
+
+        if (pending) card.attr('data-hold-pending', '1'); else card.removeAttr('data-hold-pending');
+        card.find('.room-hold-badge').toggleClass('hidden', !pending);
     }
 
     let livePollInFlight = false;
@@ -897,10 +907,12 @@ $(function () {
 
                     const line = card.find('.room-stay-line');
                     const heldNow = card.attr('data-held') === '1';
+                    const pendingNow = card.attr('data-hold-pending') === '1';
                     if (line.attr('data-kind') !== r.stay.kind
                         || line.find('.room-stay-text').text() !== r.stay.label
-                        || heldNow !== r.held) {
-                        applyStayToCard(card, r.stay, r.held);
+                        || heldNow !== r.held
+                        || pendingNow !== r.pending) {
+                        applyStayToCard(card, r.stay, r.held, r.pending);
                         changed = true;
                     }
                 });

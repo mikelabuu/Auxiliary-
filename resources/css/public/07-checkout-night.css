@@ -86,6 +86,14 @@ body.theme-night .room-tile.booked {
     color: var(--color-ember-200);
 }
 
+/* Unpaid hold on the night-themed checkout: gold, dashed, unselectable. */
+body.theme-night .room-tile.reserved {
+    background-color: color-mix(in oklch, var(--color-gold) 10%, transparent);
+    border-color: color-mix(in oklch, var(--color-gold) 45%, transparent);
+    border-style: dashed;
+    color: var(--color-gold);
+}
+
 body.theme-night .room-tile.cleaning {
     background-color: color-mix(in oklch, var(--color-gold) 12%, transparent);
     border-color: color-mix(in oklch, var(--color-gold) 40%, transparent);

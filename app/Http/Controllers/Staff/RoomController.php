@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
 use App\Events\RoomStatusChanged;
 use App\Support\Realtime;
+use App\Support\RoomHold;
 
 class RoomController extends Controller
 {
@@ -84,7 +85,16 @@ class RoomController extends Controller
             ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
             ->whereDate('bookings.check_out', '>=', $today)
             ->orderBy('bookings.check_in')
-            ->get(['reservations.room_number', 'bookings.guest_name', 'bookings.check_in', 'bookings.check_out']);
+            ->get([
+                'reservations.room_number',
+                'bookings.guest_name',
+                'bookings.check_in',
+                'bookings.check_out',
+                // Carried so the card can say whether the hold is paid for —
+                // see App\Support\RoomHold. Aliased because `status` would
+                // otherwise collide with the room's own housekeeping status.
+                'bookings.status as booking_status',
+            ]);
 
         $stayContext = [];
         foreach ($stays as $stay) {
@@ -94,13 +104,15 @@ class RoomController extends Controller
 
             if ($checkIn->lte($today) && $checkOut->gte($today)) {
                 $stayContext[$roomNumber]['current'] ??= [
-                    'guest' => $stay->guest_name,
-                    'until' => $checkOut->format('M d'),
+                    'guest'  => $stay->guest_name,
+                    'until'  => $checkOut->format('M d'),
+                    'status' => $stay->booking_status,
                 ];
             } elseif (!isset($stayContext[$roomNumber]['next']) && $checkIn->gt($today)) {
                 $stayContext[$roomNumber]['next'] = [
-                    'guest' => $stay->guest_name,
-                    'from'  => $checkIn->format('M d'),
+                    'guest'  => $stay->guest_name,
+                    'from'   => $checkIn->format('M d'),
+                    'status' => $stay->booking_status,
                 ];
             }
         }
@@ -122,19 +134,24 @@ class RoomController extends Controller
             $current = $ctx['current'] ?? null;
             $next = $ctx['next'] ?? null;
 
-            if ($current) {
-                $stay = ['kind' => 'current', 'label' => 'In use · until ' . $current['until'], 'title' => $current['guest'] . ' · until ' . $current['until']];
-            } elseif ($next) {
-                $stay = ['kind' => 'next', 'label' => 'Next stay · ' . $next['from'], 'title' => $next['guest'] . ' arrives ' . $next['from']];
-            } else {
-                $stay = ['kind' => 'none', 'label' => 'No upcoming stays', 'title' => null];
-            }
+            // Same helper the room card renders from, so a live poll can never
+            // word a hold differently from the server-rendered page.
+            $line = RoomHold::stayLine($current, $next);
+
+            $stay = [
+                'kind'  => $line['kind'],
+                'label' => $line['label'],
+                'title' => $line['title'] ?: null,
+            ];
 
             return [
-                'id'     => $room->id,
-                'status' => $room->status,
-                'held'   => (bool) $current,
-                'stay'   => $stay,
+                'id'      => $room->id,
+                'status'  => $room->status,
+                'held'    => (bool) $current,
+                // Held, but nobody has been paid yet — the front desk can act
+                // on this (chase the guest, or let it expire).
+                'pending' => RoomHold::isPending($current['status'] ?? $next['status'] ?? null),
+                'stay'    => $stay,
             ];
         });
 

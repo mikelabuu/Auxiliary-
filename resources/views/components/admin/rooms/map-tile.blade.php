@@ -18,6 +18,9 @@
         'available'   => 'bg-clsu-50  text-clsu-800  border-clsu-200  hover:bg-clsu-100  hover:border-clsu-300  border-solid',
         'occupied'    => 'bg-clsu-600 text-white      border-clsu-700  hover:bg-clsu-700                         border-solid',
         'reserved'    => 'bg-palay-100 text-palay-800 border-palay-300 hover:bg-palay-200                        border-dashed',
+        // Held but unpaid — amber like reserved, dashed and lighter, because
+        // this one can still lapse and the desk may want to chase it.
+        'pending'     => 'bg-palay-50 text-palay-700  border-palay-400 hover:bg-palay-100                        border-dashed',
         'cleaning'    => 'bg-sky-50   text-sky-800   border-sky-300   hover:bg-sky-100   hover:border-sky-400   border-dotted',
         'maintenance' => 'bg-ember-50 text-ember-800 border-ember-300 hover:bg-ember-100                         border-double border-[3px]',
     ];
@@ -35,6 +38,7 @@
         'available'   => 'Available',
         'occupied'    => 'Occupied',
         'reserved'    => 'Reserved',
+        'pending'     => 'Reserved · awaiting payment',
         'cleaning'    => 'Cleaning',
         'maintenance' => 'Maintenance',
     ];

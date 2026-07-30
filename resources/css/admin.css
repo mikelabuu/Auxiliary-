@@ -22,6 +22,8 @@
 @import './admin/09-craft.css';
 @import './admin/10-frontdesk.css';
 @import './admin/11-notify-nav.css';
+/* Shared with the public bundle — see resources/css/shared/toast.css. */
+@import './shared/toast.css';
 @import './admin/12-bento-blur.css';
 @import './admin/13-dashboard-hero.css';
 @import './admin/14-booking-dossier.css';

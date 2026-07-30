@@ -91,8 +91,6 @@ document.addEventListener('DOMContentLoaded', function () {
   setMinDates();
 
   function updateCapsDisplay() {
-    const v = parseInt(expectedGuestsInput?.value) || 1;
-    if (maxSeniorsLabel) maxSeniorsLabel.textContent = v;
     generateBookingSummary();
   }
 
@@ -153,8 +151,48 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!capacityHint) return;
       const beds = parseInt(resBeds.value, 10) || 0;
       capacityHint.textContent = beds
-        ? 'Sleeps up to ' + beds + ' guest' + (beds > 1 ? 's' : '') + ' in this room'
+        ? 'Sleeps ' + (beds > 1 ? '1–' + beds : '1') + ' guest' + (beds > 1 ? 's' : '') + ' in this room'
         : '';
+    }
+
+    // Push the chosen room style's capacity onto the number inputs so the ±
+    // buttons stop AT the limit rather than overshooting and being yanked
+    // back, and so the browser's own validation knows the bounds too.
+    function applyCapacityLimits() {
+      const beds = parseInt(resBeds.value, 10) || 0;
+
+      if (numGuestsInput) {
+        numGuestsInput.min = 1;
+        if (beds) {
+          numGuestsInput.max = beds;
+          numGuestsInput.placeholder = '1–' + beds;
+          if ((parseInt(numGuestsInput.value, 10) || 0) > beds) numGuestsInput.value = beds;
+        } else {
+          numGuestsInput.removeAttribute('max');
+        }
+        if ((parseInt(numGuestsInput.value, 10) || 0) < 1) numGuestsInput.value = 1;
+      }
+
+      // Seniors can never outnumber the guests actually in the room, which is
+      // a tighter bound than the bed count once the room is under-filled.
+      if (numSeniorsInput) {
+        const guests = parseInt(numGuestsInput?.value, 10) || 0;
+        const cap = beds ? Math.min(beds, guests || beds) : guests;
+        numSeniorsInput.min = 0;
+        if (cap) {
+          numSeniorsInput.max = cap;
+          if ((parseInt(numSeniorsInput.value, 10) || 0) > cap) numSeniorsInput.value = cap;
+        } else {
+          numSeniorsInput.removeAttribute('max');
+        }
+      }
+
+      // Breakfasts are optional, but there can never be more of them than
+      // there are guests to eat them.
+      block.querySelectorAll('.meal-qty').forEach(function (input) {
+        input.min = 0;
+        input.max = parseInt(numGuestsInput?.value, 10) || 0;
+      });
     }
 
     // Visual room-type cards drive the hidden select
@@ -181,10 +219,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (numGuestsInput) {
       numGuestsInput.addEventListener('input', () => {
-        const cap = parseInt(resBeds.value) || 0;
-        let v = parseInt(numGuestsInput.value) || 0;
-        if (v > cap) numGuestsInput.value = cap;
-        if (v < 1) numGuestsInput.value = 1;
+        applyCapacityLimits();
+        generateBookingSummary();
+      });
+    }
+
+    if (numSeniorsInput) {
+      numSeniorsInput.addEventListener('input', () => {
+        applyCapacityLimits();
         generateBookingSummary();
       });
     }
@@ -197,6 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resPriceHidden.value = opt.dataset.price || '';
         resPrice.value = formatPrice(opt.dataset.price || '0');
         refreshCapacityHint();
+        applyCapacityLimits();
         syncTypeCards();
       }
     }
@@ -207,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
       resPriceHidden.value = (opt && opt.dataset.price) ? opt.dataset.price : '';
       resPrice.value = formatPrice(resPriceHidden.value || 0);
       refreshCapacityHint();
+      applyCapacityLimits();
       syncTypeCards();
       roomTilesWrap.innerHTML = '';
       const prevSelected = roomNumberHidden.value;
@@ -216,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
         setTimeout(() => btnCheck.click(), 120);
       } else if (roomTypeSelect.value) {
-        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-ink/55 py-3 flex items-center gap-1.5"><span class="material-icons text-[15px] text-gold">event</span>Choose your check-in and check-out dates above to see open rooms.</div>';
+        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-stone-500 py-3 flex items-center gap-1.5"><span class="material-icons text-[15px] text-palay-800">event</span>Choose your check-in and check-out dates above to see open rooms.</div>';
       }
       generateBookingSummary();
     });
@@ -237,12 +281,12 @@ document.addEventListener('DOMContentLoaded', function () {
       
       // Beautiful animated SVG spinner
       roomTilesWrap.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-6 text-ink/50">
-            <svg class="animate-spin h-7 w-7 text-gold mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div class="flex flex-col items-center justify-center py-6 text-stone-500">
+            <svg class="animate-spin h-7 w-7 text-palay-800 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span class="text-xs font-semibold uppercase tracking-wider text-ink/55">Retrieving open rooms...</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">Retrieving open rooms...</span>
         </div>
       `;
 
@@ -352,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const priorSelection = hiddenInput.value; // the guest's current pick, if any
     tilesWrap.innerHTML = '';
     if (!rooms.length) {
-      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-ink/55 py-4">No rooms available</div>';
+      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-stone-500 py-4">No rooms available</div>';
       // Nothing open at all — drop any existing pick for this block.
       if (priorSelection) {
         hiddenInput.value = '';
@@ -422,7 +466,11 @@ document.addEventListener('DOMContentLoaded', function () {
           updateAggregateHiddenInputs();
           generateBookingSummary();
         });
-      } else if (r.status === 'booked') { tile.classList.add('booked'); tile.title = 'Unavailable';
+      } else if (r.status === 'booked') { tile.classList.add('booked'); tile.title = 'Already booked';
+      // Held by a booking whose payment has not been verified yet. Just as
+      // unselectable as 'booked' — the honest word matters to the guest,
+      // and the server enforces it either way.
+      } else if (r.status === 'reserved') { tile.classList.add('reserved'); tile.title = 'Reserved — awaiting payment';
       } else if (r.status === 'cleaning') { tile.classList.add('cleaning'); tile.title = 'Cleaning';
       } else if (r.status === 'maintenance') { tile.classList.add('maintenance'); tile.title = 'Maintenance';
       } else { tile.classList.add('unavailable'); tile.title = 'Unavailable'; }
@@ -555,17 +603,36 @@ document.addEventListener('DOMContentLoaded', function () {
     if (li) { e.preventDefault(); jumpToStepCard(li); }
   });
 
+  // Checkout problems pop up rather than sitting in a banner at the top of a
+  // long form. "That room was just taken" is only useful if the guest sees it
+  // where they are looking — down at the room tiles — not 2000px up the page.
+  // window.toast lives in resources/js/app.js and its styles are shared by
+  // both bundles (resources/css/shared/toast.css).
   function showFormError(msg) {
+    if (typeof window.toast === 'function') {
+      window.toast(msg, 'error');
+      return;
+    }
+
+    // Fallbacks, in case app.js failed to load: the old inline banner, and
+    // then the browser's own dialog. A validation message must never be
+    // silently swallowed.
     if (bookingFormAlert) {
       bookingFormAlert.innerText = msg;
       bookingFormAlert.classList.remove('d-none');
-      // Restart the attention shake even when the banner is already visible
       bookingFormAlert.classList.remove('shake-now');
       void bookingFormAlert.offsetWidth;
       bookingFormAlert.classList.add('shake-now');
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       bookingFormAlert.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
-    } else { alert(msg); }
+    } else {
+      alert(msg);
+    }
+  }
+
+  // Success/neutral notices use the same popup channel.
+  function showFormNotice(msg, type) {
+    if (typeof window.toast === 'function') window.toast(msg, type || 'info');
   }
 
   // Summary room rows deep-link back to their reservation block
@@ -603,9 +670,13 @@ document.addEventListener('DOMContentLoaded', function () {
       if (numGuests > beds) { e.preventDefault(); showFormError('Guests in a room cannot exceed that room’s capacity.'); return; }
       if (numGuests < 1) { e.preventDefault(); showFormError('Each room must have at least 1 guest.'); return; }
 
+      // Breakfast is a free extra, not part of the booking contract — a guest
+      // who wants none, or fewer than one each, may book anyway. The only
+      // rule left is the cap, enforced as they click (you cannot order more
+      // breakfasts than there are guests) and again server-side.
       let totalMeals = 0;
       b.querySelectorAll('.meal-qty').forEach(inp => totalMeals += parseInt(inp.value) || 0);
-      if (totalMeals !== numGuests) { e.preventDefault(); showFormError(`Meals in room ${roomNum} must equal the number of guests assigned to that room.`); return; }
+      if (totalMeals > numGuests) { e.preventDefault(); showFormError(`Room ${roomNum} has more breakfasts selected than guests staying in it.`); return; }
 
       totalGuests += numGuests;
       totalCapacity += beds;
@@ -758,8 +829,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!checkInVal || !checkOutVal) {
       container.innerHTML = `
-        <div class="text-center py-10 text-ink/45">
-            <span class="material-icons text-5xl mb-3 block text-white/10">event</span>
+        <div class="text-center py-10 text-stone-500">
+            <span class="material-icons text-5xl mb-3 block text-emerald-deep/10">event</span>
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
@@ -777,8 +848,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const blocks = document.querySelectorAll('.reservation-block');
     if (blocks.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-10 text-ink/45">
-            <span class="material-icons text-5xl mb-3 block text-white/10">hotel</span>
+        <div class="text-center py-10 text-stone-500">
+            <span class="material-icons text-5xl mb-3 block text-emerald-deep/10">hotel</span>
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
@@ -810,25 +881,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
       const mealLine = mealChips.length
-        ? `<p class="text-[11px] font-semibold text-gold/90 mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
+        ? `<p class="text-[11px] font-semibold text-palay-800 mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
         : '';
 
       roomRows += `
-        <div class="sum-row flex items-start justify-between gap-3 py-3.5 border-b border-white/10 last:border-0" data-jump-block="${block.dataset.index}" title="Review this room">
+        <div class="sum-row flex items-start justify-between gap-3 py-3.5 border-b border-emerald-deep/10 last:border-0" data-jump-block="${block.dataset.index}" title="Review this room">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-bold text-ink truncate">${typeName}</p>
-            <p class="text-[11px] font-semibold text-ink/50 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
-            <p class="text-[11px] font-semibold text-ink/50">${formatPrice(price)} &times; ${nights} night(s)</p>
+            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
+            <p class="text-[11px] font-semibold text-stone-500">${formatPrice(price)} &times; ${nights} night(s)</p>
             ${mealLine}
           </div>
-          <span class="text-sm font-extrabold text-gold tabnum">${formatPrice(blockTotal)}</span>
+          <span class="text-sm font-extrabold text-palay-800 tabnum">${formatPrice(blockTotal)}</span>
         </div>`;
     });
 
     const discountNote = document.getElementById('request_discount')?.checked
       ? `
-      <div class="mt-4 text-xs font-bold text-ink/80 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
-          <span class="material-icons text-[16px] text-gold">info</span>
+      <div class="mt-4 text-xs font-bold text-stone-700 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
+          <span class="material-icons text-[16px] text-palay-800">info</span>
           <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
       </div>`
       : '';
@@ -836,22 +907,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const guestsTotal = parseInt(expectedGuestsInput?.value) || 1;
 
     container.innerHTML = `
-      <div class="grid grid-cols-3 items-center bg-white/5 ring-1 ring-white/10 rounded-2xl px-2 py-3 text-center">
+      <div class="grid grid-cols-3 items-center bg-white/60 ring-1 ring-emerald-deep/5 rounded-2xl px-2 py-3 text-center">
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Check-in</span>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-in</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
         </div>
-        <div class="border-x border-white/10">
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Nights</span>
-          <span class="block text-[13px] font-extrabold text-gold mt-0.5">${nights}</span>
+        <div class="border-x border-emerald-deep/10">
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Nights</span>
+          <span class="block text-[13px] font-extrabold text-palay-800 mt-0.5">${nights}</span>
         </div>
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-ink/45">Check-out</span>
+          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-out</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
         </div>
       </div>
-      <div class="mt-1.5 text-center text-[11px] font-semibold text-ink/45">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
-      <div class="space-y-1 bg-white/5 p-4 rounded-2xl ring-1 ring-white/10 mt-3">
+      <div class="mt-1.5 text-center text-[11px] font-semibold text-stone-500">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
+      <div class="space-y-1 bg-white/60 p-4 rounded-2xl ring-1 ring-emerald-deep/5 mt-3">
         ${roomRows}
       </div>
       <div class="mt-5 bg-emerald-deep p-5 rounded-2xl flex justify-between items-center">
@@ -859,7 +930,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <span class="text-[10px] font-bold uppercase tracking-[0.24em] text-cream/60">Total Due</span>
           <span class="block text-[11px] font-semibold text-cream/45 mt-0.5">${blocks.length} room(s) for ${nights} night(s)</span>
         </div>
-        <div class="font-display text-2xl text-gold tabnum" id="summaryTotalAmount">${formatPrice(totalPrice)}</div>
+        <div class="font-display text-2xl text-palay-800 tabnum" id="summaryTotalAmount">${formatPrice(totalPrice)}</div>
       </div>
       ${discountNote}
     `;

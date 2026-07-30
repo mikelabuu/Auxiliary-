@@ -1,0 +1,107 @@
+/* ============================================================
+   TOAST NOTIFICATIONS — shared by BOTH bundles.
+
+   window.toast() lives in resources/js/app.js, which every layout
+   loads, so the styling has to be reachable from every layout too.
+   It used to live only in admin/11-notify-nav.css, which meant a
+   toast fired from a public page (the checkout form's validation
+   messages) rendered as unstyled markup in the corner.
+
+   Every admin-only token below carries a public fallback as its
+   second var() argument, so the same card renders correctly under
+   the Fresh Meadow (admin) and Boutique (public) palettes without
+   either bundle having to know about the other's tokens.
+   ============================================================ */
+
+/* ── Toast stack: bottom-right, above every modal/popover ── */
+.toast-stack {
+    position: fixed; right: 20px; bottom: 20px; z-index: 400;
+    display: flex; flex-direction: column; align-items: flex-end;
+    pointer-events: none;
+    max-width: min(400px, calc(100vw - 40px));
+}
+@media (max-width: 640px) {
+    .toast-stack { right: 12px; bottom: 12px; left: 12px; max-width: none; align-items: stretch; }
+}
+
+/* Slot handles stacking + collapse; the card handles the visuals.
+   Collapse works by animating the grid track to 0fr while the card
+   fades out faster than the track shrinks, so no clipping is needed. */
+.toast-slot {
+    display: grid; grid-template-rows: 1fr;
+    margin-top: 10px; pointer-events: auto;
+    transition: grid-template-rows 220ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+                margin-top 220ms var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+    @starting-style { grid-template-rows: 0fr; margin-top: 0; }
+}
+.toast-slot[data-closing] { grid-template-rows: 0fr; margin-top: 0; }
+
+.toast {
+    min-height: 0; min-width: 0;
+    display: flex; align-items: flex-start; gap: 11px;
+    position: relative; overflow: hidden;
+    width: 100%; padding: 13px 15px 14px;
+    /* Public pages have no --color-card/--color-border; fall back to the
+       Boutique cream surface so the card is legible on the night canvas. */
+    background: var(--color-card, var(--color-cream-warm, #fff));
+    border: 1px solid var(--color-border, rgb(0 0 0 / 0.08));
+    border-radius: var(--radius, 12px);
+    box-shadow: var(--shadow-lg, 0 18px 40px -16px rgb(0 0 0 / 0.4));
+    opacity: 1; transform: translateY(0) scale(1);
+    transition: opacity 300ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+                transform 320ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+    @starting-style { opacity: 0; transform: translateY(14px) scale(.96); }
+}
+.toast-slot[data-closing] .toast {
+    opacity: 0; transform: translateX(16px) scale(.98);
+    transition: opacity 150ms ease, transform 160ms ease;
+}
+
+.toast-icon {
+    width: 28px; height: 28px; border-radius: var(--radius-sm, 8px);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+}
+.toast-icon svg { width: 15px; height: 15px; }
+.toast-msg {
+    flex: 1; min-width: 0; align-self: center;
+    font-size: 13px; font-weight: 600; line-height: 1.45;
+    /* Not --color-ink: on the night-themed checkout that token is flipped to
+       bone, which would be invisible on this light card. */
+    color: var(--color-card-ink); overflow-wrap: break-word;
+}
+.toast-close {
+    width: 24px; height: 24px; border-radius: var(--radius-xs, 6px);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; border: none; background: transparent; cursor: pointer;
+    color: var(--color-faint, #9a9a95);
+    transition: background var(--transition, 160ms ease), color var(--transition, 160ms ease);
+}
+.toast-close:hover { background: var(--color-stone-100); color: var(--color-card-ink); }
+.toast-close:focus-visible { outline: 2px solid var(--color-g-500, var(--color-clsu-500)); outline-offset: 1px; }
+.toast-close svg { width: 12px; height: 12px; }
+
+/* Auto-dismiss lifeline along the bottom edge; paused on hover (JS
+   pauses the timer, this pauses the visual). */
+.toast-life {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 2.5px;
+    transform-origin: left; border-radius: 0 2px 2px 0;
+    animation: toastLife linear both;
+}
+.toast.is-paused .toast-life { animation-play-state: paused; }
+@keyframes toastLife { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* Type variants. Admin token first, Boutique equivalent as the fallback. */
+.toast-success .toast-icon { background: var(--color-g-100, var(--color-clsu-100)); color: var(--color-g-700, var(--color-clsu-700)); }
+.toast-success .toast-life { background: var(--color-g-500, var(--color-clsu-500)); }
+.toast-error .toast-icon { background: var(--color-ember-100); color: var(--color-ember-700); }
+.toast-error .toast-life { background: var(--color-ember-500); }
+.toast-warning .toast-icon { background: var(--color-au-100, var(--color-palay-100)); color: var(--color-au-700, var(--color-palay-800)); }
+.toast-warning .toast-life { background: var(--color-au-500, var(--color-palay-500)); }
+.toast-info .toast-icon { background: var(--color-stone-100); color: var(--color-stone-600); }
+.toast-info .toast-life { background: var(--color-stone-400); }
+
+@media (prefers-reduced-motion: reduce) {
+    .toast-slot, .toast, .toast-slot[data-closing] .toast { transition: none; }
+    .toast-life { animation-duration: 0s !important; visibility: hidden; }
+}

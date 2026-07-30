@@ -64,6 +64,22 @@
         </div>
     @endif
 
+    {{-- Live update banner. Hidden until a broadcast arrives (or until one
+         that arrived just before a reload is replayed from sessionStorage). --}}
+    <div id="liveBookingNotice" class="hidden mb-6" role="status" aria-live="polite">
+        <div class="flex items-start gap-3 rounded-2xl border px-5 py-4 shadow-sm" data-notice-shell>
+            <span class="material-icons text-[20px] shrink-0 mt-0.5" data-notice-icon>notifications_active</span>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold leading-relaxed" data-notice-text></p>
+                <p class="text-[11px] font-semibold opacity-70 mt-1" data-notice-sub>Updating your bookings…</p>
+            </div>
+            <button type="button" data-notice-dismiss aria-label="Dismiss"
+                    class="shrink-0 rounded-full p-1 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                <span class="material-icons text-[18px]">close</span>
+            </button>
+        </div>
+    </div>
+
     {{-- Booking list --}}
     @if($bookings->count())
         <!-- Desktop Table -->
@@ -84,7 +100,7 @@
                 </thead>
                 <tbody class="divide-y divide-stone-100 text-sm font-semibold text-stone-700">
                     @foreach($bookings as $booking)
-                        <tr class="hover:bg-clsu-50/40 transition-colors">
+                        <tr class="hover:bg-clsu-50/40 transition-colors" data-booking-row="{{ $booking->id }}">
                             <td class="p-4 font-bold text-ink">#{{ $booking->id }}</td>
                             <td class="p-4 font-bold">{{ $booking->room_type ?? '—' }}</td>
                             <td class="p-4">{{ is_array($booking->room_numbers) ? implode(', ', $booking->room_numbers) : $booking->room_numbers }}</td>
@@ -126,7 +142,7 @@
         <!-- Mobile Cards -->
         <div class="grid grid-cols-1 gap-4 md:hidden">
             @foreach($bookings as $booking)
-                <div class="border border-stone-200/70 rounded-2xl p-5 bg-white space-y-4 shadow-sm">
+                <div class="border border-stone-200/70 rounded-2xl p-5 bg-white space-y-4 shadow-sm" data-booking-row="{{ $booking->id }}">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-black text-ink">Booking #{{ $booking->id }}</span>
                         <x-booking.ui.badge :status="$booking->status" />
@@ -220,5 +236,91 @@
         function closeModal() {
             window.pubModalClose('cancelModal');
         }
+    </script>
+
+    <script>
+    // Real-time: this list is where a guest waits after uploading a proof of
+    // payment, and until now the only way to learn the verdict was to refresh
+    // by hand. The account-wide private channel (App\Events\GuestBookingUpdated)
+    // carries only a booking id, its new status and a message already safe to
+    // show — never an amount or a contact detail.
+    //
+    // Reverb being down is harmless: nothing here throws, the page simply
+    // behaves exactly as it did before.
+    //
+    // Bound on DOMContentLoaded, not inline: app.js is a Vite module and so is
+    // deferred, which means window.Echo does not exist yet while this script
+    // is being parsed. Deferred modules run before DOMContentLoaded fires, so
+    // by the time this callback runs Echo is there.
+    document.addEventListener('DOMContentLoaded', function () {
+        const KEY = 'guest_booking_notice';
+        const notice = document.getElementById('liveBookingNotice');
+        if (!notice) return;
+
+        const shell = notice.querySelector('[data-notice-shell]');
+        const icon  = notice.querySelector('[data-notice-icon]');
+        const text  = notice.querySelector('[data-notice-text]');
+        const sub   = notice.querySelector('[data-notice-sub]');
+
+        const TONE = {
+            good: { shell: 'border-clsu-200 bg-clsu-50 text-clsu-800', icon: 'task_alt' },
+            bad:  { shell: 'border-ember-200 bg-ember-50 text-ember-700', icon: 'error_outline' },
+        };
+
+        function show(message, tone, subText) {
+            const t = TONE[tone] || TONE.good;
+            shell.className = 'flex items-start gap-3 rounded-2xl border px-5 py-4 shadow-sm ' + t.shell;
+            icon.textContent = t.icon;
+            text.textContent = message;
+            sub.textContent = subText || '';
+            sub.classList.toggle('hidden', !subText);
+            notice.classList.remove('hidden');
+        }
+
+        notice.querySelector('[data-notice-dismiss]').addEventListener('click', function () {
+            notice.classList.add('hidden');
+        });
+
+        // A message stashed just before the reload below — replay it so the
+        // guest actually reads the outcome instead of watching it flash past.
+        try {
+            const stashed = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+            if (stashed) {
+                sessionStorage.removeItem(KEY);
+                show(stashed.message, stashed.tone, '');
+                const row = document.querySelector('[data-booking-row="' + stashed.bookingId + '"]');
+                if (row) {
+                    row.classList.add('booking-row-flash');
+                    row.scrollIntoView({
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                        block: 'center',
+                    });
+                }
+            }
+        } catch (e) { /* a corrupt stash must never break the page */ }
+
+        if (!window.Echo) return;
+
+        window.Echo.private('user.{{ auth()->id() }}.bookings')
+            .listen('.GuestBookingUpdated', function (payload) {
+                if (!payload || !payload.message) return;
+
+                const tone = payload.status === 'paid' ? 'good' : 'bad';
+                show(payload.message, tone, 'Refreshing your bookings…');
+
+                // The status badge, the total and the available actions are
+                // all computed in Blade, so a reload is the only way to show a
+                // consistent row. Stash the message so it survives the trip.
+                try {
+                    sessionStorage.setItem(KEY, JSON.stringify({
+                        message: payload.message,
+                        tone: tone,
+                        bookingId: payload.bookingId,
+                    }));
+                } catch (e) { /* private mode — the banner just won't persist */ }
+
+                setTimeout(function () { window.location.reload(); }, 2200);
+            });
+    });
     </script>
 @endsection

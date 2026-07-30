@@ -260,11 +260,49 @@
 
                     <!-- Primary Payments Button -->
                     @if($booking->status === 'pending_payment')
+                        @php
+                            $awaitingProof = ($latestPayment ?? null)
+                                && $latestPayment->status === \App\Models\Payment::STATUS_AWAITING_VERIFICATION;
+                            $proofRejected = ($latestPayment ?? null)
+                                && $latestPayment->status === \App\Models\Payment::STATUS_REJECTED;
+                        @endphp
+
                         <div id="paymentCta" class="pt-4 border-t border-white/10 scroll-mt-28">
-                            <a href="{{ route('bookings.pay', $booking->id) }}" class="press focus-ring !no-underline w-full min-h-12 py-3.5 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
-                                <span class="material-icons text-[18px]">payment</span>
-                                Proceed to Payment
-                            </a>
+                            @if($awaitingProof)
+                                {{-- The guest has paid and proved it; the ball is with the front
+                                     desk now, so the pay button would only invite a double payment. --}}
+                                <div class="flex flex-col gap-3 rounded-2xl bg-gold/10 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
+                                    <div class="flex gap-2 text-gold">
+                                        <span class="material-icons text-[16px] flex-shrink-0 mt-0.5">hourglass_empty</span>
+                                        <div class="font-bold leading-relaxed">
+                                            Proof of payment received. Our front desk is verifying it against the transfer — your official receipt is emailed as soon as it clears.
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-ink/50">
+                                        <span>{{ $latestPayment->proof_method_label }}</span>
+                                        <span class="font-data">Ref {{ $latestPayment->proof_reference }}</span>
+                                        <span class="tabnum">Sent {{ $latestPayment->proof_submitted_at?->timezone('Asia/Manila')->format('M d, g:i A') }}</span>
+                                    </div>
+                                </div>
+                            @else
+                                @if($proofRejected)
+                                    <div class="mb-3 flex gap-2 rounded-2xl bg-ember-600/15 ring-1 ring-ember-600/40 px-4 py-3.5 text-xs text-ember-200">
+                                        <span class="material-icons text-[16px] flex-shrink-0 mt-0.5">error_outline</span>
+                                        <div class="font-bold leading-relaxed">
+                                            Your proof of payment was not accepted.
+                                            @if($latestPayment->rejection_reason)
+                                                <span class="block mt-1 font-semibold">Reason: {{ $latestPayment->rejection_reason }}</span>
+                                            @endif
+                                            <span class="block mt-1 font-semibold">Please upload a corrected receipt.</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <a href="{{ route('bookings.pay', $booking->id) }}" class="press focus-ring !no-underline w-full min-h-12 py-3.5 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] bg-bone text-night cursor-pointer hover:bg-cream hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
+                                    <span class="material-icons text-[18px]">payment</span>
+                                    {{ $proofRejected ? 'Try payment again' : 'Proceed to Payment' }}
+                                </a>
+                            @endif
                         </div>
                     @endif
                 </div>

@@ -55,6 +55,10 @@
     /* deeper ivory for alternating sections */
     --color-ink: #1C1917;
     /* warm near-black (stone-900) */
+    --color-card-ink: #1C1917;
+    /* Text on an always-light surface. Unlike --color-ink this is NOT flipped
+       by body.theme-night, so components that keep a light card on a dark page
+       (toasts) stay legible. */
 
     /* ─────────────────────────────────────────────────────────────
        Boutique Farmstead — editorial palette for the public site

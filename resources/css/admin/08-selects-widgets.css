@@ -202,6 +202,15 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
 .map-stat__fill--available   { background: var(--color-g-400); }
 .map-stat__fill--occupied    { background: var(--color-g-600); }
 .map-stat__fill--reserved    { background: var(--color-au-400); }
+/* Held but unpaid: the same amber as reserved, hatched so it reads as
+   provisional at a glance rather than as confirmed business. */
+.map-stat__fill--pending {
+    background: repeating-linear-gradient(
+        45deg,
+        var(--color-au-400) 0 4px,
+        var(--color-au-200) 4px 8px
+    );
+}
 .map-stat__fill--cleaning    { background: #38bdf8; }
 .map-stat__fill--maintenance { background: var(--color-ember-400); }
 

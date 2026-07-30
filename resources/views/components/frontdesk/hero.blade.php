@@ -29,6 +29,7 @@
         ['route' => 'frontdesk.walkin.create',   'icon' => 'calendar-plus', 'label' => 'Manual Booking'],
         ['route' => 'frontdesk.room.index',      'icon' => 'bed',           'label' => 'Rooms'],
         ['route' => 'frontdesk.booking',         'icon' => 'clipboard',     'label' => 'Bookings'],
+        ['route' => 'staff.paymentverification.index', 'icon' => 'receipt', 'label' => 'Verify Payments'],
     ];
 @endphp
 

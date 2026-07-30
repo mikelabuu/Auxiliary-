@@ -306,6 +306,39 @@
     opacity: 0.65;
 }
 
+/* Held by a booking whose payment is not verified yet. Unselectable like
+   .booked, but amber rather than red — the room is spoken for, not sold. */
+.room-tile.reserved {
+    background-color: var(--color-palay-50);
+    color: var(--color-palay-800);
+    border-color: var(--color-palay-300);
+    border-style: dashed;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+/* My Bookings: marks the row a live update just changed, after the reload
+   that brought the new state in. Same recipe as .block-flash on checkout. */
+.booking-row-flash {
+    animation: bookingRowFlash 1.6s cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes bookingRowFlash {
+    0% {
+        background-color: color-mix(in oklch, var(--color-clsu-500) 22%, transparent);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .booking-row-flash {
+        animation: none;
+    }
+}
+
 .room-tile.cleaning {
     background-color: var(--color-palay-50);
     color: var(--color-palay-700);

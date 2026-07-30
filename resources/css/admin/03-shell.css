@@ -892,11 +892,12 @@
 
 .notif-row {
     display: flex;
+    align-items: center;
     gap: 13px;
     padding: 12px 18px;
     text-decoration: none;
     border-bottom: 1px solid var(--color-surface);
-    transition: background var(--transition);
+    transition: background var(--transition), opacity var(--transition);
 }
 
 .notif-row:hover {
@@ -905,6 +906,25 @@
 
 .notif-row:last-child {
     border-bottom: 0;
+}
+
+/* Opened already: still listed and still clickable, just no longer shouting. */
+.notif-row.is-read {
+    opacity: .55;
+}
+
+.notif-row.is-read .notif-text {
+    font-weight: 500;
+}
+
+/* The per-item unread marker. Hidden the moment its row is opened. */
+.notif-unread-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--color-g-600);
+    flex-shrink: 0;
+    align-self: center;
 }
 
 .notif-icon {

@@ -7,92 +7,11 @@
    and keyboard navigation for the topbar command palette.
    ============================================================ */
 
-/* ── Toast stack: bottom-right, above every modal/popover ── */
-.toast-stack {
-    position: fixed; right: 20px; bottom: 20px; z-index: 400;
-    display: flex; flex-direction: column; align-items: flex-end;
-    pointer-events: none;
-    max-width: min(400px, calc(100vw - 40px));
-}
-@media (max-width: 640px) {
-    .toast-stack { right: 12px; bottom: 12px; left: 12px; max-width: none; align-items: stretch; }
-}
-
-/* Slot handles stacking + collapse; the card handles the visuals.
-   Collapse works by animating the grid track to 0fr while the card
-   fades out faster than the track shrinks, so no clipping is needed. */
-.toast-slot {
-    display: grid; grid-template-rows: 1fr;
-    margin-top: 10px; pointer-events: auto;
-    transition: grid-template-rows 220ms var(--ease-out), margin-top 220ms var(--ease-out);
-    @starting-style { grid-template-rows: 0fr; margin-top: 0; }
-}
-.toast-slot[data-closing] { grid-template-rows: 0fr; margin-top: 0; }
-
-.toast {
-    min-height: 0; min-width: 0;
-    display: flex; align-items: flex-start; gap: 11px;
-    position: relative; overflow: hidden;
-    width: 100%; padding: 13px 15px 14px;
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    opacity: 1; transform: translateY(0) scale(1);
-    transition: opacity 300ms var(--ease-out), transform 320ms var(--ease-spring);
-    @starting-style { opacity: 0; transform: translateY(14px) scale(.96); }
-}
-.toast-slot[data-closing] .toast {
-    opacity: 0; transform: translateX(16px) scale(.98);
-    transition: opacity 150ms ease, transform 160ms ease;
-}
-
-.toast-icon {
-    width: 28px; height: 28px; border-radius: var(--radius-sm);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-top: 1px;
-}
-.toast-icon svg { width: 15px; height: 15px; }
-.toast-msg {
-    flex: 1; min-width: 0; align-self: center;
-    font-size: 13px; font-weight: 600; line-height: 1.45;
-    color: var(--color-ink); overflow-wrap: break-word;
-}
-.toast-close {
-    width: 24px; height: 24px; border-radius: var(--radius-xs);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; border: none; background: transparent; cursor: pointer;
-    color: var(--color-faint);
-    transition: background var(--transition), color var(--transition);
-}
-.toast-close:hover { background: var(--color-stone-100); color: var(--color-ink); }
-.toast-close:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 1px; }
-.toast-close svg { width: 12px; height: 12px; }
-
-/* Auto-dismiss lifeline along the bottom edge; paused on hover (JS
-   pauses the timer, this pauses the visual). */
-.toast-life {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 2.5px;
-    transform-origin: left; border-radius: 0 2px 2px 0;
-    animation: toastLife linear both;
-}
-.toast.is-paused .toast-life { animation-play-state: paused; }
-@keyframes toastLife { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-
-/* Type variants */
-.toast-success .toast-icon { background: var(--color-g-100); color: var(--color-g-700); }
-.toast-success .toast-life { background: var(--color-g-500); }
-.toast-error .toast-icon { background: var(--color-ember-100); color: var(--color-ember-700); }
-.toast-error .toast-life { background: var(--color-ember-500); }
-.toast-warning .toast-icon { background: var(--color-au-100); color: var(--color-au-700); }
-.toast-warning .toast-life { background: var(--color-au-500); }
-.toast-info .toast-icon { background: var(--color-stone-100); color: var(--color-stone-600); }
-.toast-info .toast-life { background: var(--color-stone-400); }
-
-@media (prefers-reduced-motion: reduce) {
-    .toast-slot, .toast, .toast-slot[data-closing] .toast { transition: none; }
-    .toast-life { animation-duration: 0s !important; visibility: hidden; }
-}
+/* The toast styles that used to live here moved to
+   resources/css/shared/toast.css so the public bundle can load them too —
+   window.toast() is defined in app.js, which every layout loads, but a
+   toast fired from a public page rendered unstyled while these rules were
+   admin-only. Imported by both bundle entrypoints. */
 
 /* ── Command palette: keyboard-active row mirrors hover ── */
 .search-result-row.is-active { background: var(--color-g-50); }
