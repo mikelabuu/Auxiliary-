@@ -28,6 +28,7 @@
     $stayIcon  = $line['icon'];
     $stayClass = $line['class'];
     $stayLabel = $line['label'];
+    $stayGuest = $line['guest'];
     $stayTitle = $line['title'];
 
     // A hold with no money behind it yet. Worth calling out on the card:
@@ -70,37 +71,56 @@
         </div>
     </div>
 
-    <div class="p-4 pb-3 flex flex-col items-center text-center gap-2">
-        <div>
-            <p class="text-base font-extrabold text-stone-900 font-data tabnum">{{ $room->room_number }}</p>
-            <p class="room-type-label text-stone-400 text-[10px] font-bold tracking-wide uppercase mt-0.5">{{ ucfirst($room->room_type) }}</p>
+    {{-- Left-aligned, not centred: a board is scanned down a column of room
+         numbers, and centred text makes every row start in a different place. --}}
+    <div class="room-card-body">
+        <div class="room-card-head">
+            <p class="room-card-number font-data tabnum">{{ $room->room_number }}</p>
+            <p class="room-type-label">{{ ucfirst($room->room_type) }}</p>
         </div>
-        <div class="flex flex-wrap items-center justify-center gap-1.5">
+
+        <div class="room-card-chips">
             <span class="room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $meta['badge'] }}">
                 <span class="room-status-dot w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
                 <span class="room-status-text">{{ $meta['label'] }}</span>
             </span>
-            {{-- Housekeeping says the room is free; a booking says otherwise
-                 and has not been paid for. Both facts matter, so both show. --}}
-            <span class="room-hold-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border border-palay-200 bg-palay-50 text-palay-800 {{ $holdPending ? '' : 'hidden' }}">
+            {{-- Housekeeping says the room is free; a booking says otherwise and
+                 has not been paid for. Both facts matter, so both show.
+
+                 Visibility is driven by [data-hold-pending] on the card, NOT by
+                 a `hidden` class. `hidden` and `inline-flex` are both display
+                 utilities, and Tailwind emits `inline-flex` after `hidden`, so
+                 the two together left this badge permanently visible — every
+                 room read "Unpaid hold" regardless of its bookings. --}}
+            <span class="room-hold-badge items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border border-palay-200 bg-palay-50 text-palay-800">
                 <span class="w-1.5 h-1.5 rounded-full bg-palay-500"></span>
                 Unpaid hold
             </span>
         </div>
-        <p class="room-stay-line flex items-center gap-1 text-[10px] {{ $stayClass }}" data-kind="{{ $stayKind }}" @if($stayTitle) title="{{ $stayTitle }}" @endif>
-            <x-admin.ui.icon :name="$stayIcon" class="w-3 h-3 shrink-0" stroke-width="2" />
-            <span class="room-stay-text">{{ $stayLabel }}</span>
-        </p>
+
+        <div class="room-stay-block">
+            <p class="room-stay-line flex items-center gap-1 text-[10px] {{ $stayClass }}" data-kind="{{ $stayKind }}" @if($stayTitle) title="{{ $stayTitle }}" @endif>
+                <x-admin.ui.icon :name="$stayIcon" class="w-3 h-3 shrink-0" stroke-width="2" />
+                <span class="room-stay-text">{{ $stayLabel }}</span>
+            </p>
+            {{-- Who is holding it. Previously only in the title attribute above,
+                 which a phone cannot hover and a screen reader skips. --}}
+            <p class="room-guest-line" @if(! $stayGuest) hidden @endif>
+                <x-admin.ui.icon name="user" class="w-3 h-3 shrink-0" stroke-width="2" />
+                <span class="room-guest-text">{{ $stayGuest }}</span>
+            </p>
+        </div>
+
         @if($room->notes)
-            <p class="flex items-center gap-1 text-[10px] text-stone-400 italic mt-0.5 max-w-full" title="{{ $room->notes }}">
+            <p class="room-note-line" title="{{ $room->notes }}">
                 <x-admin.ui.icon name="note" class="w-3 h-3 shrink-0" />
                 <span class="truncate">{{ \Illuminate\Support\Str::limit($room->notes, 28) }}</span>
             </p>
         @endif
-        <p class="room-updated text-[11px] text-stone-400 italic">Updated {{ $room->updated_at->diffForHumans() }}</p>
+        <p class="room-updated">Updated {{ $room->updated_at->diffForHumans() }}</p>
     </div>
 
-    <div class="border-t border-stone-100 px-4 py-2 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-stone-400 group-hover/card:text-clsu-600 group-hover/card:bg-clsu-50/60 transition-colors">
+    <div class="room-card-foot">
         <x-admin.ui.icon name="eye" class="w-3 h-3" />
         View occupancy
     </div>

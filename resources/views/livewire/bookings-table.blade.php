@@ -172,11 +172,12 @@
         </div>
     @endif
 
-    @if($selectedBooking)
-        <x-admin.ui.modal id="bookingDetailModal" icon="clipboard" :title="'Booking #' . $selectedBooking->id" max-width="3xl" always-visible close-action="closeModal">
-            @include('staff.partials.booking-detail-body', ['booking' => $selectedBooking])
-        </x-admin.ui.modal>
-    @endif
+    {{-- The booking-detail modal is NOT rendered here.
+         It used to be, driven by a $selectedBooking Livewire property, which
+         made "View" one of the most expensive clicks in the console — see the
+         note on the button handler below. It is now fetched on demand by
+         window.openBookingDetail() (layouts/admin), the same path the guest
+         name has always used, rendering the same partial. --}}
 </x-admin.ui.section-card>
 
 @push('scripts')
@@ -189,8 +190,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = $(this).data('action');
 
         // View is read-only — open it straight away, no interstitial.
+        //
+        // Fetched, not dispatched to Livewire. `openBookingModal` set a full
+        // Booking model (with reservations.room and payments eager-loaded)
+        // into a public Livewire property, which meant every click round-
+        // tripped the whole component: the status-count query, the paginated
+        // 15-row query and the entire table markup were rebuilt just to show a
+        // dialog — and because this card is wire:poll.15s, that model graph was
+        // then re-serialised and the table re-rendered every 15 seconds for as
+        // long as the modal stayed open. That is the lag.
+        //
+        // The guest name beside it already fetched the same modal, from the
+        // same partial, without touching the table. Now both do.
         if (action === 'view') {
-            Livewire.dispatch('openBookingModal', { bookingId });
+            window.openBookingDetail(bookingId);
             return;
         }
 

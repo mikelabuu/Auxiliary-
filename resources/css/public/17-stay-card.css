@@ -1,0 +1,311 @@
+/* Part 17 of the public bundle — the stay card on My Bookings.
+   Imported in order by resources/css/app.css; do not reorder.
+
+   Replaces a nine-column table (plus a second, separately-maintained card
+   layout for mobile). Nine columns never fit: "Aug 02, 2026" wrapped onto
+   three lines, Room Type and Room Numbers were routinely blank, and the
+   Actions cell pushed a red Cancel button to the widest point of the row —
+   making destroy the loudest thing on a page about upcoming holidays.
+
+   One card, one layout, all widths. A booking is a *stay*, so it is shaped
+   like a ticket: an accent rail keyed to status, the two dates it spans, and
+   the one action that is actually next.
+   ============================================================ */
+
+.stay-card {
+    --stay-accent: var(--color-stone-400, #93a698);
+
+    position: relative;
+    display: grid;
+    gap: 1.1rem;
+    padding: 1.25rem 1.35rem 1.25rem 1.6rem;
+    border-radius: 1.5rem;
+    background: #fff;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 1px 2px rgba(6, 40, 30, 0.04),
+        0 16px 34px -26px rgba(6, 40, 30, 0.28);
+    transition: box-shadow 240ms ease, transform 240ms ease;
+}
+
+/* The rail is the status, read before any text. Colour is never the only
+   signal — the badge beside it names the same state in words. */
+.stay-card::before {
+    content: "";
+    position: absolute;
+    inset: 1.1rem auto 1.1rem 0.6rem;
+    width: 4px;
+    border-radius: 999px;
+    background: var(--stay-accent);
+}
+
+.stay-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 1px 2px rgba(6, 40, 30, 0.05),
+        0 24px 46px -26px rgba(6, 40, 30, 0.36);
+}
+
+.stay-card--pending { --stay-accent: var(--color-gold, #d9b45b); }
+.stay-card--good { --stay-accent: var(--color-emerald, #16b364); }
+.stay-card--dead { --stay-accent: var(--color-ember-500, #ef4444); }
+
+/* ── Header ── */
+.stay-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.stay-card__ref {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.stay-card__id {
+    font-family: var(--font-data, ui-monospace, monospace);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-ink, #14201a);
+}
+
+.stay-card__rooms {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-stone-500, #64786c);
+}
+
+.stay-card__money {
+    text-align: right;
+    margin-left: auto;
+}
+
+.stay-card__amount {
+    display: block;
+    font-family: var(--font-data, ui-monospace, monospace);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-emerald-deep, #0b3d2c);
+    font-variant-numeric: tabular-nums;
+}
+
+.stay-card__amount-note {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-stone-400, #93a698);
+}
+
+/* ── Date rail: the stay drawn as the span it is ── */
+.stay-card__dates {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    background: color-mix(in oklch, var(--color-emerald, #16b364) 5%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 8%, transparent);
+}
+
+.stay-card__date-label {
+    display: block;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-stone-400, #93a698);
+}
+
+.stay-card__date-value {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    /* Dates must never wrap — that was the table's most visible failure. */
+    white-space: nowrap;
+    color: var(--color-ink, #14201a);
+}
+
+.stay-card__span {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-width: 0;
+}
+
+.stay-card__span::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: repeating-linear-gradient(90deg,
+            color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 22%, transparent) 0 4px,
+            transparent 4px 8px);
+}
+
+.stay-card__nights {
+    position: relative;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-emerald-deep, #0b3d2c);
+    white-space: nowrap;
+}
+
+/* ── Footer ── */
+.stay-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.stay-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-stone-500, #64786c);
+}
+
+.stay-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+/* Cancel is a real action but it is not the point of the page — it reads as
+   text until you reach for it, so "Pay now" stays the loudest thing here. */
+.stay-card__quiet {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 0;
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-stone-500, #64786c);
+    cursor: pointer;
+    transition: color 200ms ease, background 200ms ease;
+}
+
+.stay-card__quiet:hover {
+    background: color-mix(in oklch, var(--color-ember-500, #ef4444) 10%, transparent);
+    color: var(--color-ember-700, #b91c1c);
+}
+
+.stay-card__quiet:focus-visible {
+    outline: 2px solid var(--color-ember-500, #ef4444);
+    outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+    .stay-card__dates {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+        text-align: left;
+    }
+
+    /* The dashed connector means nothing once the dates stack. */
+    .stay-card__span {
+        justify-items: start;
+    }
+
+    .stay-card__span::before {
+        display: none;
+    }
+
+    .stay-card__actions {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stay-card {
+        transition: none;
+    }
+
+    .stay-card:hover {
+        transform: none;
+    }
+}
+
+/* ============================================================
+   CALENDAR AVAILABILITY (checkout date pickers)
+
+   Lives here rather than in 08-utilities so the two states the
+   /rooms/calendar-availability feed introduces stay next to each other.
+   Both are painted by booking.js via flatpickr's onDayCreate.
+
+   Neither state is signalled by colour alone: a sold-out night is also
+   unselectable and carries a title, and a nearly-gone night carries a dot
+   plus its own title.
+   ============================================================ */
+
+/* Sold out — every sellable room is taken for that night. */
+.flatpickr-day.fp-sold-out,
+.flatpickr-day.fp-sold-out:hover {
+    position: relative;
+    color: var(--color-stone-400, #93a698);
+    background: color-mix(in oklch, var(--color-ember-500, #ef4444) 7%, transparent);
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+/* A strike rather than a plain grey-out: flatpickr already greys out dates
+   that are merely outside the range, and those two mean different things. */
+.flatpickr-day.fp-sold-out::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    height: 1.5px;
+    border-radius: 2px;
+    background: color-mix(in oklch, var(--color-ember-500, #ef4444) 65%, transparent);
+    transform: rotate(-12deg);
+}
+
+/* One or two rooms left — bookable, but worth knowing before you plan. */
+.flatpickr-day.fp-nearly-gone {
+    position: relative;
+    font-weight: 700;
+}
+
+.flatpickr-day.fp-nearly-gone::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--color-gold, #d9b45b);
+}
+
+/* The selected day already has a solid fill; a gold dot on top of it reads
+   as an artefact. */
+.flatpickr-day.fp-nearly-gone.selected::after {
+    background: rgba(255, 255, 255, 0.85);
+}

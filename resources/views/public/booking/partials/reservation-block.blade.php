@@ -8,7 +8,7 @@
             <span class="text-xs font-bold text-stone-600 uppercase tracking-[0.18em]">Room Allocation</span>
         </div>
         <button type="button" class="btn-remove-block inline-flex items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-bold bg-ember-600/15 text-ember-700 border border-ember-600/40 hover:bg-ember-600/25 transition-[color,background-color,border-color,box-shadow] cursor-pointer" style="display:none;">
-            <span class="material-icons text-[14px]">delete_outline</span>
+            <i class="fa-solid fa-trash-can text-[14px]"></i>
             Remove
         </button>
     </div>
@@ -50,7 +50,7 @@
             <input type="hidden" name="reservations[__INDEX__][beds]" class="res-beds">
             <input type="hidden" name="reservations[__INDEX__][price_per_night]" class="res-price-hidden">
             <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[11px] font-bold text-palay-800">
-                <span class="material-icons text-[14px]">payments</span>
+                <i class="fa-solid fa-money-bill-wave text-[14px]"></i>
                 <input type="text" class="res-price w-20 border-0 bg-transparent p-0 text-[11px] font-bold text-palay-800 outline-none pointer-events-none select-none" readonly placeholder="₱--" tabindex="-1" aria-label="Nightly rate">
             </span>
             <span class="capacity-hint text-[11px] font-semibold text-stone-500"></span>
@@ -63,11 +63,11 @@
             <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">No. of Guests</label>
             <div class="stepper flex items-center gap-1.5">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests in room">
-                    <span class="material-icons text-[16px]">remove</span>
+                    <i class="fa-solid fa-minus text-[16px]"></i>
                 </button>
                 <input type="number" name="reservations[__INDEX__][num_guests]" class="res-num-guests w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" placeholder="e.g. 2" required>
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests in room">
-                    <span class="material-icons text-[16px]">add</span>
+                    <i class="fa-solid fa-plus text-[16px]"></i>
                 </button>
             </div>
         </div>
@@ -75,11 +75,11 @@
             <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">Seniors / PWD in Room</label>
             <div class="stepper flex items-center gap-1.5">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer seniors">
-                    <span class="material-icons text-[16px]">remove</span>
+                    <i class="fa-solid fa-minus text-[16px]"></i>
                 </button>
                 <input type="number" name="reservations[__INDEX__][num_seniors]" class="res-num-seniors w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More seniors">
-                    <span class="material-icons text-[16px]">add</span>
+                    <i class="fa-solid fa-plus text-[16px]"></i>
                 </button>
             </div>
             <small class="text-[10px] text-stone-500 mt-1.5 block font-medium">For 20% Senior/PWD discount verification</small>
@@ -89,10 +89,10 @@
     <!-- Meal Selection (Alpine-powered collapsible panel) -->
     <div class="mt-4" x-data="{ mealsOpen: false }">
         <button type="button" @click="mealsOpen = !mealsOpen" class="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl text-xs font-bold bg-white/60 hover:bg-white text-stone-700 transition-[color,background-color,border-color,box-shadow] cursor-pointer border border-emerald-deep/15">
-            <span class="material-icons text-[15px] text-emerald">restaurant_menu</span>
+            <i class="fa-solid fa-utensils text-[15px] text-emerald"></i>
             Breakfast Meal Selections
             <span class="text-stone-500 font-medium">(optional)</span>
-            <span class="material-icons text-[14px] ml-1 transition-transform duration-200 text-stone-500" :class="mealsOpen ? 'rotate-180' : ''">expand_more</span>
+            <i class="fa-solid fa-chevron-down text-[14px] ml-1 transition-transform duration-200 text-stone-500" :class="mealsOpen ? 'rotate-180' : ''"></i>
         </button>
         <div class="mt-2.5"
              x-show="mealsOpen"
@@ -106,7 +106,7 @@
          >
             <div class="border border-emerald-deep/10 rounded-2xl p-5 bg-white/60 space-y-3.5">
                 <p class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <span class="material-icons text-[14px] text-emerald">info</span>
+                    <i class="fa-solid fa-circle-info text-[14px] text-emerald"></i>
                     Free breakfast — optional, up to one silog per guest
                 </p>
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -115,11 +115,11 @@
                             <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1 text-center">{{ $mealLabel }}</label>
                             <div class="flex items-center rounded-lg border border-emerald-deep/10 bg-white/60 overflow-hidden">
                                 <button type="button" class="btn-minus-meal w-7 h-8 flex items-center justify-center text-stone-500 hover:bg-white hover:text-palay-800 transition-colors cursor-pointer shrink-0">
-                                    <span class="material-icons text-[15px]">remove</span>
+                                    <i class="fa-solid fa-minus text-[15px]"></i>
                                 </button>
                                 <input type="number" name="reservations[__INDEX__][meal][{{ $mealKey }}]" class="meal-qty w-full min-w-0 px-1 py-1.5 border-0 bg-transparent text-xs text-center font-bold text-ink outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
                                 <button type="button" class="btn-plus-meal w-7 h-8 flex items-center justify-center text-stone-500 hover:bg-white hover:text-palay-800 transition-colors cursor-pointer shrink-0">
-                                    <span class="material-icons text-[15px]">add</span>
+                                    <i class="fa-solid fa-plus text-[15px]"></i>
                                 </button>
                             </div>
                         </div>
@@ -133,16 +133,16 @@
     <div class="mt-5 pt-4 border-t border-emerald-deep/10">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <p class="text-[11px] text-stone-500 font-medium flex items-center gap-1.5">
-                <span class="material-icons text-[14px] text-emerald">touch_app</span>
+                <i class="fa-solid fa-hand-pointer text-[14px] text-emerald"></i>
                 Pick a room style above and open rooms for your dates appear here. Tap a room number to reserve it.
             </p>
             <div class="flex items-center gap-2">
                 <button type="button" class="btn-autopick press inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-palay-800 transition-colors hover:bg-gold hover:text-night cursor-pointer">
-                    <span class="material-icons text-[13px]">auto_awesome</span>
+                    <i class="fa-solid fa-wand-magic-sparkles text-[13px]"></i>
                     Pick for me
                 </button>
                 <button type="button" class="btn-check-availability press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/15 bg-white/60 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
-                    <span class="material-icons text-[13px]">refresh</span>
+                    <i class="fa-solid fa-arrows-rotate text-[13px]"></i>
                     Refresh
                 </button>
             </div>

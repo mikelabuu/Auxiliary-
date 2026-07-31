@@ -54,6 +54,9 @@ Route::get('/', [BookingController::class, 'welcome'])->name('home');
 
 Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
 Route::post('/rooms/availability-summary', [BookingController::class, 'availabilitySummary'])->name('rooms.availability_summary');
+// Sold-out nights for the checkout date pickers. GET because it takes no
+// guest input and the answer is the same for everyone looking at the calendar.
+Route::get('/rooms/calendar-availability', [BookingController::class, 'calendarAvailability'])->name('rooms.calendar_availability');
 
 // Public room detail page. Declared after the POST availability endpoints so
 // the literal /rooms/* paths above always win over this wildcard.

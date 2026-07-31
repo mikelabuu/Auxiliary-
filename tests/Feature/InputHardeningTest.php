@@ -23,6 +23,11 @@ use Tests\TestCase;
  * script in every front-desk browser. The views escape now; these tests cover
  * the other half — keeping the payload out of the column in the first place.
  */
+/*
+ * Discount-file fixtures are PNG deliberately — this GD build has imagepng()
+ * but not imagejpeg(), so a .jpg fixture throws before any assertion runs.
+ * See the note on PaymentSecurityTest.
+ */
 class InputHardeningTest extends TestCase
 {
     use RefreshDatabase;
@@ -189,8 +194,8 @@ class InputHardeningTest extends TestCase
 
         $this->actingAs($owner)->post("/discount/{$booking->id}", [
             'discount_files' => [
-                $mine->id   => [UploadedFile::fake()->image('mine.jpg')],
-                $theirs->id => [UploadedFile::fake()->image('theirs.jpg')],
+                $mine->id   => [UploadedFile::fake()->image('mine.png')],
+                $theirs->id => [UploadedFile::fake()->image('theirs.png')],
             ],
         ]);
 

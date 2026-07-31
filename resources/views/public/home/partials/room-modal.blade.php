@@ -86,7 +86,14 @@
         >
             <!-- Hero Image -->
             <div class="relative h-64 flex-shrink-0 overflow-hidden bg-night sm:h-72">
-                <img :src="room ? '{{ asset('/') }}' + room.image : ''" class="h-full w-full object-cover brightness-[0.9]" :alt="room ? room.title : ''">
+                {{-- `null`, not `''`. This modal sits closed in the DOM on every
+                     page load, so `room` is null and the fallback was rendering
+                     <img src="">. Per the HTML spec an empty src resolves to the
+                     *current document URL*, so every visitor silently fetched the
+                     entire homepage a second time before seeing anything. Alpine
+                     removes an attribute bound to null, so there is no src at all
+                     until a room is chosen. --}}
+                <img :src="room ? '{{ asset('/') }}' + room.image : null" class="h-full w-full object-cover brightness-[0.9]" :alt="room ? room.title : ''">
                 <div class="absolute inset-0 bg-linear-to-t from-night-2 via-night/20 to-transparent"></div>
 
                 <template x-if="room && room.badge">

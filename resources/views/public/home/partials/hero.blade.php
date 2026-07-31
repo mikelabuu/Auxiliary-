@@ -60,8 +60,8 @@
                     <span class="block">
                         <span class="split-word">@foreach (str_split('The') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
                         <span class="split-word">
-                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" aria-label="quietest" data-words="quietest,greenest,calmest">
-                                <span class="word-rotate-track" aria-hidden="true"><span class="word-rotate-word is-active">@foreach (str_split('quietest') as $ch)<span class="flip-char rt-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span></span>
+                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" aria-label="quiet" data-words="quiet,greenest,calmest">
+                                <span class="word-rotate-track" aria-hidden="true"><span class="word-rotate-word is-active">@foreach (str_split('quiet') as $ch)<span class="flip-char rt-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span></span>
                             </span>
                         </span>
                         <span class="split-word">@foreach (str_split('address') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
@@ -90,17 +90,28 @@
                 </div>
             </div>
 
-            {{-- Social-proof badge. Hidden below 900px (see app.css). --}}
+            {{-- Institutional credential. Hidden below 900px (see app.css).
+
+                 This slot used to hold a review badge — five stars, "1,200+",
+                 "4.8 / 5", and three avatars initialled JR / MA / LC. None of it
+                 was real, and the avatars implied specific guests who do not
+                 exist. PRODUCT.md is explicit that this product has no
+                 testimonials, guest counts, awards or press, and that invented
+                 proof is worse than blank space.
+
+                 What replaces it is the strongest claim this hostel can
+                 actually make, and it happens to be true: it is run by the
+                 university, on the university's campus, since 1998. For the
+                 audience that books this place, that outranks a star rating. --}}
             <div class="fh-badge">
-                <p class="mb-3 text-[12px] tracking-[0.28em] text-[#c9a24a]" aria-label="Rated 4.8 out of 5">★★★★★</p>
-                <div class="mb-3.5 flex items-center">
-                    <span class="grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#d8c39c] text-[13px] font-semibold text-[#4a3a20]">JR</span>
-                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#a9bfa2] text-[13px] font-semibold text-[#2f4029]">MA</span>
-                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#b8654a] text-[13px] font-semibold text-[#fff4ec]">LC</span>
-                    <span class="-ml-3 grid h-[38px] w-[38px] place-items-center rounded-full border-2 border-white bg-[#10161c] text-[15px] text-white">+</span>
-                </div>
-                <p class="font-display text-[40px] leading-none tracking-[-0.02em] text-[#10161c]">1,200<span class="text-[#c9a24a]">+</span></p>
-                <p class="mt-1.5 font-label text-[11.5px] font-light uppercase tracking-[0.2em] text-[#7c8288]">Guest reviews · 4.8 / 5</p>
+                <img src="{{ asset('image/clsu.logo.png') }}" alt=""
+                     class="mb-3 h-[42px] w-[42px] object-contain" loading="lazy" width="42" height="42">
+                <p class="font-display text-[40px] leading-none tracking-[-0.02em] text-[#10161c]">
+                    Est.&nbsp;1998
+                </p>
+                <p class="mt-2 font-label text-[11.5px] font-light uppercase leading-[1.7] tracking-[0.2em] text-[#7c8288]">
+                    Auxiliary Services Program<br>Central Luzon State University
+                </p>
             </div>
         </div>
     </div>

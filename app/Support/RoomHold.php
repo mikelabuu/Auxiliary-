@@ -35,8 +35,14 @@ class RoomHold
 
     /**
      * The one-line stay descriptor shown on a room card and kept in sync by
-     * the status feed. Returns the kind (a JS hook), an icon, a colour class
-     * and the visible label.
+     * the status feed. Returns the kind (a JS hook), an icon, a colour class,
+     * the visible label, and the guest the hold belongs to.
+     *
+     * `guest` used to exist only inside `title` — a hover tooltip, which is
+     * unreachable on the touch devices the desk actually carries around, and
+     * invisible to a screen reader. Whoever is holding a room is the first
+     * thing someone asks when they look at this board, so it is now its own
+     * field and the card renders it as text.
      *
      * @param  array|null  $current  ['guest','until','status'] — a stay spanning today
      * @param  array|null  $next     ['guest','from','status']  — the soonest arrival
@@ -49,7 +55,8 @@ class RoomHold
                     'kind'  => 'current-pending',
                     'icon'  => 'clock',
                     'class' => 'font-semibold text-palay-700',
-                    'label' => 'Reserved · awaiting payment',
+                    'label' => 'Reserved · unpaid · until ' . $current['until'],
+                    'guest' => $current['guest'],
                     'title' => $current['guest'] . ' · unpaid · until ' . $current['until'],
                 ];
             }
@@ -59,6 +66,7 @@ class RoomHold
                 'icon'  => 'clock',
                 'class' => 'font-semibold text-clsu-700',
                 'label' => 'In use · until ' . $current['until'],
+                'guest' => $current['guest'],
                 'title' => $current['guest'] . ' · until ' . $current['until'],
             ];
         }
@@ -70,6 +78,7 @@ class RoomHold
                     'icon'  => 'arrival',
                     'class' => 'font-semibold text-palay-700',
                     'label' => 'Reserved · ' . $next['from'] . ' · unpaid',
+                    'guest' => $next['guest'],
                     'title' => $next['guest'] . ' arrives ' . $next['from'] . ' — payment not yet verified',
                 ];
             }
@@ -79,6 +88,7 @@ class RoomHold
                 'icon'  => 'arrival',
                 'class' => 'font-semibold text-palay-700',
                 'label' => 'Next stay · ' . $next['from'],
+                'guest' => $next['guest'],
                 'title' => $next['guest'] . ' arrives ' . $next['from'],
             ];
         }
@@ -88,6 +98,7 @@ class RoomHold
             'icon'  => 'check',
             'class' => 'font-medium text-stone-400',
             'label' => 'No upcoming stays',
+            'guest' => null,
             'title' => '',
         ];
     }

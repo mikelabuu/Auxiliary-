@@ -72,7 +72,7 @@
                                 </div>
                             </div>
                             <span class="slot-counter inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold-soft/30 px-3.5 py-1.5 text-[11px] font-bold text-ink/75 tabnum">
-                                <span class="material-icons text-[14px] text-gold">badge</span>
+                                <i class="fa-solid fa-id-badge text-[14px] text-gold"></i>
                                 <span class="slot-count">0</span> of {{ $reservation->num_seniors }} ID{{ $reservation->num_seniors > 1 ? 's' : '' }} added
                             </span>
                         </div>
@@ -84,7 +84,7 @@
                         <div class="dropzone group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-deep/20 bg-white/60 px-6 py-8 text-center transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer hover:border-gold hover:bg-gold-soft/15"
                              role="button" tabindex="0" aria-label="Upload verification IDs for room {{ $reservation->room_number }}">
                             <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10 transition-transform duration-200 group-hover:-translate-y-0.5">
-                                <span class="material-icons text-[24px]">upload_file</span>
+                                <i class="fa-solid fa-file-arrow-up text-[24px]"></i>
                             </span>
                             <p class="text-sm font-bold text-ink">Drop ID photos here <span class="font-medium text-stone-400">or</span> <span class="gold-underline text-emerald-deep">browse files</span></p>
                             <p class="text-[11px] font-medium text-stone-400">JPG or PNG · up to 2MB each · max {{ $reservation->num_seniors }} for this room</p>
@@ -96,7 +96,7 @@
 
                 <!-- Legibility reminder -->
                 <div class="flex items-start gap-2.5 rounded-2xl border border-gold/40 bg-gold-soft/25 px-5 py-4 text-xs font-bold text-ink/75 leading-relaxed">
-                    <span class="material-icons text-[18px] text-gold shrink-0">tips_and_updates</span>
+                    <i class="fa-solid fa-lightbulb text-[18px] text-gold shrink-0"></i>
                     Make sure the ID number, name, and photo are clearly readable — blurred or cropped documents are usually rejected and will slow down your discount.
                 </div>
 
@@ -106,7 +106,7 @@
                     </a>
                     <button type="submit" id="submitDiscount" disabled
                             class="press focus-ring w-full sm:w-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)] disabled:opacity-50 disabled:pointer-events-none">
-                        <span class="material-icons text-[18px]">verified</span>
+                        <i class="fa-solid fa-circle-check text-[18px]"></i>
                         Submit for review
                     </button>
                 </div>
@@ -116,12 +116,12 @@
         @else
             <div class="bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] px-8 py-14 text-center">
                 <span class="grid h-14 w-14 mx-auto place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                    <span class="material-icons text-[28px]">badge</span>
+                    <i class="fa-solid fa-id-badge text-[28px]"></i>
                 </span>
                 <h3 class="font-display text-2xl text-ink mt-5">No seniors declared</h3>
                 <p class="text-sm font-medium text-ink/55 mt-2 max-w-sm mx-auto">This booking has no declared Senior Citizen or PWD guests, so the 20% discount doesn't apply here.</p>
                 <a href="{{ route('booking.show', $booking->id) }}" class="press mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-emerald-deep px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-cream transition-colors hover:bg-emerald !no-underline">
-                    <span class="material-icons text-[16px]">arrow_back</span>
+                    <i class="fa-solid fa-arrow-left text-[16px]"></i>
                     Back to booking summary
                 </a>
             </div>
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <img src="${url}" alt="ID preview ${i + 1}" class="h-28 w-full object-cover" onload="URL.revokeObjectURL(this.src)">
                     <button type="button" data-remove="${i}" aria-label="Remove this ID"
                             class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition-colors hover:bg-ember-600 cursor-pointer">
-                        <span class="material-icons text-[14px]">close</span>
+                        <i class="fa-solid fa-xmark text-[14px]"></i>
                     </button>
                     <span class="absolute bottom-1.5 left-1.5 rounded-full bg-ink/60 px-2 py-0.5 text-[9px] font-bold text-cream backdrop-blur">${(file.size / 1024 / 1024).toFixed(1)} MB</span>`;
                 previewGrid.appendChild(tile);

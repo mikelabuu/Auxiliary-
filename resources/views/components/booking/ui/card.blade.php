@@ -14,7 +14,7 @@
                 <div class="flex items-center gap-2.5">
                     @if($icon)
                         <span class="w-9 h-9 rounded-xl bg-clsu-50 text-clsu-700 flex items-center justify-center shrink-0">
-                            <span class="material-icons text-[19px]">{{ $icon }}</span>
+                            <i class="fa-solid fa-{{ $icon }} text-[19px]"></i>
                         </span>
                     @endif
                     <h3 class="text-lg font-semibold text-ink tracking-tight font-display">{{ $title }}</h3>

@@ -1,0 +1,247 @@
+/* Part 18 of the admin bundle — Premium surface pass.
+   Imported in strict order by resources/css/admin.css; do not reorder.
+
+   The console's structure was already right; what it lacked was *material*.
+   Flat white rectangles with one soft shadow read as a template no matter how
+   good the layout is. This layer gives the surfaces physics — a light source,
+   an edge that catches it, and shadows built from three distances instead of
+   one — plus the chromatic rhythm that makes the KPI row identifiably this
+   product rather than a starter kit.
+
+   Four moves, in order of how much they change the feel:
+
+   1. MATERIAL. Every raised surface gets a specular top edge and a 3-stop
+      shadow (contact / lift / ambient). Real objects cast all three.
+   2. METRIC RAIL. Each KPI card carries a hairline of its own accent along
+      the top, quiet at rest and lit on hover. Four cards then read as a
+      chord — emerald, emerald, blue, amber — instead of four white boxes.
+   3. NUMERALS. KPI figures get tabular lining figures and tighter optical
+      tracking, so a row of numbers aligns as a column of data.
+   4. INTENT. Hover and focus states resolve toward the thing you are about
+      to do, rather than just changing colour.
+
+   Nothing here introduces a new colour, font or radius — it only uses the
+   tokens in 01-tokens.
+   ============================================================ */
+
+/* ============================================================
+   1 · MATERIAL — and elevation as hierarchy
+   A single light source, high and slightly left. `inset 0 1px 0` is the edge
+   catching it; the outer stops are contact shadow, lift, and the soft ambient
+   occlusion that stops a card from floating in a void.
+
+   The console previously gave every surface the same --shadow-card, which
+   flattens the page: a KPI you can click and a panel that merely contains a
+   table read as equally important. Three tiers instead —
+
+     tier 1  hero row      the page's headline, highest off the surface
+     tier 2  KPI cards     objects you act on
+     tier 3  content panels  containers; nearly flat, holding their edge
+
+   — so the eye lands on the hero, then the numbers, then the detail, in that
+   order, without a single extra pixel of chrome.
+   ============================================================ */
+.dash-welcome,
+.dash-revenue {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 2px 3px rgba(9, 60, 38, 0.04),
+        0 10px 20px -10px rgba(9, 60, 38, 0.09),
+        0 34px 60px -30px rgba(9, 60, 38, 0.24);
+}
+
+/* The revenue card is dark, so a white top edge would read as a seam. */
+.dash-revenue {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 2px 3px rgba(9, 60, 38, 0.06),
+        0 12px 24px -10px rgba(8, 76, 46, 0.28),
+        0 34px 60px -30px rgba(8, 76, 46, 0.45);
+}
+
+.stat-card,
+.mini-stat {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 1px 1.5px rgba(9, 60, 38, 0.045),
+        0 5px 12px -6px rgba(9, 60, 38, 0.06),
+        0 20px 40px -24px rgba(9, 60, 38, 0.16);
+}
+
+.stat-card:hover,
+.mini-stat:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 1px 1.5px rgba(9, 60, 38, 0.05),
+        0 10px 22px -8px rgba(9, 60, 38, 0.1),
+        0 30px 56px -28px rgba(9, 60, 38, 0.22);
+}
+
+/* Tier 3. A container earns its separation from the page with a crisper
+   border, not with lift — that's what leaves the KPI row room to sit above. */
+.card {
+    border-color: #dde8e0;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 1px 1.5px rgba(9, 60, 38, 0.035),
+        0 12px 26px -20px rgba(9, 60, 38, 0.12);
+}
+
+.card:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 1px 1.5px rgba(9, 60, 38, 0.04),
+        0 18px 34px -22px rgba(9, 60, 38, 0.18);
+}
+
+/* ============================================================
+   2 · METRIC RAIL
+   Painted as a background layer on the card itself — .stat-card's ::before is
+   the cursor spotlight (05-motion-ux) and ::after is the corner bloom
+   (04-components), so both pseudo-elements are already spoken for.
+
+   The rail is keyed off which chip variant the card contains, which keeps the
+   colour decision in one place (the `color` prop on x-admin.ui.stat-card)
+   instead of asking callers to pass it twice. Browsers without :has() get the
+   emerald default, which is the majority case anyway.
+   ============================================================ */
+.stat-card {
+    --rail: var(--color-g-500);
+    --rail-rest: 0.32;
+
+    background-color: var(--color-card);
+    background-image: linear-gradient(90deg,
+            transparent 0%,
+            color-mix(in srgb, var(--rail) calc(var(--rail-rest) * 100%), transparent) 18%,
+            color-mix(in srgb, var(--rail) calc(var(--rail-rest) * 100%), transparent) 82%,
+            transparent 100%);
+    background-repeat: no-repeat;
+    background-size: 100% 2px;
+    background-position: 0 0;
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition),
+        background-image var(--transition);
+}
+
+.stat-card:has(.stat-icon-gold) { --rail: var(--color-au-500); }
+.stat-card:has(.stat-icon-blue) { --rail: #2563eb; }
+.stat-card:has(.stat-icon-rose) { --rail: var(--color-ember-500); }
+
+.stat-card:hover {
+    --rail-rest: 1;
+}
+
+/* The hero card is already saturated; a rail on top of it is noise. */
+.stat-card-hero {
+    background-image: none;
+}
+
+/* ============================================================
+   3 · NUMERALS
+   Lining tabular figures so the four KPIs align on the decimal, and a touch
+   more negative tracking than the display face carries by default — large
+   numerals set too loose is the single most common tell of an unconsidered
+   dashboard.
+   ============================================================ */
+.stat-value,
+.mini-stat-value,
+.dash-revenue__value,
+.dash-ops__value {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.stat-value {
+    letter-spacing: -0.042em;
+}
+
+.dash-revenue__value {
+    letter-spacing: -0.038em;
+}
+
+/* The label sits closer to the figure it names than to the card edge —
+   proximity is what makes the pair read as one unit. */
+.stat-label {
+    margin-top: -2px;
+    letter-spacing: 0.075em;
+}
+
+/* ============================================================
+   4 · INTENT
+   ============================================================ */
+
+/* KPI cards that navigate say so: the chevron slides out from under the
+   label rather than sitting there permanently. */
+.stat-card-link .stat-card-go {
+    transition: transform var(--transition), opacity var(--transition);
+    opacity: 0.45;
+}
+
+.stat-card-link:hover .stat-card-go {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+/* Section-card headers: the hairline under a header should stop short of the
+   card edge, so the panel reads as one object rather than two stacked. */
+.card-header {
+    position: relative;
+    border-bottom-color: transparent;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    left: 26px;
+    right: 26px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--color-border) 12%,
+            var(--color-border) 88%,
+            transparent 100%);
+}
+
+/* One focus ring for the whole console. Consistency here is most of what
+   separates "designed" from "assembled". */
+.stat-card-link:focus-visible,
+.mini-stat:focus-visible,
+.quick-action:focus-visible,
+.dash-btn:focus-visible {
+    outline: 2px solid var(--color-g-500);
+    outline-offset: 3px;
+    border-radius: var(--radius-lg);
+}
+
+/* ── Welcome panel: the same specular treatment, plus a whisper of the
+      meadow wash so the top row is warmer than the cards below it. ── */
+.dash-welcome {
+    background-image:
+        radial-gradient(88% 130% at 0% 0%, rgba(22, 179, 100, 0.05) 0%, transparent 58%),
+        radial-gradient(70% 110% at 100% 0%, rgba(247, 144, 9, 0.035) 0%, transparent 62%);
+    background-repeat: no-repeat;
+}
+
+/* The ops strip is data, not chrome — inset it so it reads as a well in the
+   panel rather than a card sitting on one. */
+.dash-ops {
+    box-shadow: inset 0 1px 2px rgba(9, 60, 38, 0.05);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    .stat-card,
+    .stat-card-link .stat-card-go {
+        transition: none;
+    }
+
+    .stat-card-link:hover .stat-card-go {
+        transform: none;
+    }
+}

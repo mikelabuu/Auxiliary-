@@ -12,7 +12,7 @@
             @if($title)
                 <h3 class="card-title">
                     @if($icon)
-                        <span class="material-icons" style="font-size:18px;color:var(--color-g-600);">{{ $icon }}</span>
+                        <x-admin.ui.icon :name="$icon" class="w-[18px] h-[18px] text-g-600" />
                     @endif
                     {{ $title }}
                 </h3>

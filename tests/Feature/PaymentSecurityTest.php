@@ -20,6 +20,14 @@ use Tests\TestCase;
  * guest could do the same to a stranger's booking. The gateway itself is a
  * simulation, but the auth and ownership boundary tested here is what the real
  * gateway will sit behind.
+ *
+ * Fixtures are PNG, not JPEG, and must stay that way: UploadedFile::fake()
+ * ->image() derives its encoder from the extension, and the GD build in this
+ * environment has imagepng() but not imagejpeg(). With .jpg fixtures every
+ * test in this file threw "imagejpeg function is not defined" before reaching
+ * a single assertion — so the payment authorisation boundary was completely
+ * unguarded while the suite looked merely "red". Nothing here is
+ * JPEG-specific; the upload rule accepts jpeg, png and jpg alike.
  */
 class PaymentSecurityTest extends TestCase
 {
@@ -213,7 +221,7 @@ class PaymentSecurityTest extends TestCase
             ->post("/booking/{$booking->id}/pay/proof", [
                 'proof_method' => 'gcash',
                 'proof_reference' => '123456',
-                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+                'proof' => UploadedFile::fake()->image('receipt.png'),
             ])->assertForbidden();
 
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
@@ -230,7 +238,7 @@ class PaymentSecurityTest extends TestCase
             ->post("/booking/{$booking->id}/pay/proof", [
                 'proof_method' => 'gcash',
                 'proof_reference' => '9988776655',
-                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+                'proof' => UploadedFile::fake()->image('receipt.png'),
             ])
             ->assertRedirect(route('booking.show', $booking->id));
 
@@ -261,7 +269,7 @@ class PaymentSecurityTest extends TestCase
             ->post("/booking/{$booking->id}/pay/proof", [
                 'proof_method' => 'crypto',
                 'proof_reference' => '123456',
-                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+                'proof' => UploadedFile::fake()->image('receipt.png'),
             ])->assertSessionHasErrors('proof_method');
 
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
@@ -277,7 +285,7 @@ class PaymentSecurityTest extends TestCase
         $upload = fn () => $this->actingAs($owner)->post("/booking/{$booking->id}/pay/proof", [
             'proof_method' => 'gcash',
             'proof_reference' => '9988776655',
-            'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            'proof' => UploadedFile::fake()->image('receipt.png'),
         ]);
 
         $upload();
@@ -296,7 +304,7 @@ class PaymentSecurityTest extends TestCase
         $this->actingAs($owner)->post("/booking/{$booking->id}/pay/proof", [
             'proof_method' => 'gcash',
             'proof_reference' => '9988776655',
-            'proof' => UploadedFile::fake()->image('receipt.jpg'),
+            'proof' => UploadedFile::fake()->image('receipt.png'),
         ]);
 
         // Both remaining doors close, so one booking cannot stack two claims.
@@ -322,7 +330,7 @@ class PaymentSecurityTest extends TestCase
             ->post("/booking/{$booking->id}/pay/proof", [
                 'proof_method' => 'gcash',
                 'proof_reference' => '9988776655',
-                'proof' => UploadedFile::fake()->image('receipt.jpg'),
+                'proof' => UploadedFile::fake()->image('receipt.png'),
             ])->assertRedirect(route('booking.show', $booking->id));
 
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());

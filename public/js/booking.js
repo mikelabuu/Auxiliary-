@@ -257,10 +257,17 @@ document.addEventListener('DOMContentLoaded', function () {
       if (prevSelected) selectedRoomNumbersSet.delete(prevSelected);
       roomNumberHidden.value = '';
       updateAggregateHiddenInputs();
+      // Re-scope the date pickers to the style now being shopped for. Without
+      // this the calendar keeps answering a property-wide question: a hold on
+      // room 112 leaves 21 of 22 rooms free, so the night reads wide open even
+      // though it is one of only two doubles.
+      if (typeof window.refreshCalendarAvailability === 'function') {
+        window.refreshCalendarAvailability();
+      }
       if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
         setTimeout(() => btnCheck.click(), 120);
       } else if (roomTypeSelect.value) {
-        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-stone-500 py-3 flex items-center gap-1.5"><span class="material-icons text-[15px] text-palay-800">event</span>Choose your check-in and check-out dates above to see open rooms.</div>';
+        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-stone-500 py-3 flex items-center gap-1.5"><i class="fa-solid fa-calendar-days text-[15px] text-palay-800"></i>Choose your check-in and check-out dates above to see open rooms.</div>';
       }
       generateBookingSummary();
     });
@@ -334,6 +341,11 @@ document.addEventListener('DOMContentLoaded', function () {
         block.remove();
         updateAggregateHiddenInputs();
         generateBookingSummary();
+        // Demand dropped with the block — a night blocked only because this
+        // block wanted a second room of that style is bookable again.
+        if (typeof window.refreshCalendarAvailability === 'function') {
+          window.refreshCalendarAvailability();
+        }
         document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
       }, 150);
     });
@@ -428,9 +440,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (priorSelection && r.room_number === priorSelection) {
           priorStillAvailable = true;
           tile.classList.add('selected');
-          const checkSpan = document.createElement('span');
-          checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white material-icons';
-          checkSpan.innerText = 'check';
+          const checkSpan = document.createElement('i');
+          checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white fa-solid fa-check';
           tile.appendChild(checkSpan);
         }
 
@@ -456,9 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
             tile.classList.add('selected');
             
             // Add a check icon to selected tile
-            const checkSpan = document.createElement('span');
-            checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white material-icons';
-            checkSpan.innerText = 'check';
+            const checkSpan = document.createElement('i');
+            checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white fa-solid fa-check';
             tile.appendChild(checkSpan);
             
             selectedRoomNumbersSet.add(r.room_number);
@@ -547,14 +557,16 @@ document.addEventListener('DOMContentLoaded', function () {
     window.Echo.channel('bookings').listen('.BookingChanged', recheckAllBlocksAvailability);
   }
 
-  // ── Progress rail (checkout header) ──────────────────────────────
-  function setStep(key, done) {
-    document.querySelector(`[data-progress-step="${key}"]`)?.classList.toggle('done', !!done);
-  }
-
-  function updateProgressRail() {
-    if (!document.getElementById('checkoutProgress')) return;
-
+  // ── Readiness: one pass over the form, rendered three ways ───────
+  //
+  // The progress rail at the top of the page, the allocation meter inside
+  // the Rooms card, and the blocker line above Confirm are three answers
+  // to one question: is this bookable yet, and if not, what is missing?
+  // They are computed together so they cannot drift apart, and the order
+  // of `blocker` deliberately matches the order the submit handler below
+  // rejects things in — so what the guest is told beforehand is what
+  // would actually have stopped them.
+  function readiness() {
     const datesDone = !!(check_in?.value && check_out?.value);
 
     const firstName = bookingForm?.querySelector('[name="first_name"]');
@@ -562,22 +574,137 @@ document.addEventListener('DOMContentLoaded', function () {
     const phone     = bookingForm?.querySelector('[name="guest_phone"]');
     const detailsDone = !!(firstName?.value.trim() && lastName?.value.trim() && phone?.value.trim());
 
-    const blocks = document.querySelectorAll('.reservation-block');
-    let roomsDone = blocks.length > 0;
-    let assigned = 0;
-    blocks.forEach(b => {
-      if (!b.querySelector('.res-room-number-hidden')?.value) roomsDone = false;
-      assigned += parseInt(b.querySelector('.res-num-guests')?.value, 10) || 0;
-    });
-    if (assigned !== (parseInt(expectedGuestsInput?.value, 10) || 0)) roomsDone = false;
+    const blocks = Array.from(document.querySelectorAll('.reservation-block'));
+    const expected = parseInt(expectedGuestsInput?.value, 10) || 0;
 
-    setStep('dates', datesDone);
-    setStep('details', detailsDone);
-    setStep('rooms', roomsDone);
+    let assigned = 0;
+    let unnumbered = null;   // first block with no room number picked
+    let overfilled = null;   // first block with more guests than beds
+    blocks.forEach(b => {
+      if (!unnumbered && !b.querySelector('.res-room-number-hidden')?.value) unnumbered = b;
+      const beds = parseInt(b.querySelector('.res-beds')?.value, 10) || 0;
+      const inRoom = parseInt(b.querySelector('.res-num-guests')?.value, 10) || 0;
+      if (!overfilled && beds > 0 && inRoom > beds) overfilled = b;
+      assigned += inRoom;
+    });
+
+    const balanced = blocks.length > 0 && assigned === expected;
+    const roomsDone = blocks.length > 0 && !unnumbered && !overfilled && balanced;
+
+    // The terms box is `required`, so the browser stops the submit before our
+    // own handler ever runs. Tracked here anyway: the blocker line's whole job
+    // is to name the thing that would stop you, and silently failing to
+    // mention it would put the guest in front of a browser tooltip instead.
+    const termsBox = document.getElementById('accept_terms');
+    const termsDone = !termsBox || termsBox.checked;
+
+    return { datesDone, detailsDone, blocks, expected, assigned, unnumbered, overfilled, balanced, roomsDone, termsDone, firstName };
+  }
+
+  // ── Progress rail (checkout header) ──────────────────────────────
+  function setStep(key, done) {
+    document.querySelector(`[data-progress-step="${key}"]`)?.classList.toggle('done', !!done);
+  }
+
+  // ── Allocation meter (inside the Rooms card) ─────────────────────
+  function updateAllocationMeter(r) {
+    const meter = document.getElementById('allocationMeter');
+    if (!meter) return;
+
+    const fill = document.getElementById('allocMeterFill');
+    const hint = document.getElementById('allocMeterHint');
+    const assignedEl = document.getElementById('allocAssigned');
+    const expectedEl = document.getElementById('allocExpected');
+
+    if (assignedEl) assignedEl.textContent = r.assigned;
+    if (expectedEl) expectedEl.textContent = r.expected;
+
+    let state = 'empty';
+    let msg = 'Pick a room below and say how many people are in it.';
+
+    if (r.blocks.length && r.expected > 0) {
+      if (r.assigned === 0) {
+        state = 'empty';
+      } else if (r.assigned < r.expected) {
+        const short = r.expected - r.assigned;
+        state = 'under';
+        msg = `<b>${short} more guest${short > 1 ? 's' : ''}</b> still needs a bed — raise a room's count below, or add another room.`;
+      } else if (r.assigned > r.expected) {
+        const over = r.assigned - r.expected;
+        state = 'over';
+        msg = `<b>${over} guest${over > 1 ? 's' : ''} too many</b> — lower a room's count, or raise the total in Personal Information.`;
+      } else {
+        state = 'balanced';
+        msg = `All ${r.expected} guest${r.expected > 1 ? 's have' : ' has'} a bed.`;
+      }
+    }
+
+    meter.dataset.state = state;
+    if (hint) hint.innerHTML = msg;
+    if (fill) {
+      // Capped at 100% so an over-assignment still reads as "full and then
+      // some" rather than overflowing the track.
+      const pct = r.expected > 0 ? Math.min(100, (r.assigned / r.expected) * 100) : 0;
+      fill.style.width = pct + '%';
+    }
+  }
+
+  // ── Blocker line (above the Confirm button) ──────────────────────
+  function updateBlockerLine(r) {
+    const line = document.getElementById('bookingBlocker');
+    const text = document.getElementById('bookingBlockerText');
+    if (!line || !text) return;
+
+    let msg = null;
+
+    if (!r.datesDone) {
+      msg = 'Start by choosing your stay dates.';
+    } else if (!r.blocks.length) {
+      msg = 'Add at least one room to your booking.';
+    } else if (!r.detailsDone) {
+      msg = 'Fill in your name and contact number.';
+    } else if (r.overfilled) {
+      msg = 'One room has more guests than it sleeps.';
+    } else if (r.unnumbered) {
+      msg = 'Tap a room number in the availability grid to reserve it.';
+    } else if (!r.balanced) {
+      const diff = Math.abs(r.expected - r.assigned);
+      msg = r.assigned < r.expected
+        ? `${diff} guest${diff > 1 ? 's' : ''} still to assign to a room.`
+        : `${diff} guest${diff > 1 ? 's' : ''} more assigned than you are bringing.`;
+    } else if (!r.termsDone) {
+      // Last, because it is the last thing standing between the guest and a
+      // booking once everything else is filled in.
+      msg = 'Tick the booking terms below to confirm.';
+    }
+
+    if (msg) {
+      line.removeAttribute('data-ready');
+      text.textContent = msg;
+    } else {
+      line.setAttribute('data-ready', '');
+      text.textContent = 'Everything checks out — you can confirm.';
+    }
+  }
+
+  function updateProgressRail() {
+    const r = readiness();
+
+    if (document.getElementById('checkoutProgress')) {
+      setStep('dates', r.datesDone);
+      setStep('details', r.detailsDone);
+      setStep('rooms', r.roomsDone);
+    }
+
+    updateAllocationMeter(r);
+    updateBlockerLine(r);
   }
 
   bookingForm?.addEventListener('input', function (e) {
-    if (['first_name', 'last_name', 'guest_phone'].includes(e.target?.name)) updateProgressRail();
+    if (['first_name', 'last_name', 'guest_phone', 'accept_terms'].includes(e.target?.name)) updateProgressRail();
+    // Clearing the mark as soon as the guest edits the field keeps the red
+    // from outliving the problem.
+    e.target?.classList?.remove('field-invalid');
   });
 
   // Rail steps double as jump-links to their step cards — same scroll +
@@ -608,7 +735,32 @@ document.addEventListener('DOMContentLoaded', function () {
   // where they are looking — down at the room tiles — not 2000px up the page.
   // window.toast lives in resources/js/app.js and its styles are shared by
   // both bundles (resources/css/shared/toast.css).
-  function showFormError(msg) {
+  function showFormError(msg, target) {
+    // A message that names a problem the guest then has to go find is only
+    // half an error. When we know which field or block is at fault, take
+    // them to it: flash the block, focus the input, and let the toast be
+    // the caption rather than the whole instruction.
+    if (target) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const block = target.closest ? target.closest('.reservation-block') : null;
+      const scrollTo = block || target;
+
+      scrollTo.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+
+      if (block) {
+        block.classList.remove('block-invalid');
+        void block.offsetWidth; // restart if a previous shake is mid-flight
+        block.classList.add('block-invalid');
+        setTimeout(() => block.classList.remove('block-invalid'), 2400);
+      }
+
+      if (target.tagName && /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName)) {
+        target.classList.add('field-invalid');
+        // After the smooth scroll, or focus() fights it and jumps.
+        setTimeout(() => target.focus({ preventScroll: true }), reduce ? 0 : 320);
+      }
+    }
+
     if (typeof window.toast === 'function') {
       window.toast(msg, 'error');
       return;
@@ -664,11 +816,15 @@ document.addEventListener('DOMContentLoaded', function () {
       const numSen = parseInt(b.querySelector('.res-num-seniors').value) || 0;
       const roomNum = b.querySelector('.res-room-number-hidden').value || '';
       const numGuests = parseInt(b.querySelector('.res-num-guests')?.value) || 0;
+      // Second argument: the control the guest has to change to fix it, so
+      // showFormError can scroll them to it instead of only naming it.
+      const guestsInput = b.querySelector('.res-num-guests');
+      const seniorsInput = b.querySelector('.res-num-seniors');
 
-      if (!roomNum) { e.preventDefault(); showFormError('Please select a specific room from availability for each room type.'); return; }
-      if (numSen > beds) { e.preventDefault(); showFormError('Seniors in a room cannot exceed that room\'s capacity.'); return; }
-      if (numGuests > beds) { e.preventDefault(); showFormError('Guests in a room cannot exceed that room’s capacity.'); return; }
-      if (numGuests < 1) { e.preventDefault(); showFormError('Each room must have at least 1 guest.'); return; }
+      if (!roomNum) { e.preventDefault(); showFormError('Pick a room number from the availability grid for this room.', b); return; }
+      if (numSen > beds) { e.preventDefault(); showFormError('Seniors in a room cannot exceed that room\'s capacity.', seniorsInput); return; }
+      if (numGuests > beds) { e.preventDefault(); showFormError('Guests in a room cannot exceed that room’s capacity.', guestsInput); return; }
+      if (numGuests < 1) { e.preventDefault(); showFormError('Each room must have at least 1 guest.', guestsInput); return; }
 
       // Breakfast is a free extra, not part of the booking contract — a guest
       // who wants none, or fewer than one each, may book anyway. The only
@@ -676,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // breakfasts than there are guests) and again server-side.
       let totalMeals = 0;
       b.querySelectorAll('.meal-qty').forEach(inp => totalMeals += parseInt(inp.value) || 0);
-      if (totalMeals > numGuests) { e.preventDefault(); showFormError(`Room ${roomNum} has more breakfasts selected than guests staying in it.`); return; }
+      if (totalMeals > numGuests) { e.preventDefault(); showFormError(`Room ${roomNum} has more breakfasts selected than guests staying in it.`, b); return; }
 
       totalGuests += numGuests;
       totalCapacity += beds;
@@ -684,11 +840,24 @@ document.addEventListener('DOMContentLoaded', function () {
       roomsSelected.push(roomNum);
     }
 
-    if (totalGuests !== expected) { e.preventDefault(); showFormError(`Mismatch: total assigned guests (${totalGuests}) must equal expected guests (${expected}).`); return; }
-    if (totalCapacity < expected) { e.preventDefault(); showFormError(`Total capacity ${totalCapacity} is less than expected ${expected}`); return; }
-    if (totalSeniors > expected) { e.preventDefault(); showFormError('Total seniors exceed expected guests'); return; }
+    // The allocation rule, stated the way a person would say it and pointing
+    // at the meter that has been tracking it all along — not as "Mismatch:
+    // total assigned guests (3) must equal expected guests (2)".
+    if (totalGuests !== expected) {
+      e.preventDefault();
+      const diff = Math.abs(expected - totalGuests);
+      showFormError(
+        totalGuests < expected
+          ? `${diff} guest${diff > 1 ? 's' : ''} still need a room — you are booking for ${expected}.`
+          : `You have assigned ${diff} guest${diff > 1 ? 's' : ''} more than the ${expected} you are bringing.`,
+        document.getElementById('allocationMeter')
+      );
+      return;
+    }
+    if (totalCapacity < expected) { e.preventDefault(); showFormError(`These rooms sleep ${totalCapacity}, but you are booking for ${expected}.`, document.getElementById('allocationMeter')); return; }
+    if (totalSeniors > expected) { e.preventDefault(); showFormError('More seniors than total guests.', expectedGuestsInput); return; }
     if (num_seniors_hidden && parseInt(num_seniors_hidden.value) !== totalSeniors) { e.preventDefault(); showFormError(`Mismatch: total seniors in reservations (${totalSeniors}) must equal total seniors for the booking.`); return; }
-    if (roomsSelected.length !== (new Set(roomsSelected)).size) { e.preventDefault(); showFormError('Duplicate rooms selected'); return; }
+    if (roomsSelected.length !== (new Set(roomsSelected)).size) { e.preventDefault(); showFormError('The same room is selected twice.'); return; }
 
     if (room_numbers_hidden) room_numbers_hidden.value = roomsSelected.join(',');
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
@@ -717,6 +886,65 @@ document.addEventListener('DOMContentLoaded', function () {
   check_out && check_out.addEventListener('change', function() {
     syncDates();
     autoCheckAllBlocks();
+  });
+
+  // ── Date presets ────────────────────────────────────────────────
+  //
+  // Two flatpickr popovers is a lot of tapping to express "tonight", which
+  // is what a good share of the traffic here wants — the hostel serves a
+  // campus, and campus stays are short and imminent. These fill both
+  // fields and then fire the same 'change' events a manual pick would, so
+  // availability refresh, the summary and the rail all react normally
+  // rather than needing their own path.
+  const isoDate = (d) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  };
+
+  function applyPreset(key) {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    let nights = 1;
+
+    if (key === 'tomorrow') {
+      start.setDate(start.getDate() + 1);
+    } else if (key === 'weekend') {
+      // The coming Friday. On a Saturday or Sunday "this weekend" is the one
+      // you are standing in, so stay put rather than sending them a week out.
+      const day = start.getDay();               // 0 Sun … 6 Sat
+      if (day !== 0 && day !== 6) start.setDate(start.getDate() + ((5 - day + 7) % 7));
+      nights = 2;
+    } else if (key === 'week') {
+      start.setDate(start.getDate() + 7);
+      nights = 7;
+    }
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + nights);
+
+    // flatpickr owns these inputs — setDate() keeps its calendar in step with
+    // the value. Writing .value directly leaves the two disagreeing, so the
+    // next time the guest opens the picker it highlights the wrong day.
+    const setField = (el, date) => {
+      if (!el) return;
+      if (el._flatpickr) el._flatpickr.setDate(date, false);
+      el.value = isoDate(date);
+    };
+
+    setField(check_in, start);
+    // The check-out picker's minDate is armed by check_in's own onChange;
+    // raise it here too so setDate is not clamped to a stale floor.
+    if (check_out?._flatpickr) check_out._flatpickr.set('minDate', isoDate(new Date(start.getTime() + 86400000)));
+    setField(check_out, end);
+
+    check_in?.dispatchEvent(new Event('change', { bubbles: true }));
+    check_out?.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  document.getElementById('datePresets')?.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-preset]');
+    if (!btn) return;
+    applyPreset(btn.dataset.preset);
   });
 
   function autoCheckAllBlocks() {
@@ -830,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!checkInVal || !checkOutVal) {
       container.innerHTML = `
         <div class="text-center py-10 text-stone-500">
-            <span class="material-icons text-5xl mb-3 block text-emerald-deep/10">event</span>
+            <i class="fa-solid fa-calendar-days text-5xl mb-3 block text-emerald-deep/10"></i>
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
@@ -849,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (blocks.length === 0) {
       container.innerHTML = `
         <div class="text-center py-10 text-stone-500">
-            <span class="material-icons text-5xl mb-3 block text-emerald-deep/10">hotel</span>
+            <i class="fa-solid fa-bed text-5xl mb-3 block text-emerald-deep/10"></i>
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
@@ -899,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const discountNote = document.getElementById('request_discount')?.checked
       ? `
       <div class="mt-4 text-xs font-bold text-stone-700 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
-          <span class="material-icons text-[16px] text-palay-800">info</span>
+          <i class="fa-solid fa-circle-info text-[16px] text-palay-800"></i>
           <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
       </div>`
       : '';
@@ -955,6 +1183,27 @@ document.addEventListener('DOMContentLoaded', function () {
       const inEl = document.getElementById('check_in');
       const outEl = document.getElementById('check_out');
       if (inEl && outEl) {
+        // ── Sold-out nights ────────────────────────────────────────────
+        // The calendar used to know nothing about bookings: any future date
+        // was pickable, and a guest only found out a week was gone once the
+        // room grid came back empty. /rooms/calendar-availability answers
+        // which NIGHTS have no sellable room left.
+        //
+        // Nights, not days: a stay is [check_in, check_out), so a full date is
+        // struck off the check-in picker but is still a legal check-out. The
+        // range constraint is enforced by capping the check-out picker at the
+        // first full night on or after the chosen check-in — pick Aug 2 with
+        // Aug 5 sold out and the calendar simply will not offer past Aug 5.
+        let fullNights = new Set();
+        let remaining = {};
+
+        const isoDay = (d) => {
+          const t = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+          return t.toISOString().slice(0, 10);
+        };
+
+        const isFull = (d) => fullNights.has(isoDay(d));
+
         const fpOut = flatpickr(outEl, {
           dateFormat: 'Y-m-d',
           minDate: 'today',
@@ -964,6 +1213,28 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
 
+        // The last night a stay starting on `from` could include, i.e. the
+        // furthest check-out date still available. Undefined = no limit.
+        const firstFullOnOrAfter = (from) => {
+          const cursor = new Date(from.getTime());
+          for (let i = 0; i < 366; i++) {
+            if (isFull(cursor)) return new Date(cursor.getTime());
+            cursor.setDate(cursor.getDate() + 1);
+          }
+          return null;
+        };
+
+        const applyCheckoutCeiling = (checkIn) => {
+          const blocked = firstFullOnOrAfter(checkIn);
+          // check_out === blocked is allowed: that stay's last night is the
+          // day before, which is free.
+          fpOut.set('maxDate', blocked || null);
+          if (blocked && outEl.value && new Date(outEl.value) > blocked) {
+            fpOut.clear();
+            outEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        };
+
         const fpIn = flatpickr(inEl, {
           dateFormat: 'Y-m-d',
           minDate: 'today',
@@ -972,6 +1243,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!dates[0]) return;
             const nextDay = new Date(dates[0].getTime() + 86400000);
             fpOut.set('minDate', nextDay);
+            applyCheckoutCeiling(dates[0]);
             if (outEl.value && new Date(outEl.value) < nextDay) {
               fpOut.clear();
               outEl.dispatchEvent(new Event('change', { bubbles: true }));
@@ -982,6 +1254,118 @@ document.addEventListener('DOMContentLoaded', function () {
             }
           }
         });
+
+        // Paint both calendars: sold-out nights are struck through, and the
+        // last couple of rooms get a "nearly gone" dot. Colour is never the
+        // only cue — full days are also unselectable and carry a title.
+        //
+        // `noun` names what the counts are counting. Unscoped it is "rooms";
+        // once the guest has chosen a style it is that style, because "1 room
+        // left" while eleven rooms of other types sit empty is a lie.
+        let scopeNoun = 'rooms';
+
+        const singular = (noun) => (noun.endsWith('s') ? noun.slice(0, -1) : noun);
+
+        const paintDay = (dObj, dStr, fp, dayElem) => {
+          const iso = isoDay(dayElem.dateObj);
+          if (fullNights.has(iso)) {
+            dayElem.classList.add('fp-sold-out');
+            dayElem.title = 'No ' + scopeNoun + ' left this night';
+            return;
+          }
+          const left = remaining[iso];
+          if (left !== undefined && left > 0 && left <= 2) {
+            dayElem.classList.add('fp-nearly-gone');
+            dayElem.title = left + ' ' + (left === 1 ? singular(scopeNoun) : scopeNoun) + ' left this night';
+          }
+        };
+
+        const typeTitle = (slug) => {
+          const cfg = (window.ROOM_TYPES_CONFIG || {})[slug];
+          return cfg && cfg.title ? cfg.title : slug;
+        };
+
+        // Which styles the guest has actually asked for, and how many rooms of
+        // each. A block holds exactly one room number, so the demand for a type
+        // is simply how many blocks name it — two "double" blocks need two
+        // doubles free that night, not one.
+        const requestedDemand = () => {
+          const demand = {};
+          document.querySelectorAll('.room-type-select').forEach((sel) => {
+            if (sel.value) demand[sel.value] = (demand[sel.value] || 0) + 1;
+          });
+          return demand;
+        };
+
+        const fetchAvailability = (roomType) =>
+          fetch('/rooms/calendar-availability' + (roomType ? '?room_type=' + encodeURIComponent(roomType) : ''),
+                { headers: { 'Accept': 'application/json' } })
+            .then((r) => (r.ok ? r.json() : null));
+
+        // Bumped on every call so a slow reply for a style the guest has since
+        // changed away from loses to the newer one instead of overwriting it.
+        let calToken = 0;
+
+        async function refreshCalendarAvailability() {
+          const token = ++calToken;
+          const demand = requestedDemand();
+          const types = Object.keys(demand);
+
+          let sets;
+          try {
+            sets = types.length
+              ? await Promise.all(types.map(fetchAvailability))
+              : [await fetchAvailability(null)];
+          } catch (e) {
+            return;
+          }
+          if (token !== calToken) return;
+
+          const nextFull = new Set();
+          const nextRemaining = {};
+
+          sets.forEach((data, i) => {
+            if (!data) return;
+            const need = types.length ? demand[types[i]] : 1;
+
+            Object.keys(data.remaining || {}).forEach((night) => {
+              const left = data.remaining[night];
+              // The tightest constraint wins: with a double and a triple block
+              // open, the night is only as good as whichever is scarcer.
+              if (nextRemaining[night] === undefined || left < nextRemaining[night]) {
+                nextRemaining[night] = left;
+              }
+              // Short of what this booking needs is just as unbookable as zero.
+              if (left < need) nextFull.add(night);
+            });
+
+            (data.full || []).forEach((night) => nextFull.add(night));
+          });
+
+          fullNights = nextFull;
+          remaining = nextRemaining;
+          scopeNoun = types.length === 1 ? typeTitle(types[0]).toLowerCase() + 's' : 'rooms';
+
+          // Availability is advisory here — the authoritative check still
+          // runs server-side on submit. If this request fails the calendar
+          // simply behaves as it always did, which is why none of this is
+          // awaited before the pickers are usable.
+          fpIn.set('disable', [(d) => isFull(d)]);
+          fpIn.set('onDayCreate', [paintDay]);
+          fpOut.set('onDayCreate', [paintDay]);
+          fpIn.redraw();
+          fpOut.redraw();
+
+          if (inEl.value) {
+            const d = new Date(inEl.value);
+            if (!isNaN(d.getTime())) applyCheckoutCeiling(d);
+          }
+        }
+
+        // Re-scoped whenever a block's room style changes — see the
+        // .room-type-select change handler in addReservationBlock().
+        window.refreshCalendarAvailability = refreshCalendarAvailability;
+        refreshCalendarAvailability();
 
         // Set initial minDate for check-out if check-in has a value on page load
         if (inEl.value) {

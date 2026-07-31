@@ -195,6 +195,7 @@ class RoomHoldTest extends TestCase
             'check_in' => now()->addDays(3)->toDateString(),
             'check_out' => now()->addDays(5)->toDateString(),
             'expected_guests' => 2,
+            'accept_terms' => 1,
             'region_code' => 'R03',
             'city_code' => 'C1|Munoz',
             'barangay_code' => 'B1|Bantug',
@@ -237,13 +238,24 @@ class RoomHoldTest extends TestCase
         $paid   = RoomHold::stayLine(['guest' => 'Ana', 'until' => 'Aug 03', 'status' => 'active'], null);
 
         $this->assertSame('current-pending', $unpaid['kind']);
-        $this->assertStringContainsString('awaiting payment', $unpaid['label']);
+        // Wording changed from "Reserved · awaiting payment": the label now
+        // also carries the date, matching the next-pending variant's
+        // "Reserved · Aug 08 · unpaid" and fitting a narrow card.
+        $this->assertStringContainsString('unpaid', $unpaid['label']);
+        $this->assertStringContainsString('Aug 03', $unpaid['label']);
 
         $this->assertSame('current', $paid['kind']);
         $this->assertStringContainsString('In use', $paid['label']);
+        $this->assertStringNotContainsString('unpaid', $paid['label']);
+
+        // Who holds the room is its own field now — it used to exist only
+        // inside `title`, which a touch screen cannot hover.
+        $this->assertSame('Ana', $unpaid['guest']);
+        $this->assertSame('Ana', $paid['guest']);
 
         $none = RoomHold::stayLine(null, null);
         $this->assertSame('none', $none['kind']);
+        $this->assertNull($none['guest']);
     }
 
     public function test_stay_line_flags_an_unpaid_future_arrival(): void

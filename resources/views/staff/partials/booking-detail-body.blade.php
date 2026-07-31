@@ -158,6 +158,16 @@
                         ['icon' => 'calendar', 'label' => 'Booking Date',  'value' => $booking->check_in->format('M d') . ' – ' . $booking->check_out->format('M d, Y')],
                         ['icon' => 'clock',    'label' => 'Duration',      'value' => $nights . ' ' . Str::plural('night', $nights) . ' · ' . $booking->expected_guests . ' pax'],
                     ];
+
+                    // Only when the guest actually told us. A blank slot is
+                    // more honest than "—", which reads as data we lost.
+                    if ($booking->arrival_time) {
+                        $facts[] = [
+                            'icon'  => 'clock',
+                            'label' => 'Est. Arrival',
+                            'value' => \Carbon\Carbon::parse($booking->arrival_time)->format('g:i A'),
+                        ];
+                    }
                 @endphp
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3.5 mt-5 pt-4 border-t border-stone-100">
                     @foreach($facts as $fact)
@@ -170,6 +180,19 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Guest requests are the one field on this card that asks the
+                     desk to *do* something, so it gets its own band rather than
+                     a slot in the fact grid where it would be truncated. --}}
+                @if($booking->special_requests)
+                    <div class="mt-4 pt-4 border-t border-stone-100">
+                        <p class="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 uppercase tracking-widest">
+                            <x-admin.ui.icon name="note" class="w-3 h-3 shrink-0" />
+                            Guest Request
+                        </p>
+                        <p class="mt-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-medium text-stone-700 leading-relaxed whitespace-pre-line break-words">{{ $booking->special_requests }}</p>
+                    </div>
+                @endif
 
                 @if($showProgress)
                     <div class="mt-4 pt-4 border-t border-stone-100">

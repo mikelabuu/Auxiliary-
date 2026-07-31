@@ -1,0 +1,208 @@
+/* ============================================================
+   ROOM BOARD — the "All Rooms" grid.
+
+   Three things were wrong with the card this replaces.
+
+   1. The "Unpaid hold" chip carried both `inline-flex` and a
+      conditional `hidden`. Both are display utilities, and Tailwind
+      emits `inline-flex` after `hidden`, so `hidden` never won and
+      EVERY room advertised an unpaid hold — including rooms whose own
+      stay line said "No upcoming stays" directly underneath. The chip
+      is now hidden by default and revealed by [data-hold-pending] on
+      the card, which is the attribute the live poller already
+      maintains. No utility can collide with that.
+
+   2. Whoever was holding a room existed only inside a `title`
+      attribute. A tooltip cannot be hovered on the touch screens the
+      desk actually uses, and screen readers skip it. It is text now.
+
+   3. At phone width the grid stayed at two columns, giving 136px-wide
+      cards: status chips wrapped onto two rows, the room number was
+      set at 16px, and the whole thing was 250px tall to say almost
+      nothing. Below 480px the board is now a single column of short,
+      wide rows — the shape the information actually wants.
+   ============================================================ */
+
+.rooms-grid {
+    display: grid;
+    gap: 12px;
+    /* One column on a phone. Two 136px cards side by side is not twice
+       the information, it is half the legibility. */
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) { .rooms-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; } }
+@media (min-width: 768px) { .rooms-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1024px){ .rooms-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1280px){ .rooms-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1536px){ .rooms-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.room-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.room-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 12px 14px 11px;
+    flex: 1;
+    /* Room for the edit/kebab controls pinned top-right. */
+    padding-right: 74px;
+}
+
+.room-card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.room-card-number {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-ink, #14201a);
+}
+
+.room-type-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-faint, #8ba295);
+}
+
+.room-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+/* The fix for defect (1): default hidden, revealed only by the card's
+   own state attribute. Kept out of the utility cascade entirely. */
+.room-hold-badge { display: none; }
+.room-card[data-hold-pending='1'] .room-hold-badge { display: inline-flex; }
+
+.room-stay-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.room-stay-line { min-width: 0; }
+.room-stay-line .room-stay-text { min-width: 0; overflow-wrap: anywhere; }
+
+/* Defect (2): the holder, as readable text. */
+.room-guest-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-ink, #14201a);
+}
+
+.room-guest-line[hidden] { display: none; }
+
+.room-guest-line svg { color: var(--color-faint, #8ba295); }
+
+.room-guest-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.room-note-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    font-size: 10px;
+    font-style: italic;
+    color: var(--color-faint, #8ba295);
+}
+
+.room-updated {
+    font-size: 10px;
+    font-style: italic;
+    color: var(--color-faint, #8ba295);
+    margin-top: auto;
+    padding-top: 2px;
+}
+
+.room-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-top: 1px solid var(--color-surface, #f4f8f5);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-faint, #8ba295);
+    transition: color 160ms ease, background-color 160ms ease;
+}
+
+.room-card:hover .room-card-foot {
+    color: var(--color-g-600, #099250);
+    background: color-mix(in oklch, var(--color-g-50, #edfdf3) 70%, transparent);
+}
+
+/* ── Phone: the card lies down ───────────────────────────────────
+   One column means the card is ~360px wide and only needs to be tall
+   enough for its text, so the number sits beside the detail rather
+   than above it. */
+@media (max-width: 479px) {
+    .room-card-body {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            'num  chips'
+            'num  stay'
+            'num  meta';
+        align-items: center;
+        column-gap: 14px;
+        row-gap: 4px;
+        padding: 12px 14px;
+        /* Only the top row runs under the edit/kebab controls, so reserve the
+           gutter on that row alone — reserving it on the whole card cost the
+           guest name ~60px and truncated ordinary Filipino full names. */
+        padding-right: 14px;
+    }
+
+    .room-card-chips { padding-right: 62px; }
+
+    .room-card-head {
+        grid-area: num;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        align-self: center;
+        min-width: 62px;
+    }
+
+    .room-card-number { font-size: 26px; }
+
+    .room-card-chips { grid-area: chips; }
+    .room-stay-block { grid-area: stay; }
+    .room-note-line,
+    .room-updated { grid-area: meta; margin-top: 0; }
+
+    /* Two stacked italic greys in a 4px row is noise at this size; the
+       note keeps its tooltip and the card keeps its height. */
+    .room-note-line + .room-updated { display: none; }
+
+    .room-card-foot { padding: 6px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .room-card-foot { transition: none; }
+}

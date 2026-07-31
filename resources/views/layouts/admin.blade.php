@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{-- Laravel Echo reads this to sign the POST /broadcasting/auth handshake
+       that private channels require; without it the `staff.alerts`
+       subscription 419s. The frontdesk layout has always carried it. --}}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Farmers Hostel · Admin Console')</title>
   <link rel="icon" type="image/png" href="{{ asset('image/clsu.logo.png') }}">
 
@@ -21,7 +25,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs), replacing the
+       Material Icons CDN font. Components render icons as inlined SVG through
+       <x-admin.ui.icon>, so this stylesheet is only needed for views that write
+       `<i class="fa-solid fa-…">` directly — hence the preload of the one face
+       that actually gets used. --}}
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
+  <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
   {{-- Self-hosted from public/vendor (see scripts/sync-vendor.mjs). These stay
        synchronous and ahead of @vite: inline blocks in several admin views call
        $(function(){…}) at parse time, which deferred module scripts would miss. --}}
@@ -32,7 +43,11 @@
   @livewireStyles
   @stack('styles')
 </head>
-<body class="shell-root bg-surface text-ink antialiased"
+{{-- data-staff-alerts is the gate for the private `staff.alerts` Reverb
+     subscription (resources/js/admin-notifications.js). It is only ever on a
+     layout that has already passed a staff auth middleware, so the module never
+     attempts the authorisation handshake from a page with no staff session. --}}
+<body class="shell-root bg-surface text-ink antialiased" data-staff-alerts
       x-data="{
         sidebarOpen: false,
         sidebarCollapsed: localStorage.getItem('adminSidebarCollapsed') === '1',
@@ -195,10 +210,13 @@
         }
       });
 
-      // Guest name → the booking detail modal (details + timeline + guest
-      // history — the same modal as the View button, not a separate dialog).
-      // Password-gated exactly like View, then fetched and injected.
-      function openGuestBookingModal(bookingId) {
+      // The booking-detail modal: details + timeline + guest history, fetched
+      // on demand and injected. Two callers share it — the guest name in a
+      // table row, and the row's View button (livewire/bookings-table) — so it
+      // is a global rather than a private closure. View used to render the
+      // same partial through a Livewire property instead, which re-rendered
+      // the whole table on every open and on every 15s poll thereafter.
+      window.openBookingDetail = function (bookingId) {
         fetch('{{ url('staff/bookings') }}/' + bookingId + '/guest-history', {
           headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
@@ -217,7 +235,7 @@
             if (pop) pop.classList.add('hidden');
           })
           .catch(function () {});
-      }
+      };
 
       // Dismissing this modal ([data-modal-close] and Escape) is handled
       // generically by the modal engine — nothing modal-specific here.
@@ -229,7 +247,7 @@
         e.preventDefault();
 
         // Guest history is read-only — open it directly (no password re-auth).
-        openGuestBookingModal(bookingId);
+        window.openBookingDetail(bookingId);
       });
     })();
   </script>

@@ -1,0 +1,274 @@
+/* Part 17 of the admin bundle — Icon system (Font Awesome Free 7).
+   Imported in strict order by resources/css/admin.css; do not reorder.
+
+   Everything here exists because the console moved off the hand-drawn
+   feather-style stroke set and onto Font Awesome Free. Two consequences
+   needed answering:
+
+   1. OPTICAL WEIGHT. A filled glyph reads heavier than a 1.75px stroke of the
+      same box, so every icon slot sized for the old set now looks chunky. The
+      sizes below are the old ones scaled ~8%, restated per selector rather
+      than globally — a blanket `svg { }` rule would also hit sparklines,
+      spinners, the revenue chart and the density marks.
+
+   2. NO DUOTONE. Duotone is a Pro family, and the flat pastel chips the stat
+      cards used look cheap under a solid glyph. `.stat-icon` below rebuilds
+      the two-tone depth in CSS instead: a directional tint gradient, a
+      hairline ring, a specular top edge and a bloom behind the glyph.
+
+   Chips are driven by four custom properties so a new accent is one rule:
+       --chip-tint / --chip-wash / --chip-ring / --chip-ink
+   ============================================================ */
+
+/* ============================================================
+   BARE `<i class="fa-…">`
+   The registry (<x-admin.ui.icon>) covers components; this covers views that
+   write Font Awesome classes straight into markup. Keeps a glyph sitting on
+   the text baseline instead of riding high next to a label.
+   ============================================================ */
+.fa,
+.fa-solid,
+.fa-regular,
+.fa-brands,
+.fas,
+.far,
+.fab {
+    line-height: 1;
+    vertical-align: -0.09em;
+}
+
+/* Anything laid out as a flex row (buttons, chips, nav) wants the glyph to
+   stop contributing its own leading. */
+.btn > .fa-solid,
+.btn > .fa-regular,
+.chip > .fa-solid,
+.chip > .fa-regular {
+    vertical-align: 0;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   OPTICAL SIZING — filled glyphs, ~8% down from the stroke-set boxes
+
+   Sized on HEIGHT, not on a square box. The old set was drawn on a uniform
+   24×24 grid, so `width: 18px; height: 18px` produced a tidy icon column.
+   Font Awesome draws every glyph 512 units tall but lets the width run from
+   256 (a chevron) to 640 (a bed) — drop those into a square and the wide ones
+   letterbox down to two-thirds height while the narrow ones fill it, and a
+   nav rail ends up visibly ragged.
+
+   Fixing height and giving the box the widest aspect FA ships (640/512 =
+   1.25) reproduces how the webfont sets them: every glyph the same visual
+   height, centred in a fixed-width column, so labels still align.
+
+   These rules are unlayered and therefore beat Tailwind's w-*/h-* utilities
+   on the same element — the same cascade quirk documented for .press in
+   09-craft. That is deliberate here: the utility at the call site states the
+   intended size, and this states how a filled glyph should occupy it.
+   ============================================================ */
+/* Each selector below is written to match the specificity of the rule it
+   supersedes in 03-shell / 04-components / 05-motion-ux, so source order
+   decides — a shorter :where() group would lose to `.mini-stat .stat-icon svg`. */
+.sidebar-link svg,
+.sidebar-action-btn svg,
+.user-menu-link svg,
+.notif-icon svg,
+.search-result-icon svg,
+.quick-nav-item svg,
+.stat-icon svg,
+.mini-stat .stat-icon svg,
+.quick-action .stat-icon svg {
+    height: var(--ico);
+    width: calc(var(--ico) * 1.25);
+    flex-shrink: 0;
+}
+
+.sidebar-link svg { --ico: 16.5px; }
+.sidebar-action-btn svg { --ico: 14px; }
+.user-menu-link svg { --ico: 15.5px; }
+.notif-icon svg { --ico: 15px; }
+.search-result-icon svg { --ico: 15px; }
+.quick-nav-item svg { --ico: 14.5px; }
+.stat-icon svg { --ico: 20px; }
+.mini-stat .stat-icon svg { --ico: 18px; }
+.quick-action .stat-icon svg { --ico: 17.5px; }
+
+/* The card-header chip sizes its glyph with padding inside a fixed box, so
+   the optical correction is a padding increase, not a width change. */
+.card-title svg {
+    width: 32px;
+    height: 32px;
+    padding: 8.5px;
+}
+
+/* ============================================================
+   ICON CHIPS — the duotone stand-in
+   ============================================================ */
+.stat-icon {
+    /* Emerald is the default; variants below only re-point the properties. */
+    --chip-tint: var(--color-g-100);
+    --chip-wash: var(--color-g-50);
+    --chip-ring: rgba(22, 179, 100, 0.24);
+    --chip-ink: var(--color-g-700);
+    --chip-glow: rgba(22, 179, 100, 0.28);
+
+    position: relative;
+    isolation: isolate;
+    border-radius: 15px;
+    color: var(--chip-ink);
+    background: linear-gradient(148deg, var(--chip-tint) 0%, var(--chip-wash) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 0 0 1px var(--chip-ring),
+        0 2px 5px -3px var(--chip-glow);
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+/* The second tone. A bloom of the accent pooled under the glyph reads as the
+   darker duotone layer without needing a second glyph to stack. */
+.stat-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(72% 60% at 50% 118%, var(--chip-glow) 0%, transparent 70%);
+    opacity: 0.75;
+    transition: opacity var(--transition);
+}
+
+.stat-icon svg {
+    position: relative;
+    /* Lifts the glyph off its own tint so the chip reads as two planes. */
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+    transition: transform var(--transition);
+}
+
+.stat-icon-green {
+    --chip-tint: var(--color-g-100);
+    --chip-wash: var(--color-g-50);
+    --chip-ring: rgba(22, 179, 100, 0.24);
+    --chip-ink: var(--color-g-700);
+    --chip-glow: rgba(22, 179, 100, 0.28);
+}
+
+.stat-icon-gold {
+    --chip-tint: var(--color-au-100);
+    --chip-wash: var(--color-au-50);
+    --chip-ring: rgba(247, 144, 9, 0.26);
+    --chip-ink: var(--color-au-700);
+    --chip-glow: rgba(247, 144, 9, 0.26);
+}
+
+.stat-icon-blue {
+    --chip-tint: #dbeafe;
+    --chip-wash: #f0f6ff;
+    --chip-ring: rgba(37, 99, 235, 0.22);
+    --chip-ink: #1d4ed8;
+    --chip-glow: rgba(37, 99, 235, 0.24);
+}
+
+.stat-icon-rose {
+    --chip-tint: #fee2e2;
+    --chip-wash: #fef6f6;
+    --chip-ring: rgba(220, 38, 38, 0.2);
+    --chip-ink: #b91c1c;
+    --chip-glow: rgba(220, 38, 38, 0.22);
+}
+
+/* Hover: the chip rises and its bloom opens. Overrides the flat scale(1.06)
+   in 04-components — same trigger, later in the cascade. */
+.stat-card:hover .stat-icon,
+.mini-stat:hover .stat-icon,
+.quick-action:hover .stat-icon {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 0 0 1px var(--chip-ring),
+        0 8px 18px -8px var(--chip-glow);
+}
+
+.stat-card:hover .stat-icon::before,
+.mini-stat:hover .stat-icon::before,
+.quick-action:hover .stat-icon::before {
+    opacity: 1;
+}
+
+.stat-card:hover .stat-icon svg,
+.mini-stat:hover .stat-icon svg,
+.quick-action:hover .stat-icon svg {
+    transform: scale(1.06);
+}
+
+/* On the emerald hero card the chip sits on colour, so the light-surface
+   recipe inverts to frosted glass. */
+.stat-card-hero .stat-icon {
+    background: rgba(255, 255, 255, 0.17);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.stat-card-hero .stat-icon::before {
+    background: radial-gradient(72% 60% at 50% 118%, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+}
+
+.stat-card-hero .stat-icon svg {
+    filter: none;
+}
+
+/* ============================================================
+   SIDEBAR — filled glyphs need a quieter resting tone than strokes did,
+   and a warmer one once the row is active.
+   ============================================================ */
+.sidebar-link svg {
+    color: #a3b5aa;
+}
+
+.sidebar-link:hover svg {
+    color: var(--color-g-600);
+    transform: none;
+}
+
+.sidebar-link.active svg {
+    color: var(--color-g-600);
+    filter: drop-shadow(0 1px 4px rgba(22, 179, 100, 0.35));
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    .stat-icon,
+    .stat-icon::before,
+    .stat-icon svg {
+        transition: none;
+    }
+
+    .stat-card:hover .stat-icon,
+    .mini-stat:hover .stat-icon,
+    .quick-action:hover .stat-icon {
+        transform: none;
+    }
+
+    .stat-card:hover .stat-icon svg,
+    .mini-stat:hover .stat-icon svg,
+    .quick-action:hover .stat-icon svg {
+        transform: none;
+    }
+}
+
+/* Touch: no hover lift (mirrors the block in 09-craft). */
+@media (hover: none), (pointer: coarse) {
+
+    .stat-card:hover .stat-icon,
+    .mini-stat:hover .stat-icon,
+    .quick-action:hover .stat-icon {
+        transform: none;
+    }
+}

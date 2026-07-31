@@ -19,7 +19,7 @@
 
         @if ($lastRejected)
             <div class="mb-8 flex items-start gap-2.5 rounded-2xl border border-ember-300/50 bg-ember-50 px-5 py-4 text-xs font-bold leading-relaxed text-ember-700">
-                <span class="material-icons text-[18px] shrink-0">error_outline</span>
+                <i class="fa-solid fa-circle-exclamation text-[18px] shrink-0"></i>
                 <div>
                     Your previous proof of payment was not accepted.
                     @if ($lastRejected->rejection_reason)
@@ -38,7 +38,7 @@
             </div>
             @if ($booking->discount > 0)
                 <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[11px] font-bold text-gold">
-                    <span class="material-icons text-[14px]">discount</span>
+                    <i class="fa-solid fa-tag text-[14px]"></i>
                     ₱{{ number_format($booking->discount, 2) }} discount applied
                 </span>
             @endif
@@ -49,7 +49,7 @@
             <!-- Manual: GCash / bank transfer, verified by staff -->
             <div class="flex flex-col bg-cream-warm rounded-3xl p-7 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)]">
                 <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                    <span class="material-icons text-[24px]">receipt_long</span>
+                    <i class="fa-solid fa-receipt text-[24px]"></i>
                 </span>
                 <h2 class="mt-4 font-display text-2xl text-ink tracking-tight">GCash or Bank Transfer</h2>
                 <p class="mt-2 text-xs font-medium text-stone-500 leading-relaxed">Send the payment yourself, then upload the receipt you were given. Our front desk checks it against the transfer and confirms your booking.</p>
@@ -71,7 +71,7 @@
 
                 <a href="{{ route('bookings.pay.proof', $booking->id) }}"
                    class="press focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-emerald-deep px-6 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream !no-underline cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)]">
-                    <span class="material-icons text-[18px]">upload_file</span>
+                    <i class="fa-solid fa-file-arrow-up text-[18px]"></i>
                     Upload proof of payment
                 </a>
             </div>
@@ -79,13 +79,13 @@
             <!-- Sandbox card gateway -->
             <div class="flex flex-col bg-cream-warm rounded-3xl p-7 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)]">
                 <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10">
-                    <span class="material-icons text-[24px]">credit_card</span>
+                    <i class="fa-solid fa-credit-card text-[24px]"></i>
                 </span>
                 <h2 class="mt-4 font-display text-2xl text-ink tracking-tight">Pay online by card</h2>
                 <p class="mt-2 text-xs font-medium text-stone-500 leading-relaxed">Settle instantly through the bank portal. No staff review is needed — your booking is confirmed the moment the payment clears.</p>
 
                 <span class="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/40 bg-gold-soft/30 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-ink/70">
-                    <span class="material-icons text-[13px] text-gold">science</span>
+                    <i class="fa-solid fa-flask text-[13px] text-gold"></i>
                     Sandbox — no real funds move
                 </span>
 
@@ -93,7 +93,7 @@
 
                 <a href="{{ route('bookings.pay.sandbox', $booking->id) }}"
                    class="press focus-ring mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-emerald-deep/20 bg-cream px-6 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-emerald-deep !no-underline cursor-pointer transition-colors hover:bg-emerald-deep hover:text-cream">
-                    <span class="material-icons text-[18px]">lock</span>
+                    <i class="fa-solid fa-lock text-[18px]"></i>
                     Continue to bank portal
                 </a>
             </div>
@@ -101,7 +101,7 @@
 
         <div class="mt-8 text-center">
             <a href="{{ route('booking.show', $booking->id) }}" class="press inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-deep/20 bg-cream px-6 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-deep !no-underline transition-colors hover:bg-emerald-deep hover:text-cream">
-                <span class="material-icons text-[16px]">arrow_back</span>
+                <i class="fa-solid fa-arrow-left text-[16px]"></i>
                 Back to booking
             </a>
         </div>

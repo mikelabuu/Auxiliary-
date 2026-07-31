@@ -39,8 +39,12 @@
          loaded as the fallback stack for views still authored against them. -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Material Icons (used by booking flow internals) -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs). One icon set
+         across the public site and both staff consoles; replaced the Material
+         Icons CDN font the booking flow used to pull. --}}
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
+    <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
 
     {{-- Everything below is self-hosted from public/vendor — see scripts/sync-vendor.mjs.
          Versions are pinned in package.json; `npm run vendor:sync` refreshes them. --}}

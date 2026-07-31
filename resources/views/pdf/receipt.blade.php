@@ -19,6 +19,13 @@
         <p>Official Receipt</p>
     </div>
 
+    {{-- The receipt number was passed into this view and never printed, so the
+         only copy of it on the page was inside the verification URL. With that
+         line gone the sheet had no reference at all — nothing staff could look
+         up if a QR will not scan. --}}
+    @isset($receipt_number)
+        <p><strong>Receipt No.:</strong> {{ $receipt_number }}</p>
+    @endisset
     <p><strong>Booking ID:</strong> #{{ $booking->id }}</p>
     <p><strong>Guest:</strong> {{ $booking->guest_name }}</p>
     <p><strong>Check-in:</strong> {{ \Carbon\Carbon::parse($booking->check_in)->format('M d, Y') }}</p>
@@ -53,15 +60,13 @@
         </tbody>
     </table>
 
-    @php
-        $payment = $booking->payments->first();
-    @endphp
-
-    @if ($payment)
-        <p style="margin-top:15px;"><strong>Transaction ID:</strong> {{ (string)$payment->landbank_transaction_id }}</p>
-        <p><strong>Date:</strong> {{ $payment->updated_at->format('M d, Y h:i A') }}</p>
-        <p><strong>Verification Link:</strong> {{ $verificationUrl}}</p>
-    @endif
+    {{-- The Transaction ID / Date / Verification Link block that used to sit
+         here is gone. The transaction id printed empty for every payment that
+         did not come through the bank gateway, the date was the payment row's
+         updated_at (which moves whenever staff touch the record, so it was not
+         reliably the payment date), and the link spelled out a URL nobody can
+         usefully type off a printout. The QR below carries that same link, and
+         the receipt number identifies the record. --}}
 
     <div style="text-align:center; margin-top:20px;">
         @if(isset($qrBase64))

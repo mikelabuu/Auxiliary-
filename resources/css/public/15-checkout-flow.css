@@ -1,0 +1,214 @@
+/* ============================================================
+   CHECKOUT FLOW — the parts that keep a guest out of a dead end.
+
+   The checkout's one real failure mode was arithmetic the guest could
+   not see. "Total Number of Guests" lives in step 2; the per-room guest
+   counts live in step 3, a screen further down; and the rule that the
+   two must match was only enforced on submit, as a red toast reading
+   "Mismatch: total assigned guests (3) must equal expected guests (2)".
+   By then the guest had filled in the whole form, and the two numbers
+   they had to reconcile were never on screen together.
+
+   Everything below exists to move that discovery earlier: a meter that
+   states the sum as it is being built, a blocker line that says what is
+   still missing before the button is pressed, and an invalid state that
+   points at the field rather than describing it.
+   ============================================================ */
+
+/* ── Allocation meter ────────────────────────────────────────── */
+
+.alloc-meter {
+    border-radius: 1rem;
+    padding: 0.875rem 1rem 0.9rem;
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 4%, transparent);
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
+    transition: background-color 260ms ease, border-color 260ms ease;
+}
+
+.alloc-meter-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.alloc-meter-label {
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-stone-500, #6b7280);
+}
+
+.alloc-meter-count {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink, #14201a);
+}
+
+.alloc-meter-track {
+    position: relative;
+    height: 6px;
+    margin-top: 0.5rem;
+    border-radius: 999px;
+    overflow: hidden;
+    /* Darker than the card, not lighter — a white track is invisible on
+       cream. Same lesson as the progress rail's .step-bar. */
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 14%, transparent);
+}
+
+.alloc-meter-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: var(--color-emerald, #16b364);
+    transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 260ms ease;
+}
+
+.alloc-meter-hint {
+    margin-top: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--color-stone-600, #4a5b50);
+}
+
+/* Under-filled: neutral. Nothing is wrong yet — the guest is mid-task. */
+.alloc-meter[data-state='under'] .alloc-meter-fill { background: var(--color-gold, #d9b45b); }
+
+/* Balanced: the only state that can be submitted, so it is the only one
+   that gets the full green treatment. */
+.alloc-meter[data-state='balanced'] {
+    background: color-mix(in oklch, var(--color-emerald, #16b364) 9%, transparent);
+    border-color: color-mix(in oklch, var(--color-emerald, #16b364) 34%, transparent);
+}
+.alloc-meter[data-state='balanced'] .alloc-meter-hint { color: var(--color-emerald-deep, #0b3d2c); }
+
+/* Over-filled: a real error — more people than beds booked for them. */
+.alloc-meter[data-state='over'] {
+    background: color-mix(in oklch, var(--color-ember-600, #dc2626) 7%, transparent);
+    border-color: color-mix(in oklch, var(--color-ember-600, #dc2626) 32%, transparent);
+}
+.alloc-meter[data-state='over'] .alloc-meter-fill { background: var(--color-ember-600, #dc2626); }
+.alloc-meter[data-state='over'] .alloc-meter-hint { color: var(--color-ember-700, #b91c1c); }
+
+.alloc-meter-hint b { font-weight: 800; }
+
+/* ── Date presets ────────────────────────────────────────────── */
+
+.date-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.875rem;
+}
+
+.date-preset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 14%, transparent);
+    background: color-mix(in oklch, #fff 60%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-stone-600, #4a5b50);
+    cursor: pointer;
+    transition: color 180ms ease, background-color 180ms ease,
+                border-color 180ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.date-preset:hover {
+    background: var(--color-emerald-deep, #0b3d2c);
+    border-color: var(--color-emerald-deep, #0b3d2c);
+    color: var(--color-cream, #fdfaf3);
+    transform: translateY(-1px);
+}
+
+.date-preset:active { transform: translateY(0); }
+
+.date-preset:focus-visible {
+    outline: 2px solid var(--color-gold, #d9b45b);
+    outline-offset: 2px;
+}
+
+.date-preset-nights {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.6;
+}
+
+/* ── "What's left" line above Confirm ────────────────────────── */
+
+.blocker-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.875rem;
+    background: color-mix(in oklch, var(--color-gold, #d9b45b) 14%, transparent);
+    border: 1px solid color-mix(in oklch, var(--color-gold, #d9b45b) 34%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--color-stone-700, #39463e);
+}
+
+/* The glyph is a Font Awesome <i> since the icon-set migration; booking.js
+   re-renders this line and emits the same markup. */
+.blocker-line > i {
+    font-size: 15px;
+    flex-shrink: 0;
+    color: var(--color-palay-800, #93370d);
+}
+
+/* Ready to go: the same slot, now confirming rather than warning. */
+.blocker-line[data-ready] {
+    background: color-mix(in oklch, var(--color-emerald, #16b364) 11%, transparent);
+    border-color: color-mix(in oklch, var(--color-emerald, #16b364) 34%, transparent);
+    color: var(--color-emerald-deep, #0b3d2c);
+}
+
+.blocker-line[data-ready] > i { color: var(--color-emerald, #16b364); }
+
+/* ── Invalid field / block ───────────────────────────────────── */
+
+/* Submit-time errors used to be described in a toast and nothing else, so
+   a guest read "select a specific room" and still had to find which of
+   four blocks meant it. These mark the actual offender. */
+.field-invalid,
+input.field-invalid {
+    border-color: var(--color-ember-600, #dc2626) !important;
+    background: color-mix(in oklch, var(--color-ember-600, #dc2626) 6%, #fff) !important;
+}
+
+.field-invalid:focus {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-ember-600, #dc2626) 22%, transparent) !important;
+}
+
+@keyframes blockShake {
+    0%, 100% { transform: translateX(0); }
+    22%  { transform: translateX(-5px); }
+    44%  { transform: translateX(4px); }
+    66%  { transform: translateX(-3px); }
+    88%  { transform: translateX(2px); }
+}
+
+.block-invalid {
+    animation: blockShake 380ms cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-ember-600, #dc2626) 42%, transparent);
+    border-radius: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .alloc-meter,
+    .alloc-meter-fill,
+    .date-preset { transition-duration: 1ms; }
+    .date-preset:hover { transform: none; }
+    .block-invalid { animation: none; }
+}

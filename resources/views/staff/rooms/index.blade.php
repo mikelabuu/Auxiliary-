@@ -154,7 +154,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {{-- .rooms-grid (16-room-board.css) replaces the utility grid:
+                     it drops to ONE column below 480px. Two 136px cards on a
+                     phone wrapped every status chip onto its own line. --}}
+                <div class="rooms-grid">
                     @foreach($group as $room)
                         <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :settable-statuses="$settableStatuses" :stay="$stayContext[trim($room->room_number)] ?? null" />
                     @endforeach
@@ -164,7 +167,6 @@
             <x-admin.ui.empty-state icon="grid" title="No rooms yet. Add your first room to get started." />
         @endforelse
 
-        <x-admin.ui.empty-state id="noRoomsMatch" icon="search" title="No rooms match your search or filters." class="hidden" />
     </x-admin.ui.section-card>
 </div>
 
@@ -879,8 +881,22 @@ $(function () {
         if (stay.title) line.attr('title', stay.title); else line.removeAttr('title');
         if (held) card.attr('data-held', '1'); else card.removeAttr('data-held');
 
+        // Who is holding it — .text(), never .html(): a guest controls their
+        // own name.
+        const guestLine = card.find('.room-guest-line');
+        if (stay.guest) {
+            guestLine.find('.room-guest-text').text(stay.guest);
+            guestLine.removeAttr('hidden');
+        } else {
+            guestLine.find('.room-guest-text').text('');
+            guestLine.attr('hidden', 'hidden');
+        }
+
+        // The badge's visibility hangs off this attribute alone (see
+        // 16-room-board.css). Toggling a `hidden` class here did nothing:
+        // Tailwind emits .inline-flex after .hidden, so the badge showed on
+        // every card no matter what this said.
         if (pending) card.attr('data-hold-pending', '1'); else card.removeAttr('data-hold-pending');
-        card.find('.room-hold-badge').toggleClass('hidden', !pending);
     }
 
     let livePollInFlight = false;

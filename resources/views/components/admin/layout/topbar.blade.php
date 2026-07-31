@@ -4,7 +4,7 @@
   <div class="topbar-leading">
     {{-- Mobile menu toggle --}}
     <button class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()" aria-label="Toggle sidebar">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <x-admin.ui.icon name="menu" />
     </button>
 
     {{-- Desktop rail collapse toggle --}}
@@ -89,7 +89,7 @@
        }"
        @click.outside="open = false"
        @keydown.escape="open = false">
-    <svg class="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <x-admin.ui.icon name="search" class="scan-icon" />
     <input x-ref="searchInput" x-model="q"
            @input.debounce.300ms="search()"
            @focus="open = true"
@@ -112,35 +112,35 @@
         <p class="search-group-label">Quick navigation</p>
         <div class="quick-nav-grid">
           <a href="{{ route('staff.dashboard') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            <x-admin.ui.icon name="dashboard" />
             Dashboard
           </a>
           <a href="{{ route('staff.bookings.index') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V9z"/></svg>
+            <x-admin.ui.icon name="clipboard" />
             All bookings
           </a>
           <a href="{{ route('staff.manualbooking') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+            <x-admin.ui.icon name="calendar-plus" />
             Manual booking
           </a>
           <a href="{{ route('staff.rooms') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"/><path d="M2 18h20"/><path d="M6 10V7a2 2 0 0 1 2-2h3v5"/></svg>
+            <x-admin.ui.icon name="bed" />
             Rooms
           </a>
           <a href="{{ route('staff.paymentlogs.index') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <x-admin.ui.icon name="credit-card" />
             Payments
           </a>
           <a href="{{ route('staff.discounts.index') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12l9 9 10-10V2z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+            <x-admin.ui.icon name="tag" />
             Discounts
           </a>
           <a href="{{ route('staff.userrecords.index') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <x-admin.ui.icon name="user" />
             Users
           </a>
           <a href="{{ route('staff.reports.index') }}" data-nav-row class="quick-nav-item !no-underline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17v-2m3 2v-4m3 4v-6M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/></svg>
+            <x-admin.ui.icon name="chart-bar" />
             Reports
           </a>
         </div>
@@ -158,7 +158,7 @@
           <template x-for="b in results.bookings" :key="'b' + b.id">
             <a :href="b.url" data-nav-row class="search-result-row !no-underline">
               <div class="search-result-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V9z"/></svg>
+                <x-admin.ui.icon name="clipboard" />
               </div>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-ink truncate"><span class="font-mono" x-text="'#' + b.id"></span> · <span x-text="b.guest"></span></p>
@@ -175,7 +175,7 @@
           <template x-for="u in results.users" :key="'u' + u.email">
             <a :href="u.url" data-nav-row class="search-result-row !no-underline">
               <div class="search-result-icon search-result-icon-muted">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                <x-admin.ui.icon name="user" />
               </div>
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-ink truncate" x-text="u.name"></p>
@@ -191,7 +191,7 @@
           <template x-for="r in results.rooms" :key="'r' + r.number">
             <a :href="r.url" data-nav-row class="search-result-row !no-underline">
               <div class="search-result-icon search-result-icon-muted">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"/><path d="M2 18h20"/><path d="M6 10V7a2 2 0 0 1 2-2h3v5"/></svg>
+                <x-admin.ui.icon name="bed" />
               </div>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-ink font-mono" x-text="r.number"></p>
@@ -243,20 +243,66 @@
 
         `readIds` is pruned to the ids currently on screen, so the store cannot
         grow without bound as old alerts fall out of the feed.
+
+        The list is rendered from `items` rather than a Blade @forelse because
+        it has two sources: this server backfill, and alerts pushed live over
+        Reverb (App\Events\StaffNotification → resources/js/admin-notifications.js
+        → a `staff-alert` window event). Both produce the same object shape, so
+        an alert that arrives live and the same alert re-rendered on the next
+        page load are one row, read state and all.
     --}}
     <div class="user-menu-root"
          x-data="{
             open: false,
-            stamps: {{ $notifStamps->toJson() }},
+            items: {{ Js::from($notifications) }},
             seenAt: Number(localStorage.getItem('admin_notif_seen_at') || 0),
             readIds: [],
+            freshIds: [],
+            now: Math.floor(Date.now() / 1000),
 
             init() {
                 let stored = [];
                 try { stored = JSON.parse(localStorage.getItem('admin_notif_read_ids') || '[]'); } catch (e) { stored = []; }
-                const live = this.stamps.map(s => s.id);
+                const live = this.items.map(i => i.id);
                 this.readIds = stored.filter(id => live.includes(id));
                 this.persist();
+
+                {{-- Timestamps are rendered client-side so they keep counting
+                     up on a console left open all shift. --}}
+                setInterval(() => { this.now = Math.floor(Date.now() / 1000); }, 30000);
+
+                window.addEventListener('staff-alert', (e) => this.receive(e.detail));
+            },
+
+            {{-- A live alert. Newest first, never duplicated, list stays at 8. --}}
+            receive(a) {
+                if (!a || !a.id || this.items.some(i => i.id === a.id)) return;
+                this.items = [a, ...this.items].slice(0, 8);
+                this.freshIds = [a.id, ...this.freshIds].slice(0, 8);
+                this.now = Math.floor(Date.now() / 1000);
+
+                {{-- 'Mark all read' works by timestamp, so an alert that lands
+                     after it must not be swept up by it. Persisted, not just
+                     held in memory: otherwise the next page load re-reads the
+                     old, higher line from localStorage and silently marks this
+                     alert read without anyone having opened it. --}}
+                if (a.at && a.at <= this.seenAt) {
+                    this.seenAt = a.at - 1;
+                    localStorage.setItem('admin_notif_seen_at', this.seenAt);
+                }
+
+                this.ring();
+            },
+
+            ring() {
+                const btn = this.$refs.bell;
+                const dot = this.$refs.dot;
+                [[btn, 'is-ringing'], [dot, 'is-bumped']].forEach(([el, cls]) => {
+                    if (!el) return;
+                    el.classList.remove(cls);
+                    void el.offsetWidth;   {{-- restart if one is mid-flight --}}
+                    el.classList.add(cls);
+                });
             },
 
             persist() {
@@ -265,12 +311,12 @@
 
             isRead(id) {
                 if (this.readIds.includes(id)) return true;
-                const stamp = this.stamps.find(s => s.id === id);
+                const item = this.items.find(i => i.id === id);
                 // 'Mark all read' covers everything that existed at the time.
-                return !!stamp && stamp.at <= this.seenAt;
+                return !!item && item.at <= this.seenAt;
             },
 
-            get unread() { return this.stamps.filter(s => !this.isRead(s.id)).length },
+            get unread() { return this.items.filter(i => !this.isRead(i.id)).length },
 
             markOne(id) {
                 if (!this.readIds.includes(id)) {
@@ -282,14 +328,30 @@
             markAllRead() {
                 this.seenAt = Math.floor(Date.now() / 1000);
                 localStorage.setItem('admin_notif_seen_at', this.seenAt);
-                this.readIds = this.stamps.map(s => s.id);
+                this.readIds = this.items.map(i => i.id);
                 this.persist();
+            },
+
+            {{-- Replaces Carbon's diffForHumans(), which froze at render time. --}}
+            ago(at) {
+                if (!at) return '';
+                const s = Math.max(0, this.now - at);
+                if (s < 60)    return 'just now';
+                if (s < 3600)  return Math.floor(s / 60) + 'm ago';
+                if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+                return Math.floor(s / 86400) + 'd ago';
+            },
+
+            tile(type) {
+                return { booking: 'notif-icon-gold', payment: 'notif-icon-green', discount: 'notif-icon-green', maintenance: 'notif-icon-rose' }[type] || 'notif-icon-gold';
             }
          }"
          @click.outside="open = false">
-      <button @click="open = !open" aria-haspopup="true" :aria-expanded="open" aria-label="Notifications" class="btn btn-ghost btn-sm btn-icon topbar-alert-btn">
-        <svg class="topbar-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
-        <span x-show="unread > 0" x-cloak class="topbar-alert-dot" x-text="unread > 9 ? '9+' : unread"></span>
+      <button x-ref="bell" @click="open = !open" aria-haspopup="true" :aria-expanded="open"
+              :aria-label="unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'"
+              class="btn btn-ghost btn-sm btn-icon topbar-alert-btn">
+        <x-admin.ui.icon name="bell" class="topbar-alert-icon" />
+        <span x-ref="dot" x-show="unread > 0" x-cloak class="topbar-alert-dot" x-text="unread > 9 ? '9+' : unread"></span>
       </button>
       <div x-show="open" x-transition:leave.opacity.duration.120ms x-cloak class="user-menu-panel user-menu-panel-wide">
         <div class="notif-head">
@@ -297,35 +359,34 @@
           <button x-show="unread > 0" @click="markAllRead()" class="notif-mark-read">Mark all read</button>
         </div>
         <div class="notif-list">
-          @forelse($notifications as $notif)
+          <template x-for="n in items" :key="n.id">
             {{-- @click fires before navigation, so the id is stored even
                  though the browser leaves this page immediately after. --}}
-            <a href="{{ $notif['url'] }}"
+            <a :href="n.url"
                class="notif-row !no-underline"
-               :class="isRead(@js($notif['id'])) && 'is-read'"
-               @click="markOne(@js($notif['id']))">
-              @if($notif['type'] === 'discount')
-                <div class="notif-icon notif-icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12l9 9 10-10V2z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></div>
-              @elseif($notif['type'] === 'maintenance')
-                <div class="notif-icon notif-icon-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-              @elseif($notif['type'] === 'payment')
-                <div class="notif-icon notif-icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m8.5 15 2 2 4-4"/></svg></div>
-              @else
-                <div class="notif-icon notif-icon-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.5a1.5 1.5 0 0 0 0-3V9z"/></svg></div>
-              @endif
+               :class="{ 'is-read': isRead(n.id), 'is-fresh': freshIds.includes(n.id) }"
+               @click="markOne(n.id)">
+              <div class="notif-icon" :class="tile(n.type)">
+                {{-- x-html, but every branch is a constant defined right here —
+                     no alert field ever reaches it. --}}
+                <template x-if="n.type === 'discount'"><x-admin.ui.icon name="tag" /></template>
+                <template x-if="n.type === 'maintenance'"><x-admin.ui.icon name="wrench" /></template>
+                <template x-if="n.type === 'payment'"><x-admin.ui.icon name="credit-card" /></template>
+                <template x-if="n.type === 'booking'"><x-admin.ui.icon name="clipboard" /></template>
+              </div>
               <div class="min-w-0 flex-1">
-                <p class="notif-text">{{ $notif['text'] }}</p>
-                <p class="notif-time">{{ $notif['time']?->diffForHumans() }}</p>
+                {{-- x-text, not x-html: n.text carries a guest-supplied name. --}}
+                <p class="notif-text"><span class="font-extrabold" x-text="n.title"></span> · <span x-text="n.text"></span></p>
+                <p class="notif-time" x-text="ago(n.at)"></p>
               </div>
               {{-- The dot is the unread marker; it disappears on click. --}}
-              <span x-show="!isRead(@js($notif['id']))" x-cloak class="notif-unread-dot" aria-label="Unread"></span>
+              <span x-show="!isRead(n.id)" x-cloak class="notif-unread-dot" aria-label="Unread"></span>
             </a>
-          @empty
-            <div class="notif-empty">
-              <p class="notif-empty-title">You're all caught up</p>
-              <p class="notif-empty-copy">No pending items right now</p>
-            </div>
-          @endforelse
+          </template>
+          <div x-show="items.length === 0" x-cloak class="notif-empty">
+            <p class="notif-empty-title">You're all caught up</p>
+            <p class="notif-empty-copy">No pending items right now</p>
+          </div>
         </div>
       </div>
     </div>
@@ -338,7 +399,7 @@
           <span class="user-menu-id-name block">{{ Auth::guard('staff')->user()->name }}</span>
           <span class="user-menu-id-role block">{{ Auth::guard('staff')->user()->role }}</span>
         </span>
-        <svg class="user-menu-chevron hidden sm:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        <x-admin.ui.icon name="chevron-down" class="user-menu-chevron hidden sm:block" />
       </button>
       <div x-show="userMenu" x-transition:leave.opacity.duration.120ms x-cloak class="user-menu-panel">
         <div class="user-menu-head">
@@ -346,15 +407,15 @@
           <p class="user-menu-role">{{ Auth::guard('staff')->user()->role }}</p>
         </div>
         <a href="{{ route('staff.staffrecords.index') }}" class="user-menu-link !no-underline">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> My staff record
+          <x-admin.ui.icon name="id-card" /> My staff record
         </a>
         <a href="{{ route('staff.audit.index') }}" class="user-menu-link !no-underline">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.3 1.3L6.5 5"/><path d="m3 12 1.3 1.3 2.2-2.3"/><path d="m3 18 1.3 1.3 2.2-2.3"/></svg> My activity
+          <x-admin.ui.icon name="list-check" /> My activity
         </a>
         <form method="POST" action="{{ route('staff.logout') }}" class="m-0">
           @csrf
           <button type="submit" class="user-menu-link user-menu-link-danger">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Log out
+            <x-admin.ui.icon name="log-out" /> Log out
           </button>
         </form>
       </div>

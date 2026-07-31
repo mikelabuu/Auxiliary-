@@ -14,9 +14,9 @@
             <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-2 lg:pb-0">
                 @php
                     $navItems = [
-                        ['route' => 'settings.profile', 'icon' => 'person', 'label' => 'Profile Settings'],
+                        ['route' => 'settings.profile', 'icon' => 'user', 'label' => 'Profile Settings'],
                         ['route' => 'settings.bookings', 'icon' => 'book', 'label' => 'My Bookings'],
-                        ['route' => 'settings.transactions', 'icon' => 'payments', 'label' => 'My Payments'],
+                        ['route' => 'settings.transactions', 'icon' => 'money-bill-wave', 'label' => 'My Payments'],
                     ];
                 @endphp
                 @foreach($navItems as $item)
@@ -26,7 +26,7 @@
                        {{ $active
                           ? 'bg-clsu-50 text-clsu-800 border-clsu-600'
                           : 'text-stone-600 hover:text-clsu-800 hover:bg-stone-50 border-transparent' }}">
-                        <span class="material-icons text-[20px] {{ $active ? 'text-clsu-700' : 'text-stone-400' }}">{{ $item['icon'] }}</span>
+                        <i class="fa-solid fa-{{ $item['icon'] }} text-[20px] {{ $active ? 'text-clsu-700' : 'text-stone-400' }}"></i>
                         {{ $item['label'] }}
                     </a>
                 @endforeach

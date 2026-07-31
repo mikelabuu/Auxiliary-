@@ -25,7 +25,6 @@ class BookingsTable extends Component
     public $search = '';
     public $statusFilter = '';
     public $dateFilter = '';
-    public $selectedBooking = null;
 
     protected $paginationTheme = 'tailwind';
 
@@ -36,9 +35,20 @@ class BookingsTable extends Component
         'dateFilter' => ['except' => '', 'as' => 'date'],
     ];
 
+    /**
+     * `openBookingModal` used to live here, mapped to a selectBooking() that
+     * parked a full Booking model (reservations.room + payments eager-loaded)
+     * in a public property. Livewire re-serialises public properties on every
+     * request, and this component polls every 15 seconds — so opening a
+     * read-only dialog made the whole table, its status counts and that model
+     * graph round-trip four times a minute for as long as it stayed open.
+     *
+     * The modal is fetched directly now (window.openBookingDetail, defined in
+     * layouts/admin), from the same partial, without involving this component
+     * at all. Only the two actions that genuinely mutate state remain.
+     */
     protected $listeners = [
         'refreshBookingsTable' => '$refresh',
-        'openBookingModal' => 'selectBooking',
         'cancelBookingConfirmed' => 'cancelBooking',
         'checkoutBookingConfirmed' => 'checkoutBooking',
     ];
@@ -85,29 +95,6 @@ class BookingsTable extends Component
     {
         $this->resetPage();
     }
-    // Open modal with booking details
-    public function selectBooking($bookingId)
-    {
-        $this->selectedBooking = Booking::with('reservations.room', 'payments')->find($bookingId);
-
-        if ($this->selectedBooking) {
-            $staff = auth('staff')->user();
-
-            AuditLogger::log(
-                'view_booking_modal', 
-                $this->selectedBooking, 
-                null, 
-                null, 
-                "Admin {$staff->name} viewed booking #{$this->selectedBooking->id} in modal"
-            );
-        }
-    }
-    // Close modal
-    public function closeModal()
-    {
-        $this->selectedBooking = null;
-    }
-
     public function cancelBooking($bookingId)
     {   
         $staff = Auth::guard('staff')->user();

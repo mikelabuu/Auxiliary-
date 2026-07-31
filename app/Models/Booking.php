@@ -55,6 +55,9 @@ class Booking extends Model
         'guest_phone',
         'check_in',
         'check_out',
+        'arrival_time',
+        'special_requests',
+        'accepted_terms_at',
         'discount',
         'num_seniors',
         'total_price',
@@ -68,11 +71,16 @@ class Booking extends Model
     protected $casts = [
         'check_in' => 'date',
         'check_out' => 'date',
+        // The guest-facing hold countdown (public/booking/show) needs the time
+        // of day, not just the date, to work out how long is left on the
+        // payment window — so this is a datetime, unlike check_in/check_out.
+        'pending_payment_since' => 'datetime',
+        'accepted_terms_at' => 'datetime',
         'num_seniors' => 'integer',
-        'expected_guests' => 'integer',   // 
+        'expected_guests' => 'integer',   //
         'total_price' => 'float',
         'discount' => 'float',
-        'payable_amount' => 'float',    // 
+        'payable_amount' => 'float',    //
     ];
 
 

@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
 use App\Events\RoomStatusChanged;
+use App\Events\StaffNotification;
 use App\Support\Realtime;
 use App\Support\RoomHold;
 
@@ -141,6 +142,7 @@ class RoomController extends Controller
             $stay = [
                 'kind'  => $line['kind'],
                 'label' => $line['label'],
+                'guest' => $line['guest'],
                 'title' => $line['title'] ?: null,
             ];
 
@@ -321,6 +323,13 @@ public function occupancyForRoom(Room $room)
         );
 
         Realtime::emit(new RoomStatusChanged());
+
+        // A room going out of service is the one status change the rest of the
+        // desk needs pushed at them — everything else they discover when they
+        // next look at the board.
+        if ($validated['status'] === 'maintenance' && ($oldValues['status'] ?? null) !== 'maintenance') {
+            Realtime::emit(StaffNotification::roomMaintenance($room->fresh()));
+        }
 
         return response()->json([
             'success' => true,

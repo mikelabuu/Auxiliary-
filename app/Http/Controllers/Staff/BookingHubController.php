@@ -26,12 +26,15 @@ class BookingHubController extends Controller
     {
         $staff = Auth::guard('staff')->user();
 
+        // Both the row's View button and the guest name open this modal now,
+        // so the description no longer names one of them. (The View button
+        // used to log through Livewire's selectBooking(), which is gone.)
         AuditLogger::log(
             'view_booking_modal',
             $booking,
             null,
             null,
-            "Staff {$staff->name} viewed booking #{$booking->id} via guest name \"{$booking->guest_name}\""
+            "Staff {$staff->name} viewed booking #{$booking->id} (\"{$booking->guest_name}\")"
         );
 
         $html = view('staff.partials.booking-details', [

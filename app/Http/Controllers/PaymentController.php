@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Support\Realtime;
 use App\Support\StaffAlert;
 use App\Events\PaymentProofSubmitted;
+use App\Events\StaffNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -145,6 +146,7 @@ class PaymentController extends Controller
         // The verification queue is worked live — a guest who has just uploaded
         // a receipt is standing by for a decision.
         Realtime::emit(new PaymentProofSubmitted());
+        Realtime::emit(StaffNotification::proofSubmitted($payment->fresh()->load('booking')));
 
         // And by email, for whoever is not sitting in front of the console.
         StaffAlert::proofSubmitted($booking, $payment);

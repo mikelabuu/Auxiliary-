@@ -140,7 +140,7 @@
         <x-booking.ui.empty-state
             title="No Payments Logged"
             description="You don't have any transaction history yet. Your payment statements will appear here after booking checkout."
-            icon="payments"
+            icon="money-bill-wave"
         />
     @endif
 @endsection

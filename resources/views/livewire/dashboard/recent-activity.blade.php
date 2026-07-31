@@ -4,7 +4,7 @@
     @foreach($recentActivities as $activity)
         <div class="timeline-item flex gap-3.5">
             <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ring-4 ring-white z-10 {{ $activity['color_class'] }}">
-                <span class="material-icons text-sm">{{ $activity['icon'] }}</span>
+                <x-admin.ui.icon :name="$activity['icon']" class="w-3.5 h-3.5" />
             </div>
             <div class="pb-1">
                 {{-- Escaped: descriptions are plain text and can embed

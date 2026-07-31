@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Events\BookingChanged;
 use App\Events\DiscountChanged;
+use App\Events\StaffNotification;
 use App\Models\Booking;
 use App\Models\Discount;
 use App\Models\DiscountFile;
@@ -107,6 +108,7 @@ class DiscountController extends Controller
         // The staff queue is worked live — a guest who has just uploaded IDs is
         // waiting on a decision — but it only refreshed on a 60s poll.
         Realtime::emit(new DiscountChanged());
+        Realtime::emit(StaffNotification::discountRequested($discount->load('booking')));
 
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Discount request submitted successfully! Staff will review it.');

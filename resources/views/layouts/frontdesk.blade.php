@@ -10,6 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  {{-- Same self-hosted Font Awesome Free the admin console loads — see the note
+       in layouts/admin. Components go through <x-admin.ui.icon> (inlined SVG). --}}
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
+  <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
 
   <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
   <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
@@ -21,7 +26,10 @@
   @livewireStyles
   @stack('styles')
 </head>
-<body class="bg-surface text-ink antialiased">
+{{-- Gate for the private `staff.alerts` Reverb subscription — see
+     resources/js/admin-notifications.js. The desk gets the same live alerts as
+     the admin console; it is usually the screen someone is actually sitting at. --}}
+<body class="bg-surface text-ink antialiased" data-staff-alerts>
 
   {{-- Keyboard users land here first: one Tab jumps past the band's pill nav
        to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}

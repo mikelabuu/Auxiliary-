@@ -1,0 +1,177 @@
+/* Part 16 of the public bundle — the payment hold countdown.
+   Imported in order by resources/css/app.css; do not reorder.
+
+   `bookings:expire` cancels a pending_payment booking once
+   config('bookings.expiry_minutes') has passed, and the booking summary page
+   used to say only that the rooms were "on hold" — no indication that the
+   hold had a deadline at all. A guest could sit on that page and watch the
+   reservation die without warning.
+
+   The bar states the window and counts it down. Three states, because urgency
+   should escalate rather than shout from the start:
+
+     default   gold      plenty of time, informational
+     is-urgent ember     under ten minutes, worth interrupting for
+     is-expired muted    the timer ran out; the page is about to reload
+
+   Colour is never the only signal — the digits and the copy carry the same
+   information, and the fill bar shortens.
+   ============================================================ */
+
+.hold-bar {
+    --hold-accent: var(--color-gold, #d9b45b);
+    --hold-ink: var(--color-palay-800, #93370d);
+
+    border-radius: 1.5rem;
+    padding: 1rem 1.25rem 1.15rem;
+    background: color-mix(in oklch, var(--hold-accent) 11%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--hold-accent) 32%, transparent);
+    transition: background 400ms ease, box-shadow 400ms ease;
+}
+
+.hold-bar__row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.hold-bar__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: none;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--hold-ink);
+    font-size: 20px;
+}
+
+/* The sand tips over once a minute — a small sign of life that says the
+   number is live, without a permanent animation pulling focus. */
+.hold-bar__icon i {
+    animation: hold-turn 60s steps(1, end) infinite;
+}
+
+@keyframes hold-turn {
+
+    0%,
+    49% {
+        transform: rotate(0deg);
+    }
+
+    50%,
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+.hold-bar__copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.hold-bar__label {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-ink, #14201a);
+}
+
+.hold-bar__note {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--color-stone-600, #4a5b50);
+    text-wrap: pretty;
+}
+
+.hold-bar__clock {
+    flex: none;
+    font-family: var(--font-data, ui-monospace, monospace);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--hold-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.hold-bar__track {
+    margin-top: 0.85rem;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--hold-accent) 22%, transparent);
+    overflow: hidden;
+}
+
+/* scaleX from the left: a transform composites, where animating width would
+   lay out and paint the bar every single second for up to an hour. */
+.hold-bar__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--hold-accent);
+    transform-origin: left center;
+    transform: scaleX(1);
+    transition: transform 1s linear, background 400ms ease;
+}
+
+/* ── Under ten minutes ── */
+.hold-bar.is-urgent {
+    --hold-accent: var(--color-ember-500, #ef4444);
+    --hold-ink: var(--color-ember-700, #b91c1c);
+}
+
+.hold-bar.is-urgent .hold-bar__clock {
+    animation: hold-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hold-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
+}
+
+/* ── Ran out; the reload is already queued ── */
+.hold-bar.is-expired {
+    --hold-accent: var(--color-stone-400, #93a698);
+    --hold-ink: var(--color-stone-600, #4a5b50);
+}
+
+.hold-bar.is-expired .hold-bar__clock {
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hold-bar__icon i,
+    .hold-bar.is-urgent .hold-bar__clock {
+        animation: none;
+    }
+
+    .hold-bar__fill {
+        transition: none;
+    }
+}
+
+/* Stack the clock under the copy before it starts squeezing the note. */
+@media (max-width: 560px) {
+    .hold-bar__row {
+        flex-wrap: wrap;
+    }
+
+    .hold-bar__clock {
+        width: 100%;
+        order: 3;
+        text-align: right;
+    }
+}

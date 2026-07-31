@@ -25,7 +25,9 @@ class RecentActivity extends Component
             ->limit(4)
             ->get()
             ->map(function ($log) {
-                $icon = 'check_circle';
+                // Names index app/Support/AdminIcons (Font Awesome Free), which
+                // is what the <x-admin.ui.icon> in the view resolves against.
+                $icon = 'check-circle';
                 $colorClass = 'bg-clsu-50 text-clsu-700';
 
                 $action = strtolower($log->action);
@@ -35,7 +37,7 @@ class RecentActivity extends Component
                     $icon = 'receipt';
                     $colorClass = 'bg-clsu-50 text-clsu-700';
                 } elseif (str_contains($action, 'user') || str_contains($action, 'staff') || $target === 'user' || $target === 'staff') {
-                    $icon = 'person';
+                    $icon = 'user';
                     $colorClass = 'bg-palay-50 text-palay-700';
                 } elseif (str_contains($action, 'room') || $target === 'room') {
                     $icon = 'bed';

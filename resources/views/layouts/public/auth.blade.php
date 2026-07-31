@@ -10,7 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    {{-- Font Awesome Free, self-hosted — see the note in layouts/public/base. --}}
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
+    <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
 
     <style>
         .hidden-form { display: none; }

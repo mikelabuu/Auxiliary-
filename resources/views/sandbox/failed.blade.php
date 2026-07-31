@@ -7,7 +7,7 @@
         <div class="bg-ember-700 relative px-8 pt-10 pb-16 overflow-hidden">
             <div aria-hidden="true" class="pointer-events-none absolute -top-16 -right-14 h-48 w-48 rounded-full bg-white/10 blur-3xl"></div>
             <span class="animate-shake inline-flex w-20 h-20 items-center justify-center rounded-full border-4 border-white/80 text-white">
-                <span class="material-icons text-[40px]">priority_high</span>
+                <i class="fa-solid fa-exclamation text-[40px]"></i>
             </span>
             <p class="mt-5 text-[10px] font-bold uppercase tracking-[0.4em] text-white/70">Booking #{{ $payment->booking_id }}</p>
             <h2 class="font-display text-3xl text-white tracking-tight mt-2">Payment <span class="italic">declined</span></h2>
@@ -44,7 +44,7 @@
             <div class="mt-6 flex flex-col sm:flex-row gap-2.5">
                 <a href="{{ route('bookings.pay', $payment->booking_id) }}"
                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-clsu-600 to-clsu-800 px-6 py-3 text-sm font-bold text-white shadow-[0_6px_16px_-4px_rgba(17,78,40,0.5)] transition-[transform,color,background-color,border-color,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(17,78,40,0.6)] !no-underline">
-                    <span class="material-icons text-[18px]">refresh</span>
+                    <i class="fa-solid fa-arrows-rotate text-[18px]"></i>
                     Try again
                 </a>
                 <a href="{{ route('booking.show', $payment->booking_id) }}"

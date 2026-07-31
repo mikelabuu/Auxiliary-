@@ -31,7 +31,7 @@
                     onclick="window.pubModalClose('{{ $id }}')"
                     aria-label="Close"
             >
-                <span class="material-icons text-[20px]">close</span>
+                <i class="fa-solid fa-xmark text-[20px]"></i>
             </button>
         </div>
 

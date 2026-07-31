@@ -13,7 +13,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 px-1">
         <div class="flex items-center gap-3">
             <span class="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center">
-                <span class="material-icons text-palay-300 text-[22px]">lock</span>
+                <i class="fa-solid fa-lock text-palay-300 text-[22px]"></i>
             </span>
             <div>
                 <p class="text-white font-display text-lg leading-tight">Secure Payment Portal</p>
@@ -21,7 +21,7 @@
             </div>
         </div>
         <span class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-palay-300/40 bg-palay-400/15 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-palay-200">
-            <span class="material-icons text-[13px]">science</span>
+            <i class="fa-solid fa-flask text-[13px]"></i>
             Sandbox — no real funds move
         </span>
     </div>
@@ -32,7 +32,7 @@
         <div class="lg:col-span-3 p-6 sm:p-8">
             @if (session('error'))
                 <div class="animate-shake mb-5 flex items-start gap-2.5 rounded-2xl border border-ember-200 bg-ember-50 px-4 py-3 text-sm font-semibold text-ember-700">
-                    <span class="material-icons text-[18px] mt-0.5 shrink-0">error_outline</span>
+                    <i class="fa-solid fa-circle-exclamation text-[18px] mt-0.5 shrink-0"></i>
                     {{ session('error') }}
                 </div>
             @endif
@@ -40,7 +40,7 @@
                 <div class="animate-shake mb-5 rounded-2xl border border-ember-200 bg-ember-50 px-4 py-3 text-sm font-semibold text-ember-700">
                     <ul class="space-y-1">
                         @foreach ($errors->all() as $error)
-                            <li class="flex items-start gap-2"><span class="material-icons text-[16px] mt-0.5 shrink-0">error_outline</span>{{ $error }}</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-circle-exclamation text-[16px] mt-0.5 shrink-0"></i>{{ $error }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -64,7 +64,7 @@
                 <div>
                     <label for="card" class="block text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mb-1.5">Card / Account Number</label>
                     <div class="relative">
-                        <span class="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">credit_card</span>
+                        <i class="fa-solid fa-credit-card absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]"></i>
                         <input id="card" name="card" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1111 2222 3333 4444" maxlength="19" required
                                class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-bold tracking-widest tabnum focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
@@ -73,7 +73,7 @@
                 <div>
                     <label for="holder" class="block text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mb-1.5">Account Holder</label>
                     <div class="relative">
-                        <span class="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">person</span>
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]"></i>
                         <input id="holder" name="holder" type="text" autocomplete="cc-name" placeholder="Juan Dela Cruz" required
                                class="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 bg-stone-50/60 text-stone-800 text-sm font-semibold focus:bg-white focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
@@ -86,13 +86,13 @@
                         <label class="cursor-pointer">
                             <input type="radio" name="simulate" value="success" class="peer sr-only" checked>
                             <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] peer-checked:bg-clsu-700 peer-checked:text-white peer-checked:shadow-md">
-                                <span class="material-icons text-[15px]">check_circle</span> Approve payment
+                                <i class="fa-solid fa-circle-check text-[15px]"></i> Approve payment
                             </span>
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="simulate" value="fail" class="peer sr-only">
                             <span class="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] peer-checked:bg-ember-600 peer-checked:text-white peer-checked:shadow-md">
-                                <span class="material-icons text-[15px]">cancel</span> Decline payment
+                                <i class="fa-solid fa-circle-xmark text-[15px]"></i> Decline payment
                             </span>
                         </label>
                     </div>
@@ -101,7 +101,7 @@
                 <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
                     <button type="submit" id="payBtn"
                             class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-clsu-600 to-clsu-800 px-6 py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_-4px_rgba(17,78,40,0.5)] transition-[transform,color,background-color,border-color,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-6px_rgba(17,78,40,0.6)] focus:outline-none focus:ring-2 focus:ring-clsu-400 focus:ring-offset-2 cursor-pointer disabled:opacity-70 disabled:pointer-events-none">
-                        <span class="material-icons text-[18px]">lock</span>
+                        <i class="fa-solid fa-lock text-[18px]"></i>
                         Pay ₱{{ number_format($payment->amount, 2) }}
                     </button>
                     <a href="{{ route('booking.show', $payment->booking_id) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full border border-stone-200 bg-white px-5 py-3 text-xs font-bold text-stone-500 transition-colors hover:bg-stone-50 hover:text-stone-700 !no-underline">
@@ -120,13 +120,13 @@
 
             <div class="mt-6 pt-5 border-t border-stone-100 grid grid-cols-3 gap-2 text-center">
                 <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
-                    <span class="material-icons text-[16px] text-clsu-600">lock</span> Encrypted
+                    <i class="fa-solid fa-lock text-[16px] text-clsu-600"></i> Encrypted
                 </div>
                 <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
-                    <span class="material-icons text-[16px] text-clsu-600">receipt_long</span> Instant receipt
+                    <i class="fa-solid fa-receipt text-[16px] text-clsu-600"></i> Instant receipt
                 </div>
                 <div class="text-[9px] font-bold text-stone-400 uppercase tracking-wider flex flex-col items-center gap-1">
-                    <span class="material-icons text-[16px] text-clsu-600">mark_email_read</span> Email confirmation
+                    <i class="fa-solid fa-envelope-circle-check text-[16px] text-clsu-600"></i> Email confirmation
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@
             <div aria-hidden="true" class="pointer-events-none absolute -bottom-20 -right-16 h-52 w-52 rounded-full bg-palay-300/10 blur-3xl"></div>
 
             <h4 class="font-display text-lg flex items-center gap-2 border-b border-white/10 pb-4">
-                <span class="material-icons text-palay-300 text-[20px]">receipt_long</span>
+                <i class="fa-solid fa-receipt text-palay-300 text-[20px]"></i>
                 Payment Summary
             </h4>
 
@@ -164,7 +164,7 @@
 
                 @if($booking->discount > 0)
                     <div class="mt-4 flex items-center justify-between border-t border-white/10 pt-4 text-sm">
-                        <span class="flex items-center gap-1.5 text-palay-300"><span class="material-icons text-[15px]">discount</span> Discount</span>
+                        <span class="flex items-center gap-1.5 text-palay-300"><i class="fa-solid fa-tag text-[15px]"></i> Discount</span>
                         <span class="font-semibold text-palay-300 tabnum">−₱{{ number_format($booking->discount, 2) }}</span>
                     </div>
                 @endif

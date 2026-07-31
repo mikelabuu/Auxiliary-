@@ -42,6 +42,14 @@ const ASSETS = [
     ['lightbox2/dist/js/lightbox-plus-jquery.min.js', 'lightbox2/js/lightbox-plus-jquery.min.js'],
     ['lightbox2/dist/css/lightbox.min.css', 'lightbox2/css/lightbox.min.css'],
     ['lightbox2/dist/images', 'lightbox2/images'],
+
+    // Font Awesome Free — the icon system for both consoles. all.min.css
+    // resolves its faces as url(../webfonts/…), so css/ and webfonts/ have to
+    // stay siblings, same as lightbox above. Blade components go through
+    // app/Support/AdminIcons (inlined SVG, no network); this stylesheet is what
+    // makes a bare `<i class="fa-solid fa-bed">` work in any view.
+    ['@fortawesome/fontawesome-free/css/all.min.css', 'fontawesome/css/all.min.css'],
+    ['@fortawesome/fontawesome-free/webfonts', 'fontawesome/webfonts'],
 ];
 
 // Only ever clear the folders this script owns. public/vendor/ is shared —

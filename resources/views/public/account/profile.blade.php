@@ -16,7 +16,7 @@
 
     <div class="space-y-8">
         <!-- Profile Update Section -->
-        <x-booking.ui.card title="Personal Information" icon="manage_accounts">
+        <x-booking.ui.card title="Personal Information" icon="user-gear">
             <form method="POST" action="{{ route('settings.update') }}" class="space-y-4">
                 @csrf
                 @method('PUT')
@@ -32,7 +32,7 @@
 
                 <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.ui.button variant="primary">
-                        <span class="material-icons text-[18px] mr-1.5">save</span>
+                        <i class="fa-solid fa-floppy-disk text-[18px] mr-1.5"></i>
                         Save Profile
                     </x-booking.ui.button>
                 </div>
@@ -53,7 +53,7 @@
 
                 <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.ui.button variant="primary">
-                        <span class="material-icons text-[18px] mr-1.5">lock_reset</span>
+                        <i class="fa-solid fa-key text-[18px] mr-1.5"></i>
                         Update Password
                     </x-booking.ui.button>
                 </div>

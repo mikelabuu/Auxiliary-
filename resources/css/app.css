@@ -63,6 +63,9 @@
 @import './public/12-scroll-effects.css';
 @import './public/13-booking-night-v3.css';
 @import './public/14-auth.css';
+@import './public/15-checkout-flow.css';
+@import './public/16-hold-countdown.css';
+@import './public/17-stay-card.css';
 /* Shared with the admin bundle — window.toast() is available on every page,
    so its styling has to be too. See resources/css/shared/toast.css. */
 @import './shared/toast.css';

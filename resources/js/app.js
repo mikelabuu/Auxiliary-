@@ -1,6 +1,7 @@
 import './bootstrap';
 import './admin-modals';
 import './live-refresh';
+import './admin-notifications';
 import './sortable-tables';
 import './animated-content';
 import './expandable-bento';

@@ -245,11 +245,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!card) return;
 
         if (row.available <= 0) {
-          setPill(card, '<span class="avail-pill avail-pill--full"><span class="material-icons text-[13px]">event_busy</span>Fully booked</span>');
+          setPill(card, '<span class="avail-pill avail-pill--full"><i class="fa-solid fa-calendar-xmark text-[13px]"></i>Fully booked</span>');
         } else if (row.available <= 2) {
-          setPill(card, '<span class="avail-pill avail-pill--low"><span class="material-icons text-[13px]">local_fire_department</span>Only ' + row.available + ' left</span>');
+          setPill(card, '<span class="avail-pill avail-pill--low"><i class="fa-solid fa-fire text-[13px]"></i>Only ' + row.available + ' left</span>');
         } else {
-          setPill(card, '<span class="avail-pill avail-pill--open"><span class="material-icons text-[13px]">check_circle</span>' + row.available + ' rooms open</span>');
+          setPill(card, '<span class="avail-pill avail-pill--open"><i class="fa-solid fa-circle-check text-[13px]"></i>' + row.available + ' rooms open</span>');
         }
         // Fully booked → lock the Book button. If the guest wants different
         // dates, picking them re-runs the search and re-enables the card.

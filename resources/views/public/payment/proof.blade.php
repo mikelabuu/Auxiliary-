@@ -26,7 +26,7 @@
             <div class="animate-shake mb-8 rounded-2xl border border-ember-300/50 bg-ember-50 px-5 py-4 text-xs font-bold text-ember-700">
                 <ul class="space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li class="flex items-start gap-2"><span class="material-icons text-[16px] mt-0.5 shrink-0">error_outline</span>{{ $error }}</li>
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-circle-exclamation text-[16px] mt-0.5 shrink-0"></i>{{ $error }}</li>
                     @endforeach
                 </ul>
             </div>
@@ -71,7 +71,7 @@
                             <input type="radio" name="proof_method" value="{{ $value }}" class="peer sr-only method-radio"
                                    {{ old('proof_method', 'gcash') === $value ? 'checked' : '' }} required>
                             <span class="flex items-center gap-3 rounded-2xl border-2 border-emerald-deep/15 bg-white/60 px-4 py-3.5 transition-[color,background-color,border-color,box-shadow] peer-checked:border-gold peer-checked:bg-gold-soft/20 peer-focus-visible:ring-2 peer-focus-visible:ring-gold">
-                                <span class="material-icons text-[20px] text-emerald-deep">{{ $value === 'gcash' ? 'smartphone' : 'account_balance' }}</span>
+                                <i class="fa-solid fa-{{ $value === 'gcash' ? 'mobile-screen-button' : 'building-columns' }} text-[20px] text-emerald-deep"></i>
                                 <span class="text-sm font-bold text-ink">{{ $label }}</span>
                             </span>
                         </label>
@@ -130,7 +130,7 @@
                      class="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-emerald-deep/20 bg-white/60 px-6 py-10 text-center transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer hover:border-gold hover:bg-gold-soft/15"
                      role="button" tabindex="0" aria-label="Upload proof of payment">
                     <span class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-deep/5 text-emerald-deep ring-1 ring-emerald-deep/10 transition-transform duration-200 group-hover:-translate-y-0.5">
-                        <span class="material-icons text-[24px]">upload_file</span>
+                        <i class="fa-solid fa-file-arrow-up text-[24px]"></i>
                     </span>
                     <p class="text-sm font-bold text-ink">Drop your receipt here <span class="font-medium text-stone-400">or</span> <span class="gold-underline text-emerald-deep">browse files</span></p>
                     <p class="text-[11px] font-medium text-stone-400">JPG or PNG · up to 4MB</p>
@@ -142,7 +142,7 @@
                         <button type="button" id="proofRemove"
                                 class="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-ember-600 text-white shadow-lg cursor-pointer hover:bg-ember-700 transition-colors"
                                 aria-label="Remove receipt">
-                            <span class="material-icons text-[16px]">close</span>
+                            <i class="fa-solid fa-xmark text-[16px]"></i>
                         </button>
                     </div>
                     <p id="proofFileName" class="mt-2 text-[11px] font-bold text-stone-500"></p>
@@ -150,7 +150,7 @@
             </div>
 
             <div class="flex items-start gap-2.5 rounded-2xl border border-gold/40 bg-gold-soft/25 px-5 py-4 text-xs font-bold text-ink/75 leading-relaxed">
-                <span class="material-icons text-[18px] text-gold shrink-0">tips_and_updates</span>
+                <i class="fa-solid fa-lightbulb text-[18px] text-gold shrink-0"></i>
                 Make sure the amount, reference number and date are readable. Blurred or cropped receipts are usually rejected and will delay your confirmation.
             </div>
 
@@ -160,7 +160,7 @@
                 </a>
                 <button type="submit" id="submitProof" disabled
                         class="press focus-ring w-full sm:w-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)] disabled:opacity-50 disabled:pointer-events-none">
-                    <span class="material-icons text-[18px]">verified</span>
+                    <i class="fa-solid fa-circle-check text-[18px]"></i>
                     Submit for verification
                 </button>
             </div>
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('submit', function () {
         submit.disabled = true;
-        submit.innerHTML = '<span class="material-icons text-[18px] animate-spin">progress_activity</span> Submitting…';
+        submit.innerHTML = '<i class="fa-solid fa-spinner text-[18px] animate-spin"></i> Submitting…';
     });
 
     syncSubmit();
