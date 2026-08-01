@@ -234,8 +234,8 @@
                                     data-facility-photo="{{ asset($photo['img']) }}"
                                     data-facility-title="{{ $photo['title'] }}"
                                     aria-label="View {{ $photo['title'] }} photo fullscreen">
-                                <img src="{{ asset($photo['img']) }}" alt="{{ $photo['title'] }}" loading="lazy" decoding="async"
-                                     class="w-full h-full object-cover">
+                                <x-img :src="$photo['img']" :alt="$photo['title']" loading="lazy" decoding="async"
+                                       sizes="(max-width: 768px) 50vw, 240px" class="w-full h-full object-cover" />
                                 <span class="facility-tile-scrim">
                                     <x-admin.ui.icon name="maximize" class="w-4 h-4" />
                                     <span>View fullscreen</span>

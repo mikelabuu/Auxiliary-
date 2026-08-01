@@ -1,3 +1,13 @@
+# XAMPP's Apache ships a mime.types that predates AVIF, so it serves .avif as
+# application/octet-stream. Browsers usually sniff their way to rendering it
+# anyway, but a wrong Content-Type breaks caching heuristics and any proxy that
+# trusts the header. Declaring it here keeps the fix with the app instead of in
+# a machine-local Apache config. (php artisan serve gets this right already.)
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+    AddType image/webp .webp
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

@@ -8,7 +8,8 @@
        subscription 419s. The frontdesk layout has always carried it. --}}
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Farmers Hostel · Admin Console')</title>
-  <link rel="icon" type="image/png" href="{{ asset('image/clsu.logo.png') }}">
+  {{-- 96px derivative, not the 2500px / 1.26 MB source. --}}
+  <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('image/derived/clsu.logo-96.png') }}">
 
   {{-- AnimatedContent (reactbits.dev/animations/animated-content) gate: hide
        the content-block entrances before first paint so GSAP (app.js) can

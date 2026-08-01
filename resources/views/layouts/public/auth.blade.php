@@ -25,7 +25,8 @@
 
     <!-- Ambient campus backdrop -->
     <div class="fixed inset-0 z-0">
-        <img src="{{ asset('image/hostel1.jpg') }}" class="w-full h-full object-cover animate-slow-zoom" alt="Farmers Hostel">
+        <x-img src="image/hostel1.jpg" class="w-full h-full object-cover animate-slow-zoom"
+               alt="Farmers Hostel" sizes="100vw" decoding="async" />
         <div class="absolute inset-0 bg-gradient-to-b from-clsu-950/80 via-clsu-950/60 to-clsu-950/90"></div>
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(8,36,20,0.55)_100%)]"></div>
     </div>

@@ -56,8 +56,9 @@
         <div class="relative grid grid-cols-2 gap-3 lg:h-[520px] lg:grid-cols-4 lg:grid-rows-2" data-aos="fade-up">
             <a id="roomGalleryFirst" href="{{ asset($hero) }}" data-lightbox="room-{{ $slug }}" data-title="{{ $roomType['title'] }}"
                class="group relative col-span-2 block aspect-[4/3] overflow-hidden rounded-3xl ring-1 ring-ink/10 lg:col-span-2 lg:row-span-2 lg:aspect-auto">
-                <img src="{{ asset($hero) }}" alt="{{ $roomType['title'] }}" decoding="async"
-                     class="h-full w-full object-cover transition duration-700 group-hover:scale-105">
+                <x-img :src="$hero" :alt="$roomType['title']" decoding="async" fetchpriority="high"
+                       sizes="(max-width: 1024px) 100vw, 50vw"
+                       class="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                 <span class="card-shine" aria-hidden="true"></span>
                 @if (!empty($roomType['badge']))
                     <span class="absolute top-5 left-5 rounded-full bg-gold px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-night shadow-sm">{{ $roomType['badge'] }}</span>
@@ -67,8 +68,9 @@
             @foreach ($side as $photo)
                 <a href="{{ asset($photo) }}" data-lightbox="room-{{ $slug }}" data-title="{{ $roomType['title'] }}"
                    class="group relative block aspect-square overflow-hidden rounded-3xl ring-1 ring-ink/10 lg:aspect-auto {{ $sideSpans[$loop->index] ?? '' }}">
-                    <img src="{{ asset($photo) }}" alt="{{ $roomType['title'] }} — view {{ $loop->iteration + 1 }}" loading="lazy" decoding="async"
-                         class="h-full w-full object-cover brightness-[0.96] transition duration-700 group-hover:scale-105 group-hover:brightness-100">
+                    <x-img :src="$photo" alt="{{ $roomType['title'] }} — view {{ $loop->iteration + 1 }}"
+                           loading="lazy" decoding="async" sizes="(max-width: 1024px) 50vw, 25vw"
+                           class="h-full w-full object-cover brightness-[0.96] transition duration-700 group-hover:scale-105 group-hover:brightness-100" />
                     <span class="card-shine" aria-hidden="true"></span>
                 </a>
             @endforeach
@@ -276,8 +278,9 @@
                            class="group !no-underline block overflow-hidden rounded-3xl border border-ink/10 bg-canvas transition duration-300 hover:border-ink/20 hover:shadow-[0_24px_60px_-32px_rgba(4,14,10,0.35)]"
                            data-aos="fade-up" data-aos-delay="{{ $loop->index * 90 }}">
                             <div class="relative aspect-[4/3] overflow-hidden">
-                                <img src="{{ asset($other['image']) }}" alt="{{ $other['title'] }}" loading="lazy" decoding="async"
-                                     class="h-full w-full object-cover transition duration-700 group-hover:scale-105">
+                                <x-img :src="$other['image']" :alt="$other['title']" loading="lazy" decoding="async"
+                                       sizes="(max-width: 768px) 100vw, 33vw"
+                                       class="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                             </div>
                             <div class="p-6">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.24em] text-ink/45">{{ $other['floor'] ?? '' }}</p>

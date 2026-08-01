@@ -33,8 +33,12 @@
             @foreach($prices as $type => $price)
                 <div class="group overflow-hidden rounded-xl border border-stone-200 bg-white shadow-subtle transition-shadow duration-300 hover:shadow-card-lg">
                     <div class="aspect-[4/3] overflow-hidden bg-stone-100">
-                        <img src="{{ asset('image/roomtypes/'.$type.'.jpg') }}" alt="{{ ucfirst($type) }} room"
-                             class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                        {{-- image/roomtypes/*.jpg are byte-identical copies of the
+                             image/*.jpg that config/room_types.php points at.
+                             Using the config's path keeps one canonical source. --}}
+                        <x-img src="image/{{ $type }}.jpg" alt="{{ ucfirst($type) }} room"
+                               loading="lazy" decoding="async" sizes="(max-width: 640px) 50vw, 220px"
+                               class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                     </div>
                     <div class="flex items-baseline justify-between gap-2 px-3 py-2.5">
                         <p class="truncate text-sm font-semibold text-ink">{{ ucfirst($type) }}</p>

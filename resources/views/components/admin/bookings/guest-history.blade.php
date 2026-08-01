@@ -66,8 +66,8 @@
                         <td>
                             <div class="cell-name">
                                 @if($type)
-                                    <img src="{{ asset($type['image']) }}" alt="" loading="lazy" decoding="async"
-                                         class="w-11 h-11 shrink-0 rounded-lg object-cover border border-stone-200">
+                                    <x-img :src="$type['image']" alt="" loading="lazy" decoding="async" sizes="44px"
+                                           class="w-11 h-11 shrink-0 rounded-lg object-cover border border-stone-200" />
                                 @else
                                     <span class="w-11 h-11 shrink-0 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400">
                                         <x-admin.ui.icon name="bed" class="w-4 h-4" />

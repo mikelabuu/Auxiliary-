@@ -29,8 +29,8 @@
                 <button type="button" data-type-value="{{ $type['id'] }}" data-type-title="{{ $type['title'] }}"
                         class="type-card group relative cursor-pointer overflow-hidden rounded-2xl border border-emerald-deep/10 bg-white/60 text-left transition-[transform,color,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-gold hover:shadow-[0_16px_36px_-22px_rgba(6,40,30,0.35)]">
                     <span class="block h-20 w-full overflow-hidden sm:h-24">
-                        <img src="{{ asset($type['image']) }}" alt="{{ $type['title'] }}" loading="lazy"
-                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <x-img :src="$type['image']" :alt="$type['title']" loading="lazy" sizes="200px"
+                               class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </span>
                     {{-- Per-type availability badge for the chosen dates; filled by booking.js --}}
                     <span data-type-avail class="type-card-avail hidden"></span>

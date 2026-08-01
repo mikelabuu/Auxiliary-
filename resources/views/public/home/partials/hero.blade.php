@@ -4,16 +4,19 @@
      treatment (home.js drives #heroWordRotate), and the capsule keeps every
      functional id used by booking.js / availability-search.js. --}}
 <header id="firstsection" class="fh-hero">
-    {{-- Atmosphere: an out-of-focus copy of the building tints the whole sky. --}}
-    <img src="{{ asset('image/farmers-hostel-wide.png') }}" alt="" aria-hidden="true"
-         decoding="async" class="fh-hero-wash">
+    {{-- Atmosphere: an out-of-focus copy of the building tints the whole sky.
+         It carries a 66px blur, so it is served at the smallest tier the
+         builder makes — detail here is invisible by construction. --}}
+    <x-img src="image/farmers-hostel-wide.png" alt="" aria-hidden="true"
+           decoding="async" class="fh-hero-wash" sizes="480px" />
 
     {{-- Stacked radial suns + corner falloff. --}}
     <div class="fh-hero-lights" aria-hidden="true"></div>
 
     {{-- Soft horizon band so the cut-out never floats on a bare gradient. --}}
     <div class="fh-hero-horizon" aria-hidden="true">
-        <img src="{{ asset('image/farmers-hostel-wide.png') }}" alt="" decoding="async">
+        {{-- Also blurred (14px) and only 27% of the hero tall. --}}
+        <x-img src="image/farmers-hostel-wide.png" alt="" decoding="async" sizes="960px" />
     </div>
 
     {{-- Dusk wash — opacity driven by scroll in home.js as the hero leaves. --}}
@@ -38,9 +41,13 @@
         {{-- Contact shadow pooling under the building's base. --}}
         <div class="fh-hero-pool" aria-hidden="true"></div>
 
-        <img src="{{ asset('image/hostel-front.png') }}"
-             alt="Farmers Hostel building inside the CLSU campus"
-             fetchpriority="high" decoding="async" class="fh-hero-build">
+        {{-- The LCP element. Keeps fetchpriority so it still wins the race,
+             but now at ~70 KB instead of 2.2 MB. Rendered at max(104%, 560px)
+             of the stage, which tops out around the 1800px source. --}}
+        <x-img src="image/hostel-front.png"
+               alt="Farmers Hostel building inside the CLSU campus"
+               fetchpriority="high" decoding="async" class="fh-hero-build"
+               sizes="(max-width: 640px) 560px, 104vw" />
 
         {{-- Raked legibility scrim — darkens the copy column, not the picture. --}}
         <div class="fh-hero-scrim" aria-hidden="true"></div>
@@ -104,8 +111,9 @@
                  university, on the university's campus, since 1998. For the
                  audience that books this place, that outranks a star rating. --}}
             <div class="fh-badge">
-                <img src="{{ asset('image/clsu.logo.png') }}" alt=""
-                     class="mb-3 h-[42px] w-[42px] object-contain" loading="lazy" width="42" height="42">
+                <x-img src="image/clsu.logo.png" alt=""
+                       class="mb-3 h-[42px] w-[42px] object-contain"
+                       loading="lazy" width="42" height="42" sizes="42px" />
                 <p class="font-display text-[40px] leading-none tracking-[-0.02em] text-[#10161c]">
                     Est.&nbsp;1998
                 </p>

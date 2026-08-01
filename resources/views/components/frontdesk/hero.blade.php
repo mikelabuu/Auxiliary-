@@ -35,7 +35,14 @@
 
 <header class="fd-hero">
     <div aria-hidden="true">
-        <img src="{{ asset('image/hostel1.jpg') }}" alt="" class="fd-hero-photo">
+        {{-- Decorative: masked to the right 72% of the band, held at 34% opacity
+             under .fd-hero-scrim. A viewport-relative `sizes` here made Chrome
+             re-run candidate selection after the stylesheet landed and fetch a
+             second, larger tier on top of the first. Capping the declared width
+             pins it to one request — and at this opacity, behind a scrim, the
+             detail beyond 1280px is not visible anyway. --}}
+        <x-img src="image/hostel1.jpg" alt="" class="fd-hero-photo"
+               sizes="1280px" decoding="async" />
         <div class="fd-hero-scrim"></div>
         <div class="fd-glow fd-glow-a"></div>
         <div class="fd-glow fd-glow-b"></div>
@@ -45,7 +52,8 @@
         {{-- Top row: brand · clock · staff · logout --}}
         <div class="flex items-center justify-between gap-4">
             <div class="flex min-w-0 items-center gap-3">
-                <img src="{{ asset('image/FHLogo2.png') }}" class="h-10 w-10 object-contain" alt="Farmers Hostel logo">
+                <x-img src="image/FHLogo2.png" class="h-10 w-10 object-contain"
+                       alt="Farmers Hostel logo" sizes="40px" width="40" height="40" />
                 <div class="leading-tight">
                     <p class="fd-brand-title">Farmers Hostel</p>
                     <p class="fd-brand-sub fd-shine">Front Desk</p>

@@ -13,8 +13,9 @@
      wash (cream text on top), and the top/bottom edges fade to the light canvas
      so the band melts into the page instead of ending on a hard edge. --}}
 <div data-fx-band {{ $attributes->merge(['class' => 'relative overflow-hidden']) }}>
-    <img src="{{ asset($image) }}" alt="{{ $alt }}" loading="lazy" decoding="async"
-         class="img-night-grade absolute inset-0 h-full w-full scale-110 object-cover {{ $imageClass }}" data-prlx-y="-0.08" data-prlx-ease="0.06">
+    <x-img :src="$image" :alt="$alt" loading="lazy" decoding="async" sizes="100vw"
+           class="img-night-grade absolute inset-0 h-full w-full scale-110 object-cover {{ $imageClass }}"
+           data-prlx-y="-0.08" data-prlx-ease="0.06" />
     <div class="absolute inset-0 {{ $overlay }}"></div>
     <div class="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-canvas to-transparent"></div>
     <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-canvas to-transparent"></div>

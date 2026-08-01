@@ -26,8 +26,9 @@
        class="hover-lift-premium !no-underline relative block aspect-[3/4] overflow-hidden rounded-2xl bg-canvas-deep ring-1 ring-white/10 sm:aspect-[4/5]">
         {{-- Zoom rides the slow editorial curve; filter/opacity (the fully-booked
              dim toggled by availability-search.js) read as one 400ms state change --}}
-        <img data-card-image src="{{ asset($image) }}" alt="{{ $title }}" loading="lazy" decoding="async"
-             class="absolute inset-0 h-full w-full object-cover brightness-[0.92] saturate-[0.9] [transition:transform_1200ms_cubic-bezier(0.22,1,0.36,1),filter_400ms_ease,opacity_400ms_ease] group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100">
+        <x-img data-card-image :src="$image" :alt="$title" loading="lazy" decoding="async"
+               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+               class="absolute inset-0 h-full w-full object-cover brightness-[0.92] saturate-[0.9] [transition:transform_1200ms_cubic-bezier(0.22,1,0.36,1),filter_400ms_ease,opacity_400ms_ease] group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100" />
         <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-night/60 via-transparent to-night/20"></div>
 
         <!-- Glare sweep on hover (see .card-shine in app.css) -->

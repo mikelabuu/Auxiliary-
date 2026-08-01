@@ -89,8 +89,8 @@
         <nav id="siteNav" aria-label="Primary" data-dark="{{ $navDark ? '1' : '0' }}">
             <!-- Brand lockup -->
             <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="fh-brand focus-ring rounded-full">
-                <img src="{{ asset('image/fh-mark.png') }}" alt="" aria-hidden="true"
-                     width="512" height="512" decoding="async" class="fh-brand-mark">
+                <x-img src="image/fh-mark.png" alt="" aria-hidden="true" sizes="30px"
+                       width="60" height="60" decoding="async" class="fh-brand-mark" />
                 <span class="grid min-w-0">
                     <span class="fh-brand-name truncate">Farmers Hostel</span>
                     <span class="fh-brand-tag">CLSU · Science City of Muñoz</span>
@@ -172,8 +172,8 @@
             <div>
                 <div class="flex items-center justify-between pb-6 border-b border-ink/10">
                     <div class="flex items-center gap-2.5">
-                        <img src="{{ asset('image/fh-mark.png') }}" alt="" aria-hidden="true"
-                             width="512" height="512" decoding="async" class="h-9 w-9 object-contain">
+                        <x-img src="image/fh-mark.png" alt="" aria-hidden="true" sizes="36px"
+                               width="60" height="60" decoding="async" class="h-9 w-9 object-contain" />
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-clsu-600">Hostel</span></span>
                     </div>
                     <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">

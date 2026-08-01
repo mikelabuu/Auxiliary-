@@ -11,7 +11,7 @@
   {{-- Brand head --}}
   <div class="sidebar-head">
     <div class="sidebar-seal">
-      <img src="{{ asset('image/clsu.logo.png') }}" alt="CLSU Seal">
+      <x-img src="image/clsu.logo.png" alt="CLSU Seal" sizes="76px" />
     </div>
     <div class="sidebar-brand-wrap">
       <p class="sidebar-brand-title">Farmers Hostel</p>

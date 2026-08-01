@@ -18,7 +18,9 @@
         @endphp
         @foreach ($bento as $tile)
             <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl ring-1 ring-white/10 {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
-                <img src="{{ asset($tile['img']) }}" alt="Farmers Hostel visual tour" loading="lazy" decoding="async" class="h-full w-full object-cover brightness-[0.82] saturate-[0.85] transition duration-700 group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100">
+                <x-img :src="$tile['img']" alt="Farmers Hostel visual tour" loading="lazy" decoding="async"
+                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                       class="h-full w-full object-cover brightness-[0.82] saturate-[0.85] transition duration-700 group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100" />
             </a>
         @endforeach
         {{-- Remaining shots stay in the same lightbox chain --}}
