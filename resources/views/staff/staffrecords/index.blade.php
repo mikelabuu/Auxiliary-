@@ -204,46 +204,7 @@
 
     {{-- Own account (every staff role can edit their own details) --}}
     <div class="max-w-xl">
-        <x-admin.ui.section-card icon="user" title="Your Account" subtitle="Update your own details or password" :delay="240">
-            <form method="POST" action="{{ route('staff.update', $me->id) }}" class="space-y-4">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="_form" value="self-update">
-
-                <div>
-                    <label class="{{ $labelClasses }}">Name</label>
-                    <input type="text" name="name" value="{{ $errorForm === 'self-update' ? old('name') : $me->name }}" class="{{ $inputClasses }}" required>
-                </div>
-                <div>
-                    <label class="{{ $labelClasses }}">Email</label>
-                    <input type="email" name="email" value="{{ $errorForm === 'self-update' ? old('email') : $me->email }}" class="{{ $inputClasses }}" required>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
-                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
-                    </div>
-                    <div>
-                        <label class="{{ $labelClasses }}">Confirm New Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Confirm new password" class="{{ $inputClasses }}">
-                    </div>
-                </div>
-
-                <hr class="border-stone-100 my-4">
-
-                <div>
-                    <label class="{{ $labelClasses }}">Current Password <span class="normal-case font-medium text-stone-400">(required to save changes)</span></label>
-                    <input type="password" name="current_password" placeholder="Enter current password" class="{{ $inputClasses }}" required>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-clsu-600 border border-clsu-700 rounded-xl px-4 py-2.5 hover:bg-clsu-700 active:scale-[0.99] transition-[color,background-color,transform] duration-200 ease-out shadow-card cursor-pointer">
-                        <x-admin.ui.icon name="check" class="w-4 h-4" />
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </x-admin.ui.section-card>
+        
     </div>
 
     @if ($isMaster)

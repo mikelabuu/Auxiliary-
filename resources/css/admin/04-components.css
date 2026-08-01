@@ -246,57 +246,69 @@
 .badge-gold { background: var(--color-au-100); color: var(--color-au-700); border-color: var(--color-au-300); }
 
 /* ============================================================
-   STATUS PILLS
+   STATUS PILLS (Redesigned for Premium Look)
    ============================================================ */
 .status {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 4.5px 12px; border-radius: 999px;
-    font-size: 10.5px; font-weight: 800; letter-spacing: .05em;
-    text-transform: uppercase; border: 1px solid; white-space: nowrap;
+    padding: 5px 14px; border-radius: 12px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; border: 1px solid transparent; 
+    white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    backdrop-filter: blur(4px); transition: all 0.2s ease;
 }
-.status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.status-logged { color: var(--color-g-700); border-color: var(--color-g-200); background: var(--color-g-50); }
-.status-logged::before { background: var(--color-g-500); }
-.status-process { color: #92400e; border-color: #fcd34d; background: #fffbeb; }
-.status-process::before { background: #f59e0b; animation: blink 1.6s ease-in-out infinite; }
-.status-approved { color: #1e40af; border-color: #93c5fd; background: #eff6ff; }
+.status:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 4px currentColor; }
+
+.status-logged { color: #047857; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+.status-logged::before { background: #10b981; }
+
+.status-process { color: #b45309; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); }
+.status-process::before { background: #f59e0b; animation: smooth-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+.status-approved { color: #1d4ed8; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); }
 .status-approved::before { background: #3b82f6; }
-.status-pickup { color: #9a3412; border-color: #fdba74; background: #fff7ed; }
+
+.status-pickup { color: #c2410c; background: rgba(249, 115, 22, 0.1); border-color: rgba(249, 115, 22, 0.2); }
 .status-pickup::before { background: #f97316; }
-.status-complete { color: var(--color-g-800); border-color: var(--color-g-300); background: var(--color-g-100); }
-.status-complete::before { background: var(--color-g-600); }
-.status-void { color: #991b1b; border-color: #fca5a5; background: #fef2f2; }
+
+.status-complete { color: #065f46; background: rgba(5, 150, 105, 0.1); border-color: rgba(5, 150, 105, 0.2); }
+.status-complete::before { background: #059669; }
+
+.status-void { color: #b91c1c; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
 .status-void::before { background: #ef4444; }
-/* Soft breathing pulse for pending states: a hard step-start blink read as
-   an alarm; pending is "waiting", not "on fire". */
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* Soft breathing pulse for pending states */
+@keyframes smooth-pulse { 
+    0%, 100% { opacity: 1; transform: scale(1); } 
+    50% { opacity: .5; transform: scale(0.85); box-shadow: 0 0 8px currentColor; } 
+}
 
 /* Hostel-domain aliases so x-admin.ui.status-badge maps booking /
    room / payment states onto the shared pill language. */
 .status-pending, .status-pending_payment, .status-pending_discount, .status-cleaning, .status-unpaid {
-    color: #92400e; border-color: #fcd34d; background: #fffbeb;
+    color: #b45309; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2);
 }
 .status-pending::before, .status-pending_payment::before, .status-pending_discount::before,
-.status-cleaning::before, .status-unpaid::before { background: #f59e0b; animation: blink 1.6s ease-in-out infinite; }
+.status-cleaning::before, .status-unpaid::before { background: #f59e0b; animation: smooth-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
 .status-confirmed, .status-booked, .status-reserved {
-    color: #1e40af; border-color: #93c5fd; background: #eff6ff;
+    color: #1d4ed8; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);
 }
 .status-confirmed::before, .status-booked::before, .status-reserved::before { background: #3b82f6; }
 
 .status-checked_in, .status-occupied, .status-active, .status-paid, .status-approved-green, .status-available, .status-completed, .status-success {
-    color: var(--color-g-800); border-color: var(--color-g-300); background: var(--color-g-100);
+    color: #065f46; background: rgba(5, 150, 105, 0.15); border-color: rgba(5, 150, 105, 0.25);
 }
 .status-checked_in::before, .status-occupied::before, .status-active::before, .status-paid::before,
-.status-approved-green::before, .status-available::before, .status-completed::before, .status-success::before { background: var(--color-g-600); }
+.status-approved-green::before, .status-available::before, .status-completed::before, .status-success::before { background: #059669; }
 
 .status-checked_out, .status-neutral, .status-archived {
-    color: var(--color-muted); border-color: var(--color-border); background: var(--color-surface);
+    color: #475569; background: rgba(148, 163, 184, 0.1); border-color: rgba(148, 163, 184, 0.2);
 }
-.status-checked_out::before, .status-neutral::before, .status-archived::before { background: var(--color-faint); }
+.status-checked_out::before, .status-neutral::before, .status-archived::before { background: #64748b; }
 
 .status-cancelled, .status-rejected, .status-maintenance, .status-failed, .status-expired, .status-danger {
-    color: #991b1b; border-color: #fca5a5; background: #fef2f2;
+    color: #b91c1c; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2);
 }
 .status-cancelled::before, .status-rejected::before, .status-maintenance::before,
 .status-failed::before, .status-expired::before, .status-danger::before { background: #ef4444; }
@@ -355,56 +367,63 @@
 .row-check:checked { border-color: var(--color-g-600); }
 
 /* ============================================================
-   BUTTONS — sentence case, fresh fills, quiet confidence
+   BUTTONS (Redesigned for Dynamic, Premium Feel)
    ============================================================ */
 .btn {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 11px 20px; border-radius: var(--radius-sm);
-    font-size: 13.5px; font-weight: 600; letter-spacing: .005em;
-    transition: background var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition), transform 160ms var(--ease-out);
+    padding: 10px 22px; border-radius: 12px;
+    font-size: 13.5px; font-weight: 600; letter-spacing: .01em;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     cursor: pointer; border: 1px solid transparent;
     text-decoration: none; white-space: nowrap;
-    position: relative;
+    position: relative; overflow: hidden;
 }
 .btn:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 /* Press cancels any hover lift so the button visibly settles under the cursor */
-.btn:active { transform: translateY(0) scale(.97); }
+.btn:active { transform: translateY(1px) scale(.98); }
 .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
 .btn-primary {
-    background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: #fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 2px 10px rgba(9,146,80,.28);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 .btn-primary:hover {
-    background: linear-gradient(180deg, #0fa156 0%, var(--color-g-700) 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 6px 18px rgba(9,146,80,.38);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
+
 .btn-gold {
-    background: linear-gradient(180deg, var(--color-au-500) 0%, var(--color-au-600) 100%);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: #fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.30), 0 2px 10px rgba(220,104,3,.26);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 .btn-gold:hover {
-    background: linear-gradient(180deg, #ef8b08 0%, var(--color-au-700) 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.30), 0 6px 18px rgba(220,104,3,.34);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
-.btn-outline {
-    background: var(--color-card); color: var(--color-ink); border-color: var(--color-border);
-    box-shadow: var(--shadow-xs);
-}
-.btn-outline:hover { background: var(--color-g-50); border-color: var(--color-g-300); color: var(--color-g-800); }
-.btn-ghost { background: transparent; color: var(--color-muted); border-color: transparent; }
-.btn-ghost:hover { background: var(--color-g-50); color: var(--color-g-800); }
-.btn-danger { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
-.btn-danger:hover { background: #fee2e2; }
 
-.btn-sm { padding: 8px 14px; font-size: 12.5px; }
-.btn-lg { padding: 14px 28px; font-size: 14.5px; }
-.btn-icon { padding: 9px; border-radius: var(--radius-sm); }
+.btn-outline {
+    background: rgba(255, 255, 255, 0.8); color: var(--color-ink); border-color: var(--color-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03); backdrop-filter: blur(8px);
+}
+.btn-outline:hover { 
+    background: #fff; border-color: var(--color-g-400); color: var(--color-g-800); 
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06); transform: translateY(-2px); 
+}
+
+.btn-ghost { background: transparent; color: var(--color-muted); border-color: transparent; }
+.btn-ghost:hover { background: rgba(22, 179, 100, 0.08); color: var(--color-g-800); transform: translateY(-1px); }
+
+.btn-danger { background: #fef2f2; color: #dc2626; border-color: #fca5a5; box-shadow: 0 2px 6px rgba(220,38,38,0.05); }
+.btn-danger:hover { background: #fee2e2; border-color: #f87171; box-shadow: 0 6px 16px rgba(220,38,38,0.15); transform: translateY(-2px); }
+
+.btn-sm { padding: 8px 16px; font-size: 12.5px; border-radius: 8px; }
+.btn-lg { padding: 14px 28px; font-size: 14.5px; border-radius: 14px; }
+.btn-icon { padding: 10px; border-radius: 10px; }
 .btn-icon svg { width: 17px; height: 17px; }
 .btn-center { justify-content: center; }
 .btn-fill { flex: 1; }

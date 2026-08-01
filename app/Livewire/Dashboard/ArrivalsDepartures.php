@@ -272,7 +272,7 @@ class ArrivalsDepartures extends Component
         $booking = Booking::with(['reservations.room', 'payments'])->find($bookingId);
 
         if (!$booking) {
-            $this->dispatch('alert', type: 'error', message: 'Booking not found.');
+            $this->dispatch('toast', type: 'error', message: 'Booking not found.');
             return;
         }
 
@@ -282,7 +282,7 @@ class ArrivalsDepartures extends Component
         $paymentStatus = $booking->payments->status ?? null;
 
         if ($booking->status !== 'paid' || !$checkInToday || !$paymentExists || $paymentStatus !== 'success') {
-            $this->dispatch('alert', type: 'error', message: 'Booking not eligible for check-in.');
+            $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-in.');
             return;
         }
 
@@ -313,7 +313,7 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} checked in by {$staff->name}"
         );
 
-        $this->dispatch('alert', type: 'success', message: 'Check-in successful!');
+        $this->dispatch('toast', type: 'success', message: 'Check-in successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
@@ -331,7 +331,7 @@ class ArrivalsDepartures extends Component
         // window the auto-checkout command uses. Only future checkouts are barred.
         $checkOutInFuture = Carbon::parse($booking->check_out)->timezone('Asia/Manila')->startOfDay()->gt(Carbon::today('Asia/Manila'));
         if ($booking->status !== 'active' || $checkOutInFuture) {
-            $this->dispatch('alert', type: 'error', message: 'Booking not eligible for check-out.');
+            $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-out.');
             return;
         }
 
@@ -362,7 +362,7 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} checked out by {$staff->name}"
         );
 
-        $this->dispatch('alert', type: 'success', message: 'Check-out successful!');
+        $this->dispatch('toast', type: 'success', message: 'Check-out successful!');
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
@@ -375,7 +375,7 @@ class ArrivalsDepartures extends Component
         $booking = Booking::with(['reservations.room', 'payments'])->find($bookingId);
 
         if (!$booking) {
-            $this->dispatch('alert', type: 'error', message: 'Booking not found.');
+            $this->dispatch('toast', type: 'error', message: 'Booking not found.');
             return;
         }
 
@@ -387,7 +387,7 @@ class ArrivalsDepartures extends Component
         $paymentStatus = $booking->payments->status ?? null;
 
         if ($booking->status !== 'paid' || $checkInInFuture || !$paymentExists || $paymentStatus !== 'success') {
-            $this->dispatch('alert', type: 'error', message: 'Booking not eligible for No Show.');
+            $this->dispatch('toast', type: 'error', message: 'Booking not eligible for No Show.');
             return;
         }
 
@@ -422,7 +422,7 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} marked as no-show by {$staff->name}"
         );
 
-        $this->dispatch('alert', type: 'success', message: 'No Show successful!');
+        $this->dispatch('toast', type: 'success', message: 'No Show successful!');
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
         Realtime::emit(new BookingChanged());

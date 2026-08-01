@@ -800,7 +800,12 @@ document.addEventListener('DOMContentLoaded', function () {
     block.classList.add('block-flash');
   });
 
+  let isSubmittingBooking = false;
   bookingForm && bookingForm.addEventListener('submit', function(e) {
+    if (isSubmittingBooking) {
+      e.preventDefault();
+      return;
+    }
     bookingFormAlert && bookingFormAlert.classList.add('d-none');
     const blocks = document.querySelectorAll('.reservation-block');
     if (!blocks || blocks.length === 0) { e.preventDefault(); showFormError('Please add at least one room type.'); return; }
@@ -863,10 +868,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
 
     // All client checks passed — lock both submit buttons against double-submit
+    isSubmittingBooking = true;
     ['btnSubmitBooking', 'btnSubmitBookingMobile'].forEach(id => {
       const b = document.getElementById(id);
       if (!b) return;
       b.classList.add('opacity-80', 'pointer-events-none');
+      b.disabled = true;
       b.innerHTML = '<svg class="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="ml-2">Placing booking…</span>';
     });
   });

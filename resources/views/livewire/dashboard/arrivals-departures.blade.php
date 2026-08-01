@@ -224,8 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmButtonText: l.confirmButtonText
         }).then(result => {
             if (result.isConfirmed) {
-                // v3 requires array payload
-                window.Livewire.dispatch('arrivalsPasswordConfirmed', [ { bookingId, action } ]);
+                window.Livewire.dispatch('arrivalsPasswordConfirmed', { payload: { bookingId, action } });
             }
         });
     };

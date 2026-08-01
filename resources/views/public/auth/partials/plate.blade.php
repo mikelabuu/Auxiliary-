@@ -26,7 +26,6 @@
     </picture>
 
     <span class="fha-plate-scrim" aria-hidden="true"></span>
-    <span class="fha-plate-mat" aria-hidden="true"></span>
 
     <span class="fha-plate-eyebrow">Est. 1998 &middot; Science City of Muñoz</span>
     <h2 class="fha-plate-title">{{ $title }}</h2>

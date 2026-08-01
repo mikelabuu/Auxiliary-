@@ -170,7 +170,7 @@ class Booking extends Model
 
     public function payments()
     {
-        return $this->hasOne(\App\Models\Payment::class, 'booking_id');
+        return $this->hasOne(\App\Models\Payment::class, 'booking_id')->latestOfMany();
     }
 
     public function scopeActive($query)

@@ -6,9 +6,6 @@
     <section class="dash-welcome">
         <div class="dash-welcome__meta">
             <span class="dash-live">
-                <span class="dash-live__dot" aria-hidden="true"></span>
-                Live · syncs every 15s
-            </span>
             <span class="dash-welcome__date">{{ now('Asia/Manila')->format('l, M j, Y') }}</span>
         </div>
 

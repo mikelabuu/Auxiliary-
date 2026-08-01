@@ -43,7 +43,7 @@
     @if($href) href="{{ $href }}" @endif
     {{ $attributes->merge(['class' => 'stat-card animate-in' . ($dark ? ' stat-card-hero' : '') . ($href ? ' stat-card-link' : '')]) }}
     @if($delay) style="animation-delay:{{ $delay }}ms" @endif>
-    <div class="flex items-start justify-between">
+    <div class="flex items-start justify-between flex-row-reverse">
         <div class="stat-icon {{ $iconBg }}">
             <x-admin.ui.icon :name="$icon" class="w-5 h-5" />
         </div>
