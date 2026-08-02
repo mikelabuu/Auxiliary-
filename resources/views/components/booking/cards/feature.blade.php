@@ -1,6 +1,6 @@
 @props(['icon' => null, 'title', 'description'])
 
-{{-- Typographic feature column: hairline top, Lora title, muted body.
+{{-- Typographic feature column: hairline top, display-face title, muted body.
      No card box; the hairline and the whitespace do the grouping.
      ($icon is accepted for backwards compatibility but not rendered.) --}}
 <div {{ $attributes->merge(['class' => 'border-t border-ink/15 pt-7']) }}>

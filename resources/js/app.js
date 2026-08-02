@@ -201,3 +201,62 @@ import './expandable-bento';
         open(tile.getAttribute('data-facility-photo'), tile.getAttribute('data-facility-title') || '');
     });
 })();
+
+/* ────────────────────────────────────────────────────────────────────────────
+   [data-busy-form] — double-submit guard + in-flight button state.
+
+   This pattern already existed but only ran on the auth plate
+   (public/auth/partials/form-js.blade.php). Every other guest form that POSTs
+   — profile/settings, the discount cancel on booking/show — could be submitted
+   twice by an impatient double-click and gave no sign anything was happening.
+
+   Opt-in rather than automatic: a form declares `data-busy-form` and the button
+   it should freeze declares `data-busy-btn` (or, failing that, the first
+   submit control is used). Search and filter forms are deliberately left alone.
+
+   The auth plate keeps its own richer .fha-submit treatment and its own
+   handler; the guard here is harmless alongside it because .is-busy styling in
+   shared/busy.css explicitly excludes .fha-submit.
+   ──────────────────────────────────────────────────────────────────────────── */
+(function () {
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('[data-busy-form]');
+        if (!form) return;
+
+        // A second submit while the first is in flight is dropped outright,
+        // rather than merely styled — this is the actual duplicate-booking /
+        // duplicate-payment guard, and the spinner is only its evidence.
+        if (form.dataset.busySent === '1') {
+            e.preventDefault();
+            return;
+        }
+
+        // Let native validation reject the form without arming the guard,
+        // otherwise a form that failed `required` can never be submitted again.
+        if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
+
+        form.dataset.busySent = '1';
+
+        const btn = form.querySelector('[data-busy-btn]')
+            || form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!btn) return;
+
+        // Freeze the box before the label goes transparent, so swapping in the
+        // spinner cannot reflow the row the button sits in.
+        // Exact, not rounded up — Math.ceil on a 159.2px button nudged it to
+        // 160 and shifted everything beside it by the best part of a pixel.
+        const rect = btn.getBoundingClientRect();
+        btn.style.minWidth = rect.width + 'px';
+        btn.style.minHeight = rect.height + 'px';
+
+        // currentColor is about to become transparent; capture the real ink
+        // first so shared/busy.css can still draw a visible spinner.
+        btn.style.setProperty('--busy-ink', getComputedStyle(btn).color);
+
+        btn.classList.add('is-busy');
+        btn.setAttribute('aria-busy', 'true');
+        // `disabled` would drop the button's own name/value from the payload,
+        // which some of these forms rely on. aria-busy + pointer-events:none in
+        // CSS + the guard above cover it without touching what gets posted.
+    }, true);
+})();

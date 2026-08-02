@@ -1,0 +1,54 @@
+/* Generic in-flight state for submit buttons.
+   Shared by both bundles — see resources/js/app.js, which owns the
+   [data-busy-form] handler and toggles .is-busy here.
+
+   The auth plate has its own richer treatment (.fha-submit.is-busy in
+   public/14-auth.css) built on inner .fha-submit-label / .fha-submit-spin
+   spans. That one is more refined and stays; this is the fallback for every
+   other button, which has no such markup to work with.
+
+   Hiding the label with `color: transparent` would also erase the spinner,
+   since it is drawn in currentColor. app.js therefore records the button's
+   computed colour into --busy-ink before it flips the class. */
+.is-busy:not(.fha-submit) {
+    position: relative;
+    color: transparent !important;
+    cursor: progress;
+    pointer-events: none;
+    /* Most of these buttons carry `transition-[color,…] duration-300`, so the
+       label would stay legible under the spinner for a third of a second and
+       read as a rendering glitch rather than a state change. The label should
+       be gone by the time the spinner is drawing. */
+    transition-duration: 120ms;
+}
+
+/* Keeps the glyphs inside the button from showing through the transparent
+   text colour (icon fonts and inline SVG both paint on their own). */
+.is-busy:not(.fha-submit) > * {
+    visibility: hidden;
+}
+
+.is-busy:not(.fha-submit)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 1.05em;
+    height: 1.05em;
+    margin: auto;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--busy-ink, currentColor) 28%, transparent);
+    border-top-color: var(--busy-ink, currentColor);
+    animation: busy-spin 620ms linear infinite;
+}
+
+@keyframes busy-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .is-busy:not(.fha-submit)::after {
+        animation-duration: 1.6s;
+    }
+}

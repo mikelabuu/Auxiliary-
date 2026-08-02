@@ -1,3 +1,9 @@
+{{-- The availability capsule's check-in/check-out fields are flatpickr
+     instances built by public/js/availability-search.js. --}}
+@push('vendor')
+    @include('partials.vendor.flatpickr')
+@endpush
+
 {{-- Farmers Hostel hero: daylight sky gradient, a defocused wash of the façade
      for atmosphere, and the cut-out building rising behind a giant two-line
      wordmark. The headline keeps the existing FlipFadeText + rotating-word
@@ -67,7 +73,17 @@
                     <span class="block">
                         <span class="split-word">@foreach (str_split('The') as $ch)<span class="flip-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span>
                         <span class="split-word">
-                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" aria-label="quiet" data-words="quiet,greenest,calmest">
+                            {{-- The animated track is aria-hidden, so this span
+                                 had nothing to announce and carried aria-label
+                                 to compensate — which ARIA does not permit on a
+                                 plain span (axe `aria-prohibited-attr`). An
+                                 sr-only word carries it instead, the same way
+                                 the FARMERS/HOSTEL wordmark above does. The
+                                 rotation is decorative, so the announced
+                                 headline deliberately stays fixed rather than
+                                 changing under the reader every few seconds. --}}
+                            <span id="heroWordRotate" class="word-rotate italic text-gold-soft" data-words="quiet,greenest,calmest">
+                                <span class="sr-only">quiet</span>
                                 <span class="word-rotate-track" aria-hidden="true"><span class="word-rotate-word is-active">@foreach (str_split('quiet') as $ch)<span class="flip-char rt-char" style="--i:{{ $fi++ }}">{{ $ch }}</span>@endforeach</span></span>
                             </span>
                         </span>
@@ -87,7 +103,9 @@
                     <button type="button" data-magnetic
                             onclick="smoothScrollTo(document.getElementById('rooms'))"
                             class="fh-btn fh-btn--light focus-ring">
-                        Check availability <span class="fh-btn-disc" aria-hidden="true">↗</span>
+                        {{-- Same label as the nav CTA on purpose: both scroll to
+                             #rooms, so they are one intent and get one name. --}}
+                        Book a stay <span class="fh-btn-disc" aria-hidden="true">↗</span>
                     </button>
                     <button type="button" data-magnetic
                             onclick="smoothScrollTo(document.getElementById('gallery'))"

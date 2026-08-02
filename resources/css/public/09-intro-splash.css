@@ -107,7 +107,8 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
     text-align: center;
 }
 
-/* Wordmark — Lora caps with an emerald→gold gradient panning through
+/* Wordmark — display-face caps (var(--font-display), i.e. Playfair) with an
+   emerald→gold gradient panning through
    the glyphs (background-clip: text on the parent; per-char spans
    only animate transform/opacity so the clip stays coherent) */
 .intro-wordmark {

@@ -1,3 +1,9 @@
+{{-- Swiper powers the testimonial deck below; nothing else on the site uses
+     it, so it is requested here rather than by the layout. --}}
+@push('vendor')
+    @include('partials.vendor.swiper')
+@endpush
+
 @php
     $testimonials = [
         ['quote' => 'Perfect location for my research week at CLSU. The rooms are spotless, the Wi-Fi is reliable, and being right on campus saved me hours of commute.', 'name' => 'Dr. Reyes', 'role' => 'Visiting Professor', 'initials' => 'DR'],

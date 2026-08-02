@@ -82,11 +82,11 @@
                     <i class="fa-solid fa-credit-card text-[24px]"></i>
                 </span>
                 <h2 class="mt-4 font-display text-2xl text-ink tracking-tight">Pay online by card</h2>
-                <p class="mt-2 text-xs font-medium text-stone-500 leading-relaxed">Settle instantly through the bank portal. No staff review is needed — your booking is confirmed the moment the payment clears.</p>
+                <p class="mt-2 text-xs font-medium text-stone-500 leading-relaxed">Settle instantly through the bank portal. No staff review is needed. Your booking is confirmed the moment the payment clears.</p>
 
                 <span class="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/40 bg-gold-soft/30 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-ink/70">
                     <i class="fa-solid fa-flask text-[13px] text-gold"></i>
-                    Sandbox — no real funds move
+                    Sandbox, no real funds move
                 </span>
 
                 <div class="flex-1"></div>

@@ -133,9 +133,26 @@
     --rail-rest: 1;
 }
 
-/* The hero card is already saturated; a rail on top of it is noise. */
+/* The hero card is already saturated; a rail on top of it is noise.
+
+   This must NOT be `background-image: none`, which is what it used to say.
+   The hero card's entire visual identity is a background-image gradient
+   declared back in layer 04, so blanking it here did not just drop the rail,
+   it dropped the card - leaving the white `background-color` set on
+   .stat-card just above, with the hero card's white text sitting on top of
+   it. The headline figure went invisible on every page that uses the dark
+   variant: Collected Today on the front desk dashboard, Occupied on
+   staff/rooms, Staff Accounts, Registered Users, and a ₱88,540.00 Total
+   Collected on payment logs.
+
+   Restating the gradient removes the rail (the actual intent) and keeps the
+   card. background-size has to be restated with it, because .stat-card above
+   pins it to a 2px strip so the rail draws as a hairline. */
 .stat-card-hero {
-    background-image: none;
+    background-image:
+        radial-gradient(120% 120% at 100% 0%, rgba(255, 255, 255, .22) 0%, transparent 50%),
+        linear-gradient(135deg, #10a45c 0%, var(--color-g-700) 100%);
+    background-size: 100% 100%;
 }
 
 /* ============================================================

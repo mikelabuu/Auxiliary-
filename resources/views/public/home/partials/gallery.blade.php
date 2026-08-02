@@ -1,3 +1,8 @@
+{{-- Lightbox2 opens the bento tiles fullscreen. --}}
+@push('vendor')
+    @include('partials.vendor.lightbox')
+@endpush
+
 <section id="gallery" class="mx-auto max-w-7xl scroll-mt-28 px-6 py-24">
     <x-booking.sections.heading
         description="A quiet walk through our rooms, common spaces, dining hall, and campus greenery."

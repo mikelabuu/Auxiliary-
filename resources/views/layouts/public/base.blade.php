@@ -1,3 +1,10 @@
+@php
+    // Does this page carry a Livewire component? Only checkout does, via the
+    // address-selector in step-guest. Sections are registered before the layout
+    // renders, so this is readable up here in <head>. Drives the one-Alpine
+    // choice below and whether @livewireScripts is emitted at all.
+    $usesLivewire = trim($__env->yieldContent('livewire')) === '1';
+@endphp
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -34,10 +41,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Google Fonts — Playfair Display (editorial display), Oswald (condensed
-         uppercase labels/nav) and Manrope (running copy). Lora/Nunito Sans stay
-         loaded as the fallback stack for views still authored against them. -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- Google Fonts — the three families body.theme-boutique actually points at:
+         Playfair Display (--font-display), Manrope (--font-sans) and Oswald
+         (--font-label).
+
+         Lora and Nunito Sans used to be requested here too, described as "the
+         fallback stack for views still authored against them". They were not:
+         a search of every stylesheet found them only inside comments, with zero
+         live rules, so both were paid for on every page load and used by
+         nothing. --}}
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs). One icon set
          across the public site and both staff consoles; replaced the Material
@@ -46,25 +59,32 @@
           href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
     <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
 
-    {{-- Everything below is self-hosted from public/vendor — see scripts/sync-vendor.mjs.
-         Versions are pinned in package.json; `npm run vendor:sync` refreshes them. --}}
+    {{-- Vendor libraries are self-hosted from public/vendor (see
+         scripts/sync-vendor.mjs) and are now OPT-IN. Each one is a partial in
+         partials/vendor/ guarded by @once, and the view that actually needs it
+         pushes it here — so the landing page no longer ships flatpickr to a
+         page with no date field, and checkout no longer ships Swiper.
 
-    <!-- SweetAlert (deferred — only called from user-event handlers) -->
-    <script src="{{ asset('vendor/sweetalert/sweetalert.min.js') }}" defer></script>
+         Push from the partial that owns the dependency, not from the page:
 
-    <!-- LightBox for Gallery (deferred — activates on gallery clicks) -->
-    <link href="{{ asset('vendor/lightbox2/css/lightbox.min.css') }}" rel="stylesheet">
-    <script src="{{ asset('vendor/lightbox2/js/lightbox-plus-jquery.min.js') }}" defer></script>
+             @push('vendor') @include('partials.vendor.lightbox') @endpush --}}
+    @stack('vendor')
 
-    <!-- Flatpickr Datepicker (deferred — initialised on DOMContentLoaded) -->
-    <link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
-    <script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}" defer></script>
+    {{-- Alpine, exactly once.
 
-    <!-- Swiper.js (deferred — initialised on DOMContentLoaded) -->
-    <link rel="stylesheet" href="{{ asset('vendor/swiper/swiper-bundle.min.css') }}" />
-    <script src="{{ asset('vendor/swiper/swiper-bundle.min.js') }}" defer></script>
+         Livewire's runtime bundles its own Alpine, so a page that has a
+         Livewire component must NOT also load the standalone build - two
+         Alpines on one page throw on init. Only checkout has one (the
+         address-selector inside step-guest), and it declares
+         @section('livewire', '1'). Every other public page uses Alpine
+         directives without any Livewire, and used to pull the entire 340 KB
+         Livewire bundle just to get them; standalone Alpine is ~46 KB. --}}
+    @if ($usesLivewire)
+        @livewireStyles
+    @else
+        <script src="{{ asset('vendor/alpine/alpine.min.js') }}" defer></script>
+    @endif
 
-    @livewireStyles
     @stack('styles')
 </head>
 @php
@@ -302,7 +322,9 @@
         <div></div><div></div><div></div><div></div><div></div><div></div>
     </div>
 
-    @livewireScripts
+    @if ($usesLivewire)
+        @livewireScripts
+    @endif
     @stack('scripts')
 
     <!-- Nav, drawer & footer behaviours -->
@@ -358,13 +380,15 @@
                 el && el.addEventListener('click', () => toggleDrawer(false));
             });
 
-            // Field Notes (decorative — friendly acknowledgement, no backend)
+            // Field Notes (decorative — friendly acknowledgement, no backend).
+            // Uses window.toast from resources/js/app.js rather than SweetAlert:
+            // this handler lives in the layout, so depending on swal here would
+            // have forced the 40 KB library onto every public page for a form
+            // in the footer. toast() ships in the app bundle already.
             const fieldNotes = document.getElementById('fieldNotesForm');
             fieldNotes && fieldNotes.addEventListener('submit', function(e) {
                 e.preventDefault();
-                if (typeof swal !== 'undefined') {
-                    swal('You\'re on the list', 'Field Notes will arrive with the next harvest.', 'success');
-                }
+                window.toast && window.toast('You\'re on the list. Field Notes arrives with the next harvest.');
                 this.reset();
             });
         });

@@ -100,7 +100,10 @@
            class="topbar-search-input" />
     <kbd class="topbar-search-kbd">Ctrl K</kbd>
 
-    {{-- Results dropdown (entry animated by CSS @starting-style; fast leave) --}}
+    {{-- Results dropdown. Opens instantly — this panel is bound to Ctrl/Cmd+K
+         and `/`, and animating a keyboard action puts a delay between the
+         keystroke and the field the user is already typing into. Only the
+         leave is animated (see .topbar-search-panel in admin/05-motion-ux). --}}
     <div x-show="open" x-ref="panel" x-transition:leave.opacity.duration.120ms x-cloak class="topbar-search-panel">
       <div x-show="loading" class="px-4 py-3 text-xs text-faint flex items-center gap-2">
         <svg class="w-3.5 h-3.5 spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>

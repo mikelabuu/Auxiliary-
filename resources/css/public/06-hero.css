@@ -186,12 +186,15 @@
     position: relative;
     z-index: 1;
     display: block;
-    width: max(104%, 560px);
+    /* Held in a custom property so the centring calc below cannot drift out of
+       sync with the width when the short-window guard overrides it. */
+    --build-w: max(104%, 560px);
+    width: var(--build-w);
     /* Same preflight clamp as .fh-hero-wash — without this the width caps at
        100% but the negative margin below still offsets it, so the façade sits
        visibly left of centre. */
     max-width: none;
-    margin-left: calc((100% - max(104%, 560px)) / 2);
+    margin-left: calc((100% - var(--build-w)) / 2);
     /* How far the roofline rides up over the HOSTEL line. The design's -5.6%
        swallowed most of the word at desktop widths; this keeps a slight
        overlap for depth while leaving the lettering readable. */
@@ -1050,5 +1053,68 @@ html.js-reveal [data-aos="fade-right"].aos-animate {
         transform: none;
         filter: none;
         transition: none;
+    }
+}
+
+/* ── Short-window guard (MUST STAY LAST IN THIS FILE) ──────────────────────────────────────────────
+   The booking capsule is this page's primary conversion element and has to
+   clear the fold. It did not: the hero measured 893px on a 1366x768 laptop,
+   putting the capsule 120px below the fold, 62px below at 1280x800 and 15px
+   at 1440x900. Only 1512x982 and 1920x1080 were ever safe.
+
+   The cause is that almost everything in the stage is sized from viewport
+   WIDTH while height is the scarce axis here. .fh-hero-build is the clearest
+   case: at an 1800x660 source, a width of 104% makes its HEIGHT a function of
+   page width, so a wide-but-short laptop got a 493px façade under a 271px
+   wordmark. .fh-hero-copy has the same trap - its -35% pull resolves against
+   the stage's inline size, dragging the column up ~440px.
+
+   Two things worth knowing before re-tuning any of these numbers:
+
+   1. A plain vh cap is the wrong instrument. 1366x768 and 1920x1080 are both
+      16:9, so any vh figure that rescues the laptop also shrinks the desktop -
+      exactly what the uncapped width-driven design was written to avoid.
+      Keying on viewport HEIGHT binds only where the problem is.
+
+   2. The levers fight each other. The hero centres its content, so shrinking
+      the façade frees height but pulls the copy UP toward the wordmark, and
+      shrinking the wordmark does not fix that collision - it worsens it, for
+      the same reason. Tuning one value in isolation just trades the capsule
+      failing for the eyebrow landing inside the FARMERS letterforms. These
+      values came out of a sweep across all three against both constraints at
+      1366x768, 1280x800 and 1440x900; worst case is a 100px wordmark-to-copy
+      gap and 25px of fold clearance.
+
+   Also note that box geometry lies here: line-height 0.8 lets Playfair's caps
+   overflow their own line box, so getBoundingClientRect reported an 8px gap
+   at a size where the eyebrow was visibly sitting inside the letterforms.
+   Anything under ~30px of measured gap is a real collision.
+
+   2.727 is the façade source's aspect ratio (1800 / 660) - capping width at
+   height * 2.727 caps the rendered height while keeping the cap expressed in
+   width, so the centring calc above still works. */
+@media (max-height: 900px) and (min-width: 901px) {
+    .fh-hero-build {
+        --build-w: min(max(104%, 560px), calc(46vh * 2.727));
+    }
+
+    .fh-wordmark-line {
+        font-size: clamp(48px, min(12.4vw, 24vh), 420px);
+    }
+
+    /* The rhythm below the stage tightens rather than the copy's pull, which
+       stays at its design value so the copy keeps sitting over the façade's
+       lower third. */
+    .fh-hero {
+        padding-top: 48px;
+        padding-bottom: 16px;
+    }
+
+    .fh-hero-note {
+        margin-top: 8px;
+    }
+
+    .fh-capsule {
+        margin-top: 10px;
     }
 }

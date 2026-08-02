@@ -1,6 +1,6 @@
 @props(['quote', 'name', 'role', 'initials', 'rating' => 5])
 
-{{-- Editorial testimonial: gold stars, Lora italic quote, sign-off. Sized
+{{-- Editorial testimonial: gold stars, display-face italic quote, sign-off. Sized
      for the glass card deck (see testimonials partial) — quote scaled to
      hold four lines without the deck's cards diverging in height. --}}
 <figure {{ $attributes->merge(['class' => 'flex h-full flex-col px-1 py-7 md:px-2 md:py-8']) }}>

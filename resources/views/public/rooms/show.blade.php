@@ -1,6 +1,11 @@
 @extends('layouts.public.base')
 @section('title', $roomType['title'] . ' · Farmers Hostel')
 
+{{-- Lightbox2 opens the room photo grid fullscreen. --}}
+@push('vendor')
+    @include('partials.vendor.lightbox')
+@endpush
+
 @section('content')
 @php
     use Illuminate\Support\Str;
@@ -68,7 +73,7 @@
             @foreach ($side as $photo)
                 <a href="{{ asset($photo) }}" data-lightbox="room-{{ $slug }}" data-title="{{ $roomType['title'] }}"
                    class="group relative block aspect-square overflow-hidden rounded-3xl ring-1 ring-ink/10 lg:aspect-auto {{ $sideSpans[$loop->index] ?? '' }}">
-                    <x-img :src="$photo" alt="{{ $roomType['title'] }} — view {{ $loop->iteration + 1 }}"
+                    <x-img :src="$photo" alt="{{ $roomType['title'] }}, view {{ $loop->iteration + 1 }}"
                            loading="lazy" decoding="async" sizes="(max-width: 1024px) 50vw, 25vw"
                            class="h-full w-full object-cover brightness-[0.96] transition duration-700 group-hover:scale-105 group-hover:brightness-100" />
                     <span class="card-shine" aria-hidden="true"></span>
@@ -139,7 +144,7 @@
                     <div x-show="tab === 'description'" x-cloak role="tabpanel" class="pt-7">
                         <p class="text-pretty max-w-2xl text-base leading-relaxed text-ink/65">{{ $roomType['description'] }}</p>
                         <p class="text-pretty mt-4 max-w-2xl text-base leading-relaxed text-ink/65">
-                            Rooms are serviced daily and kept quiet — the hostel sits inside the CLSU campus, a short walk from the
+                            Rooms are serviced daily and kept quiet. The hostel sits inside the CLSU campus, a short walk from the
                             colleges, research stations, and the dining hall where breakfast is served each morning.
                         </p>
                     </div>
@@ -177,9 +182,9 @@
                         @php
                             $policies = [
                                 ['icon' => 'clock',       'title' => 'Check-in from 2:00 PM',   'body' => 'Front desk is staffed 24/7. Present a valid ID for every guest on the booking.'],
-                                ['icon' => 'clock',       'title' => 'Check-out by 12:00 NN',   'body' => 'Late check-out is subject to availability — ask the front desk on the morning of departure.'],
+                                ['icon' => 'clock',       'title' => 'Check-out by 12:00 NN',   'body' => 'Late check-out is subject to availability. Ask the front desk on the morning of departure.'],
                                 ['icon' => 'utensils',    'title' => 'Outside food',            'body' => 'Outside food is not allowed inside the rooms. The dining hall is open to all guests.'],
-                                ['icon' => 'badge-check', 'title' => 'Senior / PWD discount',   'body' => 'A 20% discount is available on request — upload a valid ID after booking for staff review.'],
+                                ['icon' => 'badge-check', 'title' => 'Senior / PWD discount',   'body' => 'A 20% discount is available on request. Upload a valid ID after booking for staff review.'],
                             ];
                         @endphp
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

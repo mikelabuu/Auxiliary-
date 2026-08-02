@@ -1,0 +1,75 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   Touch devices: a tap fires :hover and then leaves it stuck.
+
+   Colour and background hover changes are harmless when they stick — they read
+   as "this is the thing I just touched". Movement is not: a card that lifts and
+   stays lifted looks like a rendering bug, and on a phone every card the guest
+   has touched stays raised.
+
+   So: neutralise transforms only. :active press feedback is deliberately left
+   alone — presses should work everywhere, and they self-cancel on release.
+
+   ── Why this file is imported LAST ──────────────────────────────────────────
+   Admin already had a version of this block, but it lived in
+   admin/05-motion-ux.css while most of the selectors it names are defined in
+   layers 06 through 18. A media query adds no specificity, so those later
+   same-specificity rules simply won and the neutraliser did nothing for
+   .room-card, .type-tile, .ops-pill and everything in 12–18. Import order is
+   the whole fix: this must stay the final import in both bundles.
+
+   The public bundle had no equivalent at all, which had it backwards — admin
+   is used on desktops, the guest site is used on phones.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@media (hover: none), (pointer: coarse) {
+    /* ── Admin / front desk ── */
+    .card-hover:hover,
+    .card-hoverable:hover,
+    .stat-card:hover,
+    .quick-action:hover,
+    .mini-stat:hover,
+    .filter-tab:hover,
+    .btn-hover-scale:hover,
+    .btn:hover,
+    .room-card:hover,
+    .type-tile:hover,
+    #addTypeTile:hover,
+    .ops-pill:hover,
+    .status:hover,
+    .back-to-top:hover,
+    .sidebar-link:hover svg,
+    .fd-nav-link:hover svg,
+    [data-bento-item]:hover,
+    .dash-revenue__link:hover svg,
+    .alert-card:hover .alert-cta svg,
+    .stat-card-link:hover .stat-card-go,
+    .stat-card:hover .stat-icon,
+    .mini-stat:hover .stat-icon,
+    .quick-action:hover .stat-icon,
+    .stat-card:hover .stat-icon svg,
+    .mini-stat:hover .stat-icon svg,
+    .quick-action:hover .stat-icon svg,
+
+    /* ── Public site ── */
+    .fh-badge:hover,
+    .hover-lift-premium:hover,
+    .stay-card:hover,
+    .date-preset:hover,
+    .fha-submit:hover,
+    .fha-submit:hover .fha-submit-key,
+    .fha-tag[aria-selected="false"]:hover,
+    .group:hover .card-shine::before {
+        transform: none;
+    }
+
+    /* Tailwind hover-transform utilities used directly in public markup
+       (group-hover:scale-105 on the room and gallery cards, hover:-translate-y-0.5
+       on the buttons). They are generated utilities, so they are caught by
+       attribute match rather than by name — there is no class to override. */
+    [class*="hover:scale-"]:hover,
+    [class*="hover:-translate-"]:hover,
+    .group:hover [class*="group-hover:scale-"],
+    .group:hover [class*="group-hover:-translate-"] {
+        transform: none;
+    }
+}

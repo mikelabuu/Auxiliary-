@@ -39,7 +39,10 @@
        $(function(){…}) at parse time, which deferred module scripts would miss. --}}
   <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
   <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
-  <script src="{{ asset('vendor/chart.js/chart.umd.min.js') }}"></script>
+  {{-- Chart.js is NOT here. Its only consumer is the Bookings Insights modal
+       (partials/dashboard/insights-modal), which already pulls it in its own
+       @push('scripts') — so loading it here meant every admin page paid 204 KB
+       for a chart it does not draw, and the dashboard fetched it twice. --}}
   @vite(['resources/css/admin.css', 'resources/js/app.js'])
   @livewireStyles
   @stack('styles')

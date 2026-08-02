@@ -36,7 +36,7 @@
                             ]
                             : [
                                 ['text' => 'Settle your payment to lock in the reservation.', 'href' => $booking->status === 'pending_payment' ? '#paymentCta' : null],
-                                ['text' => 'Keep your receipt — you\'ll get it right after payment.', 'href' => null],
+                                ['text' => 'Keep your receipt. You\'ll get it right after payment.', 'href' => null],
                             ];
                         $nextSteps[] = ['text' => 'Check in from 2:00 PM on ' . $booking->check_in->format('M d') . ' with a valid ID.', 'href' => null];
                     @endphp
@@ -188,7 +188,7 @@
                     <div class="mt-5 pt-5 border-t border-emerald-deep/10">
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-1.5">Your Requests</span>
                         <p class="text-sm font-medium text-stone-700 leading-relaxed whitespace-pre-line">{{ $booking->special_requests }}</p>
-                        <p class="text-[11px] font-medium text-stone-500 mt-2">We'll do our best — requests aren't guaranteed.</p>
+                        <p class="text-[11px] font-medium text-stone-500 mt-2">We'll do our best, though requests aren't guaranteed.</p>
                     </div>
                 @endif
             </div>
@@ -298,7 +298,7 @@
                                             <i class="fa-solid fa-hourglass text-[16px] flex-shrink-0 mt-0.5"></i>
                                             <div class="font-bold leading-relaxed">Verification Request Submitted. Please wait for staff review and approval before making payments.</div>
                                         </div>
-                                        <form action="{{ route('discount.cancel', $booking->id) }}" method="POST" class="w-full">
+                                        <form action="{{ route('discount.cancel', $booking->id) }}" method="POST" class="w-full" data-busy-form>
                                             @csrf
                                             <button type="submit" class="w-full py-2 bg-ember-600/10 hover:bg-ember-600/20 text-ember-700 ring-1 ring-ember-600/35 font-bold rounded-lg text-[10px] transition-[color,background-color,border-color,box-shadow] cursor-pointer">
                                                 Cancel Request
@@ -332,7 +332,7 @@
                                     <div class="flex gap-2 text-palay-800">
                                         <i class="fa-solid fa-hourglass text-[16px] flex-shrink-0 mt-0.5"></i>
                                         <div class="font-bold leading-relaxed">
-                                            Proof of payment received. Our front desk is verifying it against the transfer — your official receipt is emailed as soon as it clears.
+                                            Proof of payment received. Our front desk is verifying it against the transfer. Your official receipt is emailed as soon as it clears.
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500">

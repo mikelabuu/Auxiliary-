@@ -69,16 +69,31 @@ body.lw-updated .data-table tbody tr { animation: none; }
 }
 @keyframes growBar { from { width: 0; } }
 
-/* ── Dropdown & search panels pop from their trigger ──
+/* ── Dropdown pops from its trigger ──
    Entry is @starting-style so it retargets smoothly if reopened mid-exit;
-   exit is a fast Alpine leave (markup) — always quicker than entry. */
-.user-menu-panel, .topbar-search-panel {
+   exit is a fast Alpine leave (markup) — always quicker than entry.
+   Mouse-opened and occasional, so it earns the animation. */
+.user-menu-panel {
     transform-origin: top right;
     opacity: 1; transform: translateY(0) scale(1);
     transition: opacity 180ms var(--ease-out), transform 200ms var(--ease-spring);
     @starting-style { opacity: 0; transform: translateY(-6px) scale(.97); }
 }
-.topbar-search-panel { transform-origin: top center; }
+
+/* ── Command palette opens INSTANTLY, on purpose ──
+   The topbar search is bound to Ctrl/Cmd+K and `/` (see components/admin/
+   layout/topbar). A keyboard shortcut is a hundred-times-a-shift action, and
+   animating it puts a delay between the keystroke and the thing the user is
+   already typing into — it reads as lag, not polish. Raycast ships no open
+   animation for the same reason.
+
+   The exit stays animated: dismissing is not on the critical path, and a hard
+   cut on close looks broken. */
+.topbar-search-panel {
+    transform-origin: top center;
+    opacity: 1;
+    transform: none;
+}
 @keyframes menuPop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
 
 /* ── Cross-page view transition: content softly rises in ── */
@@ -147,19 +162,13 @@ body.density-switching .data-table { opacity: .35; }
 .back-to-top svg { width: 19px; height: 19px; }
 .back-to-top:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 
-/* ── Touch devices: taps must not stick hover transforms ──
-   Color/background hover changes stay (harmless when tapped); only the
-   lift/scale transforms are neutralized for coarse pointers. :active press
-   feedback is untouched — presses should work everywhere. */
-@media (hover: none), (pointer: coarse) {
-    .card-hover:hover, .card-hoverable:hover, .stat-card:hover,
-    .quick-action:hover, .quick-action:hover .stat-icon, .mini-stat:hover,
-    .filter-tab:hover, .btn-hover-scale:hover, .room-card:hover,
-    .type-tile:hover, #addTypeTile:hover, .ops-pill:hover,
-    .sidebar-link:hover svg {
-        transform: none;
-    }
-}
+/* ── Touch-device hover neutralising moved to shared/touch-hover.css ──
+   A copy of this block used to live here. It could only ever work for the
+   selectors defined in layers 01-05: a media query adds no specificity, so
+   `.room-card:hover { transform: none }` written here lost outright to the
+   `.room-card:hover { transform: … }` in layer 06, and the same for every
+   later layer. The replacement is imported LAST in admin.css (and app.css,
+   which never had one at all), which is the only position where it wins. */
 
 /* ── Richer empty states ── */
 /* Rare-view surfaces get one soft rise so they enter like their neighbors.

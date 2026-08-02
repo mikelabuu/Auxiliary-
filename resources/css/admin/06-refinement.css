@@ -122,6 +122,9 @@
 /* ── Donut / gauge chart helpers ── */
 .gauge-ring { transform: rotate(-90deg); transform-origin: center; }
 .gauge-ring circle.gauge-value {
-    transition: stroke-dashoffset 900ms var(--ease-out);
+    /* 600ms, not 900ms — a load-time data reveal earns more than the 300ms
+       interaction budget, but at 900ms the ring was still filling after staff
+       had started reading the number it belongs to. */
+    transition: stroke-dashoffset 600ms var(--ease-out);
     filter: drop-shadow(0 2px 6px rgba(9,146,80,.28));
 }

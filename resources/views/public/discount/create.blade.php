@@ -1,5 +1,10 @@
 @extends('layouts.public.base')
 @section('title', 'Senior / PWD Discount | Farmers Hostel')
+
+{{-- swal() warns about missing/oversized ID uploads before submit. --}}
+@push('vendor')
+    @include('partials.vendor.sweetalert')
+@endpush
 @section('content')
 @php
     $eligibleReservations = $booking->reservations->where('num_seniors', '>', 0);
@@ -44,7 +49,7 @@
             <div class="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="flex items-start gap-3 bg-cream-warm ring-1 ring-emerald-deep/5 rounded-2xl px-4 py-3.5">
                     <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">1</span>
-                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Add a clear photo of each ID — one per declared senior/PWD guest.</p>
+                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Add a clear photo of each ID, one per declared senior/PWD guest.</p>
                 </div>
                 <div class="flex items-start gap-3 bg-cream-warm ring-1 ring-emerald-deep/5 rounded-2xl px-4 py-3.5">
                     <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">2</span>
@@ -97,7 +102,7 @@
                 <!-- Legibility reminder -->
                 <div class="flex items-start gap-2.5 rounded-2xl border border-gold/40 bg-gold-soft/25 px-5 py-4 text-xs font-bold text-ink/75 leading-relaxed">
                     <i class="fa-solid fa-lightbulb text-[18px] text-gold shrink-0"></i>
-                    Make sure the ID number, name, and photo are clearly readable — blurred or cropped documents are usually rejected and will slow down your discount.
+                    Make sure the ID number, name, and photo are clearly readable. Blurred or cropped documents are usually rejected and will slow down your discount.
                 </div>
 
                 <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3">
@@ -207,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 if (files.some(f => f.name === file.name && f.size === file.size)) continue;
                 if (files.length >= max) {
-                    warn('Upload limit reached', `You can add up to ${max} ID${max > 1 ? 's' : ''} for this room — one per declared senior/PWD guest.`);
+                    warn('Upload limit reached', `You can add up to ${max} ID${max > 1 ? 's' : ''} for this room, one per declared senior/PWD guest.`);
                     break;
                 }
                 files.push(file);

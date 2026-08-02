@@ -9,7 +9,10 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+    {{-- Same three families as layouts/public/base and auth-desk. This layout
+         (the sandbox payment portal) used to request Fraunces + Inter, giving
+         the booking journey a second typographic identity halfway through. --}}
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     {{-- Font Awesome Free, self-hosted — see the note in layouts/public/base. --}}
     <link rel="preload" as="font" type="font/woff2" crossorigin
           href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
@@ -18,7 +21,6 @@
     <style>
         .hidden-form { display: none; }
     </style>
-    @livewireStyles
     @stack('styles')
 </head>
 <body class="antialiased overflow-x-hidden font-sans text-ink">
@@ -35,7 +37,6 @@
         @yield('content')
     </div>
 
-    @livewireScripts
     @stack('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {

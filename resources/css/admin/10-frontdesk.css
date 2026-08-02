@@ -194,8 +194,11 @@
     height: 20px; width: 20px; border-radius: 999px;
     background: rgba(255, 255, 255, .1);
     opacity: 0; pointer-events: none;
-    transition: transform 420ms var(--ease-spring), width 420ms var(--ease-spring),
-        height 420ms var(--ease-spring), opacity 180ms var(--ease-out);
+    /* 240ms, not 420ms: this pill chases the cursor across the nav, and at
+       420ms it visibly trailed behind the pointer — which reads as lag rather
+       than smoothness. A follower has to keep up to feel weightless. */
+    transition: transform 240ms var(--ease-spring), width 240ms var(--ease-spring),
+        height 240ms var(--ease-spring), opacity 180ms var(--ease-out);
     will-change: transform, width;
 }
 .fd-nav.glide-on .fd-nav-glide { opacity: 1; }

@@ -17,7 +17,7 @@
     <div class="space-y-8">
         <!-- Profile Update Section -->
         <x-booking.ui.card title="Personal Information" icon="user-gear">
-            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4">
+            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4" data-busy-form>
                 @csrf
                 @method('PUT')
 
@@ -41,7 +41,7 @@
 
         <!-- Password Update Section -->
         <x-booking.ui.card title="Change Password" icon="lock">
-            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4">
+            <form method="POST" action="{{ route('settings.update') }}" class="space-y-4" data-busy-form>
                 @csrf
                 @method('PUT')
 

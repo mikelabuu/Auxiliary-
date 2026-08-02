@@ -61,7 +61,7 @@
                     <span class="w-8 h-8 rounded-full bg-emerald-deep text-cream font-display italic text-sm flex items-center justify-center shrink-0">1</span>
                     <div>
                         <h2 class="text-sm font-bold text-ink">Send the payment</h2>
-                        <p class="text-[11px] font-semibold text-stone-500">Choose how you paid — the account details update to match.</p>
+                        <p class="text-[11px] font-semibold text-stone-500">Choose how you paid. The account details update to match.</p>
                     </div>
                 </div>
 
@@ -104,7 +104,7 @@
                     <span class="w-8 h-8 rounded-full bg-emerald-deep text-cream font-display italic text-sm flex items-center justify-center shrink-0">2</span>
                     <div>
                         <h2 class="text-sm font-bold text-ink">Reference number</h2>
-                        <p class="text-[11px] font-semibold text-stone-500">The number printed on your own receipt — staff match it against the transfer.</p>
+                        <p class="text-[11px] font-semibold text-stone-500">The number printed on your own receipt. Staff match it against the transfer.</p>
                     </div>
                 </div>
 

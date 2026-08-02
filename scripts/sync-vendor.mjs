@@ -37,6 +37,14 @@ const ASSETS = [
     ['swiper/swiper-bundle.min.css', 'swiper/swiper-bundle.min.css'],
     ['lenis/dist/lenis.min.js', 'lenis/lenis.min.js'],
 
+    // Alpine, standalone. Livewire bundles its own copy, so this is loaded
+    // only on public pages that use Alpine directives WITHOUT having a
+    // Livewire component on them - the landing page's room modal and the
+    // rooms/show tabs. Those pages used to pull Livewire's whole 340 KB
+    // runtime just to get Alpine; this is ~45 KB. Two Alpines on one page
+    // throw, so layouts/public/base picks exactly one (see the @stack there).
+    ['alpinejs/dist/cdn.min.js', 'alpine/alpine.min.js'],
+
     // lightbox.min.css resolves its controls as url(../images/…), so the
     // css/ and images/ folders have to stay siblings.
     ['lightbox2/dist/js/lightbox-plus-jquery.min.js', 'lightbox2/js/lightbox-plus-jquery.min.js'],

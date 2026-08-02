@@ -63,8 +63,8 @@
 
                 <h1 class="fha-panel-title">Take your key.</h1>
                 <p class="fha-panel-lede">
-                    One door for guests, the front desk and administration —
-                    your account decides where it opens.
+                    One door for guests, the front desk and administration.
+                    Your account decides where it opens.
                 </p>
 
                 <form method="POST" action="{{ route('login.attempt') }}" class="fha-form" novalidate data-busy-form>

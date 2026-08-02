@@ -136,8 +136,8 @@
                                     </div>
                                 </td>
                                 <td class="font-data tabnum text-stone-600">{{ $item->room_numbers_str }}</td>
-                                <td class="font-data tabnum">{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}</td>
-                                <td class="font-data tabnum">{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}</td>
+                                <td class="font-data tabnum" title="{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}">{{ \Carbon\Carbon::parse($item->check_in)->format('M d') }}</td>
+                                <td class="font-data tabnum" title="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}">{{ \Carbon\Carbon::parse($item->check_out)->format('M d') }}</td>
                                 <td class="text-center font-data tabnum">{{ $item->nights }}</td>
                                 <td>
                                     <span class="cell-tag" style="{{ $item->type === 'arrival' ? 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);' : 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;' }}">{{ ucfirst($item->type) }}</span>

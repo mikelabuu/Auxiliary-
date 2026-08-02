@@ -43,9 +43,15 @@
     <x-admin.ui.quick-action icon="clipboard" title="Find a booking" subtitle="Search, view and check out" :href="route('frontdesk.booking')" />
 </div>
 
-{{-- Arrivals & departures + occupancy (shared Livewire components) --}}
-<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-    <div class="lg:col-span-2">
+{{-- Arrivals & departures + occupancy (shared Livewire components).
+
+     4 columns rather than 3, with the table taking three of them. At a 2:1
+     split the table got ~979px for 1036px of columns, so it scrolled and the
+     sticky Actions column parked on top of Status - the desk could not read a
+     booking's state without scrolling sideways first. Occupancy is a donut and
+     three legend rows; it did not need the 490px it was holding. --}}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+    <div class="lg:col-span-3">
         <livewire:dashboard.arrivals-departures />
     </div>
     <div class="lg:col-span-1">

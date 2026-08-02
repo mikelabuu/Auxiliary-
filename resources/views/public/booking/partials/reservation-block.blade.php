@@ -60,24 +60,27 @@
     <!-- Numbers allocation details -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-emerald-deep/10">
         <div>
-            <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">No. of Guests</label>
+            {{-- booking.js does `replace(/__INDEX__/g, index)` over this whole
+                 template, so the placeholder carries into the id and each
+                 cloned room block still gets unique label bindings. --}}
+            <label for="res-__INDEX__-num-guests" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">No. of Guests</label>
             <div class="stepper flex items-center gap-1.5">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests in room">
                     <i class="fa-solid fa-minus text-[16px]"></i>
                 </button>
-                <input type="number" name="reservations[__INDEX__][num_guests]" class="res-num-guests w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" placeholder="e.g. 2" required>
+                <input type="number" name="reservations[__INDEX__][num_guests]" id="res-__INDEX__-num-guests" class="res-num-guests w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" placeholder="e.g. 2" required>
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests in room">
                     <i class="fa-solid fa-plus text-[16px]"></i>
                 </button>
             </div>
         </div>
         <div>
-            <label class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">Seniors / PWD in Room</label>
+            <label for="res-__INDEX__-num-seniors" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">Seniors / PWD in Room</label>
             <div class="stepper flex items-center gap-1.5">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer seniors">
                     <i class="fa-solid fa-minus text-[16px]"></i>
                 </button>
-                <input type="number" name="reservations[__INDEX__][num_seniors]" class="res-num-seniors w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
+                <input type="number" name="reservations[__INDEX__][num_seniors]" id="res-__INDEX__-num-seniors" class="res-num-seniors w-full px-2 py-2 bg-white/60 border border-emerald-deep/10 rounded-xl text-sm font-bold text-ink text-center outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-[color,background-color,border-color,box-shadow] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="0" value="0">
                 <button type="button" class="btn-step w-9 h-9 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More seniors">
                     <i class="fa-solid fa-plus text-[16px]"></i>
                 </button>
@@ -107,7 +110,7 @@
             <div class="border border-emerald-deep/10 rounded-2xl p-5 bg-white/60 space-y-3.5">
                 <p class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-circle-info text-[14px] text-emerald"></i>
-                    Free breakfast — optional, up to one silog per guest
+                    Free breakfast, optional, up to one silog per guest
                 </p>
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     @foreach (['bangsilog' => 'Bangsilog', 'tocilog' => 'Tocilog', 'hotsilog' => 'Hotsilog', 'spamsilog' => 'Spamsilog', 'tapsilog' => 'Tapsilog'] as $mealKey => $mealLabel)

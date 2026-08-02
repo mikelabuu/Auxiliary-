@@ -69,6 +69,13 @@
 /* Shared with the admin bundle — window.toast() is available on every page,
    so its styling has to be too. See resources/css/shared/toast.css. */
 @import './shared/toast.css';
+/* Generic submit-button in-flight state; handler lives in resources/js/app.js. */
+@import './shared/busy.css';
+
+/* MUST STAY LAST: the coarse-pointer neutraliser only wins if it is imported
+   after every layer that sets a hover transform. See the file header. */
+@import './shared/touch-hover.css';
+
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 

@@ -1,5 +1,15 @@
 @extends('layouts.public.base')
 @section('title', 'Checkout | Farmers Hostel')
+
+{{-- The only public page carrying a Livewire component: the address-selector
+     inside step-guest. This flag makes the layout emit @livewireScripts and
+     skip the standalone Alpine build, since Livewire brings its own. --}}
+@section('livewire', '1')
+
+{{-- Date fields are flatpickr instances built by public/js/booking.js. --}}
+@push('vendor')
+    @include('partials.vendor.flatpickr')
+@endpush
 {{-- Cream Boutique, not Night Estate: checkout now matches the discount and
      payment pages either side of it, so the booking journey reads as one
      place instead of dipping into a dark room in the middle. The night aura
@@ -26,7 +36,18 @@
                  contract as the summary rows) -->
             <ol id="checkoutProgress" class="co-enter mb-8 grid grid-cols-3 gap-3" style="--co:1">
                 @foreach (['dates' => 'Dates', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
-                    <li data-progress-step="{{ $step }}" class="checkout-step cursor-pointer" role="button" tabindex="0" aria-label="Jump to {{ strtolower($label) }}">
+                    {{-- The <li> used to carry role="button" itself, which strips
+                         its listitem semantics and left the <ol> announcing as a
+                         list with no items (axe `list`). The interactive part is
+                         a real <button> inside instead: the list stays a list,
+                         and Enter/Space/focus come from the element natively
+                         rather than from tabindex + a keydown handler.
+                         booking.js delegates from #checkoutProgress via
+                         closest('[data-progress-step]'), so clicks still resolve
+                         to this <li> exactly as before. --}}
+                    <li data-progress-step="{{ $step }}" class="checkout-step">
+                        <button type="button" class="focus-ring w-full cursor-pointer rounded-lg text-left"
+                                aria-label="Jump to {{ strtolower($label) }}">
                         <div class="flex items-center gap-2.5">
                             <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-emerald-deep/20 bg-white/60 text-[11px] font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] duration-200">
                                 <span class="step-num">{{ $loop->iteration }}</span>
@@ -37,6 +58,7 @@
                         {{-- The un-done track needs to be DARKER than the page,
                              not lighter — white-on-cream is invisible. --}}
                         <span class="step-bar mt-2.5 block h-1 rounded-full bg-emerald-deep/25 transition-colors duration-300"></span>
+                        </button>
                     </li>
                 @endforeach
             </ol>
@@ -217,7 +239,7 @@
         <div>
             <p class="text-[9px] font-bold text-stone-500 uppercase tracking-[0.28em] leading-none">Total due</p>
             {{-- "—" until a real total exists; ₱0 due would be a false statement --}}
-            <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">—</p>
+            <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">-</p>
             <p id="mobileMetaLine" class="text-[10px] font-semibold text-stone-500 mt-0.5"></p>
         </div>
         <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">

@@ -10,33 +10,33 @@
 @if (array_filter($prefill ?? []))
     <p class="mb-4 flex items-start gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-3.5 py-2.5 text-[11px] font-semibold text-palay-800">
         <i class="fa-solid fa-wand-magic-sparkles mt-px text-[13px]"></i>
-        <span>We filled these in from your last stay — change anything that's out of date.</span>
+        <span>We filled these in from your last stay. Change anything that's out of date.</span>
     </p>
 @endif
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-        <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">First Name</label>
-        <input type="text" name="first_name" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <label for="guest-first-name" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">First Name</label>
+        <input type="text" name="first_name" id="guest-first-name" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
     <div>
         {{-- Server-side this has always been required; the input was not, so a
              guest who left it blank got a red banner after a full page round
              trip instead of a hint while they were still standing in the
              field. Only the "(Optional)" fields are optional now. --}}
-        <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Middle Name</label>
-        <input type="text" name="middle_name" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <label for="guest-middle-name" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Middle Name</label>
+        <input type="text" name="middle_name" id="guest-middle-name" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
     <div>
-        <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Last Name</label>
-        <input type="text" name="last_name" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <label for="guest-last-name" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Last Name</label>
+        <input type="text" name="last_name" id="guest-last-name" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
     <div>
-        <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Suffix <span class="text-stone-500 font-medium normal-case">(Optional)</span></label>
-        <input type="text" name="suffix" value="{{ old('suffix', $prefill['suffix'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
+        <label for="guest-suffix" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Suffix <span class="text-stone-500 font-medium normal-case">(Optional)</span></label>
+        <input type="text" name="suffix" id="guest-suffix" value="{{ old('suffix', $prefill['suffix'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
     </div>
 </div>
 
@@ -76,7 +76,7 @@
             <i class="fa-solid fa-plus text-[18px]"></i>
         </button>
     </div>
-    <p class="text-[11px] font-medium text-stone-500 mt-1.5">Assign every guest to a room below — the totals have to match.</p>
+    <p class="text-[11px] font-medium text-stone-500 mt-1.5">Assign every guest to a room below. The totals have to match.</p>
 </div>
 
 {{-- Two things the front desk had no way of knowing until the guest walked in.
@@ -97,7 +97,7 @@
             </select>
             <i class="fa-solid fa-chevron-down text-stone-500 absolute right-3.5 text-[13px] pointer-events-none"></i>
         </div>
-        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at 2:00 PM. The front desk is staffed 24/7, so a late arrival is fine — it just helps to know.</p>
+        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at 2:00 PM. The front desk is staffed 24/7, so a late arrival is fine. It just helps to know.</p>
     </div>
     <div>
         <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5" for="special_requests">
@@ -106,7 +106,7 @@
         <textarea name="special_requests" id="special_requests" rows="3" maxlength="500"
                   class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold resize-y"
                   placeholder="Ground floor, travelling with an elderly parent, allergies…">{{ old('special_requests') }}</textarea>
-        <p class="text-[11px] font-medium text-stone-500 mt-1.5">We'll do our best — requests aren't guaranteed and don't change your rate.</p>
+        <p class="text-[11px] font-medium text-stone-500 mt-1.5">We'll do our best, though requests aren't guaranteed and don't change your rate.</p>
     </div>
 </div>
 

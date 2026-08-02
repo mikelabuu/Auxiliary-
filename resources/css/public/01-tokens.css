@@ -3,9 +3,24 @@
 
 @theme {
     /* Fonts */
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-display: 'Fraunces', ui-serif, Georgia, serif;
-    --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    /* These are the defaults for any page that sets no theme class. In practice
+       that is only layouts/public/auth (the sandbox payment portal), since base
+       and auth-desk both set body.theme-boutique and re-point them anyway.
+       They used to name Fraunces and Inter, which meant the sandbox portal —
+       a page carrying the Farmers Hostel name in the middle of the booking
+       journey — was the one surface rendering in a different typeface pair.
+       Pointing the defaults at the same families the rest of the site uses
+       collapses that, and retires Fraunces and Inter from the project. */
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+    /* Tabular voice for reference codes, room numbers and account numbers
+       (.font-data). This used to lead with 'JetBrains Mono', which no public
+       layout has ever loaded — so every one of those elements silently fell
+       through to the generic `monospace` keyword, i.e. Courier New on Windows.
+       Leading with the platform UI monospace picks up SF Mono, Cascadia Mono or
+       Consolas instead, which is both better looking and free: a webfont for
+       four elements is not worth a request. */
+    --font-data: ui-monospace, 'SF Mono', 'Segoe UI Mono', 'Cascadia Mono', Consolas, monospace;
     /* Condensed uppercase voice for eyebrows, nav and micro-labels.
        Re-pointed to Oswald under body.theme-boutique. */
     --font-label: 'Oswald', ui-sans-serif, system-ui, sans-serif;
@@ -62,7 +77,7 @@
 
     /* ─────────────────────────────────────────────────────────────
        Boutique Farmstead — editorial palette for the public site
-       Deep emerald + brass gold + warm cream, Lora/Nunito pairing.
+       Deep emerald + brass gold + warm cream; Playfair/Manrope pairing.
        Activated on public pages via `body.theme-boutique`, which
        re-points canvas/ink/fonts at these values. Admin unaffected.
        ───────────────────────────────────────────────────────────── */
