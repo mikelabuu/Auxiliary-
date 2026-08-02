@@ -23,7 +23,7 @@
 
   {{-- Same design-system bundle as the admin console: Fresh Meadow tokens,
        cards, tables, status pills, modals — plus the .fd-* band layer. --}}
-  @vite(['resources/css/admin.css', 'resources/js/app.js'])
+  @vite(['resources/css/admin.css', 'resources/js/app.js', 'resources/js/admin.js'])
   @livewireStyles
   @stack('styles')
 </head>

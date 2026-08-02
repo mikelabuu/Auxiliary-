@@ -43,7 +43,7 @@
        (partials/dashboard/insights-modal), which already pulls it in its own
        @push('scripts') — so loading it here meant every admin page paid 204 KB
        for a chart it does not draw, and the dashboard fetched it twice. --}}
-  @vite(['resources/css/admin.css', 'resources/js/app.js'])
+  @vite(['resources/css/admin.css', 'resources/js/app.js', 'resources/js/admin.js'])
   @livewireStyles
   @stack('styles')
 </head>
