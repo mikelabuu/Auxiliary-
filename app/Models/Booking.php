@@ -78,9 +78,13 @@ class Booking extends Model
         'accepted_terms_at' => 'datetime',
         'num_seniors' => 'integer',
         'expected_guests' => 'integer',   //
-        'total_price' => 'float',
-        'discount' => 'float',
-        'payable_amount' => 'float',    //
+        // Money, and the columns are decimal(10,2). Cast as float these went
+        // through binary floating point on every read, so a total and the
+        // payment settling it could compare unequal at the last centavo.
+        // decimal:2 keeps them exact and keeps the scale the DB already has.
+        'total_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'payable_amount' => 'decimal:2',
     ];
 
 

@@ -26,6 +26,9 @@ class Reservation extends Model
     protected $casts = [
         'meal' => 'array',
         'status' => 'string',
+        // The nightly rate this room was actually sold at. decimal(10,2) in
+        // the database; kept exact here for the same reason as Booking's.
+        'price' => 'decimal:2',
     ];
 
     public const STATUS_AVAILABLE   = 'available';

@@ -22,9 +22,4 @@ class PaymentReportController extends Controller
         return Excel::download(new PaymentsExport('cash', $request), 'payments_cash.xlsx');
     }
 
-    // Export only sandbox (Landbank) payments
-    public function exportSandbox(Request $request)
-    {
-        return Excel::download(new PaymentsExport('sandbox', $request), 'payments_sandbox.xlsx');
-    }
 }

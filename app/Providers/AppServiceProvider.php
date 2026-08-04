@@ -140,15 +140,15 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function bootRateLimiters(): void
     {
-        // Guards the six "re-enter your password to continue" endpoints in the
-        // staff console. They each Hash::check and report the result, so
-        // unthrottled they are a password oracle for a hijacked session.
-        // Keyed on the staff account, not the IP, so the limit follows the
-        // session it is actually protecting.
-        RateLimiter::for('staff-password', function (Request $request) {
-            return Limit::perMinute(5)
-                ->by('staff-password:' . (auth('staff')->id() ?: $request->ip()));
-        });
+        // NOTE: the 'staff-password' limiter that used to live here is gone
+        // with the endpoints it guarded. The six "re-enter your password to
+        // continue" routes were orphaned — the console had already dropped the
+        // modals that called them ("Password re-auth dropped", see the staff
+        // records and user records pages) — so they were removed rather than
+        // left implying a control that no longer ran. If the confirmation step
+        // is ever brought back, it needs this limiter back with it: those
+        // endpoints Hash::check and report the result, which is a password
+        // oracle for a hijacked session if left uncapped.
 
         // Account creation and password-reset mail. Both send or write on an
         // unauthenticated request, so they are per-IP capped.

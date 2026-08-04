@@ -1,10 +1,23 @@
 /**
- * Admin modal engine.
+ * Modal engine — staff consoles *and* the public site.
  *
  * Replaces the inline openModal/closeModal helpers that used to live in
  * layouts/admin.blade.php. Same public API — `window.openModal(id)` and
  * `window.closeModal(id)` — because ~15 call sites across the staff views
  * call them, plus the `[data-modal-close="id"]` attribute contract.
+ *
+ * This module has always been bundled into app.js, which the public layout
+ * loads too — so every guest page already paid for it while the public modal
+ * and mobile drawer ran their own class-toggling with no scroll lock, no
+ * Escape, no focus trap and no focus restore. Both now go through here:
+ *
+ *  - `x-booking.ui.modal` renders the same `[data-modal]` +
+ *    `[data-modal-backdrop]` + `[data-modal-close]` contract the admin
+ *    component does, and its panel is `.pub-modal-panel`.
+ *  - The mobile drawer animates with its own CSS (opacity/visibility, not
+ *    `hidden`), so it opts in through `openOverlay`/`closeOverlay` below,
+ *    which give it the stack, lock, trap and restore without the engine
+ *    touching how it is painted.
  *
  * What the inline version got wrong, and this fixes:
  *
@@ -37,12 +50,21 @@ const FOCUSABLE = [
     '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+// The animated panel inside an overlay. `.modal` is the admin/staff shell;
+// `.pub-modal-panel` is the public one. closeModal() waits on this element's
+// opacity transition, so an overlay whose panel matches neither simply closes
+// instantly rather than incorrectly.
+const PANEL = '.modal, .pub-modal-panel';
+
 // Elements currently open, innermost last.
 const stack = [];
 // Pending close work per element, so open() can cancel it.
 const pendingClose = new WeakMap();
 // Where focus came from, per element.
 const focusOrigin = new WeakMap();
+// Overlays that paint themselves (the mobile drawer) register a closer here,
+// so Escape and backdrop clicks run *their* exit instead of toggling `hidden`.
+const customDismiss = new WeakMap();
 
 const prefersReducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -181,8 +203,31 @@ function resetScrollPanes(el) {
     el.querySelectorAll('.custom-scrollbar, .overflow-y-auto').forEach((pane) => {
         pane.scrollTop = 0;
     });
-    const panel = el.querySelector('.modal');
+    const panel = el.querySelector(PANEL);
     if (panel) panel.scrollTop = 0;
+}
+
+/**
+ * Adopt an overlay that paints itself.
+ *
+ * The mobile drawer transitions opacity/visibility rather than toggling
+ * `hidden`, and its exit curve is tuned in 05-header.css — so it keeps its own
+ * show/hide and borrows only the behaviour that was missing: the scroll lock,
+ * the focus trap, focus restore, and dismissal on Escape or a backdrop click.
+ * `onDismiss` is what those two routes call.
+ */
+export function openOverlay(target, onDismiss) {
+    const el = resolve(target);
+    if (!el) return;
+    if (onDismiss) customDismiss.set(el, onDismiss);
+    register(el);
+}
+
+export function closeOverlay(target) {
+    const el = resolve(target);
+    if (!el) return;
+    customDismiss.delete(el);
+    unregister(el);
 }
 
 export function openModal(target) {
@@ -212,7 +257,7 @@ export function closeModal(target) {
 
     el.setAttribute('data-closing', '');
 
-    const panel = el.querySelector('.modal');
+    const panel = el.querySelector(PANEL);
 
     const finish = () => {
         pendingClose.delete(el);
@@ -284,6 +329,12 @@ document.addEventListener('mousedown', (e) => {
 
 function dismiss(el) {
     if (!el) return;
+    // A self-painting overlay (the drawer) closes its own way.
+    const custom = customDismiss.get(el);
+    if (custom) {
+        custom();
+        return;
+    }
     const action = el.getAttribute('data-modal-close-action');
     if (action) closeLivewireModal(el, action);
     else closeModal(el);
@@ -292,7 +343,9 @@ function dismiss(el) {
 document.addEventListener('click', (e) => {
     // Backdrop first: it also carries [data-modal-close], so the generic
     // branch below would otherwise dismiss it without the press-target guard.
-    const backdrop = e.target.closest('.modal-backdrop-tint');
+    // `[data-modal-backdrop]` is the bundle-neutral spelling — .modal-backdrop-tint
+    // is an admin.css class and the public bundle has no such rule.
+    const backdrop = e.target.closest('.modal-backdrop-tint, [data-modal-backdrop]');
     if (backdrop) {
         // Require the press to have started on the backdrop too, so releasing
         // a text-selection drag outside the panel doesn't dismiss the dialog.
@@ -356,3 +409,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.openModal = openModal;
 window.closeModal = closeModal;
+window.openOverlay = openOverlay;
+window.closeOverlay = closeOverlay;
+
+// The public layout used to define its own `pubModalClose` in <head> — a
+// hide/show with none of the above. Kept as an alias so any inline onclick
+// still in a cached page keeps working.
+window.pubModalClose = closeModal;

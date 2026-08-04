@@ -16,17 +16,6 @@ class CompletedBookingsController extends Controller
         return view('staff.completedbookings.index');
     }
 
-    public function verifyPassword(Request $request)
-    {
-        $staff = auth('staff')->user();
-
-        if (!$staff || !\Hash::check($request->password, $staff->password)) {
-            return response()->json(['success' => false, 'message' => 'Invalid password. Please try again.']);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
     public function showDetails($id)
     {
         $booking = Booking::with(['reservations.room', 'payments'])->find($id);

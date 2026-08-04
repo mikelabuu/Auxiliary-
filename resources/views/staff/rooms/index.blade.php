@@ -189,7 +189,7 @@
 
 <!-- ==================== Add Room Modal ==================== -->
 <x-admin.ui.modal id="addRoomModal" icon="plus" title="Add New Room" scroll-body>
-    <form action="{{ route('staff.rooms.store') }}" method="POST" class="px-6 py-5 space-y-4">
+    <form action="{{ route('staff.rooms.store') }}" method="POST" class="px-6 py-5 space-y-4" data-busy-form>
         @csrf
         <div>
             <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>

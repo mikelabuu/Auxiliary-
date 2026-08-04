@@ -46,40 +46,17 @@
     </div>
   </main>
 
+  {{-- Modal open/close, [data-modal-close] dismissal, Escape, the scroll lock
+       and focus trapping all come from resources/js/admin-modals.js. The
+       entrance-animation cleanup, band clock, card spotlight and KPI count-up
+       come from resources/js/staff-console.js — both bundled into the assets
+       this layout already loads.
+
+       This file used to carry its own byte-for-byte copy of all of it. Two
+       implementations meant the frontdesk console quietly missed every fix
+       made on the admin side; the glide pill below is genuinely desk-only and
+       is the one thing that stays. --}}
   <script>
-    // Modal open/close, [data-modal-close] dismissal, Escape, the scroll lock
-    // and focus trapping all come from resources/js/admin-modals.js (bundled
-    // into the app.js this layout already loads). This file used to carry its
-    // own byte-for-byte copy of those helpers; two implementations meant the
-    // frontdesk console quietly missed every fix made on the admin side.
-
-    // Entrance keyframes fill forwards and would trap page-level fixed
-    // modals inside a stale stacking context — clear them once done.
-    document.addEventListener('animationend', function (e) {
-      const n = e.animationName;
-      if (n === 'fadeInUp' || n === 'popIn' || n === 'rowIn') {
-        e.target.style.animation = 'none';
-        if (n !== 'rowIn') e.target.style.opacity = '1';
-      }
-    }, true);
-
-    // ── Band clock (desk time = Manila wall clock on the machine) ──
-    (function () {
-      const timeEl = document.getElementById('fdClock');
-      const dateEl = document.getElementById('fdClockDate');
-      if (!timeEl) return;
-      function tick() {
-        const now = new Date();
-        let h = now.getHours();
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        timeEl.textContent = h + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ' ' + ampm;
-        if (dateEl) dateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-      }
-      tick();
-      setInterval(tick, 1000);
-    })();
-
     // ── Nav glide pill: a soft highlight follows the hovered link ──
     (function () {
       const nav = document.querySelector('.fd-nav');
@@ -100,43 +77,6 @@
       });
       nav.addEventListener('mouseleave', function () { nav.classList.remove('glide-on'); });
     })();
-
-    // ── Cursor spotlight on cards (CSS reads --spot-x/--spot-y) ──
-    (function () {
-      let raf = null;
-      document.addEventListener('pointermove', function (e) {
-        if (raf) return;
-        raf = requestAnimationFrame(function () {
-          raf = null;
-          const t = e.target.closest && e.target.closest('.card, .stat-card, .mini-stat, .quick-action');
-          if (!t) return;
-          const r = t.getBoundingClientRect();
-          t.style.setProperty('--spot-x', (e.clientX - r.left) + 'px');
-          t.style.setProperty('--spot-y', (e.clientY - r.top) + 'px');
-        });
-      }, { passive: true });
-    })();
-
-    // ── Animated count-up for plain numeric KPI values ──
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.querySelectorAll('.stat-value, .mini-stat-value').forEach(function (el) {
-        if (el.children.length > 0) return;
-        const m = el.textContent.trim().match(/^([₱$]?)([\d,]+)(\.\d+)?(%?)$/);
-        if (!m) return;
-        const target = parseFloat(m[2].replace(/,/g, '') + (m[3] || ''));
-        if (!isFinite(target) || target === 0) return;
-        const dec = m[3] ? m[3].length - 1 : 0;
-        const dur = 560, start = performance.now();
-        function fmt(v) {
-          return m[1] + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[4];
-        }
-        (function tick(t) {
-          const p = Math.min(1, (t - start) / dur);
-          el.textContent = fmt(target * (1 - Math.pow(1 - p, 3)));
-          if (p < 1) requestAnimationFrame(tick);
-        })(start);
-      });
-    }
   </script>
 
   {{-- Session flashes surface as toasts (engine in resources/js/app.js).
@@ -150,6 +90,9 @@
   </script>
   @endif
   @livewireScripts
+  {{-- Parity with layouts/admin: a desk page that pushed a modal here would
+       otherwise have it silently dropped. --}}
+  @stack('modals')
   @stack('scripts')
 </body>
 </html>

@@ -119,19 +119,6 @@ class UserRecordsController extends Controller
         return response()->json(['success' => true, 'message' => 'Email marked as verified']);
     }
 
-    public function verifyPassword(Request $request)
-    {
-        $request->validate(['password' => 'required']);
-
-        $staff = Auth::guard('staff')->user();
-
-        if (!Hash::check($request->password, $staff->password)) {
-            return response()->json(['success' => false, 'message' => 'Invalid password']);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
     public function suspend(User $user)
     {
         $staff = Auth::guard('staff')->user();

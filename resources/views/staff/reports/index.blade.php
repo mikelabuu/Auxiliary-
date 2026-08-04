@@ -77,7 +77,8 @@
                 <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Gateway</p>
                 <div class="flex flex-wrap gap-1.5" data-filter-chips="gateway">
                     <button type="button" class="filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer" data-filter-group="gateway" data-filter-value="all">All Gateways</button>
-                    <button type="button" class="filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer" data-filter-group="gateway" data-filter-value="sandbox">Sandbox</button>
+                    <button type="button" class="filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer" data-filter-group="gateway" data-filter-value="gcash">GCash</button>
+                    <button type="button" class="filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer" data-filter-group="gateway" data-filter-value="bank_transfer">Bank Transfer</button>
                     <button type="button" class="filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer" data-filter-group="gateway" data-filter-value="manual">Manual / Walk-in</button>
                 </div>
             </div>

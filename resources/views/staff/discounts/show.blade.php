@@ -149,15 +149,19 @@
 
                                         @if($file->status === 'pending' && !$isExpired)
                                             <div class="grid grid-cols-2 gap-2">
-                                                <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}">
+                                                {{-- Per-ID review is a judgement call the reviewer is
+                                                     already making with the document open, so these two
+                                                     stay un-confirmed — but they still get the in-flight
+                                                     state and the double-submit guard. --}}
+                                                <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
-                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-600 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" data-busy-btn class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-600 px-3 py-2 text-[11px] font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                                         <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> Approve
                                                     </button>
                                                 </form>
-                                                <form method="POST" action="{{ route('staff.discounts.file.reject', [$discount->id, $file->id]) }}">
+                                                <form method="POST" action="{{ route('staff.discounts.file.reject', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
-                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-ember-200 bg-ember-50 px-3 py-2 text-[11px] font-bold text-ember-700 transition-colors hover:bg-ember-100 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" data-busy-btn class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-ember-200 bg-ember-50 px-3 py-2 text-[11px] font-bold text-ember-700 transition-colors hover:bg-ember-100 active:scale-[0.98] cursor-pointer">
                                                         <x-admin.ui.icon name="x" class="w-3.5 h-3.5" stroke-width="2.5" /> Reject
                                                     </button>
                                                 </form>
@@ -207,15 +211,24 @@
                         Finalizing will recalculate the guest's bill.
                     </p>
                     <div class="flex gap-2.5 shrink-0">
-                        <form method="POST" action="{{ route('staff.discounts.reject', $discount->id) }}" data-confirm="Reject this entire discount request? The guest keeps the original price.">
+                        <form method="POST" action="{{ route('staff.discounts.reject', $discount->id) }}"
+                              data-busy-form
+                              data-confirm-title="Reject this discount request?"
+                              data-confirm="The guest keeps the original price."
+                              data-confirm-action="Yes, reject"
+                              data-confirm-tone="danger">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl border border-ember-200 bg-ember-50 px-5 py-2.5 text-sm font-bold text-ember-700 transition-colors hover:bg-ember-100 active:scale-[0.98] cursor-pointer">
+                            <button type="submit" data-busy-btn class="inline-flex items-center gap-1.5 rounded-xl border border-ember-200 bg-ember-50 px-5 py-2.5 text-sm font-bold text-ember-700 transition-colors hover:bg-ember-100 active:scale-[0.98] cursor-pointer">
                                 <x-admin.ui.icon name="x" class="w-4 h-4" stroke-width="2.5" /> Reject Request
                             </button>
                         </form>
-                        <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}" data-confirm="Approve this discount? The 20% per approved ID will be applied to the booking total.">
+                        <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}"
+                              data-busy-form
+                              data-confirm-title="Approve this discount?"
+                              data-confirm="The 20% per approved ID will be applied to the booking total."
+                              data-confirm-action="Yes, approve">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-600 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
+                            <button type="submit" data-busy-btn class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-600 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-700 active:scale-[0.98] cursor-pointer">
                                 <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve Discount
                             </button>
                         </form>
@@ -234,21 +247,8 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-    // Confirm before the irreversible finalize actions
-    document.querySelectorAll('form[data-confirm]').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Are you sure?',
-                text: form.dataset.confirm,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, continue',
-                confirmButtonColor: '#14532d',
-            }).then(result => { if (result.isConfirmed) form.submit(); });
-        });
-    });
-</script>
-@endpush
+{{-- The confirm dialog for the two finalize actions above now comes from the
+     shared [data-confirm] contract in resources/js/staff-actions.js. The copy
+     that used to live here bound a static NodeList (so it missed anything
+     Livewire re-rendered) and finished with form.submit(), which fires no
+     submit event and therefore never armed the double-submit guard. --}}

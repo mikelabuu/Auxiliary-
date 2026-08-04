@@ -10,6 +10,13 @@
  * so this single bundle is safe on every staff screen.
  */
 
+// Shell behaviours shared by layouts/admin and layouts/frontdesk (entrance
+// cleanup, card spotlight, KPI count-up, live clock, back-to-top, copy-ref).
+// Both layouts used to carry their own inline copy of these.
+import './staff-console';
+// Confirm-then-submit for irreversible actions, with the double-submit guard.
+import './staff-actions';
+
 import './pages/admin-dashboard';
 import './pages/admin-reports';
 import './pages/admin-rooms';

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exceptions\RoomUnavailable;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Booking;
@@ -367,7 +368,7 @@ class BookingController extends Controller
                     ->all();
 
                 if (!empty($overlappingRooms)) {
-                    throw new \Exception('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
+                    throw new RoomUnavailable('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
                 }
 
                 // Authoritative status guard: a room the front desk just set to
@@ -378,7 +379,7 @@ class BookingController extends Controller
                     ->pluck('room_number')->toArray();
 
                 if (!empty($unavailableRooms)) {
-                    throw new \Exception('The following rooms are no longer available: ' . implode(', ', $unavailableRooms));
+                    throw new RoomUnavailable('The following rooms are no longer available: ' . implode(', ', $unavailableRooms));
                 }
                 
                 //Begin Booking 
@@ -453,13 +454,24 @@ class BookingController extends Controller
                 return $booking;
             });
         }
+        catch (RoomUnavailable $e) {
+            // The one failure written to be read by a guest: someone took the
+            // room while this form was open.
+            return back()->withErrors([
+                'reservations' => $e->getMessage()
+            ])->withInput();
+        }
         catch (\Throwable $e) {
+            // Everything else is ours, not theirs. This used to echo
+            // $e->getMessage() into the form, so a missing column or a
+            // constraint violation was rendered verbatim to whoever was
+            // booking — the schema, leaked one failure at a time.
             \Log::error('Booking store failed: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
             return back()->withErrors([
-                'reservations' => $e->getMessage()
+                'reservations' => 'We could not complete that booking. Please try again, or contact the front desk if it keeps happening.'
             ])->withInput();
         }
 

@@ -23,14 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
 
-        // The gateway callback has no session to carry a token. This has to be
-        // declared here: the route-level withoutMiddleware() it used to rely on
-        // named App\Http\Middleware\VerifyCsrfToken, which is a leftover from
-        // the Laravel 10 layout and is not the class actually in the web group,
-        // so the exclusion silently did nothing and the webhook always 419'd.
-        $middleware->validateCsrfTokens(except: [
-            'sandbox/webhook/*',
-        ]);
+        // NOTE: the CSRF exemption that used to live here covered
+        // `sandbox/webhook/*`, the callback for the simulated card gateway.
+        // Both the gateway and its webhook have been removed — settlement is
+        // manual (upload a receipt, staff verify) and has no server-to-server
+        // callback. There is nothing left in this app that legitimately posts
+        // without a session, so no route should be exempt from CSRF; if that
+        // ever changes, declare it here rather than with a route-level
+        // withoutMiddleware(), which silently does nothing against the web
+        // group's actual middleware class.
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

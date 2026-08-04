@@ -17,9 +17,18 @@ use Tests\TestCase;
  *
  * The whole payment flow previously carried no middleware: an anonymous
  * visitor could read any payment and drive it to completion, and any signed-in
- * guest could do the same to a stranger's booking. The gateway itself is a
- * simulation, but the auth and ownership boundary tested here is what the real
- * gateway will sit behind.
+ * guest could do the same to a stranger's booking.
+ *
+ * There is now exactly one way to settle a booking — send the money over GCash
+ * or a bank transfer and upload the receipt, which a staff member verifies by
+ * hand. The simulated card gateway that used to sit beside it (`/sandbox/*`,
+ * its HMAC webhook, and the payment-method choice page) has been removed, and
+ * with it the tests that covered it. Nothing in that gateway ever moved real
+ * funds; it marked a booking paid on a button press with no human in the loop.
+ *
+ * What must remain true, and is asserted below: only the owner of a booking
+ * can see or act on its payment, a claim is never self-confirming, and one
+ * booking cannot stack two pending claims.
  *
  * Fixtures are PNG, not JPEG, and must stay that way: UploadedFile::fake()
  * ->image() derives its encoder from the extension, and the GD build in this
@@ -37,7 +46,8 @@ class PaymentSecurityTest extends TestCase
     {
         parent::setUp();
 
-        // processPayment() mails a confirmation on success.
+        // Staff verification mails an official receipt; nothing here should
+        // reach a real mailer.
         Mail::fake();
     }
 
@@ -79,9 +89,9 @@ class PaymentSecurityTest extends TestCase
             'user_id' => $booking->user_id,
             'amount' => $booking->payable_amount,
             'status' => $status,
-            'payment_type' => 'online',
+            'payment_type' => 'manual',
             'reference_no' => 'TESTREF123',
-            'gateway' => 'sandbox',
+            'gateway' => 'gcash',
         ]);
     }
 
@@ -93,25 +103,26 @@ class PaymentSecurityTest extends TestCase
     {
         $owner = $this->user('owner@example.test');
         $booking = $this->booking($owner);
-        $payment = $this->payment($booking);
 
         $this->get("/booking/{$booking->id}/pay")->assertRedirect('/login');
-        $this->get("/sandbox/pay/{$payment->id}")->assertRedirect('/login');
-        $this->get("/sandbox/status/{$payment->id}")->assertRedirect('/login');
-        $this->get("/sandbox/result/success/{$payment->id}")->assertRedirect('/login');
-        $this->post("/sandbox/process/{$payment->id}")->assertRedirect('/login');
+        $this->post("/booking/{$booking->id}/pay/proof")->assertRedirect('/login');
     }
 
-    public function test_anonymous_visitor_cannot_mark_a_booking_paid(): void
+    public function test_anonymous_visitor_cannot_queue_a_payment_claim(): void
     {
+        Storage::fake('local');
+
         $owner = $this->user('owner@example.test');
         $booking = $this->booking($owner);
-        $payment = $this->payment($booking);
 
-        $this->post("/sandbox/process/{$payment->id}", ['simulate' => 'success']);
+        $this->post("/booking/{$booking->id}/pay/proof", [
+            'proof_method' => 'gcash',
+            'proof_reference' => '9988776655',
+            'proof' => UploadedFile::fake()->image('receipt.png'),
+        ]);
 
         $this->assertSame('pending_payment', $booking->fresh()->status);
-        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
     }
 
     // ---------------------------------------------------------------
@@ -123,20 +134,10 @@ class PaymentSecurityTest extends TestCase
         $owner = $this->user('owner@example.test');
         $intruder = $this->user('intruder@example.test');
         $booking = $this->booking($owner);
-        $payment = $this->payment($booking);
+        $this->payment($booking);
 
         $this->actingAs($intruder)
             ->get("/booking/{$booking->id}/pay")->assertForbidden();
-
-        $this->actingAs($intruder)
-            ->get("/sandbox/pay/{$payment->id}")->assertForbidden();
-
-        $this->actingAs($intruder)
-            ->get("/sandbox/status/{$payment->id}")->assertForbidden();
-
-        $this->actingAs($intruder)
-            ->post("/sandbox/process/{$payment->id}", ['simulate' => 'success'])
-            ->assertForbidden();
 
         $this->assertSame('pending_payment', $booking->fresh()->status);
     }
@@ -145,30 +146,20 @@ class PaymentSecurityTest extends TestCase
     // Owner happy path
     // ---------------------------------------------------------------
 
-    public function test_owner_can_complete_a_payment(): void
+    public function test_pay_serves_the_receipt_upload_form(): void
     {
         $owner = $this->user('owner@example.test');
         $booking = $this->booking($owner);
 
-        // /pay is now the method choice — settle manually and upload a
-        // receipt, or run the simulated gateway. The card route is explicit.
+        // /pay used to be a fork between manual settlement and the card
+        // gateway. It is now the upload form itself.
         $this->actingAs($owner)
             ->get("/booking/{$booking->id}/pay")
             ->assertOk()
-            ->assertSee('Pay online by card');
-
-        $this->actingAs($owner)
-            ->get("/booking/{$booking->id}/pay/sandbox")
-            ->assertRedirectContains('/sandbox/pay/');
-
-        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
-
-        $this->actingAs($owner)
-            ->post("/sandbox/process/{$payment->id}", ['simulate' => 'success'])
-            ->assertRedirectContains("/sandbox/result/success/{$payment->id}");
-
-        $this->assertSame('paid', $booking->fresh()->status);
-        $this->assertSame('success', $payment->fresh()->status);
+            ->assertSee('Submit for verification')
+            // The retired gateway must not be advertised anywhere on it.
+            ->assertDontSee('Pay online by card')
+            ->assertDontSee('bank portal');
     }
 
     public function test_payment_cannot_be_started_for_a_booking_not_awaiting_payment(): void
@@ -183,39 +174,36 @@ class PaymentSecurityTest extends TestCase
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
     }
 
-    public function test_an_already_processed_payment_cannot_be_re_driven(): void
+    /**
+     * The retired gateway's routes are gone, not merely unlinked. A bookmarked
+     * or guessed URL must 404 rather than quietly still working.
+     */
+    public function test_the_retired_card_gateway_routes_no_longer_exist(): void
     {
         $owner = $this->user('owner@example.test');
         $booking = $this->booking($owner);
-        $payment = $this->payment($booking, 'failed');
+        $payment = $this->payment($booking);
 
-        $this->actingAs($owner)
-            ->post("/sandbox/process/{$payment->id}", ['simulate' => 'success']);
+        $this->actingAs($owner)->get("/booking/{$booking->id}/pay/sandbox")->assertNotFound();
+        $this->actingAs($owner)->get("/sandbox/pay/{$payment->id}")->assertNotFound();
+        $this->actingAs($owner)->get("/sandbox/status/{$payment->id}")->assertNotFound();
+        $this->actingAs($owner)->get("/sandbox/result/success/{$payment->id}")->assertNotFound();
+        $this->actingAs($owner)->post("/sandbox/process/{$payment->id}", ['simulate' => 'success'])->assertNotFound();
+        $this->postJson("/sandbox/webhook/{$payment->id}", ['event' => 'payment.success'])->assertNotFound();
 
-        $this->assertSame('failed', $payment->fresh()->status);
+        // And nothing about the booking moved on the way past.
         $this->assertSame('pending_payment', $booking->fresh()->status);
+        $this->assertSame('pending', $payment->fresh()->status);
     }
 
     // ---------------------------------------------------------------
     // Manual proof of payment
     // ---------------------------------------------------------------
 
-    public function test_anonymous_visitors_cannot_reach_the_proof_routes(): void
-    {
-        $booking = $this->booking($this->user('owner@example.test'));
-
-        $this->get("/booking/{$booking->id}/pay/proof")->assertRedirect('/login');
-        $this->post("/booking/{$booking->id}/pay/proof")->assertRedirect('/login');
-        $this->get("/booking/{$booking->id}/pay/sandbox")->assertRedirect('/login');
-    }
-
     public function test_a_stranger_cannot_upload_proof_against_someone_elses_booking(): void
     {
         $booking = $this->booking($this->user('owner@example.test'));
         $intruder = $this->user('intruder@example.test');
-
-        $this->actingAs($intruder)
-            ->get("/booking/{$booking->id}/pay/proof")->assertForbidden();
 
         $this->actingAs($intruder)
             ->post("/booking/{$booking->id}/pay/proof", [
@@ -294,7 +282,7 @@ class PaymentSecurityTest extends TestCase
         $this->assertSame(1, Payment::where('booking_id', $booking->id)->count());
     }
 
-    public function test_the_choice_page_is_closed_once_a_proof_is_queued(): void
+    public function test_the_upload_form_is_closed_once_a_proof_is_queued(): void
     {
         Storage::fake('local');
 
@@ -307,14 +295,38 @@ class PaymentSecurityTest extends TestCase
             'proof' => UploadedFile::fake()->image('receipt.png'),
         ]);
 
-        // Both remaining doors close, so one booking cannot stack two claims.
+        // The only door closes, so one booking cannot stack two claims.
         $this->actingAs($owner)->get("/booking/{$booking->id}/pay")
             ->assertRedirect(route('booking.show', $booking->id))
             ->assertSessionHas('info');
+    }
 
-        $this->actingAs($owner)->get("/booking/{$booking->id}/pay/sandbox")
-            ->assertRedirect(route('booking.show', $booking->id))
-            ->assertSessionHas('info');
+    /**
+     * A rejected receipt has to say so at the moment the guest is replacing
+     * it. The choice page used to carry this banner; /pay inherited it when
+     * that page was removed, and losing it in the move would leave a guest
+     * re-uploading the same unusable image with no idea why.
+     */
+    public function test_a_rejected_proof_shows_its_reason_on_the_upload_form(): void
+    {
+        $owner = $this->user('owner@example.test');
+        $booking = $this->booking($owner);
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'user_id' => $owner->id,
+            'amount' => $booking->payable_amount,
+            'status' => Payment::STATUS_REJECTED,
+            'payment_type' => 'manual',
+            'reference_no' => 'REJECTED01',
+            'gateway' => 'gcash',
+            'rejection_reason' => 'The reference number is not readable.',
+        ]);
+
+        $this->actingAs($owner)
+            ->get("/booking/{$booking->id}/pay")
+            ->assertOk()
+            ->assertSee('The reference number is not readable.');
     }
 
     public function test_proof_cannot_be_uploaded_for_a_booking_not_awaiting_payment(): void
@@ -323,7 +335,7 @@ class PaymentSecurityTest extends TestCase
         $booking = $this->booking($owner, 'paid');
 
         $this->actingAs($owner)
-            ->get("/booking/{$booking->id}/pay/proof")
+            ->get("/booking/{$booking->id}/pay")
             ->assertRedirect(route('booking.show', $booking->id));
 
         $this->actingAs($owner)
@@ -334,77 +346,5 @@ class PaymentSecurityTest extends TestCase
             ])->assertRedirect(route('booking.show', $booking->id));
 
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
-    }
-
-    // ---------------------------------------------------------------
-    // View-name injection
-    // ---------------------------------------------------------------
-
-    public function test_result_status_cannot_address_an_arbitrary_view(): void
-    {
-        $owner = $this->user('owner@example.test');
-        $payment = $this->payment($this->booking($owner));
-
-        foreach (['gateway', 'layouts.app', 'welcome'] as $status) {
-            $this->actingAs($owner)
-                ->get("/sandbox/result/{$status}/{$payment->id}")
-                ->assertNotFound();
-        }
-    }
-
-    // ---------------------------------------------------------------
-    // Webhook signature
-    // ---------------------------------------------------------------
-
-    public function test_webhook_rejects_missing_and_wrong_signatures(): void
-    {
-        config(['services.sandbox.webhook_secret' => 'test-secret']);
-
-        $payment = $this->payment($this->booking($this->user('owner@example.test')));
-        $body = ['event' => 'payment.success'];
-
-        $this->postJson("/sandbox/webhook/{$payment->id}", $body)
-            ->assertStatus(401);
-
-        $this->postJson("/sandbox/webhook/{$payment->id}", $body, [
-            'X-Sandbox-Signature' => 'deadbeef',
-        ])->assertStatus(401);
-
-        $this->assertSame('pending', $payment->fresh()->status);
-    }
-
-    public function test_webhook_accepts_a_correct_signature(): void
-    {
-        config(['services.sandbox.webhook_secret' => 'test-secret']);
-
-        $payment = $this->payment($this->booking($this->user('owner@example.test')));
-        $body = json_encode(['event' => 'payment.success']);
-
-        $this->call(
-            'POST',
-            "/sandbox/webhook/{$payment->id}",
-            [], [], [],
-            [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_X_SANDBOX_SIGNATURE' => hash_hmac('sha256', $body, 'test-secret'),
-            ],
-            $body
-        )->assertOk();
-
-        $this->assertSame('success', $payment->fresh()->status);
-        $this->assertTrue($payment->fresh()->webhook_verified);
-    }
-
-    public function test_webhook_fails_closed_when_no_secret_is_configured(): void
-    {
-        // An unset secret must never degrade into "accept anything".
-        config(['services.sandbox.webhook_secret' => null]);
-
-        $payment = $this->payment($this->booking($this->user('owner@example.test')));
-
-        $this->postJson("/sandbox/webhook/{$payment->id}", ['event' => 'x'])
-            ->assertStatus(401);
-
-        $this->assertSame('pending', $payment->fresh()->status);
     }
 }

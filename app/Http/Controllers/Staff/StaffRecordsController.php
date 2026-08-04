@@ -141,19 +141,6 @@ class StaffRecordsController extends Controller
         return back()->with('success', 'Account updated successfully.');
     }
 
-    public function verifyPassword(Request $request)
-    {
-        $request->validate(['password' => 'required']);
-
-        $staff = Auth::guard('staff')->user();
-
-        if (!Hash::check($request->password, $staff->password)) {
-            return response()->json(['success' => false, 'message' => 'Invalid password']);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
     public function activity(Staff $staff)
     {
         $logs = \App\Models\AuditLog::where('staff_id', $staff->id)

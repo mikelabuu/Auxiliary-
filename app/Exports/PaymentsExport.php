@@ -31,9 +31,6 @@ class PaymentsExport implements FromCollection, WithHeadings
             case 'cash':
                 $query->where('gateway', 'cash');
                 break;
-            case 'sandbox':
-                $query->where('gateway', 'sandbox');
-                break;
         }
 
         $payments = $query->get();

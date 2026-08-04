@@ -44,7 +44,23 @@ return [
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+
+            // Google shows an App Password as four groups of four ("abcd efgh
+            // ijkl mnop") for readability, but SMTP AUTH sends the literal
+            // string — so pasting it verbatim authenticates with the spaces
+            // included and Gmail answers a flat "535-5.7.8 Username and
+            // Password not accepted", which reads like a wrong password rather
+            // than a formatting slip. Strip whitespace for Google hosts only;
+            // other providers may legitimately have spaces in a password, so
+            // they get a plain trim.
+            'password' => (function () {
+                $password = (string) env('MAIL_PASSWORD');
+                $host = (string) env('MAIL_HOST', '');
+
+                return str_contains($host, 'gmail.com') || str_contains($host, 'googlemail.com')
+                    ? preg_replace('/\s+/', '', $password)
+                    : trim($password);
+            })(),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],

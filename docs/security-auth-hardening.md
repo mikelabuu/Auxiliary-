@@ -265,6 +265,38 @@ All six now carry `throttle:staff-password` — 5 attempts per minute, keyed on
 the **staff account** rather than the IP, so the limit follows the session it
 is actually protecting.
 
+### Superseded — the endpoints have been removed
+
+The throttle above was the right fix for the oracle, but it turned out to be
+guarding endpoints nothing called. The console had already dropped every
+password prompt in favour of a plain "are you sure?" confirm — see
+`resources/js/pages/admin-user-records.js` ("Password re-auth dropped — a plain
+confirm still guards the account change") and the staff records page ("confirm
+only"). Meanwhile `staff.rooms.verifyPassword` pointed at a `verifyPassword`
+method that did not exist on `RoomController` at all, so that route was a 500
+waiting to be hit.
+
+So the position was: seven routes and six controller methods that hashed a
+password, reported the result, and gated nothing. **Every destructive staff
+action — suspend a user, suspend a staff member, delete a room, approve or
+reject a payment, approve or reject a discount — runs with no re-authentication
+at all.** That was already true before the endpoints were removed; deleting
+them changes nothing about the exposure, it only stops the code implying a
+control that does not run.
+
+The `staff-password` limiter has been removed from `AppServiceProvider`
+alongside them, with a note pointing back here.
+
+**Still open.** Whether consequential staff actions should require a password
+is a product decision, not a cleanup: re-adding the prompt puts a step back
+into every front-desk workflow, and someone deliberately took it out. If it is
+brought back, it needs to be enforced **server-side** — a short-lived
+`password_confirmed_at` stamp in the session plus a middleware on the
+destructive routes, in the shape of Laravel's own `password.confirm`. The
+previous design could not have worked even with the modals in place: the
+confirmation endpoint and the action were separate requests with nothing
+carried between them, so posting straight to the action skipped the prompt.
+
 ---
 
 ## 7. New building blocks
@@ -287,7 +319,6 @@ definitions, and they can key on the authenticated user rather than the IP.
 
 | Name | Policy |
 |---|---|
-| `staff-password` | 5/minute, keyed on staff id (falls back to IP) |
 | `registration` | 5 per 10 minutes, keyed on IP |
 | `password-reset` | 5 per 10 minutes, keyed on `email\|ip` |
 
@@ -295,7 +326,7 @@ Use them from a route with `->middleware('throttle:<name>')`. A typo in the name
 fails at request time, not boot time — verify with:
 
 ```bash
-php artisan tinker --execute="var_dump((bool) app(Illuminate\Cache\RateLimiter::class)->limiter('staff-password'));"
+php artisan tinker --execute="var_dump((bool) app(Illuminate\Cache\RateLimiter::class)->limiter('registration'));"
 ```
 
 ---
@@ -318,7 +349,6 @@ spraying many different accounts.
 | `POST /signup` | 5 per 10 min | ip | `throttle:registration` |
 | `POST /forgot-password` | 5 per 10 min | `email\|ip` | `throttle:password-reset` |
 | `POST /reset-password` | 10/min | ip | `throttle:10,1` |
-| 6 × `verify-password` | 5/min | `staff_id` | `throttle:staff-password` |
 | `POST /email/verification-notification` | 6/min | ip | `throttle:6,1` (pre-existing) |
 
 ### Where the counters live
@@ -462,8 +492,8 @@ php artisan config:clear
 ```
 
 after setting `STAFF_OTP_ENABLED=false` in `.env`. Login reverts to
-single-factor immediately. In `local` the `/__dev-login` route is a further
-backstop.
+single-factor immediately. (The `/__dev-login` route that used to serve as a
+further local backstop has been removed — see §12.)
 
 The mailer itself: `MAIL_MAILER=smtp` against `smtp.gmail.com` requires
 `MAIL_PASSWORD` to be a Gmail **app password**, not the account password —
@@ -529,8 +559,10 @@ probed rather than only read:
 - `APP_DEBUG=true` and `APP_ENV=local` are correct for local work. Shipping as
   is renders stack traces containing DB credentials on any 500.
 - `SESSION_SECURE_COOKIE` is unset — set it once the site is on HTTPS.
-- Remove the `/__dev-login` route (`routes/web.php`). It is environment-guarded
-  and safe today, but its own comment says to remove it.
+- ~~Remove the `/__dev-login` route (`routes/web.php`).~~ **Done.** It logged in
+  as `Staff::first()`, which is a `master_admin`, behind nothing but an
+  `APP_ENV=local` check — one copied `.env` on an XAMPP deploy away from being
+  an unauthenticated master-admin session at a fixed URL.
 - Password minimum is 6 characters across signup, reset, and staff creation.
   Consider Laravel's `Password::defaults()` with an uncompromised check.
 
@@ -554,7 +586,7 @@ probed rather than only read:
 | `app/Http/Controllers/AuthController.php` | Added login rate limiting; `email` validation; session invalidation for suspended users |
 | `bootstrap/app.php` | Registered the `staff.active` middleware alias |
 | `app/Providers/AppServiceProvider.php` | Added `bootRateLimiters()` with three named limiters |
-| `routes/web.php` | Applied `staff.active` to 3 staff groups; throttles on login, signup, password reset, and 6 verify-password endpoints |
+| `routes/web.php` | Applied `staff.active` to 3 staff groups; throttles on login, signup and password reset. (The 6 verify-password endpoints were throttled here too; they have since been removed — see §6.) |
 | `database/migrations/2025_09_13_010449_*.php` | MySQL driver guard |
 | `database/migrations/2025_09_27_064346_*.php` | MySQL driver guard |
 | `database/migrations/2025_10_12_125103_*.php` | MySQL driver guard |

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff\Concerns;
 
 use App\Events\BookingChanged;
 use App\Events\RoomStatusChanged;
+use App\Exceptions\RoomUnavailable;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Reservation;
@@ -12,6 +13,7 @@ use App\Models\RoomType;
 use App\Rules\PersonName;
 use App\Services\AuditLogger;
 use App\Support\Realtime;
+use App\Support\RoomCatalog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -114,12 +116,20 @@ trait CreatesStaffBooking
         $totalPrice     = 0;
         $roomPrices     = []; // room_number => authoritative nightly rate
 
-        // Authoritative room records — price and type ownership come from
-        // here, not from whatever the client posted.
+        // Authoritative room records — type ownership comes from here, not
+        // from whatever the client posted.
         $dbRooms = Room::whereIn(
             'room_number',
             collect($request->reservations)->pluck('room_number')->all()
         )->get()->keyBy('room_number');
+
+        // …and the nightly rate comes from the same catalog the public site
+        // quotes from. This used to read `rooms.price`, while the guest path
+        // read `room_types.base_price` via RoomCatalog — two columns nothing
+        // kept in step, and only one of them editable from Room Types &
+        // Pricing. They agree today; the first rate change would have made the
+        // website and the front desk quote different money for the same night.
+        $catalog = RoomCatalog::all();
 
         foreach ($request->reservations as $block) {
             $roomType   = strtolower($block['room_type']);
@@ -133,7 +143,13 @@ trait CreatesStaffBooking
                     'reservations' => "Room {$roomNumber} does not exist or is not a {$roomType} room."
                 ])->withInput();
             }
-            $price = (float) $room->price;
+            // Catalog first; `rooms.price` only as a fallback for a slug with
+            // no room_types row behind it, which is the same case
+            // LEGACY_CAPACITIES covers below.
+            $price = isset($catalog[$roomType]['price'])
+                ? (float) $catalog[$roomType]['price']
+                : (float) $room->price;
+
             $roomPrices[$roomNumber] = $price;
 
             $capacity = $typeCapacities[$roomType] ?? self::LEGACY_CAPACITIES[$roomType] ?? 1;
@@ -169,43 +185,73 @@ trait CreatesStaffBooking
             ])->withInput();
         }
 
-        // Rooms already spoken for over the selected range. BLOCKING_STATUSES
-        // is the shared list: a hand-rolled one here once omitted
-        // pending_discount, letting a discount-pending room be double-booked.
-        $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
-            ->whereHas('booking', function ($q) use ($request) {
-                $q->whereIn('status', Booking::BLOCKING_STATUSES)
-                    ->where('check_in', '<', $request->check_out)
-                    ->where('check_out', '>', $request->check_in);
-            })
-            ->pluck('room_number')
-            ->toArray();
-
-        if (!empty($overlappingRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
-            ])->withInput();
-        }
-
-        // Authoritative status guard: reject rooms the front desk just closed
-        // (maintenance/cleaning/occupied) even if this page still showed them as
-        // open. The live board is a convenience; this is the guarantee.
-        $unavailableRooms = Room::whereIn('room_number', $allRoomNumbers)
-            ->where('status', '!=', 'available')
-            ->pluck('room_number')
-            ->toArray();
-
-        if (!empty($unavailableRooms)) {
-            return back()->withErrors([
-                'reservations' => 'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
-            ])->withInput();
-        }
-
         $status = 'paid';
-        $discount = $request->input('discount_amount', 0);
+        $discount = (float) $request->input('discount_amount', 0);
+
+        // A discount may not exceed what the stay actually costs. `min:0` was
+        // the only bound, so a posted discount_amount larger than the total
+        // drove payable_amount negative — a "paid" booking worth less than
+        // nothing, with a successful Payment row to match.
+        //
+        // Rejected rather than clamped: a fat-fingered 99999 that silently
+        // became "the whole stay is free" is exactly the mistake nobody would
+        // catch until the books did. The ceiling is the server-computed total,
+        // never anything the form claimed it was.
+        if ($discount > $totalPrice) {
+            return back()->withErrors([
+                'discount_amount' => 'The discount (₱' . number_format($discount, 2) . ') cannot exceed the total for this stay (₱' . number_format($totalPrice, 2) . ').'
+            ])->withInput();
+        }
 
         DB::beginTransaction();
         try {
+            // Rooms already spoken for over the selected range, re-checked
+            // INSIDE the transaction and behind a row lock.
+            //
+            // This pair of guards used to run before the transaction opened,
+            // with no lock at all — so two staff assigning the same room at
+            // once both passed, and a walk-in could not serialise against a
+            // guest booking online (that path locks `rooms`, this one never
+            // touched them). BookingController::store has locked correctly for
+            // a while; this is the same guarantee, finally on the same terms.
+            $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
+                ->lockForUpdate()
+                ->get();
+
+            // BLOCKING_STATUSES is the shared list: a hand-rolled one here once
+            // omitted pending_discount, letting a discount-pending room be
+            // double-booked.
+            $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
+                ->whereHas('booking', function ($q) use ($request) {
+                    $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                        ->where('check_in', '<', $request->check_out)
+                        ->where('check_out', '>', $request->check_in);
+                })
+                ->pluck('room_number')
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($overlappingRooms)) {
+                throw new RoomUnavailable(
+                    'The following rooms are already booked for the selected dates: ' . implode(', ', $overlappingRooms)
+                );
+            }
+
+            // Authoritative status guard: reject rooms the front desk just closed
+            // (maintenance/cleaning/occupied) even if this page still showed them as
+            // open. The live board is a convenience; this is the guarantee.
+            $unavailableRooms = $lockedRooms
+                ->filter(fn ($room) => $room->status !== 'available')
+                ->pluck('room_number')
+                ->all();
+
+            if (!empty($unavailableRooms)) {
+                throw new RoomUnavailable(
+                    'The following rooms are no longer available: ' . implode(', ', $unavailableRooms)
+                );
+            }
+
             $booking = Booking::create([
                 'user_id'         => null,
                 'expected_guests' => $request->expected_guests,
@@ -253,11 +299,9 @@ trait CreatesStaffBooking
                 ]);
             }
 
-            // Rooms were proven to exist in the pricing loop above, so this
-            // reads straight off the records already in hand.
-            $roomIds = collect($request->reservations)
-                ->map(fn ($res) => $dbRooms->get($res['room_number'])->id)
-                ->all();
+            // Off the locked read, not the unlocked one taken before the
+            // transaction opened — same rows the guards above just cleared.
+            $roomIds = $lockedRooms->pluck('id')->all();
 
             if (!empty($roomIds)) {
                 $booking->rooms()->attach($roomIds);
@@ -272,6 +316,14 @@ trait CreatesStaffBooking
                 ['status' => $status],
                 "Front desk staff " . Auth::user()->name . " created walk-in booking #{$booking->id} (Status: {$status})"
             );
+        } catch (RoomUnavailable $e) {
+            // A room conflict is an ordinary outcome at a busy desk, not a
+            // failure: someone else took the room first. It belongs on the
+            // reservations field where the staff member is looking, in the
+            // same shape the pre-transaction checks used to return.
+            DB::rollBack();
+
+            return back()->withErrors(['reservations' => $e->getMessage()])->withInput();
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Walk-in booking failed: ' . $e->getMessage());

@@ -3,14 +3,18 @@
 
 @theme {
     /* Fonts */
-    /* These are the defaults for any page that sets no theme class. In practice
-       that is only layouts/public/auth (the sandbox payment portal), since base
-       and auth-desk both set body.theme-boutique and re-point them anyway.
-       They used to name Fraunces and Inter, which meant the sandbox portal —
-       a page carrying the Farmers Hostel name in the middle of the booking
-       journey — was the one surface rendering in a different typeface pair.
-       Pointing the defaults at the same families the rest of the site uses
-       collapses that, and retires Fraunces and Inter from the project. */
+    /* These are the defaults for any page that sets no theme class. No layout
+       relies on them today — base, account and auth-desk all set
+       body.theme-boutique and re-point the families anyway. The last holdout
+       was layouts/public/auth, which dressed the simulated card gateway; both
+       that layout and the gateway have since been removed.
+
+       These used to name Fraunces and Inter, which is why it mattered: that
+       one surface, carrying the Farmers Hostel name in the middle of the
+       booking journey, rendered in a different typeface pair from everything
+       around it. Keeping the defaults pointed at the same families the rest of
+       the site uses means a new layout that forgets the theme class inherits
+       the right voice instead of a stray one. */
     --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Playfair Display', ui-serif, Georgia, serif;
     /* Tabular voice for reference codes, room numbers and account numbers

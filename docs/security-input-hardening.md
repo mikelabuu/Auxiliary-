@@ -247,8 +247,7 @@ checklist from batch 1 §12, none of which is a code change:
 
 - `APP_DEBUG=true` and `APP_ENV=local` — correct locally, must not ship.
 - `SESSION_SECURE_COOKIE` unset — set once the site is on HTTPS.
-- `/__dev-login` in `routes/web.php` — environment-guarded and safe, but its own
-  comment says to remove it.
+- ~~`/__dev-login` in `routes/web.php`~~ — removed.
 - Password minimum is 6 characters across signup, reset and staff creation.
   Consider `Password::defaults()` with an uncompromised check.
 - `SANDBOX_WEBHOOK_SECRET` and `STAFF_OTP_ENABLED` must be set in `.env` on any

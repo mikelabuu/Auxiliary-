@@ -59,7 +59,7 @@
                         <th class="p-4">Status</th>
                         <th class="p-4">Reference No</th>
                         <th class="p-4">Gateway</th>
-                        <th class="p-4">Landbank Ref ID</th>
+                        <th class="p-4">Gateway Ref</th>
                         <th class="p-4">Date processed</th>
                     </tr>
                 </thead>
@@ -75,7 +75,9 @@
                             <td class="p-4 text-stone-500 font-mono text-xs">{{ $payment->reference_no }}</td>
                             <td class="p-4 uppercase text-xs">{{ $payment->gateway }}</td>
                             <td class="p-4 text-stone-500 font-mono text-xs">
-                                @if($payment->gateway === 'sandbox')
+                                {{-- Keyed off the value itself rather than the retired 'sandbox'
+                                     gateway: those payments are history and still have to render. --}}
+                                @if($payment->landbank_transaction_id)
                                     {{ $payment->landbank_transaction_id }}
                                 @else
                                     <span class="text-stone-400">N/A</span>
@@ -118,9 +120,9 @@
                             <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Reference No</span>
                             <span class="text-stone-800 font-mono text-[10px] block truncate">{{ $payment->reference_no }}</span>
                         </div>
-                        @if($payment->gateway === 'sandbox' && $payment->landbank_transaction_id)
+                        @if($payment->landbank_transaction_id)
                             <div class="col-span-2">
-                                <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Landbank Ref ID</span>
+                                <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Gateway Ref</span>
                                 <span class="text-stone-800 font-mono text-[10px] block truncate">{{ $payment->landbank_transaction_id }}</span>
                             </div>
                         @endif

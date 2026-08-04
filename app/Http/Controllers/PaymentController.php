@@ -17,10 +17,16 @@ use Illuminate\Validation\Rule;
 class PaymentController extends Controller
 {
     /**
-     * Fork in the road: settle manually (GCash / bank transfer, proved by an
-     * uploaded receipt and cleared by staff) or run the simulated card
-     * gateway. Both land on the same place — a paid booking and an official
-     * receipt — but only the manual route has a human in the loop.
+     * The one way to settle: send the money over GCash or a bank transfer,
+     * then upload the receipt for staff to check against the actual transfer.
+     *
+     * There used to be a fork here — this page offered a choice between the
+     * manual route and a simulated card gateway, and `/pay/sandbox` ran the
+     * latter. The gateway was only ever a demo: it moved no real funds, marked
+     * a booking paid on a button press, and had no human in the loop. Manual
+     * settlement with staff verification is the design this hostel actually
+     * operates, so the fork and the gateway behind it are gone and this route
+     * serves the upload form directly.
      */
     public function pay(Booking $booking)
     {
@@ -37,58 +43,17 @@ class PaymentController extends Controller
                 ->with('info', 'Your proof of payment is already with our staff for verification.');
         }
 
-        return view('public.payment.choose', [
-            'booking' => $booking,
-            'amount' => $this->amountFor($booking),
-            'lastRejected' => Payment::where('booking_id', $booking->id)
-                ->where('status', Payment::STATUS_REJECTED)
-                ->latest('id')
-                ->first(),
-        ]);
-    }
-
-    /**
-     * The original behaviour, now reached explicitly rather than by default.
-     */
-    public function sandbox(Booking $booking)
-    {
-        $this->authorizeBooking($booking);
-
-        if ($redirect = $this->rejectIfNotPayable($booking)) {
-            return $redirect;
-        }
-
-        if ($this->awaitingProofFor($booking)) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('info', 'Your proof of payment is already with our staff for verification.');
-        }
-
-        $payment = $this->pendingPaymentFor($booking) ?? $this->openPayment($booking, 'online', 'sandbox');
-
-        return redirect()->route('sandbox.pay', $payment->id);
-    }
-
-    /**
-     * The upload form: where to send the money, and the fields that let staff
-     * match a receipt against a real transfer.
-     */
-    public function proofForm(Booking $booking)
-    {
-        $this->authorizeBooking($booking);
-
-        if ($redirect = $this->rejectIfNotPayable($booking)) {
-            return $redirect;
-        }
-
-        if ($this->awaitingProofFor($booking)) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('info', 'Your proof of payment is already with our staff for verification.');
-        }
-
         return view('public.payment.proof', [
             'booking' => $booking,
             'amount' => $this->amountFor($booking),
             'methods' => Payment::PROOF_METHODS,
+            // Carried over from the retired choice page: a guest whose receipt
+            // was turned down needs to see why, at the moment they are about
+            // to upload the corrected one.
+            'lastRejected' => Payment::where('booking_id', $booking->id)
+                ->where('status', Payment::STATUS_REJECTED)
+                ->latest('id')
+                ->first(),
         ]);
     }
 
@@ -183,9 +148,14 @@ class PaymentController extends Controller
     }
 
     /**
-     * A half-finished attempt is reused rather than orphaned — a guest who
-     * opens the card gateway, backs out and uploads a GCash receipt instead
-     * should end up with one payment row, not two.
+     * A half-finished attempt is reused rather than orphaned, so a booking
+     * ends up with one payment row and not two.
+     *
+     * Nothing opens a `pending` payment any more — the retired card gateway
+     * was the only thing that did, and storeProof() moves straight to
+     * awaiting_verification. This still runs so a row left `pending` by that
+     * flow before it was removed is picked up and completed rather than
+     * stranded beside a new one.
      */
     private function pendingPaymentFor(Booking $booking): ?Payment
     {

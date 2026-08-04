@@ -235,6 +235,13 @@ import './expandable-bento';
         // otherwise a form that failed `required` can never be submitted again.
         if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
 
+        // A form still awaiting its confirmation dialog is going to have this
+        // submit cancelled by the [data-confirm] handler (staff-actions.js).
+        // Arming here would set busySent on a submit that never happened, and
+        // the real one — dispatched by requestSubmit() after the user
+        // confirms — would then be dropped as a duplicate.
+        if (form.hasAttribute('data-confirm') && form.dataset.confirmed !== '1') return;
+
         form.dataset.busySent = '1';
 
         const btn = form.querySelector('[data-busy-btn]')

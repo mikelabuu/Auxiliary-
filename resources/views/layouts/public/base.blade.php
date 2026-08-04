@@ -19,19 +19,14 @@
          never invisible if JS doesn't run. Must execute before first paint. -->
     <script>
         document.documentElement.classList.add('js-reveal');
-        // Animated close for the x-booking.ui.modal component — sets [data-closing]
-        // so the .pub-modal CSS exit (app.css) runs, then hides. Mirrors the admin
-        // data-closing contract. Defined early so inline onclick= can use it.
-        window.pubModalClose = function (id) {
-            const el = document.getElementById(id);
-            if (!el || el.classList.contains('hidden') || el.hasAttribute('data-closing')) return;
-            el.setAttribute('data-closing', '');
-            setTimeout(function () {
-                el.classList.add('hidden');
-                el.removeAttribute('data-closing');
-            }, 140);
-        };
     </script>
+
+    {{-- `window.pubModalClose` used to be defined here: a bare hide/show with no
+         scroll lock, no Escape, no focus trap and no focus restore. The modal
+         engine in resources/js/admin-modals.js does all of that and has always
+         been bundled into the app.js below — the public site simply wasn't
+         using it. It now owns x-booking.ui.modal and keeps `pubModalClose` as
+         an alias. --}}
 
     <!-- Tailwind & Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -187,7 +182,12 @@
     </div>
 
     <!-- Mobile Drawer Navigation -->
-    <div id="mobileDrawer" class="fixed inset-0 z-[60] flex justify-end bg-ink/50 backdrop-blur-sm" aria-hidden="true">
+    {{-- role/aria-modal + the label make this announce as a dialog; the scroll
+         lock, focus trap, focus restore and Escape come from the modal engine
+         via openOverlay() below. It keeps its own opacity/visibility exit
+         (05-header.css) rather than the engine's `hidden` toggle. --}}
+    <div id="mobileDrawer" class="fixed inset-0 z-[60] flex justify-end bg-ink/50 backdrop-blur-sm"
+         role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden="true">
         <div class="drawer-panel bg-canvas w-80 h-full shadow-2xl p-7 flex flex-col justify-between border-l border-ink/10">
             <div>
                 <div class="flex items-center justify-between pb-6 border-b border-ink/10">
@@ -367,10 +367,18 @@
             const drawer = document.getElementById('mobileDrawer');
             const closeBtn = document.getElementById('mobileDrawerCloseBtn');
 
+            // Opening also hands the drawer to the modal engine, which locks
+            // the page behind it, traps Tab inside the panel, closes it on
+            // Escape or a backdrop click, and returns focus to the burger
+            // button on the way out. Before this, none of that happened: Tab
+            // walked straight into the page underneath and the body kept
+            // scrolling behind the open drawer.
             function toggleDrawer(open) {
                 if (!drawer) return;
                 drawer.classList.toggle('drawer-open', open);
                 drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+                if (open) window.openOverlay && window.openOverlay(drawer, () => toggleDrawer(false));
+                else window.closeOverlay && window.closeOverlay(drawer);
             }
             menuBtn && menuBtn.addEventListener('click', () => toggleDrawer(true));
             closeBtn && closeBtn.addEventListener('click', () => toggleDrawer(false));

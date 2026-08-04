@@ -4,11 +4,34 @@ Batch 2 of the security audit: the **payment flow**. Batch 1 (authentication
 and sessions) is documented in
 [`security-auth-hardening.md`](security-auth-hardening.md).
 
-The gateway is still a simulation — no real money moves. What this batch fixes
-is the **trust boundary around it**, which is gateway-independent: who is
-allowed to start a payment, who may read or drive one, and how a server-to-server
-callback proves it is genuine. Swapping the sandbox for a real provider should
-not require redesigning any of it.
+> ## ⚠️ Partly superseded — the simulated gateway has been removed
+>
+> Settlement is now **manual only**: the guest sends the money over GCash or a
+> bank transfer, uploads the receipt, and a staff member verifies it against
+> the actual transfer. That was always the design this hostel operates; the
+> card gateway was a demo standing beside it, and it is gone.
+>
+> **Removed:** `App\Http\Controllers\Payments\SandboxGatewayController`, the
+> whole `/sandbox/*` route group, the `sandbox/webhook/{payment}` callback and
+> its CSRF exemption, `resources/views/sandbox/`, the payment-method choice
+> page (`public/payment/choose.blade.php`), `layouts/public/auth`, the
+> `services.sandbox.webhook_secret` config and `SANDBOX_WEBHOOK_SECRET`, and
+> the Sandbox payments report.
+>
+> **What this means for the sections below.** §3 (view-name injection) and §4
+> (the webhook) describe code that no longer exists — kept as the record of
+> what was fixed and why, not as a description of the system. §2 (auth and
+> ownership) and §5 (state guards) still hold: they are gateway-independent and
+> now protect `GET /booking/{booking}/pay` and
+> `POST /booking/{booking}/pay/proof`, which are the only payment routes left.
+> §8 (swapping in a real gateway) is the one to read if a real provider is ever
+> introduced — the trust boundary it describes is still the right shape, and
+> the webhook design in §4 is the worked example to copy.
+>
+> Historical `payments` rows with `gateway = 'sandbox'` are untouched, as are
+> the `landbank_transaction_id` and `webhook_verified` columns that hold their
+> values. Nothing writes to them any more; the guest transactions list and the
+> staff payment logs still read them so old records render.
 
 ---
 
@@ -356,9 +379,10 @@ four items below.
 
 </details>
 
-Deployment checklist items (`APP_DEBUG`, `SESSION_SECURE_COOKIE`,
-`/__dev-login`, the 6-character password minimum) are listed in
-[`security-auth-hardening.md`](security-auth-hardening.md) §12.
+Deployment checklist items (`APP_DEBUG`, `SESSION_SECURE_COOKIE`, the
+6-character password minimum) are listed in
+[`security-auth-hardening.md`](security-auth-hardening.md) §12. `/__dev-login`
+was on that list and has since been removed.
 
 ### Dead code worth removing
 

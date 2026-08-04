@@ -192,7 +192,10 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     padding: 11px clamp(16px, 1.6vw, 24px) 8px;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    transition: background 0.5s, border-color 0.5s, padding 0.5s, -webkit-backdrop-filter 0.5s, backdrop-filter 0.5s;
+    /* No `padding` here: nothing changes .fh-nav's padding between the rest,
+       condensed and static states, so transitioning it only asked the browser
+       to watch a layout property that never moves. */
+    transition: background 0.5s, border-color 0.5s, -webkit-backdrop-filter 0.5s, backdrop-filter 0.5s;
 }
 
 #navWrap.is-condensed .fh-nav,
@@ -346,44 +349,9 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 /* ── Mobile drawer ────────────────────────────────────────────────
    Backdrop fades, panel slides on the iOS drawer curve. Closed state
    uses opacity + pointer-events (not display) so the transition can
-   actually play and retarget mid-flight. Enter 350ms, exit 250ms. */
-#mobileDrawer {
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
-}
+   actually play and retarget mid-flight. Enter 350ms, exit 250ms.
 
-#mobileDrawer .drawer-panel {
-    transform: translateX(100%);
-    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-#mobileDrawer.drawer-open {
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-    transition: opacity 0.3s ease, visibility 0s;
-}
-
-#mobileDrawer.drawer-open .drawer-panel {
-    transform: translateX(0);
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    #mobileDrawer .drawer-panel,
-    #mobileDrawer.drawer-open .drawer-panel {
-        transition: none;
-        transform: translateX(0);
-    }
-}
-
-/* ── Mobile drawer ────────────────────────────────────────────────
-   Backdrop fades, panel slides on the iOS drawer curve. Closed state
-   uses opacity + pointer-events (not display) so the transition can
-   actually play and retarget mid-flight. Enter 350ms, exit 250ms. */
+   This block used to appear twice, byte for byte, back to back. */
 #mobileDrawer {
     opacity: 0;
     pointer-events: none;

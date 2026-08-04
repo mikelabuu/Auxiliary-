@@ -35,11 +35,4 @@ return [
         ],
     ],
 
-    // Simulated payment gateway. The webhook is the one payment endpoint with
-    // no session behind it, so this shared secret is what authenticates it.
-    // Unset means every webhook call is rejected — fail closed, by design.
-    'sandbox' => [
-        'webhook_secret' => env('SANDBOX_WEBHOOK_SECRET'),
-    ],
-
 ];

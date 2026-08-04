@@ -18,9 +18,13 @@
                 All bookings
             </a>
             @if ($booking->status == 'active')
-                <form method="POST" action="{{ route('frontdesk.booking.checkout', $booking->id) }}" class="js-checkout-form">
+                <form method="POST" action="{{ route('frontdesk.booking.checkout', $booking->id) }}"
+                      data-busy-form
+                      data-confirm-title="Check out this booking?"
+                      data-confirm="The rooms will be released and the booking marked completed."
+                      data-confirm-action="Check out">
                     @csrf
-                    <button type="submit" class="btn btn-primary btn-sm">
+                    <button type="submit" data-busy-btn class="btn btn-primary btn-sm">
                         <x-admin.ui.icon name="log-out" class="h-3.5 w-3.5" stroke-width="2" />
                         Check out
                     </button>
@@ -96,27 +100,6 @@
 
 @endsection
 
-@push('scripts')
-<script>
-$(function () {
-    $(document).on('submit', '.js-checkout-form', function (e) {
-        if ($(this).data('confirmed')) return;
-        e.preventDefault();
-        const form = this;
-        Swal.fire({
-            title: 'Check out this booking?',
-            text: 'The rooms will be released and the booking marked completed.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Check out',
-            confirmButtonColor: '#099250'
-        }).then(function (res) {
-            if (res.isConfirmed) {
-                $(form).data('confirmed', true);
-                form.submit();
-            }
-        });
-    });
-});
-</script>
-@endpush
+{{-- The check-out confirmation comes from the shared [data-confirm] contract
+     (resources/js/staff-actions.js) — see the note in
+     staff/frontdesk/bookings/index, which carried the identical copy. --}}

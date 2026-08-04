@@ -123,9 +123,13 @@
                                             View
                                         </a>
                                         @if ($booking->status == 'active')
-                                            <form method="POST" action="{{ route('frontdesk.booking.checkout', $booking->id) }}" class="js-checkout-form">
+                                            <form method="POST" action="{{ route('frontdesk.booking.checkout', $booking->id) }}"
+                                                  data-busy-form
+                                                  data-confirm-title="Check out this booking?"
+                                                  data-confirm="The rooms will be released and the booking marked completed."
+                                                  data-confirm-action="Check out">
                                                 @csrf
-                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                <button type="submit" data-busy-btn class="btn btn-primary btn-sm">
                                                     <x-admin.ui.icon name="log-out" class="h-3.5 w-3.5" stroke-width="2" />
                                                     Check out
                                                 </button>
@@ -161,27 +165,11 @@
 
 @push('scripts')
 <script>
-$(function () {
-    // Confirm before checking a booking out (releases the rooms)
-    $(document).on('submit', '.js-checkout-form', function (e) {
-        if ($(this).data('confirmed')) return;
-        e.preventDefault();
-        const form = this;
-        Swal.fire({
-            title: 'Check out this booking?',
-            text: 'The rooms will be released and the booking marked completed.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Check out',
-            confirmButtonColor: '#099250'
-        }).then(function (res) {
-            if (res.isConfirmed) {
-                $(form).data('confirmed', true);
-                form.submit();
-            }
-        });
-    });
-});
+// The check-out confirmation now comes from the shared [data-confirm]
+// contract (resources/js/staff-actions.js). This page and
+// frontdesk/walkin/show each carried a byte-identical copy, both ending in
+// form.submit() — which fires no submit event, so neither ever armed the
+// double-submit guard on an action that releases rooms.
 
 // Real-time push: a booking paid online, checked out at another desk, or
 // expired by the scheduler shows up here immediately. Held back while a

@@ -218,20 +218,4 @@ class PaymentVerificationController extends Controller
         return back()->with('success', "Proof rejected. Booking #{$booking->id} is still awaiting payment and the guest can upload a corrected receipt.");
     }
 
-    /**
-     * Re-authentication before money moves, matching the other consequential
-     * staff actions in the console.
-     */
-    public function verifyPassword(Request $request)
-    {
-        $request->validate(['password' => 'required|string']);
-
-        $staff = Auth::guard('staff')->user();
-
-        if (! $staff || ! Hash::check($request->password, $staff->password)) {
-            return response()->json(['success' => false, 'message' => 'Incorrect password'], 422);
-        }
-
-        return response()->json(['success' => true]);
-    }
 }

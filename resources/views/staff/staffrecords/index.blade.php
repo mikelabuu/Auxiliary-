@@ -210,7 +210,7 @@
     @if ($isMaster)
         {{-- Create staff modal --}}
         <x-admin.ui.modal id="createStaffModal" icon="plus" title="New Staff Account" max-width="lg" scroll-body>
-            <form method="POST" action="{{ route('staff.create-staff') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('staff.create-staff') }}" class="p-6 space-y-4" data-busy-form>
                 @csrf
                 <input type="hidden" name="_form" value="create-staff">
 
@@ -250,7 +250,7 @@
 
         {{-- Edit staff modal --}}
         <x-admin.ui.modal id="editStaffModal" icon="edit" title="Edit Staff Account" max-width="lg" scroll-body>
-            <form method="POST" action="{{ route('staff.master-update') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('staff.master-update') }}" class="p-6 space-y-4" data-busy-form>
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="_form" value="edit-staff">

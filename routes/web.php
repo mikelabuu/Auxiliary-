@@ -40,9 +40,7 @@ use App\Http\Controllers\Staff\frontdesk\WalkInBookingController;
 use App\Http\Controllers\Staff\frontdesk\BookingsController;
 
 
-//for simulation only
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Payments\SandboxGatewayController;
 use App\Http\Controllers\ReceiptController;
 /*
 |--------------------------------------------------------------------------
@@ -79,13 +77,6 @@ Route::middleware('guest:web,staff')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup'])
         ->middleware('throttle:registration')
         ->name('signup');
-
-    // TEMP-DEV-LOGIN (remove before commit)
-    Route::get('/__dev-login', function () {
-        abort_unless(app()->environment('local'), 404);
-        auth('staff')->login(\App\Models\Staff::first());
-        return redirect()->route('staff.bookings.index');
-    });
 
     // Staff now sign in through the same form as everyone else. The name is
     // kept because middleware and older links still redirect to it.
@@ -164,11 +155,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
     Route::get('/staff/rooms/status-feed', [RoomController::class, 'statusFeed'])->name('staff.rooms.statusFeed');
     Route::post('/staff/rooms/store', [RoomController::class, 'store'])->name('staff.rooms.store');
 
-    // Verify staff password before delete (AJAX)
-    Route::post('/staff/rooms/{room}/verify-password', [RoomController::class, 'verifyPassword'])
-        ->middleware('throttle:staff-password')
-        ->name('staff.rooms.verifyPassword');
-
     Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
     Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
     Route::patch('/staff/rooms/{room}/status', [RoomController::class, 'updateStatus'])->name('staff.rooms.updateStatus');
@@ -187,10 +173,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::get('/completed-bookings', [CompletedBookingsController::class, 'index'])
             ->name('staff.completedbookings.index');
 
-        Route::post('/completed-bookings/verify-password', [CompletedBookingsController::class, 'verifyPassword'])
-            ->middleware('throttle:staff-password')
-            ->name('staff.completedbookings.verify-password');
-
         Route::get('/completed-bookings/{id}/details', [CompletedBookingsController::class, 'showDetails'])
             ->name('staff.completedbookings.details');
 
@@ -198,12 +180,7 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::get('/payment-logs', [PaymentLogsController::class, 'index'])->name('staff.paymentlogs.index');
 
         Route::get('/user-records', [UserRecordsController::class, 'index'])->name('staff.userrecords.index');
-        // Verify staff password
-        Route::post('/user-records/verify-password', [UserRecordsController::class, 'verifyPassword'])
-            ->middleware('throttle:staff-password')
-            ->name('staff.userrecords.verify-password');
 
-        // Perform suspend/unsuspend action (only called after password verified)
         Route::post('/user-records/{user}/suspend', [UserRecordsController::class, 'suspend'])->name('staff.userrecords.suspend');
         Route::post('/user-records/{user}/unsuspend', [UserRecordsController::class, 'unsuspend'])->name('staff.userrecords.unsuspend');
 
@@ -215,11 +192,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::post('/staff/create', [StaffRecordsController::class, 'createStaff'])->name('staff.create-staff');
         Route::put('/staff/{staff}/update', [StaffRecordsController::class, 'update'])->name('staff.update');
 
-        Route::post('/staff-records/verify-password', [StaffRecordsController::class, 'verifyPassword'])
-            ->middleware('throttle:staff-password')
-            ->name('staff.staffrecords.verify-password');
-
-        // Perform suspend/unsuspend action (only called after password verified)
         Route::post('/staff-records/{staff}/suspend', [StaffRecordsController::class, 'suspend'])->name('staff.staffrecords.suspend');
         Route::post('/staff-records/{staff}/unsuspend', [StaffRecordsController::class, 'unsuspend'])->name('staff.staffrecords.unsuspend');
 
@@ -253,11 +225,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
     Route::post('/staff/discounts/{discount}/file/{file}/approve', [DiscountAdminController::class, 'approveFile'])->name('staff.discounts.file.approve');
     Route::post('/staff/discounts/{discount}/file/{file}/reject', [DiscountAdminController::class, 'rejectFile'])->name('staff.discounts.file.reject');
 
-    //verify password before review
-    Route::post('/staff/discounts/verify-password', [DiscountAdminController::class, 'verifyPassword'])
-        ->middleware('throttle:staff-password')
-        ->name('staff.discounts.verify-password');
-
     // Secure preview for file (stream private storage)
     Route::get('/staff/discounts/file/{file}/preview', [DiscountAdminController::class, 'previewFile'])->name('staff.discounts.file.preview');
 
@@ -272,7 +239,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         // Payments Reports
         Route::get('payments/all', [PaymentReportController::class, 'exportAll'])->name('reports.payments.all');
         Route::get('payments/cash', [PaymentReportController::class, 'exportCash'])->name('reports.payments.cash');
-        Route::get('payments/sandbox', [PaymentReportController::class, 'exportSandbox'])->name('reports.payments.sandbox');
 
          // Users Reports
         Route::get('users/all', [UserReportController::class, 'exportAll'])->name('reports.users.all');
@@ -305,9 +271,6 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
         return redirect()->route('login');
     })->name('staff.logout');
 
-    Route::post('/staff/bookings/verify-password', [BookingHubController::class, 'verifyPassword'])
-        ->middleware('throttle:staff-password')
-        ->name('staff.bookings.verify-password');
     Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
     
@@ -334,10 +297,6 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,
 
         Route::post('/{payment}/approve', [PaymentVerificationController::class, 'approve'])->name('approve');
         Route::post('/{payment}/reject', [PaymentVerificationController::class, 'reject'])->name('reject');
-
-        Route::post('/verify-password', [PaymentVerificationController::class, 'verifyPassword'])
-            ->middleware('throttle:staff-password')
-            ->name('verify-password');
     });
 
 /*
@@ -387,48 +346,28 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-/*--------------------------------------------
-----------------------------------------------
--------------- TEMPORARY ROUTES --------------
-----------------------------------------------
-----------------------------------------------
+/*
+|--------------------------------------------------------------------------
+| Payment
+|--------------------------------------------------------------------------
+| Guests settle over GCash or a bank transfer and upload the receipt; staff
+| verify it. That is the only route to a paid booking — the simulated card
+| gateway that used to sit alongside it has been removed.
+|
+| These sit behind auth+verified like the rest of the booking journey. They
+| were previously wide open, so anyone could drive a payment for a booking
+| they did not own. Per-payment ownership is enforced in the controller; the
+| middleware only establishes who is asking.
 */
-// Guest-facing payment flow. These sit behind auth+verified like the rest of
-// the booking journey — they were previously wide open, so anyone could drive
-// a payment for a booking they did not own. Per-payment ownership is enforced
-// in the controllers; the middleware only establishes who is asking.
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // The fork: settle manually and prove it, or run the simulated gateway.
+    // The upload form: where to send the money, and the fields that let staff
+    // match a receipt against a real transfer.
     Route::get('/booking/{booking}/pay', [PaymentController::class, 'pay'])->name('bookings.pay');
-    Route::get('/booking/{booking}/pay/sandbox', [PaymentController::class, 'sandbox'])->name('bookings.pay.sandbox');
 
-    // Manual proof of payment. Throttled on the write: an upload costs disk
-    // and puts a row in front of a human, so it is not a free action to spam.
-    Route::get('/booking/{booking}/pay/proof', [PaymentController::class, 'proofForm'])->name('bookings.pay.proof');
+    // Throttled on the write: an upload costs disk and puts a row in front of
+    // a human, so it is not a free action to spam.
     Route::post('/booking/{booking}/pay/proof', [PaymentController::class, 'storeProof'])
         ->middleware('throttle:10,1')
         ->name('bookings.pay.proof.store');
-
-    Route::prefix('sandbox')->name('sandbox.')->group(function () {
-        Route::get('/pay/{payment}', [SandboxGatewayController::class, 'showPaymentPage'])->name('pay');
-        Route::post('/process/{payment}', [SandboxGatewayController::class, 'processPayment'])->name('process');
-
-        // {status} is interpolated into a view name, so constrain it here as
-        // well as in the controller.
-        Route::get('/result/{status}/{payment}', [SandboxGatewayController::class, 'result'])
-            ->where('status', 'success|failed')
-            ->name('result');
-
-        Route::get('/status/{payment}', [SandboxGatewayController::class, 'status'])->name('status');
-    });
 });
-
-// Server-to-server callback: no session exists, so it carries no auth
-// middleware and is exempt from CSRF (see bootstrap/app.php). It is
-// authenticated instead by an HMAC signature over the raw request body.
-Route::post('sandbox/webhook/{payment}', [SandboxGatewayController::class, 'webhook'])
-    ->name('sandbox.webhook');
-
-
-    

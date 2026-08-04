@@ -251,16 +251,4 @@ class DiscountAdminController extends Controller
         }
     }
 
-    public function verifyPassword(Request $request)
-    {
-        $request->validate(['password' => 'required|string']);
-
-        $staff = Auth::guard('staff')->user();
-
-        if (! $staff || ! Hash::check($request->password, $staff->password)) {
-            return response()->json(['success' => false, 'message' => 'Incorrect password'], 422);
-        }
-
-        return response()->json(['success' => true]);
-    }
 }

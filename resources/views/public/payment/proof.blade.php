@@ -32,6 +32,22 @@
             </div>
         @endif
 
+        {{-- A turned-down receipt is the one thing the guest has to act on, and
+             this is the moment they are about to replace it. Carried over from
+             the retired payment-method choice page, which used to show it. --}}
+        @if (!empty($lastRejected))
+            <div class="mb-8 flex items-start gap-2.5 rounded-2xl border border-ember-300/50 bg-ember-50 px-5 py-4 text-xs font-bold leading-relaxed text-ember-700">
+                <i class="fa-solid fa-circle-exclamation text-[18px] shrink-0"></i>
+                <div>
+                    Your previous proof of payment was not accepted.
+                    @if ($lastRejected->rejection_reason)
+                        <span class="block mt-1 font-semibold text-ember-600">Reason: {{ $lastRejected->rejection_reason }}</span>
+                    @endif
+                    <span class="block mt-1 font-semibold text-ember-600">Upload a corrected receipt below.</span>
+                </div>
+            </div>
+        @endif
+
         <!-- Booking context strip -->
         <div class="mb-8 grid grid-cols-2 sm:grid-cols-4 rounded-3xl bg-cream-warm ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] divide-x divide-emerald-deep/5 text-center overflow-hidden">
             <div class="px-3 py-4">
@@ -155,8 +171,10 @@
             </div>
 
             <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3">
-                <a href="{{ route('bookings.pay', $booking->id) }}" class="press w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-deep/20 bg-cream px-6 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream !no-underline">
-                    Back
+                {{-- Back to the booking, not to `bookings.pay` — that route is
+                     now this page, so it pointed at itself. --}}
+                <a href="{{ route('booking.show', $booking->id) }}" class="press w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-deep/20 bg-cream px-6 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream !no-underline">
+                    Back to booking
                 </a>
                 <button type="submit" id="submitProof" disabled
                         class="press focus-ring w-full sm:w-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-deep px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_25%,transparent)] disabled:opacity-50 disabled:pointer-events-none">

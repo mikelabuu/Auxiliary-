@@ -44,6 +44,10 @@ class Payment extends Model
     ];
 
     protected $casts = [
+        // decimal(10,2) in the database, and money everywhere it is read.
+        // Left uncast it arrived as a driver string, so `$payment->amount ==
+        // $booking->payable_amount` compared a string against a float.
+        'amount' => 'decimal:2',
         'gateway_response' => 'array',
         'webhook_verified' => 'boolean',
         'paid_at' => 'datetime',

@@ -120,10 +120,17 @@
                             </div>
 
                             <div class="mt-4 flex flex-wrap items-center gap-2.5">
+                                {{-- Verifying moves money and emails a receipt — make it
+                                     deliberate, and make a second click while the first
+                                     POST is in flight impossible. Both come from the
+                                     shared contract in resources/js/staff-actions.js. --}}
                                 <form method="POST" action="{{ route('staff.paymentverification.approve', $payment->id) }}"
-                                      data-confirm-verify="{{ $payment->booking_id }}">
+                                      data-busy-form
+                                      data-confirm-title="Verify this payment?"
+                                      data-confirm="Booking #{{ $payment->booking_id }} will be marked paid and the official receipt emailed to the guest."
+                                      data-confirm-action="Yes, verify">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm">
+                                    <button type="submit" data-busy-btn class="btn btn-primary btn-sm">
                                         <x-admin.ui.icon name="check-circle" class="w-4 h-4" stroke-width="2" />
                                         Verify &amp; mark paid
                                     </button>
@@ -178,7 +185,7 @@
 {{-- Reject: a reason is mandatory, because the guest is shown it and has to
      know what to correct before uploading again. --}}
 <x-admin.ui.modal id="rejectProofModal" icon="block" title="Reject proof of payment" max-width="lg">
-    <form method="POST" id="rejectProofForm">
+    <form method="POST" id="rejectProofForm" data-busy-form>
         @csrf
         <div class="modal-body space-y-4">
             <p class="text-sm text-stone-600">
@@ -196,7 +203,7 @@
         </div>
         <div class="flex gap-2.5 justify-end px-7 pb-7">
             <button type="button" class="btn btn-outline" data-modal-close="rejectProofModal">Cancel</button>
-            <button type="submit" class="btn btn-danger">
+            <button type="submit" data-busy-btn class="btn btn-danger">
                 <x-admin.ui.icon name="block" class="w-4 h-4" stroke-width="2" />
                 Reject proof
             </button>
@@ -215,29 +222,36 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Verifying moves money and emails a receipt — make it deliberate.
-        document.querySelectorAll('[data-confirm-verify]').forEach(function (form) {
-            form.addEventListener('submit', function (e) {
-                const id = form.dataset.confirmVerify;
-                if (!form.dataset.confirmed) {
-                    e.preventDefault();
-                    if (window.confirm('Verify this payment? Booking #' + id + ' will be marked paid and the official receipt emailed to the guest.')) {
-                        form.dataset.confirmed = '1';
-                        form.submit();
-                    }
-                }
-            });
-        });
+        // The confirm dialog and the double-submit guard for both actions now
+        // come from the shared [data-confirm] / [data-busy-form] contract
+        // (resources/js/staff-actions.js). This page used to hand-roll the
+        // first with window.confirm() — a raw browser dialog on the most
+        // consequential button in the console — and had none of the second.
 
         // The queue is worked live: a guest who just transferred money is
         // standing by. Reverb being down is harmless — the page simply does
         // not auto-refresh, exactly as before.
-        if (window.Echo) {
-            window.Echo.channel('payment-verifications')
-                .listen('.PaymentProofSubmitted', function () {
+        if (!window.Echo) return;
+
+        window.Echo.channel('payment-verifications')
+            .listen('.PaymentProofSubmitted', function () {
+                // Reloading outright used to discard whatever the person at
+                // the desk was doing — most painfully the half-typed rejection
+                // reason in the modal, which is a required field. Offer the
+                // refresh instead, and only take it automatically when the
+                // page is idle: no modal open, no text entered, nothing in
+                // flight.
+                const busy = document.querySelector('[data-modal]:not(.hidden)')
+                    || document.querySelector('[data-busy-form][data-busy-sent="1"]')
+                    || (document.activeElement && document.activeElement.matches('input, textarea, select'));
+
+                if (!busy) {
                     window.location.reload();
-                });
-        }
+                    return;
+                }
+
+                window.toast('A new proof of payment arrived. Refresh when you\'re done here.', 'info', { duration: 8000 });
+            });
     });
 </script>
 @endpush

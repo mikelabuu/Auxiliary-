@@ -216,7 +216,7 @@
 
     <!-- Cancellation Modal -->
     <x-booking.ui.modal id="cancelModal" title="Cancel Room Booking">
-        <form id="cancelForm" method="POST" class="space-y-4">
+        <form id="cancelForm" method="POST" class="space-y-4" data-busy-form>
             @csrf
             <div>
                 <label for="reason" class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Reason for Cancellation</label>
@@ -225,23 +225,24 @@
             </div>
 
             <div class="pt-4 border-t border-stone-100 flex justify-end gap-2.5">
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition-[color,background-color,border-color,box-shadow] cursor-pointer">Close</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-ember-600 hover:bg-ember-700 text-white shadow-sm transition-[color,background-color,border-color,box-shadow] cursor-pointer">Confirm Cancellation</button>
+                <button type="button" data-modal-close="cancelModal" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 transition-[color,background-color,border-color,box-shadow] cursor-pointer">Close</button>
+                <button type="submit" data-busy-btn class="px-5 py-2.5 rounded-xl text-sm font-bold bg-ember-600 hover:bg-ember-700 text-white shadow-sm transition-[color,background-color,border-color,box-shadow] cursor-pointer">Confirm Cancellation</button>
             </div>
         </form>
     </x-booking.ui.modal>
 
     <script>
+        // openModal() rather than classList.remove('hidden'): the bare class
+        // toggle skipped the scroll lock and the focus trap, so the page kept
+        // scrolling behind the dialog and Tab left it immediately.
         function openCancelModal(bookingId) {
-            const modal = document.getElementById('cancelModal');
-            const form = document.getElementById('cancelForm');
-            form.action = `/booking/${bookingId}/cancel`;
-            modal.classList.remove('hidden');
+            document.getElementById('cancelForm').action = `/booking/${bookingId}/cancel`;
+            window.openModal('cancelModal');
         }
 
-        function closeModal() {
-            window.pubModalClose('cancelModal');
-        }
+        // The local `closeModal()` that used to live here shadowed the engine's
+        // own window.closeModal for every other script on the page. Dismissal
+        // is now the declarative [data-modal-close] contract.
     </script>
 
     <script>
