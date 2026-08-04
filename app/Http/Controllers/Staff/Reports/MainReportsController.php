@@ -40,6 +40,21 @@ class MainReportsController extends Controller
             'column_set'       => ['nullable', Rule::in(['booking_summary', 'financial', 'combined'])],
             'match_type'       => ['nullable', Rule::in(['AND', 'OR'])],
 
+            // Sorting is whitelisted again downstream against the selected
+            // column set (ReportColumnMapper::getSortable), because which
+            // aliases are valid depends on that set — 'gateway' is sortable on
+            // a financial report and meaningless on a booking one. This rule
+            // only keeps obvious junk out of the service.
+            'sort'             => ['nullable', 'string', 'max:40'],
+            'direction'        => ['nullable', Rule::in(['asc', 'desc'])],
+
+            'per_page'         => ['nullable', Rule::in(\App\Services\ReportService::PAGE_SIZES)],
+
+            // Was read by ReportExportService as $params['format'] but never
+            // validated, so validate() stripped it and every export was xlsx
+            // regardless of what was asked for.
+            'format'           => ['nullable', Rule::in(['xlsx', 'pdf'])],
+
             'date_range'       => ['required', 'array'],
             'date_range.type'  => ['required', Rule::in(['monthly', 'yearly', 'weekly', 'range'])],
             'date_range.value' => ['required'],
@@ -49,6 +64,14 @@ class MainReportsController extends Controller
             'filters'          => ['nullable', 'array'],
             'filters.*'        => ['array'],
             'filters.*.*'      => ['string'],
+        ], [
+            // These reach the user now. The page renders a 422's messages into
+            // the results panel instead of a flat "please try again", so the
+            // defaults ("The date range.value field is required") would be
+            // read by staff rather than by a developer.
+            'date_range.value.required' => 'Choose a month, a year, or both ends of a custom date range.',
+            'date_range.type.required'  => 'Choose a timeframe for the report.',
+            'report_type.required'      => 'Choose a report category.',
         ]);
     }
 }
