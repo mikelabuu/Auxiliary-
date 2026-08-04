@@ -27,4 +27,21 @@ return [
         'max_recipients' => 5,
     ],
 
+    // The desk's heads-up that a stay is leaving today
+    // (App\Console\Commands\RemindCheckoutsDue).
+    //
+    // Everything else about check-out is retrospective: the dashboard's Needs
+    // Attention panel and the `overdue` KPI only light up once the date has
+    // already passed, and bookings:autocheckout closes the stay after the
+    // fact. This is the only part of the flow that speaks up while the guest
+    // is still standing in the room.
+    'checkout_reminder' => [
+        'enabled' => env('CHECKOUT_REMINDER_ENABLED', true),
+
+        // Check-out is 2 PM Manila (the time bookings:autocheckout enforces).
+        // Noon leaves two hours to chase a guest, brief housekeeping, or take
+        // an extension — while all three are still possible.
+        'at' => env('CHECKOUT_REMINDER_AT', '12:00'),
+    ],
+
 ];

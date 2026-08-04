@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Events\StaffNotification;
 use App\Models\Booking;
 use App\Models\Discount;
 use App\Models\Payment;
@@ -107,6 +108,30 @@ class AppServiceProvider extends ServiceProvider
                         'level' => 'success',
                         'at'    => $b->created_at?->timestamp ?? 0,
                     ]);
+                });
+
+            // Stays leaving today that are still in house.
+            //
+            // Built by calling the event factory and taking its payload,
+            // rather than assembling the array by hand the way the four blocks
+            // above do. Those predate the event and have to be kept in step
+            // with it by eye — an id assembled even slightly differently here
+            // would silently split one alert into two rows, one of which can
+            // never be marked read. Borrowing the factory makes that class of
+            // drift impossible for this type.
+            //
+            // Present all day, not only after the reminder has fired: the bell
+            // is a standing view of what needs doing, and the scheduled
+            // command is what makes it *pop*. `at` is fixed to the reminder
+            // time either way, so the row's age reads the same in both.
+            Booking::with('reservations')
+                ->where('status', 'active')
+                ->whereDate('check_out', \Carbon\Carbon::today('Asia/Manila')->toDateString())
+                ->orderBy('id')
+                ->take(5)
+                ->get()
+                ->each(function ($b) use ($notifications) {
+                    $notifications->push(StaffNotification::checkoutDue($b)->broadcastWith());
                 });
 
             $maintenance = Room::where('status', 'maintenance')

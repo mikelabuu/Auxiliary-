@@ -346,7 +346,7 @@
             },
 
             tile(type) {
-                return { booking: 'notif-icon-gold', payment: 'notif-icon-green', discount: 'notif-icon-green', maintenance: 'notif-icon-rose' }[type] || 'notif-icon-gold';
+                return { booking: 'notif-icon-gold', payment: 'notif-icon-green', discount: 'notif-icon-green', maintenance: 'notif-icon-rose', checkout_due: 'notif-icon-gold' }[type] || 'notif-icon-gold';
             }
          }"
          @click.outside="open = false">
@@ -376,6 +376,7 @@
                 <template x-if="n.type === 'maintenance'"><x-admin.ui.icon name="wrench" /></template>
                 <template x-if="n.type === 'payment'"><x-admin.ui.icon name="credit-card" /></template>
                 <template x-if="n.type === 'booking'"><x-admin.ui.icon name="clipboard" /></template>
+                <template x-if="n.type === 'checkout_due'"><x-admin.ui.icon name="clock" /></template>
               </div>
               <div class="min-w-0 flex-1">
                 {{-- x-text, not x-html: n.text carries a guest-supplied name. --}}

@@ -16,24 +16,9 @@ class ReportQueryBuilder
         $this->applyDateFilter($query, $params, $schema);
         $this->applyFilters($query, $params, $schema);
         $this->applyColumns($query, $params);
+        $this->applySorting($query, $params, $schema);
 
         return $query;
-    }
-
-    // -------------------------
-
-    protected function baseQuery($type)
-    {
-        return match ($type) {
-            'booking' => DB::table('bookings'),
-
-            'payment' => DB::table('payments')
-                ->join('bookings', 'payments.booking_id', '=', 'bookings.id'),
-
-            'combined' => DB::table('bookings'),
-
-            default => throw new \Exception('Invalid report type')
-        };
     }
 
     // -------------------------
@@ -94,25 +79,18 @@ class ReportQueryBuilder
 
     // -------------------------
 
-    protected function resolveDateColumn($type)
-    {
-        return match ($type) {
-            'booking' => 'bookings.created_at',
-            'payment' => 'payments.created_at',
-            'combined' => DB::raw('COALESCE(payments.created_at, bookings.created_at)')
-        };
-    }
-
-    // -------------------------
-
     protected function applyFilters($query, $params, $schema)
     {
         if (empty($params['filters'])) return;
 
         $allowed = $schema['allowed_filters'];
 
-        $matchType = $params['match_type'] ?? 'AND';
+        $matchType = strtoupper($params['match_type'] ?? 'AND');
 
+        // The closure groups the whole filter set, so an OR between two
+        // filters cannot escape and turn the date range into an alternative
+        // as well — "(status = x OR gateway = y)" inside the period, never
+        // "in the period OR gateway = y".
         $query->where(function ($q) use ($params, $allowed, $matchType) {
 
             foreach ($params['filters'] as $field => $values) {
@@ -126,7 +104,14 @@ class ReportQueryBuilder
 
                 if (!$column) continue;
 
-                $q->whereIn($column, $values);
+                // $matchType was read and then never applied, so 'OR' produced
+                // exactly the AND query — quietly, since a narrower result set
+                // looks like a legitimate answer rather than a bug.
+                if ($matchType === 'OR') {
+                    $q->orWhereIn($column, $values);
+                } else {
+                    $q->whereIn($column, $values);
+                }
             }
 
         });
@@ -141,7 +126,11 @@ class ReportQueryBuilder
             'booking_status' => 'bookings.status',
             'payment_status' => 'payments.status',
             'gateway' => 'payments.gateway',
-            'mode' => 'bookings.mode',
+            // The column is payment_mode. 'bookings.mode' does not exist, so
+            // this mapping turned an allowed filter — ReportSchema lists it for
+            // both the booking and combined reports — into a 500. Unreachable
+            // today only because no chip on the page sends it.
+            'mode' => 'bookings.payment_mode',
             default => null
         };
     }
@@ -151,8 +140,48 @@ class ReportQueryBuilder
     protected function applyColumns($query, $params)
     {
         $columns = app(ReportColumnMapper::class)
-            ->getColumns($params['column_set']);
+            ->getColumns($params['column_set'] ?? null);
 
         $query->select($columns);
+    }
+
+    // -------------------------
+
+    /**
+     * ORDER BY, resolved through the same alias => column map the select list
+     * comes from, so only a column the report actually shows can be sorted by.
+     * An unknown alias falls back to the default rather than reaching the
+     * database — ORDER BY cannot be bound as a parameter, so an unvalidated
+     * value here would be concatenated straight into SQL.
+     *
+     * The default is the base table's id descending: newest first, and a
+     * deterministic order. Without one, a paginated report has no guaranteed
+     * row order at all, and MySQL is free to return a row on both page 1 and
+     * page 2 while another never appears — the kind of fault that reads as
+     * missing data rather than missing sort.
+     */
+    protected function applySorting($query, $params, $schema)
+    {
+        $sortable = app(ReportColumnMapper::class)
+            ->getSortable($params['column_set'] ?? null);
+
+        $requested = $params['sort'] ?? null;
+        $direction = strtolower($params['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        $column = $sortable[$requested] ?? null;
+
+        if (! $column) {
+            $query->orderBy($schema['base'] . '.id', 'desc');
+
+            return;
+        }
+
+        $query->orderBy($column, $direction);
+
+        // A tie on the sorted column leaves the same page-straddling
+        // ambiguity, so anything non-unique gets the id as a tiebreaker.
+        if ($column !== $schema['base'] . '.id') {
+            $query->orderBy($schema['base'] . '.id', 'desc');
+        }
     }
 }
