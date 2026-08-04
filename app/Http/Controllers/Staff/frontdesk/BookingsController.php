@@ -77,7 +77,7 @@ class BookingsController extends Controller{
 
             CheckOut::create([
                 'booking_id' => $booking->id,
-                'checked_out_at' => now('Asia/Manila'),
+                'checked_out_at' => now(config('hostel.timezone')),
                 'method' => 'manual',
                 'processed_by' => $staff->id,
             ]);

@@ -180,7 +180,7 @@ class Booking extends Model
     public function scopeActive($query)
     {
         return $query->whereIn('status', ['paid', 'active'])
-                    ->where('check_out', '>=', now('Asia/Manila')->startOfDay());
+                    ->where('check_out', '>=', now(config('hostel.timezone'))->startOfDay());
     }
     
     public function balance()

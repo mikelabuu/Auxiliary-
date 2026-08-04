@@ -28,7 +28,7 @@ class MarkNoShowBookings extends Command
      */
     public function handle(): void
     {
-        $now = Carbon::now('Asia/Manila');
+        $now = Carbon::now(config('hostel.timezone'));
         $this->info("🔍 Checking for no-show bookings at {$now->format('Y-m-d H:i:s')}...");
 
         $bookings = Booking::where('status', 'paid')

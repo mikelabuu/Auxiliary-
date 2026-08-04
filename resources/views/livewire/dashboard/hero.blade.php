@@ -6,7 +6,7 @@
     <section class="dash-welcome">
         <div class="dash-welcome__meta">
             <span class="dash-live">
-            <span class="dash-welcome__date">{{ now('Asia/Manila')->format('l, M j, Y') }}</span>
+            <span class="dash-welcome__date">{{ now(config('hostel.timezone'))->format('l, M j, Y') }}</span>
         </div>
 
         <h1 class="dash-welcome__title">

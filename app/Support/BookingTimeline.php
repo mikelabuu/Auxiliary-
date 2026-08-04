@@ -34,10 +34,10 @@ class BookingTimeline
         // Timestamp storage is mixed: Eloquent-managed columns (created_at,
         // updated_at, discount casts) hold UTC and need converting, while the
         // action logs (checked_in_at, checked_out_at, marked_at, expired_at)
-        // were written with Carbon::now('Asia/Manila') — i.e. Manila
+        // were written with Carbon::now(config('hostel.timezone')) — i.e. Manila
         // wall-clock — and must be read back as such, not shifted again.
-        $utc = fn ($v) => $v ? Carbon::parse($v)->timezone('Asia/Manila') : null;
-        $manila = fn ($v) => $v ? Carbon::parse($v, 'Asia/Manila') : null;
+        $utc = fn ($v) => $v ? Carbon::parse($v)->timezone(config('hostel.timezone')) : null;
+        $manila = fn ($v) => $v ? Carbon::parse($v, config('hostel.timezone')) : null;
 
         $push = function (?Carbon $at, string $label, ?string $detail, string $icon, string $color) use (&$events) {
             if (!$at) {

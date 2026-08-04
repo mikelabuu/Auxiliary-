@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Support\RoomCatalog;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -37,7 +38,7 @@ class ArrivalsDepartures extends Component
 
     public function mount($date = null)
     {
-        $this->date = $date ?? Carbon::today('Asia/Manila')->toDateString();
+        $this->date = $date ?? Carbon::today(config('hostel.timezone'))->toDateString();
     }
 
     public function updatingSortField()
@@ -77,7 +78,7 @@ class ArrivalsDepartures extends Component
 
     public function goToday()
     {
-        $this->date = Carbon::today('Asia/Manila')->toDateString();
+        $this->date = Carbon::today(config('hostel.timezone'))->toDateString();
         $this->resetPage();
     }
 
@@ -178,7 +179,7 @@ class ArrivalsDepartures extends Component
                 $type = $isArrival ? 'arrival' : 'departure';
                 
                 $roomType = $b->reservations->first()?->room?->room_type ?? 'Room';
-                $roomType = ucfirst(str_replace(['dormitory1', 'dormitory2'], 'Dormitory', $roomType));
+                $roomType = RoomCatalog::label($roomType);
                 
                 $dateStr = $isArrival 
                     ? 'Check-in ' . Carbon::parse($b->check_in)->format('M d')
@@ -202,7 +203,7 @@ class ArrivalsDepartures extends Component
             });
 
         // Is the panel showing the real "today"? Actions are only offered then.
-        $actualToday = Carbon::today('Asia/Manila')->toDateString();
+        $actualToday = Carbon::today(config('hostel.timezone'))->toDateString();
         $isToday = $this->date === $actualToday;
 
         // In-house on the viewed date: active stays spanning it.
@@ -254,7 +255,7 @@ class ArrivalsDepartures extends Component
             'total' => $list->count(),
             'upcomingBookings' => $upcomingBookings,
             'isToday' => $isToday,
-            'viewLabel' => Carbon::parse($this->date)->isSameDay(Carbon::today('Asia/Manila'))
+            'viewLabel' => Carbon::parse($this->date)->isSameDay(Carbon::today(config('hostel.timezone')))
                 ? 'Today'
                 : Carbon::parse($this->date)->format('M d, Y'),
             'arrivalsCount' => $arrivalsCount,
@@ -277,7 +278,7 @@ class ArrivalsDepartures extends Component
         }
 
         // Eligibility checks
-        $checkInToday = Carbon::parse($booking->check_in)->timezone('Asia/Manila')->isToday();
+        $checkInToday = Carbon::parse($booking->check_in)->timezone(config('hostel.timezone'))->isToday();
         $paymentExists = $booking->payments !== null;
         $paymentStatus = $booking->payments->status ?? null;
 
@@ -300,7 +301,7 @@ class ArrivalsDepartures extends Component
         // Log check-in
         Checkin::create([
             'booking_id' => $booking->id,
-            'checked_in_at' => Carbon::now('Asia/Manila'),
+            'checked_in_at' => Carbon::now(config('hostel.timezone')),
             'processed_by' => auth('staff')->id(),
         ]);
 
@@ -329,7 +330,7 @@ class ArrivalsDepartures extends Component
 
         // Allow today OR overdue (checkout date already passed) — the same
         // window the auto-checkout command uses. Only future checkouts are barred.
-        $checkOutInFuture = Carbon::parse($booking->check_out)->timezone('Asia/Manila')->startOfDay()->gt(Carbon::today('Asia/Manila'));
+        $checkOutInFuture = Carbon::parse($booking->check_out)->timezone(config('hostel.timezone'))->startOfDay()->gt(Carbon::today(config('hostel.timezone')));
         if ($booking->status !== 'active' || $checkOutInFuture) {
             $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-out.');
             return;
@@ -348,7 +349,7 @@ class ArrivalsDepartures extends Component
         // Log checkout
         Checkout::create([
             'booking_id' => $booking->id,
-            'checked_out_at' => Carbon::now('Asia/Manila'),
+            'checked_out_at' => Carbon::now(config('hostel.timezone')),
             'method' => 'manual',
             'processed_by' => auth('staff')->id(),
         ]);
@@ -382,7 +383,7 @@ class ArrivalsDepartures extends Component
         // Eligibility checks. No-show is allowed for today OR a past check-in
         // (a missed arrival the scheduler hasn't swept yet); only a future
         // check-in is barred.
-        $checkInInFuture = Carbon::parse($booking->check_in)->timezone('Asia/Manila')->startOfDay()->gt(Carbon::today('Asia/Manila'));
+        $checkInInFuture = Carbon::parse($booking->check_in)->timezone(config('hostel.timezone'))->startOfDay()->gt(Carbon::today(config('hostel.timezone')));
         $paymentExists = $booking->payments !== null;
         $paymentStatus = $booking->payments->status ?? null;
 
@@ -394,7 +395,7 @@ class ArrivalsDepartures extends Component
         // Capture before the update, or the log records 'no_show' as its own
         // previous status.
         $previousStatus = $booking->status;
-        $now = Carbon::now('Asia/Manila');
+        $now = Carbon::now(config('hostel.timezone'));
 
         // Update booking status
         $booking->update(['status' => 'no_show']);

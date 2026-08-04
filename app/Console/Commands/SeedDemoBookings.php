@@ -75,7 +75,7 @@ class SeedDemoBookings extends Command
             return self::FAILURE;
         }
 
-        $today = Carbon::today('Asia/Manila');
+        $today = Carbon::today(config('hostel.timezone'));
         $catalog = RoomCatalog::all();
 
         $this->line('');
@@ -250,8 +250,8 @@ class SeedDemoBookings extends Command
      */
     private function availableRooms(int $count)
     {
-        $windowStart = Carbon::today('Asia/Manila')->subDays(3);
-        $windowEnd = Carbon::today('Asia/Manila')->addDays(6);
+        $windowStart = Carbon::today(config('hostel.timezone'))->subDays(3);
+        $windowEnd = Carbon::today(config('hostel.timezone'))->addDays(6);
 
         return Room::where('status', 'available')
             ->whereDoesntHave('bookings', function ($q) use ($windowStart, $windowEnd) {

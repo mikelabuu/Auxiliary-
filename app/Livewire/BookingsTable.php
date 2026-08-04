@@ -156,7 +156,7 @@ class BookingsTable extends Component
 
             Checkout::create([
                 'booking_id' => $booking->id,
-                'checked_out_at' => Carbon::now('Asia/Manila'),
+                'checked_out_at' => Carbon::now(config('hostel.timezone')),
                 'method' => 'manual',
                 'processed_by' => $staff->id,
             ]);
@@ -196,8 +196,8 @@ class BookingsTable extends Component
         }
 
         if (!empty($this->dateFilter)) {
-            $today = Carbon::today('Asia/Manila');
-            $tomorrow = Carbon::tomorrow('Asia/Manila');
+            $today = Carbon::today(config('hostel.timezone'));
+            $tomorrow = Carbon::tomorrow(config('hostel.timezone'));
 
             switch ($this->dateFilter) {
                 case 'today_checkin':

@@ -42,7 +42,7 @@ class RoomController extends Controller
     {
         // Business dates are Manila; the app timezone is UTC, so a bare
         // today() is yesterday between midnight and 8 AM Manila.
-        $today = Carbon::today('Asia/Manila');
+        $today = Carbon::today(config('hostel.timezone'));
 
         $rooms = Room::all();
 
@@ -127,7 +127,7 @@ class RoomController extends Controller
      */
     public function statusFeed()
     {
-        $today = Carbon::today('Asia/Manila');
+        $today = Carbon::today(config('hostel.timezone'));
         $stayContext = $this->buildStayContext($today);
 
         $rooms = Room::all(['id', 'room_number', 'status'])->map(function ($room) use ($stayContext) {
@@ -162,7 +162,7 @@ class RoomController extends Controller
 
 public function occupancyForRoom(Room $room)
 {
-    $today = now('Asia/Manila')->toDateString();
+    $today = now(config('hostel.timezone'))->toDateString();
 
     $bookings = \App\Models\Booking::query()
         ->select(

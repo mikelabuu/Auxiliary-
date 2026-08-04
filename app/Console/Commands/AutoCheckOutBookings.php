@@ -18,26 +18,33 @@ class AutoCheckOutBookings extends Command
      *
      * @var string
      */
-    protected $signature = 'bookings:autocheckout {--force : Process regardless of the 2 PM time guard}';
+    protected $signature = 'bookings:autocheckout {--force : Process regardless of the check-out time guard}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Automatically check out active bookings past their checkout date (runs after 2 PM Manila).';
+    protected $description = 'Automatically check out active bookings past their checkout date (runs after the configured check-out time).';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $now = Carbon::now('Asia/Manila');
-        $targetTime = Carbon::today('Asia/Manila')->setTime(14, 0, 0);
+        $timezone = \App\Support\CheckoutSchedule::timezone();
 
-        // Checkout time is 2 PM; scheduled runs before that just skip.
+        // This command *is* the check-out deadline — nothing else enforces it —
+        // so the time it guards on is the hostel's actual policy, not a detail
+        // of the command. CheckoutSchedule owns the derivation so the reminder
+        // that fires ahead of this, and the alert timestamp that decides
+        // whether anyone still sees it, cannot drift away from the deadline
+        // they are defined against.
+        $now = Carbon::now($timezone);
+        $targetTime = \App\Support\CheckoutSchedule::deadlineOn();
+
         if (!$this->option('force') && $now->lessThan($targetTime)) {
-            $this->info("It's not yet 2:00 PM in Manila. Skipping auto-checkout.");
+            $this->info("It's not yet {$targetTime->format('g:i A')} ({$timezone}). Skipping auto-checkout.");
             return;
         }
 
@@ -74,7 +81,7 @@ class AutoCheckOutBookings extends Command
 
                 Checkout::create([
                     'booking_id'     => $booking->id,
-                    'checked_out_at' => Carbon::now('Asia/Manila'),
+                    'checked_out_at' => Carbon::now(config('hostel.timezone')),
                     'method'         => 'auto',
                     'processed_by'   => null,
                 ]);

@@ -126,7 +126,7 @@ class AppServiceProvider extends ServiceProvider
             // time either way, so the row's age reads the same in both.
             Booking::with('reservations')
                 ->where('status', 'active')
-                ->whereDate('check_out', \Carbon\Carbon::today('Asia/Manila')->toDateString())
+                ->whereDate('check_out', \Carbon\Carbon::today(config('hostel.timezone'))->toDateString())
                 ->orderBy('id')
                 ->take(5)
                 ->get()

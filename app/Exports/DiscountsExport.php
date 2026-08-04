@@ -51,8 +51,8 @@ class DiscountsExport implements FromCollection, WithHeadings
                 'Status' => ucfirst($discount->status),
                 'Approved Amount' => $discount->amount ?? 0,
                 'Reviewed By' => $discount->reviewer?->name ?? '',
-                'Reviewed At' => $discount->reviewed_at ? Carbon::parse($discount->reviewed_at)->setTimezone('Asia/Manila')->format('Y-m-d H:i:s') : '',
-                'Request Date' => Carbon::parse($discount->created_at)->setTimezone('Asia/Manila')->format('Y-m-d H:i:s'),
+                'Reviewed At' => $discount->reviewed_at ? Carbon::parse($discount->reviewed_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s') : '',
+                'Request Date' => Carbon::parse($discount->created_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s'),
             ];
         });
     }

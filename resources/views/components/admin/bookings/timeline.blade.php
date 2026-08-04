@@ -28,7 +28,7 @@
                         @if($event['detail'])
                             <p class="text-xs text-stone-500 mt-0.5">{{ $event['detail'] }}</p>
                         @endif
-                        <p class="text-[11px] text-stone-400 mt-0.5 font-data tabnum">{{ $event['at']->timezone('Asia/Manila')->format('M d, Y · g:i A') }}</p>
+                        <p class="text-[11px] text-stone-400 mt-0.5 font-data tabnum">{{ $event['at']->timezone(config('hostel.timezone'))->format('M d, Y · g:i A') }}</p>
                     </div>
                 </div>
             @endforeach

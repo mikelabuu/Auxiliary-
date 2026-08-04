@@ -22,7 +22,7 @@
 
         <x-admin.ui.stat-card icon="check-circle" badge="TODAY" label="Collected Today" :delay="80">
             ₱{{ number_format($stats['collected_today'], 2) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">{{ now('Asia/Manila')->format('M d, Y') }}</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-stone-400">{{ now(config('hostel.timezone'))->format('M d, Y') }}</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="clock" color="palay" badge="AWAITING" label="Pending" :delay="120">
@@ -106,7 +106,7 @@
                                 <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ $payment->gateway ?? '—' }}</td>
                                 <td class="font-data tabnum text-muted">{{ $payment->reference_no ?? '—' }}</td>
                                 <td class="font-data tabnum text-xs text-faint">{{ $payment->landbank_transaction_id ?? '—' }}</td>
-                                <td class="font-data tabnum whitespace-nowrap text-muted">{{ \Carbon\Carbon::parse($payment->created_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') }}</td>
+                                <td class="font-data tabnum whitespace-nowrap text-muted">{{ \Carbon\Carbon::parse($payment->created_at)->timezone(config('hostel.timezone'))->format('M d, Y · h:i A') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -46,15 +46,15 @@ class BookingsExport implements FromCollection, WithHeadings
                 'Booking ID' => $booking->id,
                 'Guest Name' => $booking->guest_name,
                 'User ID' => $booking->user_id,
-                'Check-in' => $booking->check_in ? Carbon::parse($booking->check_in)->setTimezone('Asia/Manila')->format('Y-m-d') : '',
-                'Check-out' => $booking->check_out ? Carbon::parse($booking->check_out)->setTimezone('Asia/Manila')->format('Y-m-d') : '',
+                'Check-in' => $booking->check_in ? Carbon::parse($booking->check_in)->setTimezone(config('hostel.timezone'))->format('Y-m-d') : '',
+                'Check-out' => $booking->check_out ? Carbon::parse($booking->check_out)->setTimezone(config('hostel.timezone'))->format('Y-m-d') : '',
                 'Status' => $booking->status,
                 'Room Numbers' => $booking->reservations->pluck('room_number')->implode(', '),
                 'Total Price' => $booking->total_price,
                 'Payable Amount' => $booking->payable_amount,
                 'Payment ID' => $booking->payments?->id ?? '',
                 'Reference No' => $booking->payments?->reference_no ?? '',
-                'Booking Created At' => $booking->created_at ? Carbon::parse($booking->created_at)->setTimezone('Asia/Manila')->format('Y-m-d H:i:s') : '',
+                'Booking Created At' => $booking->created_at ? Carbon::parse($booking->created_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s') : '',
             ];
         });
     }

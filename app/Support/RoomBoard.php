@@ -31,7 +31,7 @@ class RoomBoard
         $upcoming = DB::table('booking_room')
             ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
             ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->where('bookings.check_in', '>', Carbon::now('Asia/Manila'))
+            ->where('bookings.check_in', '>', Carbon::now(config('hostel.timezone')))
             ->get(['booking_room.room_id', 'bookings.status']);
 
         // A settled hold outranks a pending one on the same room, so a paid
@@ -46,7 +46,7 @@ class RoomBoard
 
         // Who is actually in each room — 'occupied' with no booking behind it
         // gets an explicit "No guest on record" instead of implying a guest.
-        $today = Carbon::today('Asia/Manila');
+        $today = Carbon::today(config('hostel.timezone'));
 
         $stays = DB::table('booking_room')
             ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')

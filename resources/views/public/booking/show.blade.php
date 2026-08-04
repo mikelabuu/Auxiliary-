@@ -338,7 +338,7 @@
                                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500">
                                         <span>{{ $latestPayment->proof_method_label }}</span>
                                         <span class="font-data">Ref {{ $latestPayment->proof_reference }}</span>
-                                        <span class="tabnum">Sent {{ $latestPayment->proof_submitted_at?->timezone('Asia/Manila')->format('M d, g:i A') }}</span>
+                                        <span class="tabnum">Sent {{ $latestPayment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, g:i A') }}</span>
                                     </div>
                                 </div>
                             @else

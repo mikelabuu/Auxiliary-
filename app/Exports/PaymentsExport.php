@@ -44,7 +44,7 @@ class PaymentsExport implements FromCollection, WithHeadings
                 'Amount' => $payment->amount,
                 'Status' => $payment->status,
                 'Payment Method' => ucfirst($payment->gateway),
-                'Payment Date' => $payment->created_at->setTimezone('Asia/Manila')->format('Y-m-d'),
+                'Payment Date' => $payment->created_at->setTimezone(config('hostel.timezone'))->format('Y-m-d'),
                 'Staff ID' => $payment->staff_id ?? '',
             ];
         });

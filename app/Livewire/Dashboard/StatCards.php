@@ -25,7 +25,7 @@ class StatCards extends Component
 
     public function render()
     {
-        $now = Carbon::now('Asia/Manila');
+        $now = Carbon::now(config('hostel.timezone'));
 
         $totalRooms = Room::count();
         $roomsUnderMaintenance = Room::where('status', 'maintenance')->count();
@@ -70,7 +70,7 @@ class StatCards extends Component
         // number never moves much and says nothing about direction. The
         // sparkline shows the weekly intake behind it. One grouped query each;
         // YEARWEEK mode 3 is ISO, matching Carbon's 'oW'.
-        $weeksAgo = Carbon::now('Asia/Manila')->subWeeks(11)->startOfWeek();
+        $weeksAgo = Carbon::now(config('hostel.timezone'))->subWeeks(11)->startOfWeek();
 
         $weeklySeries = function ($rows) use ($now) {
             $out = [];

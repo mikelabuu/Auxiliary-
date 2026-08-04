@@ -26,7 +26,7 @@ class UserRecordsController extends Controller
             'active'         => User::where('is_suspended', false)->count(),
             'suspended'      => User::where('is_suspended', true)->count(),
             'verified'       => User::whereNotNull('email_verified_at')->count(),
-            'new_this_month' => User::where('created_at', '>=', now('Asia/Manila')->startOfMonth())->count(),
+            'new_this_month' => User::where('created_at', '>=', now(config('hostel.timezone'))->startOfMonth())->count(),
         ];
 
         $users = User::query()
@@ -84,10 +84,10 @@ class UserRecordsController extends Controller
             'phone'          => $user->phone,
             'is_suspended'   => (bool) $user->is_suspended,
             'verified'       => (bool) $user->email_verified_at,
-            'verified_at'    => $user->email_verified_at?->timezone('Asia/Manila')->format('M d, Y'),
-            'joined'         => $user->created_at->timezone('Asia/Manila')->format('M d, Y'),
-            'last_login'     => $user->last_login_at ? Carbon::parse($user->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : null,
-            'last_cancelled' => $user->last_cancelled_at ? Carbon::parse($user->last_cancelled_at)->timezone('Asia/Manila')->format('M d, Y') : null,
+            'verified_at'    => $user->email_verified_at?->timezone(config('hostel.timezone'))->format('M d, Y'),
+            'joined'         => $user->created_at->timezone(config('hostel.timezone'))->format('M d, Y'),
+            'last_login'     => $user->last_login_at ? Carbon::parse($user->last_login_at)->timezone(config('hostel.timezone'))->format('M d, Y · h:i A') : null,
+            'last_cancelled' => $user->last_cancelled_at ? Carbon::parse($user->last_cancelled_at)->timezone(config('hostel.timezone'))->format('M d, Y') : null,
             'stats' => [
                 'total'     => $user->total_bookings,
                 'completed' => $user->completed_bookings,

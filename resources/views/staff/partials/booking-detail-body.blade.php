@@ -24,7 +24,7 @@
     // "night 4 of 4 · 92%" instead of being due out.
     $checkInDate  = \Carbon\Carbon::parse($booking->check_in->toDateString());
     $checkOutDate = \Carbon\Carbon::parse($booking->check_out->toDateString());
-    $todayDate    = \Carbon\Carbon::parse(now('Asia/Manila')->toDateString());
+    $todayDate    = \Carbon\Carbon::parse(now(config('hostel.timezone'))->toDateString());
 
     $nights = max(1, (int) $checkInDate->diffInDays($checkOutDate));
     $roomNumbers = $booking->reservations->pluck('room_number')->filter();

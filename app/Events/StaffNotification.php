@@ -140,17 +140,18 @@ class StaffNotification implements ShouldBroadcastNow
     {
         $rooms = $booking->reservations->pluck('room_number')->filter()->unique()->implode(', ');
 
-        $at = \Carbon\Carbon::parse(
-            $booking->check_out->toDateString() . ' ' . config('staff.checkout_reminder.at', '12:00'),
-            'Asia/Manila'
-        );
+        $at = \App\Support\CheckoutSchedule::reminderOn($booking->check_out->toDateString());
 
         return new self(
             id: 'checkout_due:' . $booking->id . ':' . $booking->check_out->timestamp,
             type: 'checkout_due',
             title: 'Checkout due today',
+            // The deadline is stated, not spelled "2:00 PM". An alert that
+            // names a time the system no longer enforces is worse than one
+            // that names none.
             text: '#' . $booking->id . ' · ' . $booking->guest_name
-                . ($rooms ? ' · Room ' . $rooms : '') . ' — due by 2:00 PM',
+                . ($rooms ? ' · Room ' . $rooms : '')
+                . ' — due by ' . \App\Support\CheckoutSchedule::deadlineLabel(),
             url: route('staff.bookings.index', ['search' => $booking->id], absolute: false),
             // Time-critical, but nothing has gone wrong yet. 'error' is what
             // the desk should see once it has, and that is the overdue panel's

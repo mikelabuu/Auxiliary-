@@ -48,7 +48,7 @@ class Hero extends Component
 
     public function render()
     {
-        $now = Carbon::now('Asia/Manila');
+        $now = Carbon::now(config('hostel.timezone'));
         $today = $now->copy()->startOfDay()->toDateString();
 
         // ── Inventory ────────────────────────────────────────────────────

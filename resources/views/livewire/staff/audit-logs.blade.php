@@ -99,7 +99,7 @@
                                         : 'Unsorted';
                                 @endphp
                                 <tr>
-                                    <td class="font-data tabnum text-muted whitespace-nowrap">{{ $log->created_at->timezone('Asia/Manila')->format('M d, Y · H:i:s') }}</td>
+                                    <td class="font-data tabnum text-muted whitespace-nowrap">{{ $log->created_at->timezone(config('hostel.timezone'))->format('M d, Y · H:i:s') }}</td>
                                     <td>
                                         <div class="cell-name">
                                             <span class="avatar-initials">{{ $initials }}</span>

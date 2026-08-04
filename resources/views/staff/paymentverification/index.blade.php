@@ -104,7 +104,7 @@
                             <div>
                                 <dt class="font-bold uppercase tracking-[0.14em] text-stone-400 text-[9px]">Submitted</dt>
                                 <dd class="mt-1 font-bold text-stone-700 tabnum">
-                                    {{ $payment->proof_submitted_at?->timezone('Asia/Manila')->format('M d, g:i A') ?? '—' }}
+                                    {{ $payment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, g:i A') ?? '—' }}
                                 </dd>
                             </div>
                             <div>
@@ -161,7 +161,7 @@
                                 <div>
                                     {{ $wasVerified ? 'Verified' : 'Rejected' }}
                                     by {{ $payment->verifier->name ?? 'staff' }}
-                                    on {{ $payment->verified_at?->timezone('Asia/Manila')->format('M d, Y g:i A') ?? '—' }}.
+                                    on {{ $payment->verified_at?->timezone(config('hostel.timezone'))->format('M d, Y g:i A') ?? '—' }}.
                                     @if (! $wasVerified && $payment->rejection_reason)
                                         <span class="block mt-1 font-bold">Reason: {{ $payment->rejection_reason }}</span>
                                     @endif

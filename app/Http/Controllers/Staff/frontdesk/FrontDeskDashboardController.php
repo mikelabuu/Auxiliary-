@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff\frontdesk;
 
+use App\Support\RoomCatalog;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\Booking;
@@ -71,7 +72,7 @@ class FrontDeskDashboardController extends Controller
             ->each(function ($b) use (&$calendarData, $calendarStart, $calendarEnd) {
                 $rooms = $b->reservations->pluck('room_number')->filter()->unique()->implode(', ');
                 $type = $b->reservations->first()->room_type ?? '';
-                $type = $type ? ucfirst(str_replace(['dormitory1', 'dormitory2'], 'dormitory', $type)) : 'Room';
+                $type = RoomCatalog::label($type);
 
                 $start = $b->check_in->greaterThan($calendarStart) ? $b->check_in->copy() : $calendarStart->copy();
                 $end   = $b->check_out->lessThan($calendarEnd) ? $b->check_out->copy() : $calendarEnd->copy();
@@ -99,7 +100,7 @@ class FrontDeskDashboardController extends Controller
 
         // Desk-day KPIs: the desk lives in Manila time while the app clock
         // may be UTC, so "today" is pinned to Asia/Manila.
-        $manilaToday = now('Asia/Manila')->toDateString();
+        $manilaToday = now(config('hostel.timezone'))->toDateString();
 
         $arrivalsToday = Booking::whereDate('check_in', $manilaToday)
             ->whereIn('status', Booking::BLOCKING_STATUSES)
@@ -116,8 +117,8 @@ class FrontDeskDashboardController extends Controller
 
         // Payments recorded during Manila's today (created_at is stored in
         // the app timezone, so convert the Manila day bounds before querying)
-        $dayStart = now('Asia/Manila')->startOfDay()->setTimezone(config('app.timezone'));
-        $dayEnd = now('Asia/Manila')->endOfDay()->setTimezone(config('app.timezone'));
+        $dayStart = now(config('hostel.timezone'))->startOfDay()->setTimezone(config('app.timezone'));
+        $dayEnd = now(config('hostel.timezone'))->endOfDay()->setTimezone(config('app.timezone'));
         $collectedToday = Payment::where('status', 'success')
             ->whereBetween('created_at', [$dayStart, $dayEnd])
             ->sum('amount');

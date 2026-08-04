@@ -9,7 +9,7 @@
     $firstName = explode(' ', trim($staff->name ?? 'Staff'))[0];
     // The desk is at CLSU; the app clock may be UTC, so pin the greeting
     // and date to Manila time.
-    $manila = now()->timezone('Asia/Manila');
+    $manila = now()->timezone(config('hostel.timezone'));
     $hour = (int) $manila->format('G');
     $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
 

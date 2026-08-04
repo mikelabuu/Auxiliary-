@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Events\StaffNotification;
 use App\Models\Booking;
+use App\Support\CheckoutSchedule;
 use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -33,17 +34,17 @@ class RemindCheckoutsDue extends Command
     protected $signature = 'bookings:checkout-reminder
                             {--dry : List the stays that would be alerted, without emitting anything}';
 
-    protected $description = 'Alert the desk about stays due to check out today (runs before the 2 PM check-out time).';
+    protected $description = 'Alert the desk about stays due to check out today (runs ahead of the configured check-out time).';
 
     public function handle(): int
     {
-        if (! config('staff.checkout_reminder.enabled', true)) {
-            $this->info('Checkout reminders are disabled (staff.checkout_reminder.enabled).');
+        if (! CheckoutSchedule::enabled()) {
+            $this->info('Checkout reminders are disabled (hostel.checkout_reminder.enabled).');
 
             return self::SUCCESS;
         }
 
-        $today = Carbon::today('Asia/Manila')->toDateString();
+        $today = Carbon::today(CheckoutSchedule::timezone())->toDateString();
 
         $due = Booking::with('reservations')
             ->where('status', 'active')

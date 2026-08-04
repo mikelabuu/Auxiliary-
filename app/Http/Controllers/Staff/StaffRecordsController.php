@@ -151,12 +151,12 @@ class StaffRecordsController extends Controller
                 'action'      => ucwords(str_replace('_', ' ', $log->action)),
                 'description' => $log->description,
                 'target'      => $log->target_type ? $log->target_type . ($log->target_id ? " #{$log->target_id}" : '') : null,
-                'when'        => $log->created_at->timezone('Asia/Manila')->format('M d, Y · h:i A'),
+                'when'        => $log->created_at->timezone(config('hostel.timezone'))->format('M d, Y · h:i A'),
             ]);
 
         return response()->json([
             'name'       => $staff->name,
-            'last_login' => $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : null,
+            'last_login' => $staff->last_login_at ? \Carbon\Carbon::parse($staff->last_login_at)->timezone(config('hostel.timezone'))->format('M d, Y · h:i A') : null,
             'logs'       => $logs,
         ]);
     }

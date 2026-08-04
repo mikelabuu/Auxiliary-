@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Support\RoomCatalog;
 use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -53,12 +54,12 @@ class OccupancySnapshot extends Component
 
     protected function cacheKey(): string
     {
-        return 'dashboard:occupancy:' . Carbon::today('Asia/Manila')->toDateString();
+        return 'dashboard:occupancy:' . Carbon::today(config('hostel.timezone'))->toDateString();
     }
 
     public function recalculate()
     {
-        $today = Carbon::today('Asia/Manila')->toDateString();
+        $today = Carbon::today(config('hostel.timezone'))->toDateString();
         $cacheKey = $this->cacheKey();
 
         $data = Cache::remember($cacheKey, 30, function () use ($today) {
@@ -86,14 +87,14 @@ class OccupancySnapshot extends Component
             $percent = $totalRooms ? round(($occupiedRoomsCount / $totalRooms) * 100, 1) : 0.0;
 
             // Dorm rooms
-            $dormTotal = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])->count();
-            $dormOccupied = Room::whereIn('room_type', ['dormitory1', 'dormitory2'])
+            $dormTotal = Room::whereIn('room_type', RoomCatalog::dormTypes())->count();
+            $dormOccupied = Room::whereIn('room_type', RoomCatalog::dormTypes())
                 ->whereIn('room_number', $occupiedRoomNumbers)->count();
             $dormPercent = $dormTotal > 0 ? round(($dormOccupied / $dormTotal) * 100, 1) : 0.0;
 
             // Standard rooms
-            $standardTotal = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])->count();
-            $standardOccupied = Room::whereIn('room_type', ['double', 'triple', 'quadruple'])
+            $standardTotal = Room::whereIn('room_type', RoomCatalog::standardTypes())->count();
+            $standardOccupied = Room::whereIn('room_type', RoomCatalog::standardTypes())
                 ->whereIn('room_number', $occupiedRoomNumbers)->count();
             $standardPercent = $standardTotal > 0 ? round(($standardOccupied / $standardTotal) * 100, 1) : 0.0;
 

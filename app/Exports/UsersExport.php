@@ -44,10 +44,10 @@ class UsersExport implements FromCollection, WithHeadings
                 'User ID' => $user->id,
                 'Name' => $user->name,
                 'Email' => $user->email,
-                'Email Verified At' => $user->email_verified_at ? Carbon::parse($user->email_verified_at)->setTimezone('Asia/Manila')->format('Y-m-d H:i:s') : '',
+                'Email Verified At' => $user->email_verified_at ? Carbon::parse($user->email_verified_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s') : '',
                 'Phone' => $user->phone,
-                'Last Login At' => $user->last_login_at ? Carbon::parse($user->last_login_at)->setTimezone('Asia/Manila')->format('Y-m-d H:i:s') : '',
-                'Registration Date' => $user->created_at->setTimezone('Asia/Manila')->format('Y-m-d'),
+                'Last Login At' => $user->last_login_at ? Carbon::parse($user->last_login_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s') : '',
+                'Registration Date' => $user->created_at->setTimezone(config('hostel.timezone'))->format('Y-m-d'),
                 'Status' => $user->is_suspended ? 'Suspended' : 'Active',
             ];
         });

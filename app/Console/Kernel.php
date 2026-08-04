@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
         // Schedule times are evaluated in the app timezone (UTC) unless pinned;
         // without ->timezone() "00:05" would fire at 08:05 Manila.
         $schedule->command('bookings:mark-no-show')
-            ->timezone('Asia/Manila')->dailyAt('00:05');
+            ->timezone(config('hostel.timezone'))->dailyAt('00:05');
 
         // The command no-ops before 2 PM Manila; half-hourly runs give it
         // same-day retries if a run is missed.
@@ -30,8 +30,8 @@ class Kernel extends ConsoleKernel
         // keyed to the check-out date, so a second run the same day is
         // de-duplicated at the bell anyway.
         $schedule->command('bookings:checkout-reminder')
-            ->timezone('Asia/Manila')
-            ->dailyAt(config('staff.checkout_reminder.at', '12:00'));
+            ->timezone(\App\Support\CheckoutSchedule::timezone())
+            ->dailyAt(\App\Support\CheckoutSchedule::reminderTimeOfDay());
     }
 
     /**

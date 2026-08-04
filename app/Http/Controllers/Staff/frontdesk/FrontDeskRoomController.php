@@ -32,7 +32,7 @@ class FrontDeskRoomController extends Controller
 
     public function occupancyForRoom(Room $room)
     {
-        $today = now('Asia/Manila')->toDateString();
+        $today = now(config('hostel.timezone'))->toDateString();
 
         $bookings = \App\Models\Booking::query()
             ->select(

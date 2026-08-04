@@ -17,7 +17,7 @@ Thanks for booking with **{{ config('app.name') }}**. We have your reservation â
 
 @if($holdEndsAt)
 @component('mail::panel')
-**Settle before {{ $holdEndsAt->timezone('Asia/Manila')->format('g:i A, M d') }}.**
+**Settle before {{ $holdEndsAt->timezone(config('hostel.timezone'))->format('g:i A, M d') }}.**
 That is {{ (int) config('bookings.expiry_minutes') }} minutes from when you booked. After that the rooms are released automatically and go back on sale.
 @endcomponent
 

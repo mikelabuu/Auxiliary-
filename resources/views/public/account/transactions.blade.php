@@ -83,7 +83,7 @@
                                     <span class="text-stone-400">N/A</span>
                                 @endif
                             </td>
-                            <td class="p-4 text-stone-400 text-xs font-medium">{{ $payment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}</td>
+                            <td class="p-4 text-stone-400 text-xs font-medium">{{ $payment->created_at->timezone(config('hostel.timezone'))->format('M d, Y h:i A') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -114,7 +114,7 @@
                         </div>
                         <div>
                             <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Date</span>
-                            <span class="text-stone-800 text-[10px]">{{ $payment->created_at->timezone('Asia/Manila')->format('M d, Y h:i A') }}</span>
+                            <span class="text-stone-800 text-[10px]">{{ $payment->created_at->timezone(config('hostel.timezone'))->format('M d, Y h:i A') }}</span>
                         </div>
                         <div class="col-span-2 border-t border-stone-100 pt-2.5">
                             <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Reference No</span>

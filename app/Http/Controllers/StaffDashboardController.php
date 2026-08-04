@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\RoomCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Room;
@@ -79,7 +80,7 @@ class StaffDashboardController extends Controller
             ->each(function ($b) use (&$calendarData, $calendarStart, $calendarEnd) {
                 $rooms = $b->reservations->pluck('room_number')->filter()->unique()->implode(', ');
                 $type = $b->reservations->first()->room_type ?? '';
-                $type = $type ? ucfirst(str_replace(['dormitory1', 'dormitory2'], 'dormitory', $type)) : 'Room';
+                $type = RoomCatalog::label($type);
 
                 $start = $b->check_in->greaterThan($calendarStart) ? $b->check_in->copy() : $calendarStart->copy();
                 $end   = $b->check_out->lessThan($calendarEnd) ? $b->check_out->copy() : $calendarEnd->copy();
@@ -110,11 +111,11 @@ class StaffDashboardController extends Controller
 
         // Group rooms for the room map layout
         $dormBeds = $rooms->filter(function($r) {
-            return in_array($r['room_type'], ['dormitory1', 'dormitory2']);
+            return in_array($r['room_type'], RoomCatalog::dormTypes());
         })->sortBy('room_number')->values();
 
         $standardRooms = $rooms->filter(function($r) {
-            return in_array($r['room_type'], ['double', 'triple', 'quadruple']);
+            return in_array($r['room_type'], RoomCatalog::standardTypes());
         })->sortBy('room_number')->values();
 
         $deluxeRooms = $rooms->filter(function($r) {

@@ -64,7 +64,7 @@
 </div>
 
 <div class="page-footer">
-    Generated {{ now('Asia/Manila')->format('M d, Y \a\t g:i A') }}
+    Generated {{ now(config('hostel.timezone'))->format('M d, Y \a\t g:i A') }}
     &nbsp;·&nbsp; Page <span class="pagenum"></span>
 </div>
 

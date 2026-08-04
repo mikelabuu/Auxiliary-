@@ -55,7 +55,7 @@ class ExpireBookingsCommand extends Command
                     'previous_status' => $previousStatus,
                     'new_status' => 'expired',
                     'reason' => 'Booking did not complete payment before expiry window.',
-                    'expired_at' => Carbon::now('Asia/Manila'),
+                    'expired_at' => Carbon::now(config('hostel.timezone')),
                     'processed_by' => null,
                 ]);
             }

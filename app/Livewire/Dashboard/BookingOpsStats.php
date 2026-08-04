@@ -22,7 +22,7 @@ class BookingOpsStats extends Component
             ->groupBy('status')
             ->pluck('aggregate', 'status');
 
-        $arrivingToday = Booking::whereDate('check_in', Carbon::today('Asia/Manila'))
+        $arrivingToday = Booking::whereDate('check_in', Carbon::today(config('hostel.timezone')))
             ->whereNotIn('status', ['cancelled', 'expired', 'no_show', 'completed'])
             ->count();
 

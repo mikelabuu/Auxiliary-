@@ -150,9 +150,9 @@
                                     @endif
                                 </td>
                                 <td class="font-data tabnum text-xs whitespace-nowrap text-faint">
-                                    {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->timezone('Asia/Manila')->format('M d, Y · h:i A') : '—' }}
+                                    {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->timezone(config('hostel.timezone'))->format('M d, Y · h:i A') : '—' }}
                                 </td>
-                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">{{ $user->created_at->timezone('Asia/Manila')->format('M d, Y') }}</td>
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">{{ $user->created_at->timezone(config('hostel.timezone'))->format('M d, Y') }}</td>
                                 <td class="text-right">
                                     <div class="table-actions justify-end">
                                         <button class="view-user-btn btn btn-ghost btn-sm btn-icon cursor-pointer"

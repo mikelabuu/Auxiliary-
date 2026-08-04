@@ -224,8 +224,8 @@ class BookingController extends Controller
         $totalCapacity = 0;
         $totalSeniors = 0;
         $totalGuestsAssigned = 0;
-        $cdate = Carbon::parse($request->check_in, 'Asia/Manila');
-        $now = Carbon::now('Asia/Manila');
+        $cdate = Carbon::parse($request->check_in, config('hostel.timezone'));
+        $now = Carbon::now(config('hostel.timezone'));
 
         // authoritative catalog: capacity AND nightly rate come from here,
         // never from the submitted form

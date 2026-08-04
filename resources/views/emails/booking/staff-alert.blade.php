@@ -20,7 +20,7 @@
 **What the guest says they sent**
 - Method: {{ $payment->proof_method_label }}
 - Their reference: {{ $payment->proof_reference ?: '—' }}
-- Submitted: {{ $payment->proof_submitted_at?->timezone('Asia/Manila')->format('M d, Y g:i A') ?? '—' }}
+- Submitted: {{ $payment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, Y g:i A') ?? '—' }}
 
 Check the amount, reference and date on the receipt against the actual transfer before verifying. Verifying marks the booking paid and emails the guest their official receipt.
 @endif

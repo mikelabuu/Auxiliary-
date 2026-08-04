@@ -86,6 +86,79 @@ class RoomCatalog
     }
 
     /**
+     * Capacity for one slug, with a caller-supplied fallback for a type the
+     * catalog does not know.
+     *
+     * Use this rather than a local map. Capacity is admin-editable in Room
+     * Types & Pricing, so a hardcoded copy is not merely duplication — it is a
+     * number that stops tracking the one staff can change, silently, in
+     * whatever it is used to calculate.
+     */
+    public static function capacityFor(?string $slug, int $fallback = 1): int
+    {
+        if ($slug === null) {
+            return $fallback;
+        }
+
+        return static::capacityMap()[strtolower(trim($slug))] ?? $fallback;
+    }
+
+    /**
+     * Shared-occupancy room types.
+     *
+     * Derived from the slug rather than listed, so a third dormitory added in
+     * Room Types & Pricing is grouped correctly the day it is created instead
+     * of the day somebody remembers to update a literal.
+     *
+     * @return array<int, string>
+     */
+    public static function dormTypes(): array
+    {
+        return collect(static::all())
+            ->keys()
+            ->filter(fn ($slug) => str_starts_with($slug, 'dormitory'))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Everything that is not a dormitory — defined as the remainder rather
+     * than as its own list, which is the part that matters.
+     *
+     * The two groups were previously two hardcoded arrays, and 'deluxe' had
+     * been added to the catalog without being added to either. Seven of the
+     * hostel's twenty-two rooms were therefore counted in neither, so the
+     * occupancy snapshot quietly described two thirds of the building. Any
+     * pair of hand-listed groups can drift apart like that; a group and its
+     * complement cannot.
+     *
+     * @return array<int, string>
+     */
+    public static function standardTypes(): array
+    {
+        return array_values(array_diff(
+            collect(static::all())->keys()->all(),
+            static::dormTypes()
+        ));
+    }
+
+    /**
+     * Short display label for a room-type slug: 'double' => 'Double', and every
+     * dormitory variant collapsed to a single 'Dormitory', because guests and
+     * staff say "dormitory", not "dormitory2".
+     */
+    public static function label(?string $slug, string $fallback = 'Room'): string
+    {
+        $slug = $slug ? strtolower(trim($slug)) : '';
+
+        if ($slug === '') {
+            return $fallback;
+        }
+
+        return ucfirst(str_starts_with($slug, 'dormitory') ? 'dormitory' : $slug);
+    }
+
+    /**
      * Lowest nightly rate across the catalog (for "from ₱X / night" UI).
      */
     public static function minPrice(): float

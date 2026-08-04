@@ -99,7 +99,7 @@ class PaymentLogs extends Component
         // Ledger-wide stats (deliberately independent of search/filter)
         $stats = [
             'collected'       => (float) Payment::where('status', 'success')->sum('amount'),
-            'collected_today' => (float) Payment::where('status', 'success')->whereDate('created_at', now('Asia/Manila')->toDateString())->sum('amount'),
+            'collected_today' => (float) Payment::where('status', 'success')->whereDate('created_at', now(config('hostel.timezone'))->toDateString())->sum('amount'),
             'success'         => Payment::where('status', 'success')->count(),
             'failed'          => Payment::where('status', 'failed')->count(),
             'pending'         => Payment::where('status', 'pending')->count(),
