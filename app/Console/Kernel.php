@@ -24,6 +24,14 @@ class Kernel extends ConsoleKernel
         // same-day retries if a run is missed.
         $schedule->command('bookings:autocheckout')
             ->everyThirtyMinutes()->withoutOverlapping();
+
+        // Heads-up on today's departures, ahead of the 2 PM check-out the
+        // command above enforces. Once daily, not repeated: the alert id is
+        // keyed to the check-out date, so a second run the same day is
+        // de-duplicated at the bell anyway.
+        $schedule->command('bookings:checkout-reminder')
+            ->timezone('Asia/Manila')
+            ->dailyAt(config('staff.checkout_reminder.at', '12:00'));
     }
 
     /**

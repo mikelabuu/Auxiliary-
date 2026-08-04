@@ -110,6 +110,57 @@ class StaffNotification implements ShouldBroadcastNow
         );
     }
 
+    /**
+     * A stay that is still in house and leaves today.
+     *
+     * This one is built differently from the four around it, because it is the
+     * only alert that is *scheduled* rather than caused. The others each fire
+     * from the event that created them — a booking row appearing, a proof
+     * arriving — so their id is unique by construction and the moment they
+     * became news is simply "now".
+     *
+     * A reminder has neither property for free, and the two ids it needs pull
+     * in opposite directions:
+     *
+     *   · `id` keys off the **check-out date**, so it is identical every time
+     *     the command runs. A retried scheduler tick, a manual run while
+     *     testing, or a console reload must not put a second card in front of
+     *     a desk that already dismissed the first. Extending a stay moves the
+     *     date, which correctly reads as new news.
+     *
+     *   · `at` keys off the **reminder time on that date**, not the check-out
+     *     date's midnight. 'Mark all read' records a timestamp and treats
+     *     everything older as read, so an `at` of 00:00 would arrive at noon
+     *     already greyed out for anyone who cleared the bell that morning —
+     *     the exact pre-read failure the topbar composer warns about. It is
+     *     also fixed rather than now(), so the row's "2h ago" does not reset
+     *     to "just now" on every page load that re-derives it.
+     */
+    public static function checkoutDue(Booking $booking): self
+    {
+        $rooms = $booking->reservations->pluck('room_number')->filter()->unique()->implode(', ');
+
+        $at = \Carbon\Carbon::parse(
+            $booking->check_out->toDateString() . ' ' . config('staff.checkout_reminder.at', '12:00'),
+            'Asia/Manila'
+        );
+
+        return new self(
+            id: 'checkout_due:' . $booking->id . ':' . $booking->check_out->timestamp,
+            type: 'checkout_due',
+            title: 'Checkout due today',
+            text: '#' . $booking->id . ' · ' . $booking->guest_name
+                . ($rooms ? ' · Room ' . $rooms : '') . ' — due by 2:00 PM',
+            url: route('staff.bookings.index', ['search' => $booking->id], absolute: false),
+            // Time-critical, but nothing has gone wrong yet. 'error' is what
+            // the desk should see once it has, and that is the overdue panel's
+            // job — keeping this at 'warning' is what stops the two from
+            // reading as the same severity.
+            level: 'warning',
+            at: $at->timestamp,
+        );
+    }
+
     public static function roomMaintenance(Room $room): self
     {
         return new self(

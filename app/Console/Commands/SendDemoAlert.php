@@ -19,7 +19,7 @@ use Illuminate\Console\Command;
 class SendDemoAlert extends Command
 {
     protected $signature = 'alert:demo
-                            {type=booking : booking, payment, discount or maintenance}';
+                            {type=booking : booking, payment, discount, maintenance or checkout_due}';
 
     protected $description = 'Push a sample alert to every open staff console (demo / smoke test).';
 
@@ -48,6 +48,12 @@ class SendDemoAlert extends Command
             'text' => 'Room 000 moved to maintenance',
             'level' => 'error',
             'route' => 'staff.rooms',
+        ],
+        'checkout_due' => [
+            'title' => 'Checkout due today',
+            'text' => '#0000 · Demo Guest · Room 000 — due by 2:00 PM',
+            'level' => 'warning',
+            'route' => 'staff.bookings.index',
         ],
     ];
 

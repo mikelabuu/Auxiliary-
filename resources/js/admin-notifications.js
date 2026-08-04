@@ -35,6 +35,10 @@ const ICONS = {
     payment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m8.5 15 2 2 4-4"/></svg>',
     discount: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 12l9 9 10-10V2z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>',
     maintenance: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    // A clock, not the door glyph the bell uses: at this size the door reads as
+    // the arrival icon flipped, and arrival/departure confusion is the one
+    // mistake this alert exists to prevent.
+    checkout_due: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
 };
 
 // Which bell tile each alert type wears — same three tiles the dropdown uses.
@@ -43,6 +47,9 @@ const TILES = {
     payment: 'notif-icon-green',
     discount: 'notif-icon-green',
     maintenance: 'notif-icon-rose',
+    // Gold, not rose. Rose is what the console uses for something already
+    // wrong; a check-out that is merely due is on schedule.
+    checkout_due: 'notif-icon-gold',
 };
 
 const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
