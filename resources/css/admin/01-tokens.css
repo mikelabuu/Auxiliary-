@@ -77,6 +77,14 @@
     --color-ember-50:  #fef2f2;
     --color-ember-100: #fee2e2;
     --color-ember-200: #fecaca;
+    /* The scale skipped 300, but twelve places across the admin and public
+       views ask for it — form error borders, the room map's maintenance tiles,
+       the dashboard's Needs Attention rows, the payment-proof error banner.
+       Tailwind generates a utility only for a shade that exists, so every one
+       of those `border-ember-300` / `focus:ring-ember-300` classes reached the
+       HTML and then resolved to nothing. The error *messages* rendered, because
+       they use ember-600; the red outline on the field itself never has. */
+    --color-ember-300: #fca5a5;
     --color-ember-500: #ef4444;
     --color-ember-600: #dc2626;
     --color-ember-700: #b91c1c;

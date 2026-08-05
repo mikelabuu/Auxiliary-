@@ -192,49 +192,50 @@
     <form action="{{ route('staff.rooms.store') }}" method="POST" class="px-6 py-5 space-y-4" data-busy-form>
         @csrf
         <div>
-            <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>
-            <input type="text" name="room_number" value="{{ old('room_number') }}" placeholder="e.g. A-101" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_number') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
-            @error('room_number')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
+            <x-admin.ui.label for="room_number">Room Number</x-admin.ui.label>
+            <x-admin.ui.field name="room_number" :value="old('room_number')" placeholder="e.g. A-101" required />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Type</label>
-                <select name="room_type" id="room-type" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('room_type') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors"></select>
-                @error('room_type')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
+                <x-admin.ui.label for="room-type">Room Type</x-admin.ui.label>
+                {{-- Options are injected by admin-rooms.js, which finds it by id. --}}
+                <x-admin.ui.field name="room_type" control="select" id="room-type" required />
             </div>
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
-                <select name="wing" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('wing') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 cursor-pointer transition-colors">
+                <x-admin.ui.label for="wing">Wing</x-admin.ui.label>
+                <x-admin.ui.field name="wing" control="select" required>
                     <option value="" disabled {{ old('wing') ? '' : 'selected' }} hidden>Select wing</option>
                     @foreach($wingOrder as $w)
                         <option value="{{ $w }}" @selected(old('wing') === $w)>{{ $wingLabel($w) }}</option>
                     @endforeach
-                </select>
-                @error('wing')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
+                </x-admin.ui.field>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Price (₱)</label>
-                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('price') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors">
-                @error('price')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
+                <x-admin.ui.label for="price">Price (₱)</x-admin.ui.label>
+                <x-admin.ui.field name="price" type="number" step="0.01" id="price" :value="old('price')" required />
             </div>
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
-                <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
+                <x-admin.ui.label for="status">Status</x-admin.ui.label>
+                {{-- Named like the rest, so it now gets the error border and
+                     message its five siblings always had. It is validated
+                     against Room::SETTABLE_STATUSES and was the only one of the
+                     six with neither. --}}
+                <x-admin.ui.field name="status" control="select">
                     @foreach($settableStatuses as $statusKey => $sm)
                         <option value="{{ $statusKey }}" @selected(old('status', 'available') === $statusKey)>{{ $sm['label'] }}</option>
                     @endforeach
-                </select>
+                </x-admin.ui.field>
             </div>
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Notes <span class="text-stone-400 font-normal normal-case">(optional)</span></label>
-            <textarea name="notes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border {{ $errors->has('notes') ? 'border-ember-300 focus:ring-ember-300 focus:border-ember-300' : 'border-stone-200 focus:ring-clsu-500/25 focus:border-clsu-500' }} bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 transition-colors resize-none">{{ old('notes') }}</textarea>
-            @error('notes')<p class="text-ember-600 text-xs mt-1.5">{{ $message }}</p>@enderror
+            <x-admin.ui.label for="notes" hint="(optional)">Notes</x-admin.ui.label>
+            <x-admin.ui.field name="notes" control="textarea" rows="2"
+                              placeholder="e.g. Ground floor, near the entrance" :value="old('notes')" />
         </div>
 
         <div class="flex gap-2.5 justify-end pt-2">
@@ -251,38 +252,38 @@
             <p id="editFormError" class="hidden text-ember-600 text-xs bg-ember-50 border border-ember-100 rounded-lg px-3 py-2"></p>
 
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Number</label>
-                <input type="text" id="editRoomNumber" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors" required>
+                <x-admin.ui.label for="editRoomNumber">Room Number</x-admin.ui.label>
+                <x-admin.ui.field id="editRoomNumber" required />
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Room Type</label>
-                    <select id="editRoomType" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors" required></select>
+                    <x-admin.ui.label for="editRoomType">Room Type</x-admin.ui.label>
+                    <x-admin.ui.field control="select" id="editRoomType" required />
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Wing</label>
-                    <select id="editWing" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors" required>
+                    <x-admin.ui.label for="editWing">Wing</x-admin.ui.label>
+                    <x-admin.ui.field control="select" id="editWing" required>
                         <option value="" disabled hidden>Select wing</option>
                         @foreach($wingOrder as $w)
                             <option value="{{ $w }}">{{ $wingLabel($w) }}</option>
                         @endforeach
-                    </select>
+                    </x-admin.ui.field>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Price (₱)</label>
-                    <input type="number" step="0.01" id="editPrice" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors" required>
+                    <x-admin.ui.label for="editPrice">Price (₱)</x-admin.ui.label>
+                    <x-admin.ui.field type="number" step="0.01" id="editPrice" required />
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Status</label>
-                    <select id="editStatus" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
+                    <x-admin.ui.label for="editStatus">Status</x-admin.ui.label>
+                    <x-admin.ui.field control="select" id="editStatus">
                         @foreach($settableStatuses as $statusKey => $sm)
                             <option value="{{ $statusKey }}">{{ $sm['label'] }}</option>
                         @endforeach
-                    </select>
+                    </x-admin.ui.field>
                     {{-- Shown instead of the select when a guest is checked in: the
                          status is the booking's to change, not this form's. --}}
                     <div id="editStatusLocked" class="hidden">
@@ -296,8 +297,8 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Notes <span class="text-stone-400 font-normal normal-case">(optional)</span></label>
-                <textarea id="editNotes" rows="2" placeholder="e.g. Ground floor, near the entrance" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors resize-none"></textarea>
+                <x-admin.ui.label for="editNotes" hint="(optional)">Notes</x-admin.ui.label>
+                <x-admin.ui.field control="textarea" id="editNotes" rows="2" placeholder="e.g. Ground floor, near the entrance" />
             </div>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
@@ -314,17 +315,17 @@
             <p id="typeFormError" class="hidden text-ember-600 text-xs bg-ember-50 border border-ember-100 rounded-lg px-3 py-2"></p>
 
             <div>
-                <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Type Name</label>
-                <input type="text" id="typeFormName" placeholder="e.g. Family Suite" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                <x-admin.ui.label for="typeFormName">Type Name</x-admin.ui.label>
+                <x-admin.ui.field id="typeFormName" placeholder="e.g. Family Suite" required />
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Base Price (₱)</label>
-                    <input type="number" step="0.01" min="0" id="typeFormPrice" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                    <x-admin.ui.label for="typeFormPrice">Base Price (₱)</x-admin.ui.label>
+                    <x-admin.ui.field type="number" step="0.01" min="0" id="typeFormPrice" required />
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5">Sleeps</label>
-                    <input type="number" min="1" step="1" id="typeFormCapacity" required class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                    <x-admin.ui.label for="typeFormCapacity">Sleeps</x-admin.ui.label>
+                    <x-admin.ui.field type="number" min="1" step="1" id="typeFormCapacity" required />
                 </div>
             </div>
             <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms. Existing rooms keep their current price.</p>

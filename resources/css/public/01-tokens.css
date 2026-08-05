@@ -58,6 +58,10 @@
     --color-ember-50: #FEF2F2;
     --color-ember-100: #FEE2E2;
     --color-ember-200: #FECACA;
+    /* Same gap as the admin bundle: components/booking/ui/input.blade.php and
+       the payment-proof error banner both ask for ember-300, which did not
+       exist, so their invalid-field outline resolved to nothing. */
+    --color-ember-300: #FCA5A5;
     --color-ember-500: #EF4444;
     --color-ember-600: #DC2626;
     --color-ember-700: #B91C1C;
