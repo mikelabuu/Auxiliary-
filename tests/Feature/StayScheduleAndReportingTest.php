@@ -56,7 +56,10 @@ class StayScheduleAndReportingTest extends TestCase
         // Staff raise the capacity in Room Types & Pricing. The senior-discount
         // per-head price divides by this, so a stale copy silently overcharges.
         RoomType::where('slug', 'double')->update(['capacity' => 5]);
-        RoomCatalog::all();  // no memoisation to clear, but be explicit
+
+        // The catalog is memoised per request; an admin edit lands in the next
+        // one. Within a single test we have to stand in for that boundary.
+        RoomCatalog::flush();
 
         $this->assertSame(5, RoomCatalog::capacityFor('double'), 'Capacity did not follow the admin-editable value.');
         $this->assertSame(1, RoomCatalog::capacityFor('no-such-type', 1), 'Unknown type should fall back, not throw.');

@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Global, not web-only: a hardening header is worth just as much on a
+        // report download or an availability endpoint as on a rendered page.
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'staff.role' => \App\Http\Middleware\StaffRoleMiddleware::class,

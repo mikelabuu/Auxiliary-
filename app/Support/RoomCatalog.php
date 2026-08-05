@@ -19,8 +19,33 @@ class RoomCatalog
      *
      * @return array<string, array>
      */
+    /**
+     * Resolved catalog for the current request.
+     *
+     * Every read used to re-run Schema::hasTable() plus a full room_types
+     * select. That was invisible while the only callers were page controllers
+     * asking once — but dormTypes()/standardTypes()/capacityFor() all route
+     * through here, and the dashboard calls those from inside a filter()
+     * closure, once per room. The result was 72 catalog reads and 144 queries
+     * on a single page load, two thirds of its total database work.
+     *
+     * The catalog cannot change mid-request, so it is resolved once. Tests
+     * that edit room_types mid-test must call flush(); Tests\TestCase does it
+     * between cases so a memo cannot leak from one test into the next.
+     */
+    private static ?array $memo = null;
+
+    public static function flush(): void
+    {
+        static::$memo = null;
+    }
+
     public static function all(): array
     {
+        if (static::$memo !== null) {
+            return static::$memo;
+        }
+
         $catalog = collect(config('room_types', []))->keyBy('id')->toArray();
 
         // Overlay live pricing/capacity from the DB when available.
@@ -60,7 +85,7 @@ class RoomCatalog
                 ->all();
         }
 
-        return $catalog;
+        return static::$memo = $catalog;
     }
 
     /**

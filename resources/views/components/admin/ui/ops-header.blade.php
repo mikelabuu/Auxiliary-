@@ -24,7 +24,11 @@
         @if($eyebrow)
             <p class="ops-header-eyebrow">{{ $eyebrow }}</p>
         @endif
-        <h2 class="ops-header-title">{{ $slot }}</h2>
+        {{-- h1 for the same reason as page-header: this is the page title on
+             the two screens that use this variant (Booking Operations, Manual
+             Booking), and both had no h1 at all. Styling hangs off the class,
+             not the element. --}}
+        <h1 class="ops-header-title">{{ $slot }}</h1>
         @if($subtitle)
             <p class="ops-header-sub">{{ $subtitle }}</p>
         @endif

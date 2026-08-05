@@ -85,13 +85,20 @@
                     <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="yearly">Yearly</button>
                     <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="range">Custom Range</button>
                 </div>
+                {{-- aria-label rather than a visible <label> for each: the four
+                     controls are mutually exclusive views of one choice and
+                     share the "Timeframe" caption above, so four visible
+                     labels would be noise on screen. Without them a screen
+                     reader announces an unnamed date field, and only the month
+                     picker showed up in an audit at all — the other three
+                     start hidden, so they were never even flagged. --}}
                 <div class="flex flex-wrap items-center gap-3">
-                    <input type="month" id="date_month" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
-                    <select id="date_year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors"></select>
+                    <input type="month" id="date_month" aria-label="Report month" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                    <select id="date_year" aria-label="Report year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors"></select>
                     <div id="dateRangeInputs" class="hidden flex-wrap items-center gap-2">
-                        <input type="date" id="date_from" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                        <input type="date" id="date_from" aria-label="Report start date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                         <span class="text-xs text-stone-400 font-medium">to</span>
-                        <input type="date" id="date_to" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                        <input type="date" id="date_to" aria-label="Report end date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                     </div>
                 </div>
             </div>

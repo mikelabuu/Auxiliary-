@@ -234,11 +234,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="{{ $labelClasses }}">Password</label>
-                        <input type="password" name="password" placeholder="Enter password" class="{{ $inputClasses }}" required>
+                        <input type="password" name="password" placeholder="Enter password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6" required>
                     </div>
                     <div>
                         <label class="{{ $labelClasses }}">Confirm Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" required>
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6" required>
                     </div>
                 </div>
 
@@ -282,11 +282,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
-                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}">
+                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6">
                     </div>
                     <div>
                         <label class="{{ $labelClasses }}">Confirm Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}">
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6">
                     </div>
                 </div>
 
