@@ -39,6 +39,14 @@ class AppServiceProvider extends ServiceProvider
         // these are the pages guests actually read.
         View::share('checkinTime', \App\Support\StaySchedule::checkinLabel());
 
+        // Check-out, likewise — and this one was not merely repeated, it was
+        // wrong. Five guest-facing places stated "12:00 NN" while
+        // bookings:autocheckout has always enforced 14:00, so the site
+        // promised guests two hours it was never going to give them. Reading
+        // it from the same key the command enforces is what stops the promise
+        // and the behaviour from disagreeing again.
+        View::share('checkoutTime', \App\Support\StaySchedule::checkoutLabel());
+
         // Real data for the admin topbar notification dropdown.
         //
         // These are derived on each request rather than stored, so "read"

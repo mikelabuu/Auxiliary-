@@ -171,7 +171,7 @@
                     </div>
                     <div>
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Check-out Date</span>
-                        <span class="text-ink font-bold">{{ $booking->check_out->format('F d, Y') }} (12:00 NN)</span>
+                        <span class="text-ink font-bold">{{ $booking->check_out->format('F d, Y') }} ({{ $checkoutTime }})</span>
                     </div>
                     {{-- Only shown when the guest actually told us. "Not sure
                          yet" is a real answer, and printing "—" against a bold

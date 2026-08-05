@@ -182,7 +182,7 @@
                         @php
                             $policies = [
                                 ['icon' => 'clock',       'title' => 'Check-in from ' . $checkinTime,   'body' => 'Front desk is staffed 24/7. Present a valid ID for every guest on the booking.'],
-                                ['icon' => 'clock',       'title' => 'Check-out by 12:00 NN',   'body' => 'Late check-out is subject to availability. Ask the front desk on the morning of departure.'],
+                                ['icon' => 'clock',       'title' => 'Check-out by ' . $checkoutTime,   'body' => 'Late check-out is subject to availability. Ask the front desk on the morning of departure.'],
                                 ['icon' => 'utensils',    'title' => 'Outside food',            'body' => 'Outside food is not allowed inside the rooms. The dining hall is open to all guests.'],
                                 ['icon' => 'badge-check', 'title' => 'Senior / PWD discount',   'body' => 'A 20% discount is available on request. Upload a valid ID after booking for staff review.'],
                             ];
@@ -249,7 +249,7 @@
                         </div>
                         <div class="flex items-start justify-between gap-4">
                             <dt class="text-ink/50">Check-out</dt>
-                            <dd class="text-right font-semibold text-ink">12:00 NN</dd>
+                            <dd class="text-right font-semibold text-ink">{{ $checkoutTime }}</dd>
                         </div>
                     </dl>
 

@@ -7,7 +7,7 @@ Thanks for booking with **{{ config('app.name') }}**. We have your reservation â
 
 **Booking #{{ $booking->id }}**
 - Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} (12:00 NN)
+- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
 - Nights: {{ max(1, $booking->check_in->diffInDays($booking->check_out)) }}
 - Guests: {{ $booking->expected_guests }}
 @if($booking->reservations->isNotEmpty())
