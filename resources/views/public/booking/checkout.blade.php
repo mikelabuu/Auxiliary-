@@ -198,7 +198,7 @@
                              stated inline rather than behind a link because they are
                              three lines long and every one of them is enforced in
                              code: the hold above, cancelBooking()'s unpaid-only rule,
-                             and the 2:00 PM check-in the confirmation page states. --}}
+                             and the configured check-in time the confirmation page states. --}}
                         <div class="mb-4">
                             <label for="accept_terms" class="flex items-start gap-2.5 cursor-pointer select-none">
                                 <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required
@@ -207,7 +207,7 @@
                                 <span class="text-[11px] font-semibold text-stone-600 leading-relaxed">
                                     I agree to the booking terms
                                     <span class="block font-medium text-stone-500 mt-1">
-                                        Check-in from 2:00 PM with a valid ID for every guest. Bookings can be cancelled free of charge while payment is still pending; once paid, cancellations are handled by the front desk. Unpaid bookings are released automatically.
+                                        Check-in from {{ $checkinTime }} with a valid ID for every guest. Bookings can be cancelled free of charge while payment is still pending; once paid, cancellations are handled by the front desk. Unpaid bookings are released automatically.
                                     </span>
                                 </span>
                             </label>

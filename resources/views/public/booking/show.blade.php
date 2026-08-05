@@ -38,7 +38,7 @@
                                 ['text' => 'Settle your payment to lock in the reservation.', 'href' => $booking->status === 'pending_payment' ? '#paymentCta' : null],
                                 ['text' => 'Keep your receipt. You\'ll get it right after payment.', 'href' => null],
                             ];
-                        $nextSteps[] = ['text' => 'Check in from 2:00 PM on ' . $booking->check_in->format('M d') . ' with a valid ID.', 'href' => null];
+                        $nextSteps[] = ['text' => 'Check in from ' . $checkinTime . ' on ' . $booking->check_in->format('M d') . ' with a valid ID.', 'href' => null];
                     @endphp
                     {{-- .next-step-card: cards deal out in order after the checkmark draw (app.css) --}}
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 max-w-3xl mx-auto text-left">
@@ -167,7 +167,7 @@
                     </div>
                     <div>
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Check-in Date</span>
-                        <span class="text-ink font-bold">{{ $booking->check_in->format('F d, Y') }} (2:00 PM)</span>
+                        <span class="text-ink font-bold">{{ $booking->check_in->format('F d, Y') }} ({{ $checkinTime }})</span>
                     </div>
                     <div>
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Check-out Date</span>

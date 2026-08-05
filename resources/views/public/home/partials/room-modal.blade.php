@@ -173,7 +173,7 @@
                             Stay policies
                         </p>
                         <div class="grid grid-cols-1 gap-y-1.5 text-xs font-medium text-ink/75 sm:grid-cols-2">
-                            <span>Check-in · 2:00 PM</span>
+                            <span>Check-in · {{ $checkinTime }}</span>
                             <span>Check-out · 12:00 NN</span>
                             <span class="sm:col-span-2">Outside food is not allowed in the rooms</span>
                         </div>

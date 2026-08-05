@@ -32,16 +32,16 @@ class AutoCheckOutBookings extends Command
      */
     public function handle()
     {
-        $timezone = \App\Support\CheckoutSchedule::timezone();
+        $timezone = \App\Support\StaySchedule::timezone();
 
         // This command *is* the check-out deadline — nothing else enforces it —
         // so the time it guards on is the hostel's actual policy, not a detail
-        // of the command. CheckoutSchedule owns the derivation so the reminder
+        // of the command. StaySchedule owns the derivation so the reminder
         // that fires ahead of this, and the alert timestamp that decides
         // whether anyone still sees it, cannot drift away from the deadline
         // they are defined against.
         $now = Carbon::now($timezone);
-        $targetTime = \App\Support\CheckoutSchedule::deadlineOn();
+        $targetTime = \App\Support\StaySchedule::deadlineOn();
 
         if (!$this->option('force') && $now->lessThan($targetTime)) {
             $this->info("It's not yet {$targetTime->format('g:i A')} ({$timezone}). Skipping auto-checkout.");

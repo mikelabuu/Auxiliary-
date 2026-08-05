@@ -91,13 +91,13 @@
             <i class="fa-solid fa-clock text-stone-500 absolute left-3.5 text-[18px] pointer-events-none"></i>
             <select name="arrival_time" id="arrival_time" class="w-full appearance-none pl-10 pr-9 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold cursor-pointer">
                 <option value="">Not sure yet</option>
-                @foreach (['14:00' => '2:00 PM', '15:00' => '3:00 PM', '16:00' => '4:00 PM', '17:00' => '5:00 PM', '18:00' => '6:00 PM', '19:00' => '7:00 PM', '20:00' => '8:00 PM', '21:00' => '9:00 PM', '22:00' => '10:00 PM', '23:00' => '11:00 PM', '00:00' => 'After midnight'] as $slot => $slotLabel)
+                @foreach (\App\Support\StaySchedule::arrivalSlots() as $slot => $slotLabel)
                     <option value="{{ $slot }}" @selected(old('arrival_time') === $slot)>{{ $slotLabel }}</option>
                 @endforeach
             </select>
             <i class="fa-solid fa-chevron-down text-stone-500 absolute right-3.5 text-[13px] pointer-events-none"></i>
         </div>
-        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at 2:00 PM. The front desk is staffed 24/7, so a late arrival is fine. It just helps to know.</p>
+        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at {{ $checkinTime }}. The front desk is staffed 24/7, so a late arrival is fine. It just helps to know.</p>
     </div>
     <div>
         <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5" for="special_requests">

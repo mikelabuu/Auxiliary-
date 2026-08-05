@@ -30,8 +30,8 @@ class Kernel extends ConsoleKernel
         // keyed to the check-out date, so a second run the same day is
         // de-duplicated at the bell anyway.
         $schedule->command('bookings:checkout-reminder')
-            ->timezone(\App\Support\CheckoutSchedule::timezone())
-            ->dailyAt(\App\Support\CheckoutSchedule::reminderTimeOfDay());
+            ->timezone(\App\Support\StaySchedule::timezone())
+            ->dailyAt(\App\Support\StaySchedule::reminderTimeOfDay());
     }
 
     /**

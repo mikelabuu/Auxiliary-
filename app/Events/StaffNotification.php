@@ -140,7 +140,7 @@ class StaffNotification implements ShouldBroadcastNow
     {
         $rooms = $booking->reservations->pluck('room_number')->filter()->unique()->implode(', ');
 
-        $at = \App\Support\CheckoutSchedule::reminderOn($booking->check_out->toDateString());
+        $at = \App\Support\StaySchedule::reminderOn($booking->check_out->toDateString());
 
         return new self(
             id: 'checkout_due:' . $booking->id . ':' . $booking->check_out->timestamp,
@@ -151,7 +151,7 @@ class StaffNotification implements ShouldBroadcastNow
             // that names none.
             text: '#' . $booking->id . ' · ' . $booking->guest_name
                 . ($rooms ? ' · Room ' . $rooms : '')
-                . ' — due by ' . \App\Support\CheckoutSchedule::deadlineLabel(),
+                . ' — due by ' . \App\Support\StaySchedule::checkoutLabel(),
             url: route('staff.bookings.index', ['search' => $booking->id], absolute: false),
             // Time-critical, but nothing has gone wrong yet. 'error' is what
             // the desk should see once it has, and that is the overdue panel's

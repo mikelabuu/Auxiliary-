@@ -40,6 +40,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Check-in Time
+    |--------------------------------------------------------------------------
+    |
+    | When the desk starts admitting guests, and the first slot offered in the
+    | booking form's "estimated arrival" list.
+    |
+    | Separate from checkout_time on purpose. Both are 14:00 today, and that is
+    | a coincidence of policy, not one fact — folding them together would mean
+    | moving check-out silently rewrote what the site promises arriving guests.
+    | It was written out as "2:00 PM" in ten places across six guest-facing
+    | pages and the confirmation email, so a change to it used to mean finding
+    | all ten.
+    |
+    */
+
+    'checkin_time' => env('HOSTEL_CHECKIN_TIME', '14:00'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Check-out Reminder
     |--------------------------------------------------------------------------
     |

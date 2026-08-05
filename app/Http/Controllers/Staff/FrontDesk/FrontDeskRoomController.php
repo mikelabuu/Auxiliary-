@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Staff\frontdesk;
+namespace App\Http\Controllers\Staff\FrontDesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;

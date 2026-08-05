@@ -30,6 +30,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->bootRateLimiters();
 
+        // The check-in time, as guest-facing copy says it: "2:00 PM".
+        //
+        // Shared rather than called inline because it is *copy*, appearing in
+        // ten sentences across six pages and the confirmation email. Written
+        // out, moving check-in meant finding all ten and hoping. Written as a
+        // 45-character static call, the sentences become hard to read, and
+        // these are the pages guests actually read.
+        View::share('checkinTime', \App\Support\StaySchedule::checkinLabel());
+
         // Real data for the admin topbar notification dropdown.
         //
         // These are derived on each request rather than stored, so "read"

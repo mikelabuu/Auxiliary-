@@ -34,10 +34,10 @@ use App\Http\Controllers\Staff\Reports\UserReportController;
 use App\Http\Controllers\Staff\Reports\DiscountReportController;
 use App\Http\Controllers\Staff\Reports\MainReportsController;
 
-use App\Http\Controllers\Staff\frontdesk\FrontDeskDashboardController;
-use App\Http\Controllers\Staff\frontdesk\FrontDeskRoomController;
-use App\Http\Controllers\Staff\frontdesk\WalkInBookingController;
-use App\Http\Controllers\Staff\frontdesk\BookingsController;
+use App\Http\Controllers\Staff\FrontDesk\FrontDeskDashboardController;
+use App\Http\Controllers\Staff\FrontDesk\FrontDeskRoomController;
+use App\Http\Controllers\Staff\FrontDesk\WalkInBookingController;
+use App\Http\Controllers\Staff\FrontDesk\BookingsController;
 
 
 use App\Http\Controllers\PaymentController;

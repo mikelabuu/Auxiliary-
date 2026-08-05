@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Staff\frontdesk;
+namespace App\Http\Controllers\Staff\FrontDesk;
 
 use App\Support\RoomCatalog;
 use App\Http\Controllers\Controller;

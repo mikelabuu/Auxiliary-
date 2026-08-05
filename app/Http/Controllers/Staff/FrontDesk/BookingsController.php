@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Http\Controllers\Staff\frontdesk;
+namespace App\Http\Controllers\Staff\FrontDesk;
 
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
