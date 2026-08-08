@@ -12,10 +12,19 @@ html {
 body {
     font-family: var(--font-sans);
     font-size: var(--base-font-size);
+    /* Was unset, so everything inherited Geist 400 at line-height `normal`
+       (~1.2) — thin *and* cramped, which is why the console read as hard
+       work. 450/1.55 is the baseline every component now starts from. */
+    font-weight: var(--fw-body);
+    line-height: 1.55;
     color: var(--color-ink);
     background: var(--color-surface);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    /* Greyscale antialiasing thins strokes on light backgrounds. Subpixel
+       rendering keeps the stems solid, which matters more here than the
+       slightly crisper look of `antialiased`. */
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+    text-rendering: optimizeLegibility;
 }
 
 [x-cloak] { display: none !important; }
@@ -45,20 +54,20 @@ body {
 .tabnum { font-variant-numeric: tabular-nums; }
 
 .section-label {
-    font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .14em;
     text-transform: uppercase; color: var(--color-faint);
 }
 .section-title {
     font-family: var(--font-display);
-    font-size: 17px; font-weight: 700; color: var(--color-ink);
+    font-size: var(--fs-base); font-weight: 700; color: var(--color-ink);
     letter-spacing: -.01em;
 }
 .kv-label {
-    font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .12em;
     text-transform: uppercase; color: var(--color-faint); margin-bottom: 5px;
 }
 .kv-value {
-    font-size: 15px; font-weight: 700; color: var(--color-ink);
+    font-size: var(--fs-base); font-weight: 700; color: var(--color-ink);
 }
 
 /* ============================================================
@@ -92,7 +101,7 @@ body {
     border-radius: 0 0 12px 12px;
     background: var(--color-clsu-700, #14663c);
     color: #fff;
-    font-size: 13.5px;
+    font-size: var(--fs-md);
     font-weight: 700;
     letter-spacing: .01em;
     box-shadow: 0 12px 32px -12px rgba(0, 0, 0, .45);

@@ -87,7 +87,7 @@
                     <p class="mt-1.5 text-xs font-bold text-clsu-700 font-data tracking-wide">
                         {{ $booking->user_id ? 'GS-' . str_pad($booking->user_id, 4, '0', STR_PAD_LEFT) : 'WALK-IN' }}
                     </p>
-                    <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $booking->user_id ? 'bg-white text-clsu-700 border-clsu-200' : 'bg-white text-stone-600 border-stone-200' }}">
+                    <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-2xs font-bold border {{ $booking->user_id ? 'bg-white text-clsu-700 border-clsu-200' : 'bg-white text-stone-600 border-stone-200' }}">
                         <x-admin.ui.icon :name="$booking->user_id ? 'check-circle' : 'user'" class="w-3 h-3" />
                         {{ $booking->user_id ? 'Registered account' : 'No account' }}
                     </span>
@@ -107,7 +107,7 @@
                                 <x-admin.ui.icon :name="$row['icon']" class="w-4 h-4" />
                             </span>
                             <div class="min-w-0 pt-0.5">
-                                <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{{ $row['label'] }}</p>
+                                <p class="text-2xs font-bold text-faint uppercase tracking-widest">{{ $row['label'] }}</p>
                                 <p class="text-sm text-stone-800 font-medium mt-0.5 leading-snug break-words {{ $row['mono'] ? 'font-data' : '' }}">{{ $row['value'] }}</p>
                             </div>
                         </div>
@@ -117,15 +117,15 @@
                 <div class="border-t border-stone-100 grid grid-cols-3 divide-x divide-stone-100 text-center">
                     <div class="px-2 py-3.5">
                         <p class="text-base font-bold text-stone-900 font-data tabnum leading-none">{{ $stays->count() }}</p>
-                        <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1.5">Stays</p>
+                        <p class="text-2xs font-bold text-faint uppercase tracking-widest mt-1.5">Stays</p>
                     </div>
                     <div class="px-2 py-3.5">
                         <p class="text-base font-bold text-stone-900 font-data tabnum leading-none">{{ $completedStays }}</p>
-                        <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1.5">Done</p>
+                        <p class="text-2xs font-bold text-faint uppercase tracking-widest mt-1.5">Done</p>
                     </div>
                     <div class="px-2 py-3.5">
                         <p class="text-base font-bold text-stone-900 font-data tabnum leading-none">{{ $lifetimeSpend >= 1000 ? '₱' . number_format($lifetimeSpend / 1000, 1) . 'k' : '₱' . number_format($lifetimeSpend) }}</p>
-                        <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1.5">Spend</p>
+                        <p class="text-2xs font-bold text-faint uppercase tracking-widest mt-1.5">Spend</p>
                     </div>
                 </div>
             </div>
@@ -148,7 +148,7 @@
                             </p>
                         </div>
                     </div>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 {{ $badgeClass }}">{{ $statusLabel }}</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold border shrink-0 {{ $badgeClass }}">{{ $statusLabel }}</span>
                 </div>
 
                 @php
@@ -172,7 +172,7 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3.5 mt-5 pt-4 border-t border-stone-100">
                     @foreach($facts as $fact)
                         <div class="min-w-0">
-                            <p class="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                            <p class="flex items-center gap-1.5 text-2xs font-bold text-faint uppercase tracking-widest">
                                 <x-admin.ui.icon :name="$fact['icon']" class="w-3 h-3 shrink-0" />
                                 {{ $fact['label'] }}
                             </p>
@@ -186,7 +186,7 @@
                      a slot in the fact grid where it would be truncated. --}}
                 @if($booking->special_requests)
                     <div class="mt-4 pt-4 border-t border-stone-100">
-                        <p class="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 uppercase tracking-widest">
+                        <p class="flex items-center gap-1.5 text-2xs font-bold text-amber-700 uppercase tracking-widest">
                             <x-admin.ui.icon name="note" class="w-3 h-3 shrink-0" />
                             Guest Request
                         </p>
@@ -196,8 +196,8 @@
 
                 @if($showProgress)
                     <div class="mt-4 pt-4 border-t border-stone-100">
-                        <div class="flex items-center justify-between text-[11px] font-semibold mb-2">
-                            <span class="text-stone-500">
+                        <div class="flex items-center justify-between text-2xs font-semibold mb-2">
+                            <span class="text-muted">
                                 @if($elapsed < 0)
                                     Arrives in {{ abs($elapsed) }} {{ Str::plural('day', abs($elapsed)) }}
                                 @elseif($progressPct >= 100)
@@ -206,7 +206,7 @@
                                     Night {{ $currentNight }} of {{ $nights }}
                                 @endif
                             </span>
-                            <span class="text-stone-400 font-data tabnum">{{ $progressPct }}%</span>
+                            <span class="text-faint font-data tabnum">{{ $progressPct }}%</span>
                         </div>
                         <div class="stay-progress-track">
                             <div class="stay-progress-fill" style="width: {{ $progressPct }}%"></div>
@@ -219,12 +219,12 @@
             @if($facilityPhotos->isNotEmpty())
                 <div>
                     <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-2.5">
-                        <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest">
+                        <p class="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest">
                             <x-admin.ui.icon name="grid" class="w-3.5 h-3.5" />
                             Room Facilities
                         </p>
                         @if($amenityList)
-                            <p class="text-xs text-stone-500 min-w-0 truncate" title="{{ $amenityList }}">{{ $amenityList }}</p>
+                            <p class="text-xs text-muted min-w-0 truncate" title="{{ $amenityList }}">{{ $amenityList }}</p>
                         @endif
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -248,44 +248,44 @@
 
             {{-- Billing: the payable figure leads, the arithmetic supports it --}}
             <div>
-                <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest mb-2.5">
+                <p class="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2.5">
                     <x-admin.ui.icon name="receipt" class="w-3.5 h-3.5" />
                     Billing
                 </p>
                 <div class="rounded-2xl border border-stone-200 overflow-hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                         <div class="p-5 bg-clsu-50/50 border-b sm:border-b-0 sm:border-r border-stone-200">
-                            <p class="text-[10px] font-bold text-clsu-700 uppercase tracking-widest">Amount Payable</p>
+                            <p class="text-2xs font-bold text-clsu-700 uppercase tracking-widest">Amount Payable</p>
                             <p class="text-2xl font-extrabold text-clsu-800 font-data tabnum mt-1 leading-none">₱{{ number_format($payable, 2) }}</p>
                             @if($payment)
-                                <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $badgeClassMap[$paymentStatusColor] ?? 'bg-stone-100 text-stone-600 border-stone-200' }}">
+                                <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-2xs font-bold border {{ $badgeClassMap[$paymentStatusColor] ?? 'bg-stone-100 text-stone-600 border-stone-200' }}">
                                     <x-admin.ui.icon name="credit-card" class="w-3 h-3" />
                                     Payment {{ ucfirst($payment->status) }}
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-stone-100 text-stone-600 border-stone-200">
+                                <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full text-2xs font-bold border bg-stone-100 text-stone-600 border-stone-200">
                                     No payment recorded
                                 </span>
                             @endif
                         </div>
                         <div class="p-5 space-y-2.5 text-sm">
                             <div class="flex items-center justify-between gap-4">
-                                <span class="text-stone-500">Subtotal</span>
+                                <span class="text-muted">Subtotal</span>
                                 <span class="text-stone-800 font-semibold font-data tabnum">₱{{ number_format($booking->total_price, 2) }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-4">
-                                <span class="text-stone-500">Discount</span>
+                                <span class="text-muted">Discount</span>
                                 <span class="font-semibold font-data tabnum {{ $booking->discount > 0 ? 'text-clsu-700' : 'text-stone-800' }}">
                                     {{ $booking->discount > 0 ? '−' : '' }}₱{{ number_format($booking->discount, 2) }}
                                 </span>
                             </div>
                             @if($payment)
                                 <div class="flex items-center justify-between gap-4 pt-2.5 border-t border-stone-100">
-                                    <span class="text-stone-500">Paid</span>
+                                    <span class="text-muted">Paid</span>
                                     <span class="text-stone-800 font-semibold font-data tabnum">₱{{ number_format($payment->amount, 2) }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4 min-w-0">
-                                    <span class="text-stone-500 shrink-0">Reference</span>
+                                    <span class="text-muted shrink-0">Reference</span>
                                     <span class="text-stone-800 font-semibold font-data text-xs truncate">{{ $payment->reference_no ?? 'N/A' }}</span>
                                 </div>
                             @endif
@@ -296,7 +296,7 @@
 
             {{-- Per-room breakdown --}}
             <div>
-                <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest mb-2.5">
+                <p class="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest mb-2.5">
                     <x-admin.ui.icon name="bed" class="w-3.5 h-3.5" />
                     Room Details
                 </p>
@@ -307,16 +307,16 @@
                             <div class="flex items-start justify-between gap-2">
                                 <p class="text-sm font-semibold text-stone-800 min-w-0">
                                     Room {{ $res->room_number }}
-                                    <span class="block text-xs text-stone-400 font-normal mt-0.5 truncate">{{ $catalog[$res->room_type]['title'] ?? ($res->room->room_type ?? '—') }}</span>
+                                    <span class="block text-xs text-faint font-normal mt-0.5 truncate">{{ $catalog[$res->room_type]['title'] ?? ($res->room->room_type ?? '—') }}</span>
                                 </p>
                                 <span class="text-sm font-bold text-stone-800 font-data tabnum shrink-0">₱{{ number_format($res->price, 2) }}</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 mt-2.5 text-xs text-stone-500">
+                            <div class="grid grid-cols-2 gap-2 mt-2.5 text-xs text-muted">
                                 <p>Guests <span class="block font-semibold text-stone-700 font-data tabnum">{{ $res->num_guests }}</span></p>
                                 <p>Seniors / PWD <span class="block font-semibold text-stone-700 font-data tabnum">{{ $res->num_seniors }}</span></p>
                             </div>
                             <div class="mt-2.5 pt-2.5 border-t border-stone-100">
-                                <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Breakfast</p>
+                                <p class="text-2xs font-bold text-faint uppercase tracking-widest mb-1.5">Breakfast</p>
                                 @if($meals->isNotEmpty())
                                     <div class="flex flex-wrap gap-1.5">
                                         @foreach($meals as $mealName => $qty)
@@ -324,7 +324,7 @@
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="text-xs text-stone-400 italic">None selected</span>
+                                    <span class="text-xs text-faint italic">None selected</span>
                                 @endif
                             </div>
                         </div>

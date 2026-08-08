@@ -34,10 +34,10 @@
 
 <div>
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-3">
-        <p class="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest">
+        <p class="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-widest">
             <x-admin.ui.icon name="clipboard" class="w-3.5 h-3.5" />
             History Booking
-            <span class="normal-case tracking-normal font-semibold text-stone-400">— {{ $stays->count() }} {{ Str::plural('stay', $stays->count()) }}, {{ $completedCount }} completed</span>
+            <span class="normal-case tracking-normal font-semibold text-faint">— {{ $stays->count() }} {{ Str::plural('stay', $stays->count()) }}, {{ $completedCount }} completed</span>
         </p>
     </div>
 
@@ -69,7 +69,7 @@
                                     <x-img :src="$type['image']" alt="" loading="lazy" decoding="async" sizes="44px"
                                            class="w-11 h-11 shrink-0 rounded-lg object-cover border border-stone-200" />
                                 @else
-                                    <span class="w-11 h-11 shrink-0 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400">
+                                    <span class="w-11 h-11 shrink-0 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center text-faint">
                                         <x-admin.ui.icon name="bed" class="w-4 h-4" />
                                     </span>
                                 @endif
@@ -83,7 +83,7 @@
                             <div class="flex items-center gap-2">
                                 <span class="ref-code">BK-{{ str_pad($stay->id, 4, '0', STR_PAD_LEFT) }}</span>
                                 @if($isCurrent)
-                                    <span class="text-[10px] font-bold text-clsu-700 uppercase tracking-wide">This booking</span>
+                                    <span class="text-2xs font-bold text-clsu-700 uppercase tracking-wide">This booking</span>
                                 @endif
                             </div>
                         </td>

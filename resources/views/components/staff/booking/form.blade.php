@@ -30,7 +30,7 @@
 
         <x-staff.booking.step-card icon="calendar" step="1" title="Stay Dates" :delay="80">
             <x-slot:aside>
-                <span id="nights-badge" class="hidden animate-pop whitespace-nowrap rounded-full border border-clsu-200 bg-clsu-50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-ink/80"></span>
+                <span id="nights-badge" class="hidden animate-pop whitespace-nowrap rounded-full border border-clsu-200 bg-clsu-50 px-3.5 py-1.5 text-2xs font-bold uppercase tracking-[0.14em] text-ink/80"></span>
             </x-slot:aside>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -41,7 +41,7 @@
                     <div>
                         <x-staff.booking.label :for="$date['name']">{{ $date['label'] }}</x-staff.booking.label>
                         <div class="relative">
-                            <x-admin.ui.icon name="calendar" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald" />
+                            <x-admin.ui.icon name="calendar" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-ink" />
                             <x-staff.booking.input
                                 type="text"
                                 :name="$date['name']"
@@ -58,7 +58,7 @@
 
             <x-staff.booking.stay-presets />
 
-            <div id="availability-status" class="mt-4 flex min-h-[1.25rem] items-center gap-2 text-xs font-medium text-stone-500"></div>
+            <div id="availability-status" class="mt-4 flex min-h-[1.25rem] items-center gap-2 text-xs font-medium text-muted"></div>
         </x-staff.booking.step-card>
 
         <x-staff.booking.step-card icon="user" step="2" title="Guest Details" :delay="120">
@@ -99,8 +99,8 @@
             <x-slot:aside>
                 <div class="min-w-[190px]">
                     <div class="flex items-center justify-between gap-3">
-                        <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400">Guests assigned</span>
-                        <span id="assign-progress-text" class="whitespace-nowrap text-[11px] font-bold text-ink/80 font-data tabnum">0 / 1</span>
+                        <span class="text-2xs font-bold uppercase tracking-[0.18em] text-faint">Guests assigned</span>
+                        <span id="assign-progress-text" class="whitespace-nowrap text-2xs font-bold text-ink/80 font-data tabnum">0 / 1</span>
                     </div>
                     <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-emerald-deep/10">
                         <div id="assign-progress-bar" class="h-full w-0 rounded-full bg-palay-400 transition-[width] duration-300"></div>
@@ -108,7 +108,7 @@
                 </div>
             </x-slot:aside>
 
-            <p class="mb-3 text-xs font-medium text-stone-500">Tap an available room to add it to the booking, then assign guests to each room below.</p>
+            <p class="mb-3 text-xs font-medium text-muted">Tap an available room to add it to the booking, then assign guests to each room below.</p>
 
             {{-- Type filter pills + board are both rendered by the page script --}}
             <div id="type-filter-pills" class="mb-4 flex flex-wrap gap-2"></div>
@@ -120,11 +120,11 @@
             {{-- ── Guest assignment for the picked rooms ── --}}
             <div class="mt-6 border-t border-emerald-deep/10 pt-5">
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <h5 class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-deep">
+                    <h5 class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-ink-deep">
                         <x-admin.ui.icon name="users" class="w-4 h-4" />
                         Guest Assignment
                     </h5>
-                    <button type="button" id="auto-assign" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-emerald-deep/20 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-deep transition-colors hover:bg-emerald-deep hover:text-cream">
+                    <button type="button" id="auto-assign" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-emerald-deep/20 bg-white px-4 py-2 text-2xs font-bold uppercase tracking-[0.14em] text-brand-ink-deep transition-colors hover:bg-emerald-deep hover:text-cream">
                         <x-admin.ui.icon name="zap" class="w-3.5 h-3.5" />
                         Auto-distribute guests
                     </button>
@@ -132,7 +132,7 @@
 
                 <div id="assignment-list" class="space-y-3"></div>
 
-                <p id="assignment-empty" class="rounded-2xl border border-dashed border-emerald-deep/20 bg-white/50 px-5 py-6 text-center text-sm font-medium text-stone-400">
+                <p id="assignment-empty" class="rounded-2xl border border-dashed border-emerald-deep/20 bg-white/50 px-5 py-6 text-center text-sm font-medium text-faint">
                     No rooms picked yet. Tap available rooms on the board above.
                 </p>
             </div>

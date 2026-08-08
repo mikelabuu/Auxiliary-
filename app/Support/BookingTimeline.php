@@ -22,7 +22,7 @@ use Carbon\Carbon;
  */
 class BookingTimeline
 {
-    protected const COLOR_NEUTRAL = 'bg-stone-100 text-stone-500';
+    protected const COLOR_NEUTRAL = 'bg-stone-100 text-muted';
     protected const COLOR_GOOD    = 'bg-clsu-50 text-clsu-700';
     protected const COLOR_WAIT    = 'bg-palay-100 text-palay-800';
     protected const COLOR_BAD     = 'bg-ember-50 text-ember-700';

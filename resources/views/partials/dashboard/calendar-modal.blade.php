@@ -17,11 +17,11 @@
                         <x-admin.ui.icon name="chevron-right" class="w-4 h-4" stroke-width="2.5" />
                     </button>
                 </div>
-                <div class="grid grid-cols-7 text-center text-[10px] font-bold text-stone-400 mb-1">
+                <div class="grid grid-cols-7 text-center text-2xs font-bold text-faint mb-1">
                     <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
                 </div>
                 <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-stone-100 text-[10px] font-medium text-stone-500">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-stone-100 text-2xs font-medium text-stone-500">
                     <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-clsu-700"></span>Today</span>
                     <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-clsu-500"></span>Arrivals</span>
                     <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Departures</span>
@@ -76,8 +76,8 @@
 
         let dots = '';
         if (info) {
-            const a = info.a > 0 ? `<span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>${info.a > 1 ? `<span class="text-[8px] font-bold text-clsu-600 leading-none">${info.a}</span>` : ''}` : '';
-            const dep = info.d > 0 ? `<span class="w-1.5 h-1.5 rounded-full bg-palay-400"></span>${info.d > 1 ? `<span class="text-[8px] font-bold text-palay-600 leading-none">${info.d}</span>` : ''}` : '';
+            const a = info.a > 0 ? `<span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>${info.a > 1 ? `<span class="text-2xs font-bold text-clsu-600 leading-none">${info.a}</span>` : ''}` : '';
+            const dep = info.d > 0 ? `<span class="w-1.5 h-1.5 rounded-full bg-palay-400"></span>${info.d > 1 ? `<span class="text-2xs font-bold text-palay-600 leading-none">${info.d}</span>` : ''}` : '';
             if (a || dep) dots = `<span class="flex items-center gap-1 mt-1 h-2">${a}${dep}</span>`;
         }
         const attr = info ? ` data-date="${ds}"` : '';
@@ -90,7 +90,7 @@
         Object.keys(calData).forEach(k => { if (k.startsWith(`${y}-${mm}-`)) daysWith++; });
         el('calSummaryTitle').textContent = daysWith > 0 ? `${daysWith} ${daysWith === 1 ? 'day' : 'days'} with guests` : 'No booked dates';
         el('calSummarySub').textContent = `${monthsLong[m]} ${y} · active & upcoming stays`;
-        el('calDetail').innerHTML = '<p class="text-[11px] text-stone-400">Tap a highlighted day to see its guests.</p>';
+        el('calDetail').innerHTML = '<p class="text-[11px] text-faint">Tap a highlighted day to see its guests.</p>';
     }
 
     function showDayDetail(ds) {
@@ -105,10 +105,10 @@
         el('calSummarySub').textContent = bits.join(' · ');
 
         const chip = (k) => k === 'arrival'
-            ? '<span class="text-[9px] font-bold uppercase tracking-wide text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-full px-1.5 py-0.5">Arrival</span>'
+            ? '<span class="text-2xs font-bold uppercase tracking-wide text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-full px-1.5 py-0.5">Arrival</span>'
             : k === 'departure'
-                ? '<span class="text-[9px] font-bold uppercase tracking-wide text-palay-800 bg-palay-100 border border-palay-200 rounded-full px-1.5 py-0.5">Departure</span>'
-                : '<span class="text-[9px] font-bold uppercase tracking-wide text-stone-500 bg-stone-100 border border-stone-200 rounded-full px-1.5 py-0.5">In-house</span>';
+                ? '<span class="text-2xs font-bold uppercase tracking-wide text-palay-800 bg-palay-100 border border-palay-200 rounded-full px-1.5 py-0.5">Departure</span>'
+                : '<span class="text-2xs font-bold uppercase tracking-wide text-stone-500 bg-stone-100 border border-stone-200 rounded-full px-1.5 py-0.5">In-house</span>';
 
         el('calDetail').innerHTML = info.guests.map(g => `
             <div class="rounded-lg border border-stone-200 bg-white px-3 py-2">

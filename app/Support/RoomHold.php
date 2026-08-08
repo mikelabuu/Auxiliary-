@@ -96,7 +96,7 @@ class RoomHold
         return [
             'kind'  => 'none',
             'icon'  => 'check',
-            'class' => 'font-medium text-stone-400',
+            'class' => 'font-medium text-faint',
             'label' => 'No upcoming stays',
             'guest' => null,
             'title' => '',

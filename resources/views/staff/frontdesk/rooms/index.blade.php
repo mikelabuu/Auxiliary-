@@ -97,12 +97,12 @@
                     <div class="flex flex-col items-center gap-2 p-4 pb-3 text-center">
                         <div>
                             <p class="font-data text-base font-extrabold text-stone-900 tabnum">Room {{ $room->room_number }}</p>
-                            <p class="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-400">{{ ucfirst($room->room_type) }} · {{ ucfirst($room->wing) }} wing</p>
+                            <p class="mt-0.5 text-2xs font-bold uppercase tracking-wide text-faint">{{ ucfirst($room->room_type) }} · {{ ucfirst($room->wing) }} wing</p>
                         </div>
                         <span class="room-status status status-{{ $room->status }}">{{ ucfirst($room->status) }}</span>
-                        <p class="text-[11px] italic text-stone-400">Updated {{ $room->updated_at->diffForHumans() }}</p>
+                        <p class="text-2xs italic text-faint">Updated {{ $room->updated_at->diffForHumans() }}</p>
                     </div>
-                    <div class="flex items-center justify-center gap-1.5 border-t border-stone-100 px-4 py-2 text-[10px] font-semibold text-stone-400 transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
+                    <div class="flex items-center justify-center gap-1.5 border-t border-stone-100 px-4 py-2 text-2xs font-semibold text-faint transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
                         <x-admin.ui.icon name="eye" class="h-3 w-3" />
                         View occupancy
                     </div>

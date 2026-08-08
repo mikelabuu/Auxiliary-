@@ -98,7 +98,7 @@
                                 <td class="font-data tabnum text-muted">{{ $log->cancelled_at ?? 'N/A' }}</td>
                             @endif
 
-                            <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ $log->staff->name ?? 'System' }}</td>
+                            <td class="text-faint text-2xs font-bold uppercase tracking-wide">{{ $log->staff->name ?? 'System' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

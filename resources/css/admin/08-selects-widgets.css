@@ -59,7 +59,7 @@
 .flatpickr-months .flatpickr-prev-month:hover svg,
 .flatpickr-months .flatpickr-next-month:hover svg { fill: var(--color-g-600); }
 .flatpickr-weekdays { background: #fff; }
-span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size: 11px; }
+span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size: var(--fs-2xs); }
 .flatpickr-day {
     color: var(--color-ink); border-radius: 9px; font-weight: 500;
     transition: background var(--transition), color var(--transition), border-color var(--transition);
@@ -118,7 +118,7 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
     100% { transform: scale(0.96); opacity: 0; }
 }
 .swal2-title { font-size: 19px !important; font-weight: 800 !important; color: var(--color-ink) !important; font-family: var(--font-display) !important; }
-.swal2-html-container { font-size: 14.5px !important; color: var(--color-muted) !important; }
+.swal2-html-container { font-size: var(--fs-base) !important; color: var(--color-muted) !important; }
 .swal2-confirm {
     background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%) !important;
     border-radius: var(--radius-sm) !important; font-weight: 700 !important;
@@ -175,7 +175,7 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
+    font-size: var(--fs-2xs);
     font-weight: 500;
     color: var(--color-stone-500);
     white-space: nowrap;
@@ -221,7 +221,7 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
    ============================================================ */
 
 .dashboard-greeting-breadcrumb { margin-bottom: 7px; }
-.admin-breadcrumb { font-size: 12.5px; line-height: 1; }
+.admin-breadcrumb { font-size: var(--fs-sm); line-height: 1; }
 .admin-breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; list-style: none; margin: 0; padding: 0; }
 .admin-breadcrumb li { display: inline-flex; align-items: center; gap: 3px; }
 .admin-breadcrumb a { color: var(--color-muted); font-weight: 600; border-radius: var(--radius-xs); padding: 2px 5px; transition: color var(--transition), background var(--transition); }

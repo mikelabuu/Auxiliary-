@@ -65,12 +65,12 @@ function initAdminUserRecords() {
         $('#udEmail').text(u.email);
 
         $('#udStanding')
-            .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ' +
+            .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border ' +
                 (u.is_suspended ? 'bg-ember-50 text-ember-700 border-ember-200' : 'bg-clsu-50 text-clsu-700 border-clsu-200'))
             .text(u.is_suspended ? 'Suspended' : 'Active');
         $('#udVerifiedPill')
-            .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ' +
-                (u.verified ? 'bg-clsu-50 text-clsu-700 border-clsu-200' : 'bg-stone-100 text-stone-500 border-stone-200'))
+            .attr('class', 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border ' +
+                (u.verified ? 'bg-clsu-50 text-clsu-700 border-clsu-200' : 'bg-stone-100 text-muted border-stone-200'))
             .text(u.verified ? (u.verified_at ? `Verified ${u.verified_at}` : 'Verified') : 'Unverified');
 
         $('#udStatTotal').text(u.stats.total);
@@ -92,9 +92,9 @@ function initAdminUserRecords() {
             // Built with .text() throughout — a guest controls their own room
             // labels and dates, so none of it may be interpolated as HTML.
             const $row = $('<div class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm bg-white"></div>');
-            $row.append($('<span class="font-data tabnum text-stone-500 shrink-0"></span>').text('#' + b.id));
+            $row.append($('<span class="font-data tabnum text-muted shrink-0"></span>').text('#' + b.id));
             $row.append($('<span class="text-stone-700 truncate flex-1"></span>').text(`Room ${b.rooms} · ${b.dates}`));
-            $row.append($(`<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${pill}"></span>`).text(label));
+            $row.append($(`<span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold border shrink-0 ${pill}"></span>`).text(label));
             $row.append($('<span class="font-data tabnum font-semibold text-stone-800 shrink-0"></span>').text('₱' + b.amount));
             $list.append($row);
         });

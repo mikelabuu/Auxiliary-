@@ -66,7 +66,7 @@
                              alt="Proof of payment for booking #{{ $payment->booking_id }}"
                              loading="lazy"
                              class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]">
-                        <span class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
+                        <span class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-white backdrop-blur">
                             <x-admin.ui.icon name="maximize" class="w-3 h-3" stroke-width="2.5" />
                             Full size
                         </span>
@@ -79,7 +79,7 @@
                                 <p class="text-base font-bold text-stone-800 truncate">
                                     {{ $booking->guest_name ?? 'Unknown guest' }}
                                 </p>
-                                <p class="text-xs font-semibold text-stone-500 mt-0.5 tabnum">
+                                <p class="text-xs font-semibold text-muted mt-0.5 tabnum">
                                     Booking #{{ $payment->booking_id }}
                                     @if ($booking)
                                         · {{ \Carbon\Carbon::parse($booking->check_in)->format('M d') }}
@@ -94,21 +94,21 @@
 
                         <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 text-xs">
                             <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-stone-400 text-[9px]">Method</dt>
+                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Method</dt>
                                 <dd class="mt-1 font-bold text-stone-700">{{ $payment->proof_method_label }}</dd>
                             </div>
                             <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-stone-400 text-[9px]">Guest reference</dt>
+                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Guest reference</dt>
                                 <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->proof_reference ?: '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-stone-400 text-[9px]">Submitted</dt>
+                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Submitted</dt>
                                 <dd class="mt-1 font-bold text-stone-700 tabnum">
                                     {{ $payment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, g:i A') ?? '—' }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-stone-400 text-[9px]">Our reference</dt>
+                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Our reference</dt>
                                 <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->reference_no }}</dd>
                             </div>
                         </dl>
@@ -193,7 +193,7 @@
                 The guest can upload a corrected receipt.
             </p>
             <div>
-                <label for="rejection_reason" class="block text-[10px] font-bold uppercase tracking-[0.16em] text-stone-500 mb-1.5">
+                <label for="rejection_reason" class="block text-2xs font-bold uppercase tracking-[0.16em] text-muted mb-1.5">
                     Reason shown to the guest <span class="text-ember-600">*</span>
                 </label>
                 <textarea id="rejection_reason" name="rejection_reason" rows="3" required maxlength="500"

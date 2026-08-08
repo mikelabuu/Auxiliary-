@@ -19,6 +19,6 @@
        {{ $attributes->merge(['class' => 'block text-xs font-bold text-stone-600 tracking-wider uppercase mb-1.5']) }}>
     {{ $slot }}
     @if($hint)
-        <span class="text-stone-400 font-normal normal-case">{{ $hint }}</span>
+        <span class="text-faint font-normal normal-case">{{ $hint }}</span>
     @endif
 </label>

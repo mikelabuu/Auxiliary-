@@ -92,7 +92,7 @@
                                         <span class="avatar-initials">{{ $initials }}</span>
                                         <span class="min-w-0">
                                             <span class="block max-w-44 truncate font-semibold text-ink">{{ $booking->guest_name }}</span>
-                                            <span class="block font-data text-[11px] text-faint tabnum">{{ $booking->guest_phone }}</span>
+                                            <span class="block font-data text-2xs text-faint tabnum">{{ $booking->guest_phone }}</span>
                                         </span>
                                     </span>
                                 </td>

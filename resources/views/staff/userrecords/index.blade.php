@@ -55,17 +55,17 @@
 
         <x-admin.ui.stat-card icon="check-circle" badge="IN GOOD STANDING" label="Active Accounts" :delay="80">
             {{ number_format($stats['active']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Able to book and log in</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Able to book and log in</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="check" color="palay" badge="EMAIL" label="Verified Emails" :delay="120">
             {{ number_format($stats['verified']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">{{ $stats['total'] - $stats['verified'] }} still unverified</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">{{ $stats['total'] - $stats['verified'] }} still unverified</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="block" color="ember" badge="RESTRICTED" label="Suspended" :delay="160">
             {{ number_format($stats['suspended']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Blocked from booking</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Blocked from booking</p></x-slot:footnote>
         </x-admin.ui.stat-card>
     </div>
 
@@ -189,7 +189,7 @@
 
     {{-- User detail modal (populated via AJAX) --}}
     <x-admin.ui.modal id="userDetailModal" icon="user" title="User Details" max-width="xl" scroll-body>
-        <div id="udLoading" class="p-10 text-center text-sm text-stone-400">Loading user details…</div>
+        <div id="udLoading" class="p-10 text-center text-sm text-faint">Loading user details…</div>
 
         <div id="udBody" class="hidden">
             <div class="p-6 space-y-5">
@@ -199,12 +199,12 @@
                         <div id="udAvatar" class="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-base font-bold bg-clsu-100 text-clsu-700"></div>
                         <div class="min-w-0">
                             <p id="udName" class="font-bold text-stone-900 truncate"></p>
-                            <p id="udEmail" class="text-xs text-stone-400 truncate"></p>
+                            <p id="udEmail" class="text-xs text-faint truncate"></p>
                         </div>
                     </div>
                     <div class="flex flex-col items-end gap-1.5">
-                        <span id="udStanding" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"></span>
-                        <span id="udVerifiedPill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"></span>
+                        <span id="udStanding" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border"></span>
+                        <span id="udVerifiedPill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border"></span>
                     </div>
                 </div>
 
@@ -212,47 +212,47 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="rounded-xl border border-stone-200 bg-stone-50/50 p-3 text-center">
                         <p id="udStatTotal" class="text-lg font-bold font-data tabnum text-stone-900"></p>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Bookings</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint mt-0.5">Bookings</p>
                     </div>
                     <div class="rounded-xl border border-stone-200 bg-stone-50/50 p-3 text-center">
                         <p id="udStatCompleted" class="text-lg font-bold font-data tabnum text-clsu-700"></p>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Stays</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint mt-0.5">Stays</p>
                     </div>
                     <div class="rounded-xl border border-stone-200 bg-stone-50/50 p-3 text-center">
                         <p id="udStatCancelled" class="text-lg font-bold font-data tabnum text-ember-700"></p>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Cancelled</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint mt-0.5">Cancelled</p>
                     </div>
                     <div class="rounded-xl border border-stone-200 bg-stone-50/50 p-3 text-center">
                         <p id="udStatSpend" class="text-lg font-bold font-data tabnum text-stone-900"></p>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-0.5">Spent</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint mt-0.5">Spent</p>
                     </div>
                 </div>
 
                 {{-- Profile facts --}}
                 <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Phone</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint">Phone</p>
                         <p id="udPhone" class="text-stone-700 font-data tabnum mt-0.5"></p>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Joined</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint">Joined</p>
                         <p id="udJoined" class="text-stone-700 font-data tabnum mt-0.5"></p>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Last Login</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint">Last Login</p>
                         <p id="udLastLogin" class="text-stone-700 font-data tabnum mt-0.5"></p>
                     </div>
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Last Cancellation</p>
+                        <p class="text-2xs font-bold uppercase tracking-widest text-faint">Last Cancellation</p>
                         <p id="udLastCancelled" class="text-stone-700 font-data tabnum mt-0.5"></p>
                     </div>
                 </div>
 
                 {{-- Recent bookings --}}
                 <div>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Recent Bookings</p>
+                    <p class="text-2xs font-bold uppercase tracking-widest text-faint mb-2">Recent Bookings</p>
                     <div id="udBookings" class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden"></div>
-                    <p id="udNoBookings" class="hidden text-sm text-stone-400 text-center py-4">No bookings yet.</p>
+                    <p id="udNoBookings" class="hidden text-sm text-faint text-center py-4">No bookings yet.</p>
                 </div>
             </div>
 

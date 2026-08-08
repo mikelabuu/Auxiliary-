@@ -15,15 +15,15 @@
                     <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                     Updating
                 </span>
-                <button wire:click="previousDay" class="w-7 h-7 flex items-center justify-center rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Previous day">
+                <button wire:click="previousDay" class="w-11 h-11 flex items-center justify-center rounded-lg border border-stone-200 text-muted hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Previous day">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <span class="min-w-[76px] text-center text-xs font-bold text-stone-700 tabnum">{{ $viewLabel }}</span>
-                <button wire:click="nextDay" class="w-7 h-7 flex items-center justify-center rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Next day">
+                <button wire:click="nextDay" class="w-11 h-11 flex items-center justify-center rounded-lg border border-stone-200 text-muted hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Next day">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
                 @unless($isToday)
-                    <button wire:click="goToday" class="ml-0.5 text-[11px] font-bold text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-lg px-2 py-1 hover:bg-clsu-100 transition cursor-pointer">Today</button>
+                    <button wire:click="goToday" class="ml-0.5 text-2xs font-bold text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-lg px-2 py-1 hover:bg-clsu-100 transition cursor-pointer">Today</button>
                 @endunless
             </div>
         </div>
@@ -34,20 +34,20 @@
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-clsu-50 text-clsu-700 border border-clsu-100 px-2.5 py-1 text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>{{ $arrivalsCount }} arriving</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-palay-100 text-palay-800 border border-palay-200 px-2.5 py-1 text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-palay-400"></span>{{ $departuresCount }} departing</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200 px-2.5 py-1 text-xs font-semibold">{{ $inHouseCount }} in-house</span>
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-white text-stone-500 border border-stone-200 px-2.5 py-1 text-xs font-semibold">{{ $upcomingCount }} upcoming</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white text-muted border border-stone-200 px-2.5 py-1 text-xs font-semibold">{{ $upcomingCount }} upcoming</span>
             </div>
 
             <div class="flex bg-stone-100 rounded-full p-1 text-xs font-semibold w-fit shrink-0">
                 <button wire:click="$set('filterType', 'all')"
-                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'all' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    class="px-4 py-3 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'all' ? 'bg-white text-clsu-800 shadow-sm' : 'text-faint hover:text-clsu-700' }}">
                     All
                 </button>
                 <button wire:click="$set('filterType', 'arrival')"
-                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'arrival' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    class="px-4 py-3 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'arrival' ? 'bg-white text-clsu-800 shadow-sm' : 'text-faint hover:text-clsu-700' }}">
                     Arrivals
                 </button>
                 <button wire:click="$set('filterType', 'departure')"
-                    class="px-3 py-1.5 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'departure' ? 'bg-white text-clsu-800 shadow-sm' : 'text-stone-400 hover:text-clsu-700' }}">
+                    class="px-4 py-3 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'departure' ? 'bg-white text-clsu-800 shadow-sm' : 'text-faint hover:text-clsu-700' }}">
                     Departures
                 </button>
             </div>
@@ -60,17 +60,17 @@
             <div class="rounded-xl border border-ember-300 bg-ember-50/70 overflow-hidden">
                 <div class="flex items-center gap-2 px-4 py-2.5 border-b border-ember-100">
                     <svg class="w-4 h-4 text-ember-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <p class="text-[11px] font-bold text-ember-800 uppercase tracking-wide">Needs attention</p>
-                    <span class="ml-auto text-[11px] font-bold text-ember-800 bg-ember-100 rounded-full px-2 py-0.5">{{ $overdueCheckouts->count() + $missedArrivals->count() }}</span>
+                    <p class="text-2xs font-bold text-ember-800 uppercase tracking-wide">Needs attention</p>
+                    <span class="ml-auto text-2xs font-bold text-ember-800 bg-ember-100 rounded-full px-2 py-0.5">{{ $overdueCheckouts->count() + $missedArrivals->count() }}</span>
                 </div>
                 <div class="divide-y divide-ember-100">
                     @foreach($overdueCheckouts as $b)
                         <div class="flex items-center gap-3 px-4 py-2.5">
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-stone-800 truncate guest-history-link cursor-pointer hover:underline" data-booking-id="{{ $b->id }}" title="View guest history">{{ $b->guest_name }}</p>
-                                <p class="text-[11px] text-stone-500">Room {{ $b->room_numbers_str }} · Check-out was {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
+                                <p class="text-2xs text-muted">Room {{ $b->room_numbers_str }} · Check-out was {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
                             </div>
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">Overdue</span>
+                            <span class="text-2xs font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">Overdue</span>
                             <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer shrink-0" data-action="checkout" data-id="{{ $b->id }}">Check Out</button>
                         </div>
                     @endforeach
@@ -78,9 +78,9 @@
                         <div class="flex items-center gap-3 px-4 py-2.5">
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-stone-800 truncate guest-history-link cursor-pointer hover:underline" data-booking-id="{{ $b->id }}" title="View guest history">{{ $b->guest_name }}</p>
-                                <p class="text-[11px] text-stone-500">Room {{ $b->room_numbers_str }} · Was due {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
+                                <p class="text-2xs text-muted">Room {{ $b->room_numbers_str }} · Was due {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
                             </div>
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">No-show risk</span>
+                            <span class="text-2xs font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">No-show risk</span>
                             <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer shrink-0" data-action="noshow" data-id="{{ $b->id }}">No Show</button>
                         </div>
                     @endforeach
@@ -92,7 +92,7 @@
     <div class="overflow-x-auto flex-1 p-5 wire-panel" wire:loading.delay.class="is-refreshing" wire:target="filterType, sortBy, gotoPage, previousPage, nextPage, previousDay, nextDay, goToday">
         <div class="scroll-x rounded-xl border border-stone-200">
             @if($arrivalsDepartures->isEmpty())
-                <div class="grid grid-cols-7 bg-stone-50 text-[10px] font-bold text-clsu-700 tracking-wide px-4 py-2.5 uppercase border-b border-stone-200">
+                <div class="grid grid-cols-7 bg-stone-50 text-2xs font-bold text-clsu-700 tracking-wide px-4 py-2.5 uppercase border-b border-stone-200">
                     <span>Guest</span><span>Room</span><span>Check-in</span><span>Check-out</span><span>Nights</span><span>Type</span><span>Status</span>
                 </div>
                 <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -100,8 +100,8 @@
                     <svg class="icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><path d="m9 14 2 2 4-4"/></svg>
                   </div>
                   <p class="text-sm font-semibold text-stone-700">No arrivals or departures {{ $isToday ? 'today' : 'on ' . $viewLabel }}</p>
-                  <p class="text-xs text-stone-400 mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
-                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-xs font-bold text-white bg-clsu-600 rounded-lg px-3.5 py-2 hover:bg-clsu-700 active:scale-[0.98] transition-[color,background-color,transform] duration-200 !no-underline shadow-sm">Create manual booking</a>
+                  <p class="text-xs text-faint mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
+                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-sm font-bold text-white bg-clsu-700 rounded-lg px-5 py-3 hover:bg-clsu-800 active:scale-[0.98] transition-[color,background-color,transform] duration-200 !no-underline shadow-sm">Create manual booking</a>
                 </div>
             @else
                 <table class="data-table" data-server-sort style="min-width:760px;">
@@ -171,18 +171,18 @@
         {{-- Upcoming Section --}}
         @if($upcomingBookings->isNotEmpty())
             <div class="mt-6">
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">UPCOMING THIS WEEK</p>
+                <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">UPCOMING THIS WEEK</p>
                 <div class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden">
                     @foreach($upcomingBookings as $booking)
                         <div class="flex items-center gap-3 px-4 py-3 hover:bg-clsu-50/60 transition-colors">
-                            <div class="w-8 h-8 rounded-full bg-clsu-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-clsu-700 text-white flex items-center justify-center text-2xs font-bold shrink-0">
                                 {{ $booking['initials'] }}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-stone-800 truncate">{{ $booking['guest_name'] }}</p>
-                                <p class="text-xs text-stone-400">{{ $booking['details'] }}</p>
+                                <p class="text-xs text-faint">{{ $booking['details'] }}</p>
                             </div>
-                            <span class="text-[10px] font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 shrink-0 flex items-center gap-1">
+                            <span class="text-2xs font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 shrink-0 flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-clsu-500"></span>
                                 {{ $booking['status'] }}
                             </span>

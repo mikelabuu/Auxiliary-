@@ -60,7 +60,7 @@
 
             <div class="space-y-5">
                 <div>
-                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
+                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
                     <div class="flex flex-wrap gap-2">
                         @foreach($dormBeds as $room)
                             <x-admin.rooms.map-tile :room="$room" />
@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
+                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
                     <div class="flex flex-wrap gap-2">
                         @foreach($standardRooms as $room)
                             <x-admin.rooms.map-tile :room="$room" />
@@ -76,7 +76,7 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold text-stone-400 tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
+                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
                     <div class="flex flex-wrap gap-2">
                         @foreach($deluxeRooms as $room)
                             <x-admin.rooms.map-tile :room="$room" />

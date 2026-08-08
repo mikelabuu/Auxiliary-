@@ -194,7 +194,7 @@
                         </div>
                         <div class="record-detail-row">
                             <span class="record-detail-label">User agent</span>
-                            <span class="record-detail-value !font-normal text-[12px] text-muted font-data break-words" x-text="modalLog.user_agent"></span>
+                            <span class="record-detail-value !font-normal text-2xs text-muted font-data break-words" x-text="modalLog.user_agent"></span>
                         </div>
                     </div>
 

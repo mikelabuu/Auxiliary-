@@ -78,7 +78,7 @@
 
 .sidebar-brand-sub {
     margin-top: 6px;
-    font-size: 10px;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     letter-spacing: .22em;
     text-transform: uppercase;
@@ -109,7 +109,7 @@
     position: relative;
     z-index: 1;
     padding: 20px 22px 8px;
-    font-size: 10px;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     letter-spacing: .2em;
     text-transform: uppercase;
@@ -138,7 +138,7 @@
     gap: 12px;
     padding: 11px 14px;
     border-radius: var(--radius-sm);
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 550;
     letter-spacing: .005em;
     color: var(--color-muted);
@@ -217,7 +217,7 @@
     justify-content: center;
     background: linear-gradient(180deg, var(--color-au-500), var(--color-au-600));
     color: #fff;
-    font-size: 10.5px;
+    font-size: var(--fs-2xs);
     font-weight: 800;
     letter-spacing: .02em;
     box-shadow: 0 2px 8px rgba(220, 104, 3, .35);
@@ -249,7 +249,7 @@
 
 .sidebar-subnav .sidebar-link {
     padding: 9px 12px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 500;
 }
 
@@ -278,7 +278,7 @@
 .sidebar-user-role {
     display: inline-flex;
     align-items: center;
-    font-size: 9.5px;
+    font-size: var(--fs-2xs);
     font-weight: 800;
     letter-spacing: .16em;
     text-transform: uppercase;
@@ -287,14 +287,14 @@
 
 .sidebar-user-name {
     margin-top: 5px;
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--color-ink);
 }
 
 .sidebar-user-date {
     margin-top: 3px;
-    font-size: 11px;
+    font-size: var(--fs-2xs);
     color: var(--color-muted);
 }
 
@@ -310,7 +310,7 @@
     border: 1px solid var(--color-border);
     background: #fff;
     color: var(--color-muted);
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 600;
     letter-spacing: .01em;
     text-decoration: none;
@@ -535,7 +535,7 @@
 
 .topbar-sub {
     margin-top: 5px;
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
     color: var(--color-muted);
     font-weight: 500;
 }
@@ -573,7 +573,7 @@
     padding: 0 4px;
     background: #ef4444;
     color: #fff;
-    font-size: 9.5px;
+    font-size: var(--fs-2xs);
     font-weight: 800;
     border-radius: 999px;
     border: 1.5px solid #fff;
@@ -583,7 +583,7 @@
 }
 
 .topbar-date {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--color-muted);
     font-weight: 600;
     background: var(--color-surface);
@@ -618,7 +618,7 @@
     border: 1.5px solid var(--color-border);
     border-radius: var(--radius-sm);
     background: var(--color-surface);
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--color-ink);
     outline: none;
     transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
@@ -639,7 +639,7 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 10.5px;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     color: var(--color-faint);
     background: #fff;
@@ -664,7 +664,7 @@
 
 .search-group-label {
     padding: 13px 18px 5px;
-    font-size: 10.5px;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -744,7 +744,7 @@
     border-radius: var(--radius-sm);
     background: linear-gradient(135deg, var(--color-g-500), var(--color-g-700));
     color: #fff;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 800;
     letter-spacing: .04em;
     display: inline-flex;
@@ -760,13 +760,13 @@
 }
 
 .user-menu-id-name {
-    font-size: 13.5px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--color-ink);
 }
 
 .user-menu-id-role {
-    font-size: 9.5px;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
@@ -806,13 +806,13 @@
 }
 
 .user-menu-name {
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--color-ink);
 }
 
 .user-menu-role {
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
     color: var(--color-muted);
 }
 
@@ -822,7 +822,7 @@
     gap: 11px;
     width: 100%;
     padding: 10px 18px;
-    font-size: 13.5px;
+    font-size: var(--fs-md);
     color: var(--color-ink);
     text-decoration: none;
     background: transparent;
@@ -867,7 +867,7 @@
 }
 
 .notif-title {
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 800;
     color: var(--color-ink);
 }
@@ -876,7 +876,7 @@
     border: 0;
     background: transparent;
     cursor: pointer;
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     color: var(--color-g-700);
 }
@@ -958,14 +958,14 @@
 }
 
 .notif-text {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--color-ink);
     line-height: 1.45;
 }
 
 .notif-time {
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
     color: var(--color-faint);
     margin-top: 2px;
 }
@@ -976,13 +976,13 @@
 }
 
 .notif-empty-title {
-    font-size: 13.5px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--color-ink);
 }
 
 .notif-empty-copy {
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
     color: var(--color-faint);
     margin-top: 3px;
 }

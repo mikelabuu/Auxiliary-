@@ -14,7 +14,7 @@
 
     $variant = $align === 'center'
         ? 'px-2 py-2 text-center text-sm font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none'
-        : 'px-4 py-2.5 text-sm placeholder:text-stone-400';
+        : 'px-4 py-2.5 text-sm placeholder:text-faint';
 @endphp
 
 <input {{ $attributes->merge(['class' => $base . ' ' . $variant]) }}>

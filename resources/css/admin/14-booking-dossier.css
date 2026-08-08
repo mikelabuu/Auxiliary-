@@ -22,7 +22,7 @@
     transition: opacity 200ms var(--ease-out);
 }
 .facility-tile-scrim span {
-    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
 }
 .facility-tile:hover .facility-tile-scrim,
 .facility-tile:focus-visible .facility-tile-scrim { opacity: 1; }
@@ -59,7 +59,7 @@
     box-shadow: 0 32px 80px -24px rgba(0, 0, 0, .7);
 }
 .fh-lightbox figcaption {
-    color: #eaf3ed; font-size: 12px; font-weight: 600;
+    color: #eaf3ed; font-size: var(--fs-xs); font-weight: 600;
     letter-spacing: .06em; text-transform: uppercase;
 }
 .fh-lightbox-close {

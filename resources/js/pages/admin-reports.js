@@ -37,7 +37,8 @@ function initAdminReports() {
     function setToggleActive(el, markerClass, active) {
         const base = markerClass + ' text-sm font-medium px-4 py-2.5 rounded-xl border transition-colors cursor-pointer';
         const appearance = active
-            ? 'bg-clsu-600 border-clsu-700 text-white shadow-card'
+            // clsu-600 carries white at only 4.01:1; clsu-700 clears AA at 5.85:1.
+            ? 'bg-clsu-700 border-clsu-800 text-white shadow-card'
             : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50';
         el.attr('class', base + ' ' + appearance);
     }
@@ -46,7 +47,7 @@ function initAdminReports() {
         const base = 'filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors cursor-pointer';
         const appearance = active
             ? 'bg-clsu-50 border-clsu-200 text-clsu-700'
-            : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-50 hover:text-stone-700';
+            : 'bg-white border-stone-200 text-muted hover:bg-stone-50 hover:text-stone-700';
         el.attr('class', base + ' ' + appearance);
     }
 
@@ -222,20 +223,20 @@ function initAdminReports() {
     }
 
     function renderSummary(payload) {
-        let html = `<span class="text-[10px] font-bold text-stone-400 tracking-widest uppercase flex items-center gap-1">${ICON.filter} Active</span>`;
-        html += `<span class="text-[10px] font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 tracking-wide">${payload.report_type.toUpperCase()}</span>`;
+        let html = `<span class="text-2xs font-bold text-faint tracking-widest uppercase flex items-center gap-1">${ICON.filter} Active</span>`;
+        html += `<span class="text-2xs font-bold text-clsu-700 bg-clsu-50 rounded-full px-2.5 py-1 tracking-wide">${payload.report_type.toUpperCase()}</span>`;
 
         const dateVal = typeof payload.date_range.value === 'object'
             ? (payload.date_range.value.from && payload.date_range.value.to ? `${payload.date_range.value.from} → ${payload.date_range.value.to}` : 'All Time')
             : (payload.date_range.value || 'All Time');
-        html += `<span class="text-[10px] font-bold text-palay-800 bg-palay-100 rounded-full px-2.5 py-1 tracking-wide">${dateVal}</span>`;
+        html += `<span class="text-2xs font-bold text-palay-800 bg-palay-100 rounded-full px-2.5 py-1 tracking-wide">${dateVal}</span>`;
 
         Object.keys(payload.filters || {}).forEach(key => {
             const values = payload.filters[key];
             if (values && values.length) {
                 const label = humanize(key.replace('_status', ''));
                 const text = values.map(humanize).join(', ');
-                html += `<span class="text-[10px] font-bold text-stone-600 bg-stone-100 rounded-full px-2.5 py-1 tracking-wide">${label}: ${text}</span>`;
+                html += `<span class="text-2xs font-bold text-stone-600 bg-stone-100 rounded-full px-2.5 py-1 tracking-wide">${label}: ${text}</span>`;
             }
         });
 
@@ -248,7 +249,7 @@ function initAdminReports() {
 
         $('#reportTotals').html(cards.map(card => `
             <div class="card p-4">
-                <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">${humanize(card.label)}</p>
+                <p class="text-2xs font-bold text-faint tracking-widest uppercase">${humanize(card.label)}</p>
                 <p class="text-2xl font-extrabold text-stone-800 tabnum mt-1">${
                     card.format === 'money' ? peso(card.value) : Number(card.value).toLocaleString('en-PH')
                 }</p>
@@ -280,7 +281,7 @@ function initAdminReports() {
             <div class="flex flex-col items-center text-center py-14 px-6">
                 <div class="w-10 h-10 rounded-full bg-ember-50 text-ember-600 flex items-center justify-center mb-3">${ICON.alert}</div>
                 <p class="text-sm font-semibold text-stone-700">No matching records found</p>
-                <p class="text-xs text-stone-400 mt-1 max-w-xs">Try expanding the date range, removing some filters, or switching the report type.</p>
+                <p class="text-xs text-faint mt-1 max-w-xs">Try expanding the date range, removing some filters, or switching the report type.</p>
             </div>
         `);
         $('#reportPagination').remove();
@@ -310,7 +311,7 @@ function initAdminReports() {
                 const key = String(val).toLowerCase().trim();
                 if (Object.prototype.hasOwnProperty.call(STATUS_COLOR, key)) {
                     const color = STATUS_COLOR[key];
-                    val = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${BADGE_CLASS[color]}">${humanize(key)}</span>`;
+                    val = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold border ${BADGE_CLASS[color]}">${humanize(key)}</span>`;
                 }
                 html += `<td class="font-data tabnum">${val}</td>`;
             });
@@ -322,10 +323,10 @@ function initAdminReports() {
         const to = data.to || 0;
         html += `
             <div id="reportPagination" class="flex items-center justify-between px-6 py-4 border-t border-stone-100">
-                <p class="text-xs text-stone-400">Showing <span class="font-bold text-stone-700">${from}–${to}</span> of <span class="font-bold text-stone-700">${data.total}</span></p>
+                <p class="text-xs text-faint">Showing <span class="font-bold text-stone-700">${from}–${to}</span> of <span class="font-bold text-stone-700">${data.total}</span></p>
                 <div class="flex items-center gap-2">
                     <button type="button" class="page-btn flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" data-page="${data.current_page - 1}" ${data.current_page <= 1 ? 'disabled' : ''}>${ICON.chevronLeft} Previous</button>
-                    <span class="text-xs text-stone-400">Page ${data.current_page} of ${data.last_page}</span>
+                    <span class="text-xs text-faint">Page ${data.current_page} of ${data.last_page}</span>
                     <button type="button" class="page-btn flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" data-page="${data.current_page + 1}" ${data.current_page >= data.last_page ? 'disabled' : ''}>Next ${ICON.chevronRight}</button>
                 </div>
             </div>`;
@@ -402,7 +403,7 @@ function initAdminReports() {
                     <div class="flex flex-col items-center text-center py-14 px-6">
                         <div class="w-10 h-10 rounded-full bg-ember-50 text-ember-600 flex items-center justify-center mb-3">${ICON.alert}</div>
                         <p class="text-sm font-semibold text-stone-700">${errors ? 'Check your criteria' : 'Something went wrong'}</p>
-                        <p class="text-xs text-stone-500 mt-1 max-w-sm">${message}</p>
+                        <p class="text-xs text-muted mt-1 max-w-sm">${message}</p>
                     </div>
                 `);
                 toggleExport(false);

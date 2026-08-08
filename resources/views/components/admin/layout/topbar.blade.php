@@ -165,7 +165,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-ink truncate"><span class="font-mono" x-text="'#' + b.id"></span> · <span x-text="b.guest"></span></p>
-                <p class="text-[11px] text-faint" x-text="b.dates"></p>
+                <p class="text-2xs text-faint" x-text="b.dates"></p>
               </div>
               <span class="chip chip-green shrink-0" x-text="b.status"></span>
             </a>
@@ -182,7 +182,7 @@
               </div>
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-ink truncate" x-text="u.name"></p>
-                <p class="text-[11px] text-faint truncate" x-text="u.email"></p>
+                <p class="text-2xs text-faint truncate" x-text="u.email"></p>
               </div>
             </a>
           </template>
@@ -198,7 +198,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-ink font-mono" x-text="r.number"></p>
-                <p class="text-[11px] text-faint" x-text="r.type"></p>
+                <p class="text-2xs text-faint" x-text="r.type"></p>
               </div>
               <span class="chip shrink-0"
                     :class="{

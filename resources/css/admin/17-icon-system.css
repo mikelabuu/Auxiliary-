@@ -83,15 +83,15 @@
     flex-shrink: 0;
 }
 
-.sidebar-link svg { --ico: 16.5px; }
-.sidebar-action-btn svg { --ico: 14px; }
-.user-menu-link svg { --ico: 15.5px; }
-.notif-icon svg { --ico: 15px; }
-.search-result-icon svg { --ico: 15px; }
-.quick-nav-item svg { --ico: 14.5px; }
-.stat-icon svg { --ico: 20px; }
-.mini-stat .stat-icon svg { --ico: 18px; }
-.quick-action .stat-icon svg { --ico: 17.5px; }
+.sidebar-link svg { --ico: 20px; }
+.sidebar-action-btn svg { --ico: 17px; }
+.user-menu-link svg { --ico: 19px; }
+.notif-icon svg { --ico: 18px; }
+.search-result-icon svg { --ico: 18px; }
+.quick-nav-item svg { --ico: 17.5px; }
+.stat-icon svg { --ico: 24px; }
+.mini-stat .stat-icon svg { --ico: 22px; }
+.quick-action .stat-icon svg { --ico: 21px; }
 
 /* The card-header chip sizes its glyph with padding inside a fixed box, so
    the optical correction is a padding increase, not a width change. */

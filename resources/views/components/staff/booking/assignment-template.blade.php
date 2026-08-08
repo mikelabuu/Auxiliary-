@@ -9,10 +9,10 @@
                 <span data-slot="number" class="grid h-11 w-14 shrink-0 place-items-center rounded-xl bg-emerald-deep font-data text-sm font-bold text-cream shadow-sm"></span>
                 <div class="min-w-0">
                     <p data-slot="type" class="truncate text-sm font-bold text-ink"></p>
-                    <p data-slot="meta" class="text-[11px] font-medium text-stone-500"></p>
+                    <p data-slot="meta" class="text-2xs font-medium text-muted"></p>
                 </div>
             </div>
-            <button type="button" data-slot="remove" class="press inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-ember-200 bg-ember-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ember-600 transition-colors hover:bg-ember-100">
+            <button type="button" data-slot="remove" class="press inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-ember-200 bg-ember-50 px-3 py-1.5 text-2xs font-bold uppercase tracking-[0.14em] text-ember-600 transition-colors hover:bg-ember-100">
                 Remove
             </button>
         </div>
@@ -23,7 +23,7 @@
                 <x-staff.booking.stepper label="guests in room" size="sm">
                     <x-staff.booking.input type="number" data-slot="guests" min="1" value="1" align="center" required />
                 </x-staff.booking.stepper>
-                <p data-slot="capacity-hint" class="mt-1.5 text-[10px] font-medium text-stone-400"></p>
+                <p data-slot="capacity-hint" class="mt-1.5 text-2xs font-medium text-faint"></p>
             </div>
             <div>
                 <x-staff.booking.label class="tracking-[0.18em]">Seniors / PWD</x-staff.booking.label>

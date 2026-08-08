@@ -112,7 +112,7 @@ body.lw-updated .data-table tbody tr { animation: none; }
 .quick-nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 10px; border-radius: 10px;
-    font-size: 13px; font-weight: 600; color: var(--color-muted);
+    font-size: var(--fs-sm); font-weight: 600; color: var(--color-muted);
     text-decoration: none;
     transition: background var(--transition), color var(--transition), transform 140ms var(--ease-out);
 }
@@ -125,11 +125,11 @@ body.lw-updated .data-table tbody tr { animation: none; }
    Three levels: compact → comfortable (base .data-table) → large. Header labels
    stay small; only their padding grows so the row rhythm reads bigger. */
 body.density-compact .data-table thead th { padding: 9px 16px; }
-body.density-compact .data-table tbody td { padding: 9px 16px; font-size: 13.5px; }
+body.density-compact .data-table tbody td { padding: 9px 16px; font-size: var(--fs-md); }
 body.density-compact .data-table { min-width: 800px; }
 
-body.density-large .data-table thead th { padding: 18px 24px; font-size: 12px; }
-body.density-large .data-table tbody td { padding: 22px 24px; font-size: 16px; }
+body.density-large .data-table thead th { padding: 18px 24px; font-size: var(--fs-xs); }
+body.density-large .data-table tbody td { padding: 22px 24px; font-size: var(--fs-lg); }
 body.density-large .data-table { min-width: 960px; }
 
 /* Density switches reflow the table in one frame; a brief opacity dip masks

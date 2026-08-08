@@ -10,7 +10,7 @@
                 {{-- Escaped: descriptions are plain text and can embed
                      user-supplied names — never render them as HTML. --}}
                 <p class="text-sm text-stone-700">{{ $activity['description'] }}</p>
-                <p class="text-xs text-stone-400 mt-0.5">{{ $activity['created_at'] }}</p>
+                <p class="text-xs text-faint mt-0.5">{{ $activity['created_at'] }}</p>
             </div>
         </div>
     @endforeach

@@ -12,7 +12,7 @@
     $wingLabel = fn ($w) => ucwords(str_replace('_', ' ', $w));
     $statusMeta = [
         'available'   => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200', 'dot' => 'bg-clsu-400', 'bar' => 'bg-clsu-400', 'label' => 'Available'],
-        'occupied'    => ['badge' => 'bg-clsu-600 text-white border-clsu-700', 'dot' => 'bg-white/70', 'bar' => 'bg-clsu-600', 'label' => 'Occupied'],
+        'occupied'    => ['badge' => 'bg-clsu-700 text-white border-clsu-700', 'dot' => 'bg-white/70', 'bar' => 'bg-clsu-700', 'label' => 'Occupied'],
         'maintenance' => ['badge' => 'bg-ember-50 text-ember-700 border-ember-200', 'dot' => 'bg-ember-500', 'bar' => 'bg-ember-500', 'label' => 'Maintenance'],
         'cleaning'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200', 'dot' => 'bg-palay-500', 'bar' => 'bg-palay-400', 'label' => 'Cleaning'],
     ];
@@ -78,12 +78,12 @@
     <div id="rooms-overview" class="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <x-admin.ui.stat-card icon="bed" badge="ALL WINGS" label="Total Rooms" :delay="40" value-id="statTotalNum">
             {{ $totalRooms }}
-            <x-slot:footnote><p id="statTotalFoot" class="text-xs text-stone-400">Across {{ $roomsByWing->count() }} wings</p></x-slot:footnote>
+            <x-slot:footnote><p id="statTotalFoot" class="text-xs text-faint">Across {{ $roomsByWing->count() }} wings</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="check-circle" badge="READY" label="Available" :delay="80" value-id="statAvailableNum">
             {{ $availableRooms }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Ready for check-in</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Ready for check-in</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="users" badge="IN USE" label="Occupied" :delay="120" value-id="statOccupiedNum" dark>
@@ -93,7 +93,7 @@
 
         <x-admin.ui.stat-card icon="wrench" color="ember" badge="NEEDS ATTENTION" label="Maintenance" :delay="160" value-id="statMaintenanceNum">
             {{ $maintenanceRooms }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Out of rotation</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Out of rotation</p></x-slot:footnote>
         </x-admin.ui.stat-card>
     </div>
 
@@ -118,10 +118,10 @@
     <!-- All Rooms -->
     <x-admin.ui.section-card id="all-rooms" class="scroll-mt-32" icon="grid" title="All Rooms" :subtitle="$totalRooms . ' rooms across ' . $roomsByWing->count() . ' wings'" subtitle-id="allRoomsSubtitle" :delay="280">
         <x-slot:actions>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span id="legendAvailable">{{ $availableRooms }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-600"></span>Occupied · <span id="legendOccupied">{{ $occupiedRooms }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Cleaning · <span id="legendCleaning">{{ $cleaningRooms }}</span></span>
-            <span class="flex items-center gap-1.5 text-[11px] font-medium text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span id="legendMaintenance">{{ $maintenanceRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span id="legendAvailable">{{ $availableRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-clsu-600"></span>Occupied · <span id="legendOccupied">{{ $occupiedRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Cleaning · <span id="legendCleaning">{{ $cleaningRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span id="legendMaintenance">{{ $maintenanceRooms }}</span></span>
         </x-slot:actions>
 
         <!-- Controls -->
@@ -156,9 +156,9 @@
             @endphp
             <div class="wing-group mb-7 last:mb-0" data-wing-group>
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-                    <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">{{ $wingLabel($wing) }} Wing · <span data-wing-count>{{ $group->count() }}</span> room{{ $group->count() === 1 ? '' : 's' }}</p>
+                    <p class="text-2xs font-bold text-faint tracking-widest uppercase">{{ $wingLabel($wing) }} Wing · <span data-wing-count>{{ $group->count() }}</span> room{{ $group->count() === 1 ? '' : 's' }}</p>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-semibold text-stone-400"><span data-wing-open class="text-clsu-700 font-bold">{{ $wingOpen }}</span> available</span>
+                        <span class="text-2xs font-semibold text-faint"><span data-wing-open class="text-clsu-700 font-bold">{{ $wingOpen }}</span> available</span>
                         <div class="h-1.5 w-20 rounded-full bg-stone-200/70 overflow-hidden">
                             <div data-wing-bar class="h-full rounded-full bg-clsu-400 transition-[width] duration-300" style="width: {{ $group->count() ? round($wingOpen / $group->count() * 100) : 0 }}%"></div>
                         </div>
@@ -291,7 +291,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-clsu-600 shrink-0"></span>
                             <span class="font-semibold">Occupied</span>
                         </div>
-                        <p class="text-[11px] text-stone-400 mt-1.5" id="editStatusLockedNote">Set by check-in. Clears on check-out.</p>
+                        <p class="text-2xs text-faint mt-1.5" id="editStatusLockedNote">Set by check-in. Clears on check-out.</p>
                     </div>
                 </div>
             </div>
@@ -328,7 +328,7 @@
                     <x-admin.ui.field type="number" min="1" step="1" id="typeFormCapacity" required />
                 </div>
             </div>
-            <p class="text-[11px] text-stone-400">Changing the base price only affects new rooms. Existing rooms keep their current price.</p>
+            <p class="text-2xs text-faint">Changing the base price only affects new rooms. Existing rooms keep their current price.</p>
         </div>
         <div class="flex gap-2.5 justify-end border-t border-stone-100 px-6 py-4">
             <x-admin.ui.modal-footer close-target="typeModal" submit-label="Save Type" />
@@ -339,7 +339,7 @@
 <!-- ==================== Room Occupancy Modal ==================== -->
 <x-admin.ui.modal id="occupancyModal" icon="eye" title="Room Occupancy">
     <div class="px-6 py-5 space-y-2.5 max-h-[60vh] overflow-y-auto" id="occupancyModalBody">
-        <p class="text-center text-stone-400 text-sm py-6">Loading…</p>
+        <p class="text-center text-faint text-sm py-6">Loading…</p>
     </div>
 </x-admin.ui.modal>
 

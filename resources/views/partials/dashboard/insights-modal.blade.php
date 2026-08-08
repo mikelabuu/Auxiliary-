@@ -39,7 +39,7 @@
                  class="card bento-item overflow-hidden">
                 <div data-bento-summary>
                     <div class="px-3.5 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Total Bookings</p>
+                        <p class="text-2xs font-bold uppercase tracking-wider text-faint">Total Bookings</p>
                         <p class="text-xl font-bold text-stone-900 tabnum mt-0.5">{{ number_format($totalBookings) }}</p>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                  class="card bento-item overflow-hidden">
                 <div data-bento-summary>
                     <div class="px-3.5 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Total Revenue</p>
+                        <p class="text-2xs font-bold uppercase tracking-wider text-faint">Total Revenue</p>
                         <p class="text-xl font-bold text-clsu-700 tabnum mt-0.5">₱{{ number_format($totalRevenue) }}</p>
                     </div>
                 </div>
@@ -85,21 +85,21 @@
                  class="card bento-item overflow-hidden">
                 <div data-bento-summary>
                     <div class="px-3.5 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Peak Month</p>
-                        <p class="text-sm font-bold text-palay-700 mt-1.5">{{ $peakMonthName }} <span class="text-stone-400 font-medium">· {{ $peakMonthCount }}</span></p>
+                        <p class="text-2xs font-bold uppercase tracking-wider text-faint">Peak Month</p>
+                        <p class="text-sm font-bold text-palay-700 mt-1.5">{{ $peakMonthName }} <span class="text-faint font-medium">· {{ $peakMonthCount }}</span></p>
                     </div>
                 </div>
                 <div data-bento-detail>
                     <p class="text-xs text-stone-500 mb-3">Busiest months by bookings</p>
                     @if ($ranked->isEmpty())
-                        <p class="text-[13px] text-stone-400">No bookings recorded yet this year.</p>
+                        <p class="text-[13px] text-faint">No bookings recorded yet this year.</p>
                     @else
                         <ol class="space-y-1.5">
                             @foreach ($ranked as $idx => $m)
                                 <li class="flex items-center gap-3 rounded-lg px-2.5 py-1.5 {{ $idx === 0 ? 'bg-palay-50 border border-palay-200' : '' }}">
-                                    <span class="w-5 text-xs font-bold {{ $idx === 0 ? 'text-palay-700' : 'text-stone-400' }} tabnum">{{ $idx + 1 }}</span>
+                                    <span class="w-5 text-xs font-bold {{ $idx === 0 ? 'text-palay-700' : 'text-faint' }} tabnum">{{ $idx + 1 }}</span>
                                     <span class="flex-1 text-sm font-semibold text-stone-800">{{ $m['label'] }}</span>
-                                    <span class="text-xs font-bold text-stone-700 tabnum">{{ $m['b'] }} <span class="text-stone-400 font-medium">bookings</span></span>
+                                    <span class="text-xs font-bold text-stone-700 tabnum">{{ $m['b'] }} <span class="text-faint font-medium">bookings</span></span>
                                 </li>
                             @endforeach
                         </ol>
@@ -112,7 +112,7 @@
                  class="card bento-item overflow-hidden">
                 <div data-bento-summary>
                     <div class="px-3.5 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Avg / Active Month</p>
+                        <p class="text-2xs font-bold uppercase tracking-wider text-faint">Avg / Active Month</p>
                         <p class="text-xl font-bold text-stone-900 tabnum mt-0.5">{{ $avgPerMonth }}</p>
                     </div>
                 </div>
@@ -121,15 +121,15 @@
                     <div class="grid grid-cols-3 gap-2 mb-4">
                         <div class="rounded-xl border border-stone-200 bg-stone-50/60 px-3 py-2.5 text-center">
                             <p class="text-lg font-bold text-stone-900 tabnum">{{ number_format($totalBookings) }}</p>
-                            <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Bookings</p>
+                            <p class="text-2xs font-semibold uppercase tracking-wide text-faint">Bookings</p>
                         </div>
                         <div class="rounded-xl border border-stone-200 bg-stone-50/60 px-3 py-2.5 text-center">
                             <p class="text-lg font-bold text-stone-900 tabnum">{{ $activeMonths }}</p>
-                            <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Active mo.</p>
+                            <p class="text-2xs font-semibold uppercase tracking-wide text-faint">Active mo.</p>
                         </div>
                         <div class="rounded-xl border border-clsu-200 bg-clsu-50 px-3 py-2.5 text-center">
                             <p class="text-lg font-bold text-clsu-700 tabnum">{{ $avgPerMonth }}</p>
-                            <p class="text-[10px] font-semibold uppercase tracking-wide text-clsu-600/70">Average</p>
+                            <p class="text-2xs font-semibold uppercase tracking-wide text-clsu-600/70">Average</p>
                         </div>
                     </div>
                     <p class="text-[13px] text-stone-500 leading-relaxed">Across <span class="font-semibold text-stone-700">{{ $activeMonths }}</span> {{ $activeMonths === 1 ? 'month' : 'months' }} with at least one booking, the hostel averaged <span class="font-semibold text-stone-700">{{ $avgPerMonth }}</span> bookings per active month.</p>

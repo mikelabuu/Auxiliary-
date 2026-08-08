@@ -45,7 +45,7 @@
             <div class="form-group">
                 <label class="form-label" for="discount_amount">Discount (₱)</label>
                 <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="1" class="form-input tabnum">
-                <p id="discount-hint" class="hidden text-[11px] font-semibold" style="color:var(--color-au-700);"></p>
+                <p id="discount-hint" class="hidden text-2xs font-semibold" style="color:var(--color-au-700);"></p>
             </div>
         </div>
 
@@ -53,12 +53,12 @@
         <div style="padding:22px 26px;background:radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.16) 0%, transparent 50%), linear-gradient(135deg,#10a45c 0%, var(--color-g-700) 100%);color:#fff;">
             <div class="flex items-end justify-between gap-3">
                 <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.24em]" style="color:rgba(255,255,255,.72);">Total payable</p>
+                    <p class="text-2xs font-bold uppercase tracking-[0.24em]" style="color:rgba(255,255,255,.72);">Total payable</p>
                     <p class="mt-1.5 font-display text-3xl font-extrabold leading-none">
                         <span id="summary-total" class="anim-number tabnum" style="display:inline-block;overflow:hidden;"><span>₱0</span></span>
                     </p>
                 </div>
-                <span class="text-[10px] font-bold uppercase tracking-[0.16em]" style="color:rgba(255,255,255,.7);">Manual · Paid</span>
+                <span class="text-2xs font-bold uppercase tracking-[0.16em]" style="color:rgba(255,255,255,.7);">Manual · Paid</span>
             </div>
 
             <button type="submit" id="submit-booking" class="btn btn-center mt-5" style="width:100%;background:#fff;color:var(--color-g-800);font-weight:700;">

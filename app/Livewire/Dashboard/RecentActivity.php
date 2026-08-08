@@ -41,7 +41,7 @@ class RecentActivity extends Component
                     $colorClass = 'bg-palay-50 text-palay-700';
                 } elseif (str_contains($action, 'room') || $target === 'room') {
                     $icon = 'bed';
-                    $colorClass = 'bg-stone-100 text-stone-500';
+                    $colorClass = 'bg-stone-100 text-muted';
                 }
 
                 return [
@@ -59,7 +59,7 @@ class RecentActivity extends Component
                     'description' => 'System initialized · 22 rooms added',
                     'created_at' => '1 week ago',
                     'icon' => 'settings',
-                    'color_class' => 'bg-stone-100 text-stone-500',
+                    'color_class' => 'bg-stone-100 text-muted',
                 ]
             ]);
         }

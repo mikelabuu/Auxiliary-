@@ -11,7 +11,7 @@
 
 <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
     @foreach($keys as $key)
-        <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+        <span class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider text-faint">
             <span class="h-2.5 w-2.5 rounded-[4px] {{ $key['swatch'] }}"></span> {{ $key['label'] }}
         </span>
     @endforeach

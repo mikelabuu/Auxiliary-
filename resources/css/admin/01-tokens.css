@@ -36,7 +36,13 @@
     /* ── Sage Neutrals — green-tinted grays ── */
     --color-ink:    #14201a;
     --color-muted:  #51655a;
-    --color-faint:  #8ba295;
+    /* Tertiary text (labels, timestamps, units). Was #8ba295, which read at
+       2.7:1 on white and 2.5:1 on --color-surface — below WCAG AA (4.5:1) on
+       every surface in the console, across ~300 elements. #5c7266 keeps the
+       sage hue and clears AA on white (5.18:1), surface (4.83:1) and
+       stone-100 (4.56:1). Hierarchy against --color-muted (6.25:1) is held by
+       size/weight/tracking, not by colour alone. */
+    --color-faint:  #5c7266;
     --color-border: #e2ebe4;
     --color-surface: #f4f8f5;
     --color-card:   #ffffff;
@@ -113,6 +119,42 @@
     --color-gold: #f79009;
     --color-gold-soft: #fec84b;
 
+    /* ── Green that is legible as *text* ──
+       --color-g-500 (#16b364) reads 2.6:1 on white, so it works as a fill or a
+       key swatch but never as type. Anything that sets `color:` to the brand
+       should reach for this instead: 5.85:1 on white, 5.46:1 on surface. */
+    --color-brand-ink: #087443;
+
+    /* ── Type scale ──
+       The console had grown 20 distinct sizes on one page, hand-picked in half
+       pixels (9.5 / 10.5 / 11.5 / 12.5 / 13.5 / 15.5) and compounded by nested
+       `em` into runtime values like 11.52px and 13.12px. These steps are the
+       whole scale; 2xs is the floor, so nothing renders below it.
+       Declared here (not only in :root) so `text-2xs` exists as a utility and
+       Blade can stop writing text-[10px].
+
+       Sized for the people who actually run this desk, who are not all in
+       their twenties: the floor is 13px rather than the 11px a dense ops
+       console would normally use, and body copy sits at 17px. Presbyopia and
+       reduced contrast sensitivity both start biting around 40, and 11px
+       tertiary text at weight 400 is the first thing to go. Staff who want
+       the density back have the compact toggle in the topbar. */
+    --text-2xs: 0.8125rem;              /* 13px — labels, eyebrows, badges */
+    --text-2xs--line-height: 1.5;
+
+    /* Tailwind's own steps, retuned to the same scale. Without this the Blade
+       still had two type systems: the component CSS on --fs-*, and several
+       hundred `text-xs` / `text-sm` utilities on Tailwind's stock 12/14px —
+       which is where most of the remaining unreadably-small text lived. Safe
+       to override here because this bundle is loaded only by layouts/admin
+       and layouts/frontdesk; the public site keeps app.css and its defaults. */
+    --text-xs: 0.8125rem;               /* 13px (stock 12px) */
+    --text-xs--line-height: 1.5;
+    --text-sm: 0.9375rem;               /* 15px (stock 14px) */
+    --text-sm--line-height: 1.5;
+    --text-base: 1.0625rem;             /* 17px (stock 16px) */
+    --text-base--line-height: 1.6;
+
     /* Shadows — tinted to the emerald surface hue, never pure black */
     --shadow-soft: 0 1px 2px rgba(9,60,38,.05);
     --shadow-subtle: 0 1px 2px rgba(9,60,38,.05);
@@ -130,6 +172,27 @@
     --topbar-h: 74px;
     --content-max-width: 1640px;
     --base-font-size: 16px;
+
+    /* Type scale, for the component CSS below (see --text-2xs above for the
+       rationale). Six steps, no half pixels, 13px floor. Sizes above --fs-lg
+       are display type (headings, KPI values) and stay literal. */
+    --fs-2xs:  0.8125rem;   /* 13px */
+    --fs-xs:   0.875rem;    /* 14px */
+    --fs-sm:   0.9375rem;   /* 15px */
+    --fs-md:   1rem;        /* 16px */
+    --fs-base: 1.0625rem;   /* 17px */
+    --fs-lg:   1.125rem;    /* 18px */
+
+    /* ── Weight scale ──
+       Geist is loaded as a variable face (300..800), so these are real
+       interpolated weights, not synthetic bolds. Body text used to inherit
+       400, which on a light sage surface reads thin — the single most common
+       complaint about this console. 450 is the new floor: heavier on screen
+       without tipping into the "everything is bold" look that flattens
+       hierarchy. Anything a user has to *find* rather than read sits at 650+. */
+    --fw-body:   450;   /* paragraphs, table cells */
+    --fw-medium: 550;   /* secondary text that must not recede */
+    --fw-strong: 650;   /* labels, buttons, column headers */
 
     /* Shape scale: one soft-radius family, applied everywhere */
     --radius-xs: 7px;

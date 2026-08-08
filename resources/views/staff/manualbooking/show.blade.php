@@ -52,57 +52,57 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             <div class="space-y-4">
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="user" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="user" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Guest Name</p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Guest Name</p>
                         <p class="text-sm font-semibold text-stone-800">{{ $booking->guest_name }}</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="bell" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="bell" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Phone</p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Phone</p>
                         <p class="text-sm font-semibold text-stone-800">{{ $booking->guest_phone }}</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="map-pin" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="map-pin" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Address</p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Address</p>
                         <p class="text-sm font-semibold text-stone-800">{{ $booking->guest_address }}</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="users" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="users" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Expected Guests</p>
-                        <p class="text-sm font-semibold text-stone-800">{{ $booking->expected_guests }} <span class="text-stone-400 font-normal">· {{ $booking->num_seniors }} senior/PWD</span></p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Expected Guests</p>
+                        <p class="text-sm font-semibold text-stone-800">{{ $booking->expected_guests }} <span class="text-faint font-normal">· {{ $booking->num_seniors }} senior/PWD</span></p>
                     </div>
                 </div>
             </div>
             <div class="space-y-4">
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="calendar" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="calendar" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Check-In &rarr; Check-Out</p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Check-In &rarr; Check-Out</p>
                         <p class="text-sm font-semibold text-stone-800 font-data tabnum">{{ \Carbon\Carbon::parse($booking->check_in)->format('M d, Y') }} &rarr; {{ \Carbon\Carbon::parse($booking->check_out)->format('M d, Y') }}</p>
-                        <p class="text-xs text-stone-400 mt-0.5">{{ $nights }} night{{ $nights === 1 ? '' : 's' }}</p>
+                        <p class="text-xs text-faint mt-0.5">{{ $nights }} night{{ $nights === 1 ? '' : 's' }}</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="tag" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="tag" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Status</p>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $badgeClass }}">{{ ucwords(str_replace('_', ' ', $booking->status)) }}</span>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Status</p>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold border {{ $badgeClass }}">{{ ucwords(str_replace('_', ' ', $booking->status)) }}</span>
                     </div>
                 </div>
                 @if($payment)
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0"><x-admin.ui.icon name="credit-card" class="w-4 h-4" /></div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-100 text-muted flex items-center justify-center shrink-0"><x-admin.ui.icon name="credit-card" class="w-4 h-4" /></div>
                     <div>
-                        <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">Payment Reference</p>
+                        <p class="text-2xs font-bold text-faint tracking-widest uppercase">Payment Reference</p>
                         <p class="text-sm font-semibold text-stone-800 font-data tabnum">{{ $payment->reference_no }}</p>
-                        <p class="text-xs text-stone-400 mt-0.5">{{ ucfirst($payment->payment_type) }} · {{ ucfirst($payment->status) }}</p>
+                        <p class="text-xs text-faint mt-0.5">{{ ucfirst($payment->payment_type) }} · {{ ucfirst($payment->status) }}</p>
                     </div>
                 </div>
                 @endif
@@ -138,7 +138,7 @@
                     @foreach($booking->reservations as $res)
                         <tr>
                             <td><span class="cell-tag font-data">{{ $res->room_number }}</span></td>
-                            <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ ucfirst($res->room_type) }}</td>
+                            <td class="text-faint text-2xs font-bold uppercase tracking-wide">{{ ucfirst($res->room_type) }}</td>
                             <td class="font-data tabnum">{{ $res->num_guests }}</td>
                             <td class="font-data tabnum">{{ $res->num_seniors }}</td>
                             <td class="text-right font-data tabnum font-semibold">&#8369;{{ number_format($res->price, 2) }}</td>

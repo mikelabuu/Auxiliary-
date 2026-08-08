@@ -27,8 +27,8 @@
         'frontdesk'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200',    'label' => 'Front Desk'],
         'housekeeping' => ['badge' => 'bg-sky-50 text-sky-700 border-sky-200',           'label' => 'Housekeeping'],
     ];
-    $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors';
-    $labelClasses = 'block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1.5';
+    $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors';
+    $labelClasses = 'block text-2xs font-bold uppercase tracking-widest text-muted mb-1.5';
 
     // Which form (if any) triggered the validation errors, so old() values are
     // routed back to the right modal/card and the modal reopens on load.
@@ -69,17 +69,17 @@
 
         <x-admin.ui.stat-card icon="check-circle" badge="ENABLED" label="Active Accounts" :delay="80">
             {{ number_format($stats['active']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Able to sign in</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Able to sign in</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="settings" color="palay" badge="ELEVATED" label="Admin Accounts" :delay="120">
             {{ number_format($stats['admins']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Master admin and admins</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Master admin and admins</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="block" color="ember" badge="RESTRICTED" label="Suspended" :delay="160">
             {{ number_format($stats['suspended']) }}
-            <x-slot:footnote><p class="text-xs text-stone-400">Sign-in disabled</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Sign-in disabled</p></x-slot:footnote>
         </x-admin.ui.stat-card>
     </div>
 
@@ -142,7 +142,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $staffRole['badge'] }}">{{ $staffRole['label'] }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold border {{ $staffRole['badge'] }}">{{ $staffRole['label'] }}</span>
                                 </td>
                                 <td>
                                     {{-- Role already carries "master"; Standing shows the real
@@ -257,8 +257,8 @@
                 <input type="hidden" name="staff_id" id="esStaffId" value="{{ $errorForm === 'edit-staff' ? old('staff_id') : '' }}">
 
                 <div class="flex items-center gap-2.5 rounded-xl border border-stone-200 bg-stone-50/70 px-4 py-2.5 text-sm">
-                    <x-admin.ui.icon name="user" class="w-4 h-4 text-stone-400 shrink-0" />
-                    <span class="text-stone-500">Editing:</span>
+                    <x-admin.ui.icon name="user" class="w-4 h-4 text-faint shrink-0" />
+                    <span class="text-muted">Editing:</span>
                     <span id="esTarget" class="font-semibold text-stone-800 truncate">{{ $errorForm === 'edit-staff' ? (old('name') ?: 'Staff #' . old('staff_id')) : '' }}</span>
                 </div>
 
@@ -281,7 +281,7 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-stone-400">(optional)</span></label>
+                        <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-faint">(optional)</span></label>
                         <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6">
                     </div>
                     <div>
@@ -300,15 +300,15 @@
     {{-- Activity modal (populated via AJAX) --}}
     <x-admin.ui.modal id="staffActivityModal" icon="clock" title="Recent Activity" max-width="lg" scroll-body>
         <div class="p-6">
-            <div id="saLoading" class="py-8 text-center text-sm text-stone-400">Loading activity…</div>
+            <div id="saLoading" class="py-8 text-center text-sm text-faint">Loading activity…</div>
             <div id="saBody" class="hidden space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <p id="saName" class="font-semibold text-stone-800"></p>
-                    <p id="saLastLogin" class="text-xs text-stone-400 font-data tabnum"></p>
+                    <p id="saLastLogin" class="text-xs text-faint font-data tabnum"></p>
                 </div>
                 <div id="saLogs" class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden"></div>
-                <p id="saEmpty" class="hidden text-sm text-stone-400 text-center py-4">No recorded activity yet.</p>
-                <p class="text-[11px] text-stone-400">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="text-clsu-700 font-semibold hover:underline">Audit Logs</a>.</p>
+                <p id="saEmpty" class="hidden text-sm text-faint text-center py-4">No recorded activity yet.</p>
+                <p class="text-2xs text-faint">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="text-clsu-700 font-semibold hover:underline">Audit Logs</a>.</p>
             </div>
         </div>
     </x-admin.ui.modal>
@@ -366,10 +366,10 @@ $(document).on('click', '.activity-btn', function () {
                 const $row = $('<div class="px-4 py-3 bg-white"></div>');
                 const $top = $('<div class="flex items-center justify-between gap-3"></div>');
                 $top.append($('<span class="text-xs font-bold text-stone-800"></span>').text(log.action + (log.target ? ' · ' + log.target : '')));
-                $top.append($('<span class="text-[11px] text-stone-400 font-data tabnum whitespace-nowrap shrink-0"></span>').text(log.when));
+                $top.append($('<span class="text-2xs text-faint font-data tabnum whitespace-nowrap shrink-0"></span>').text(log.when));
                 $row.append($top);
                 if (log.description) {
-                    $row.append($('<p class="text-xs text-stone-500 mt-1"></p>').text(log.description));
+                    $row.append($('<p class="text-xs text-muted mt-1"></p>').text(log.description));
                 }
                 $logs.append($row);
             });

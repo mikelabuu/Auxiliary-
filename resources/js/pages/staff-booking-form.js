@@ -145,11 +145,11 @@ function initStaffBookingForm() {
     function setAvailabilityStatus(stateName) {
         if (stateName === 'loading') {
             availabilityStatusEl.innerHTML = `
-                <svg class="w-3.5 h-3.5 animate-spin text-stone-400" viewBox="0 0 24 24" fill="none">
+                <svg class="w-3.5 h-3.5 animate-spin text-faint" viewBox="0 0 24 24" fill="none">
                     <circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"></circle>
                     <path class="opacity-75" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
                 </svg>
-                <span class="text-stone-400">Checking room availability…</span>`;
+                <span class="text-faint">Checking room availability…</span>`;
             return;
         }
         if (stateName === 'error') {
@@ -201,7 +201,7 @@ function initStaffBookingForm() {
             .catch(err => {
                 console.error('Room availability fetch error:', err);
                 setAvailabilityStatus('error');
-                board.innerHTML = '<p class="rounded-2xl border border-ember-200 bg-ember-50 px-5 py-4 text-sm font-semibold text-ember-600">Could not load the room board. Change the dates to retry.</p>';
+                board.innerHTML = '<p class="rounded-2xl border border-ember-200 bg-ember-50 px-5 py-4 text-sm font-semibold text-ember-700">Could not load the room board. Change the dates to retry.</p>';
             });
     }
 
@@ -245,8 +245,8 @@ function initStaffBookingForm() {
         selected:    'border-emerald-deep bg-emerald-deep text-cream shadow-card -translate-y-0.5 cursor-pointer',
         booked:      'border-ember-200 bg-ember-50/70 text-ember-400 cursor-not-allowed opacity-75',
         cleaning:    'border-palay-300 bg-palay-100/70 text-palay-700 cursor-not-allowed opacity-75',
-        maintenance: 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed opacity-60',
-        occupied:    'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed opacity-60',
+        maintenance: 'border-stone-200 bg-stone-100 text-faint cursor-not-allowed opacity-60',
+        occupied:    'border-stone-200 bg-stone-100 text-faint cursor-not-allowed opacity-60',
     };
     const TILE_TAGS = { booked: 'Booked', cleaning: 'Cleaning', maintenance: 'Repair', occupied: 'In use' };
 
@@ -277,16 +277,16 @@ function initStaffBookingForm() {
 
     function pillHtml(slug, label, openCount) {
         const active = state.activeType === slug;
-        return `<button type="button" data-type-pill="${esc(slug)}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-emerald-deep hover:border-clsu-400 hover:bg-clsu-50'}">
+        return `<button type="button" data-type-pill="${esc(slug)}" class="press inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-2xs font-bold transition-colors ${active ? 'border-emerald-deep bg-emerald-deep text-cream' : 'border-emerald-deep/15 bg-white text-brand-ink-deep hover:border-clsu-400 hover:bg-clsu-50'}">
             ${esc(label)}
-            <span class="rounded-full px-1.5 py-0.5 font-data text-[9px] leading-none ${active ? 'bg-cream/15 text-cream' : 'bg-clsu-50 text-clsu-700'}">${openCount}</span>
+            <span class="rounded-full px-1.5 py-0.5 font-data text-2xs leading-none ${active ? 'bg-cream/15 text-cream' : 'bg-clsu-50 text-clsu-700'}">${openCount}</span>
         </button>`;
     }
 
     function renderBoard() {
         const groups = typeGroups();
         if (!state.rooms.length) {
-            board.innerHTML = `<p class="rounded-2xl border border-dashed border-emerald-deep/20 bg-white/50 px-5 py-6 text-center text-sm font-medium text-stone-400">${esc(EMPTY_BOARD_MESSAGE)}</p>`;
+            board.innerHTML = `<p class="rounded-2xl border border-dashed border-emerald-deep/20 bg-white/50 px-5 py-6 text-center text-sm font-medium text-faint">${esc(EMPTY_BOARD_MESSAGE)}</p>`;
             return;
         }
         let html = '';
@@ -303,16 +303,16 @@ function initStaffBookingForm() {
                 <header class="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
                     <div class="flex items-baseline gap-2.5">
                         <h5 class="text-xs font-bold uppercase tracking-[0.18em] text-ink/80">${esc(rooms[0].type_name || slug)}</h5>
-                        <span class="text-[11px] font-semibold text-stone-400">${priceLabel} · sleeps ${cap}</span>
+                        <span class="text-2xs font-semibold text-faint">${priceLabel} · sleeps ${cap}</span>
                     </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider ${open ? 'text-clsu-600' : 'text-ember-500'}">${open ? open + ' open' : 'Fully booked'}</span>
+                    <span class="text-2xs font-bold uppercase tracking-wider ${open ? 'text-clsu-700' : 'text-ember-600'}">${open ? open + ' open' : 'Fully booked'}</span>
                 </header>
                 <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6">
                     ${rooms.map((r, i) => tileHtml(r, i)).join('')}
                 </div>
             </section>`;
         });
-        board.innerHTML = html || '<p class="px-2 py-4 text-sm font-medium text-stone-400">No rooms of this type.</p>';
+        board.innerHTML = html || '<p class="px-2 py-4 text-sm font-medium text-faint">No rooms of this type.</p>';
 
         board.querySelectorAll('[data-room-tile]').forEach(tile => {
             tile.addEventListener('click', () => {
@@ -328,10 +328,10 @@ function initStaffBookingForm() {
         const styleKey = isSelected ? 'selected' : room.status;
         const cls = TILE_STYLES[styleKey] || TILE_STYLES.maintenance;
         const tag = !isSelected && TILE_TAGS[room.status]
-            ? `<span class="mt-0.5 text-[8px] font-black uppercase tracking-[0.14em]">${TILE_TAGS[room.status]}</span>`
-            : `<span class="mt-0.5 text-[9px] font-semibold uppercase tracking-wide ${isSelected ? 'text-cream/70' : 'text-stone-400'}">${esc(wingLabel(room.wing)) || '&nbsp;'}</span>`;
+            ? `<span class="mt-0.5 text-2xs font-black uppercase tracking-[0.14em]">${TILE_TAGS[room.status]}</span>`
+            : `<span class="mt-0.5 text-2xs font-semibold uppercase tracking-wide ${isSelected ? 'text-cream/70' : 'text-faint'}">${esc(wingLabel(room.wing)) || '&nbsp;'}</span>`;
         const check = isSelected
-            ? '<span class="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-emerald-deep"><svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
+            ? '<span class="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-brand-ink-deep"><svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
             : '';
         const anim = room.status === 'available' || isSelected ? `style="animation:popIn .28s cubic-bezier(.16,1,.3,1) both;animation-delay:${Math.min(i, 20) * 18}ms"` : '';
         return `<button type="button" data-room-tile="${esc(room.room_number)}" ${anim} class="${TILE_BASE} ${cls}" ${room.status !== 'available' ? 'disabled' : ''} aria-pressed="${isSelected}">

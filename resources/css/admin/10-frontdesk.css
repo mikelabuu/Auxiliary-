@@ -68,10 +68,10 @@
 /* ── Band chrome: brand, clock, staff chip, icon buttons ── */
 .fd-brand-title {
     font-family: var(--font-display);
-    font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; color: #f6faf7;
+    font-size: var(--fs-lg); font-weight: 700; letter-spacing: -.01em; color: #f6faf7;
 }
 .fd-brand-sub {
-    font-size: 9.5px; font-weight: 700; letter-spacing: .3em;
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .3em;
     text-transform: uppercase; color: rgba(159, 211, 180, .75);
 }
 
@@ -92,10 +92,10 @@
 }
 
 .fd-clock {
-    font-family: var(--font-mono); font-size: 13.5px; font-weight: 600;
+    font-family: var(--font-mono); font-size: var(--fs-md); font-weight: 600;
     font-variant-numeric: tabular-nums; color: #e7f0e9;
 }
-.fd-clock-date { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(190, 210, 197, .55); }
+.fd-clock-date { font-size: var(--fs-2xs); letter-spacing: .14em; text-transform: uppercase; color: rgba(190, 210, 197, .55); }
 
 .fd-chip {
     display: inline-flex; align-items: center; gap: 10px;
@@ -108,12 +108,12 @@
 .fd-avatar {
     width: 32px; height: 32px; border-radius: 50%;
     display: grid; place-items: center;
-    font-family: var(--font-display); font-size: 13px; font-weight: 700; color: #fff;
+    font-family: var(--font-display); font-size: var(--fs-sm); font-weight: 700; color: #fff;
     background: linear-gradient(135deg, #16b364, #087443);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
 }
-.fd-chip-name { font-size: 12.5px; font-weight: 700; color: #f2f7f3; line-height: 1.15; }
-.fd-chip-role { font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(159, 211, 180, .7); }
+.fd-chip-name { font-size: var(--fs-sm); font-weight: 700; color: #f2f7f3; line-height: 1.15; }
+.fd-chip-role { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(159, 211, 180, .7); }
 
 .fd-iconbtn {
     display: grid; place-items: center; width: 40px; height: 40px;
@@ -131,7 +131,7 @@
 
 /* ── Greeting: date line + display headline with per-character reveal ── */
 .fd-eyebrow {
-    font-size: 11px; font-weight: 700; letter-spacing: .18em;
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .18em;
     text-transform: uppercase; color: #9fd3b4;
 }
 .fd-greeting {
@@ -172,7 +172,7 @@
     position: relative; z-index: 1;
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 18px; border-radius: 999px;
-    font-size: 12px; font-weight: 700; letter-spacing: .09em;
+    font-size: var(--fs-xs); font-weight: 700; letter-spacing: .09em;
     text-transform: uppercase; white-space: nowrap; text-decoration: none;
     color: rgba(233, 242, 236, .64);
     transition: color var(--transition);

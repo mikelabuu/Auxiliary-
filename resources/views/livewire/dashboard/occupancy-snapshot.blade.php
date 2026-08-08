@@ -35,23 +35,23 @@
                 stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $dashOffset }}" />
       </svg>
       <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <p class="text-[28px] font-extrabold font-data tabnum text-stone-900 leading-none">{{ round($percent) }}<span class="text-lg text-stone-400">%</span></p>
-        <p class="text-[9.5px] font-bold text-stone-400 tracking-[0.15em] mt-1">OCCUPIED</p>
+        <p class="text-[28px] font-extrabold font-data tabnum text-stone-900 leading-none">{{ round($percent) }}<span class="text-lg text-faint">%</span></p>
+        <p class="text-2xs font-bold text-faint tracking-[0.15em] mt-1">OCCUPIED</p>
       </div>
     </div>
     
     <div class="mt-5 space-y-1.5 w-full">
       <div class="flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-100 border border-clsu-300"></span>Available</span>
+        <span class="flex items-center gap-1.5 text-muted"><span class="w-2 h-2 rounded-full bg-clsu-100 border border-clsu-300"></span>Available</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $available }}</span>
       </div>
       <div class="flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-clsu-500"></span>Occupied</span>
+        <span class="flex items-center gap-1.5 text-muted"><span class="w-2 h-2 rounded-full bg-clsu-500"></span>Occupied</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $occupied }}</span>
       </div>
       @if($outOfService > 0)
       <div class="flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1.5 text-stone-500"><span class="w-2 h-2 rounded-full bg-ember-100 border border-ember-400"></span>Out of service</span>
+        <span class="flex items-center gap-1.5 text-muted"><span class="w-2 h-2 rounded-full bg-ember-100 border border-ember-400"></span>Out of service</span>
         <span class="font-bold font-data text-stone-700 tabnum">{{ $outOfService }}</span>
       </div>
       @endif
@@ -59,11 +59,11 @@
   </div>
 
   <div class="mt-5 pt-4 border-t border-stone-100 space-y-2.5">
-    <p class="text-[10px] font-bold text-stone-400 tracking-widest uppercase">BY ROOM TYPE</p>
+    <p class="text-2xs font-bold text-faint tracking-widest uppercase">BY ROOM TYPE</p>
     <div>
       <div class="flex items-center justify-between text-xs mb-1">
         <span class="text-stone-600 font-medium">Dorm Beds</span>
-        <span class="text-stone-400 font-data tabnum">{{ $dormOccupied }} / {{ $dormTotal }}</span>
+        <span class="text-faint font-data tabnum">{{ $dormOccupied }} / {{ $dormTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $dormPercent }}%"></div>
@@ -72,7 +72,7 @@
     <div>
       <div class="flex items-center justify-between text-xs mb-1">
         <span class="text-stone-600 font-medium">Standard Rooms</span>
-        <span class="text-stone-400 font-data tabnum">{{ $standardOccupied }} / {{ $standardTotal }}</span>
+        <span class="text-faint font-data tabnum">{{ $standardOccupied }} / {{ $standardTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $standardPercent }}%"></div>
@@ -81,7 +81,7 @@
     <div>
       <div class="flex items-center justify-between text-xs mb-1">
         <span class="text-stone-600 font-medium">Deluxe Rooms</span>
-        <span class="text-stone-400 font-data tabnum">{{ $deluxeOccupied }} / {{ $deluxeTotal }}</span>
+        <span class="text-faint font-data tabnum">{{ $deluxeOccupied }} / {{ $deluxeTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
         <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $deluxePercent }}%"></div>

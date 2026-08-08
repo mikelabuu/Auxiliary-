@@ -41,7 +41,7 @@
         'manual'        => 'Manual / Walk-in',
     ];
 
-    $chipClass = 'filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer';
+    $chipClass = 'filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-muted hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer';
 @endphp
 
 @section('content')
@@ -69,7 +69,7 @@
         <div class="space-y-5">
             <!-- Report category -->
             <div>
-                <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Report Category</p>
+                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Report Category</p>
                 <div id="reportTypeGroup" class="flex flex-wrap gap-2">
                     <button type="button" class="report-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-report-type="booking">Booking Report</button>
                     <button type="button" class="report-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-report-type="payment">Financial Report</button>
@@ -79,7 +79,7 @@
 
             <!-- Timeframe -->
             <div>
-                <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Timeframe</p>
+                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Timeframe</p>
                 <div id="dateTypeGroup" class="flex flex-wrap gap-2 mb-3">
                     <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="monthly">Monthly</button>
                     <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="yearly">Yearly</button>
@@ -97,7 +97,7 @@
                     <select id="date_year" aria-label="Report year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors"></select>
                     <div id="dateRangeInputs" class="hidden flex-wrap items-center gap-2">
                         <input type="date" id="date_from" aria-label="Report start date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
-                        <span class="text-xs text-stone-400 font-medium">to</span>
+                        <span class="text-xs text-faint font-medium">to</span>
                         <input type="date" id="date_to" aria-label="Report end date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
                     </div>
                 </div>
@@ -105,7 +105,7 @@
 
             <!-- Status filter chip groups -->
             <div id="group_booking_status" class="filter-group">
-                <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Booking Status</p>
+                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Booking Status</p>
                 <div class="flex flex-wrap gap-1.5" data-filter-chips="booking_status">
                     <button type="button" class="{{ $chipClass }}" data-filter-group="booking_status" data-filter-value="all">All Statuses</button>
                     @foreach ($bookingStatusChips as $value => $label)
@@ -115,7 +115,7 @@
             </div>
 
             <div id="group_payment_status" class="filter-group">
-                <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Payment Status</p>
+                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Payment Status</p>
                 <div class="flex flex-wrap gap-1.5" data-filter-chips="payment_status">
                     <button type="button" class="{{ $chipClass }}" data-filter-group="payment_status" data-filter-value="all">All Statuses</button>
                     @foreach ($paymentStatusChips as $value => $label)
@@ -125,7 +125,7 @@
             </div>
 
             <div id="group_gateway" class="filter-group">
-                <p class="text-[10px] font-bold text-stone-500 tracking-widest uppercase mb-2">Gateway</p>
+                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Gateway</p>
                 <div class="flex flex-wrap gap-1.5" data-filter-chips="gateway">
                     <button type="button" class="{{ $chipClass }}" data-filter-group="gateway" data-filter-value="all">All Gateways</button>
                     @foreach ($gatewayChips as $value => $label)
@@ -163,7 +163,7 @@
     <x-admin.ui.section-card icon="chart-bar" title="Report Results" :delay="80">
         <x-slot:actions>
             <div class="flex items-center gap-2">
-                <label for="perPage" class="text-[10px] font-bold text-stone-500 tracking-widest uppercase">Rows</label>
+                <label for="perPage" class="text-2xs font-bold text-muted tracking-widest uppercase">Rows</label>
                 <select id="perPage" class="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors">
                     @foreach (\App\Services\ReportService::PAGE_SIZES as $size)
                         <option value="{{ $size }}">{{ $size }}</option>

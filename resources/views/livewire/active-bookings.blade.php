@@ -35,7 +35,7 @@
                                 <td class="font-data tabnum">{{ $booking->check_in->format('M d, Y') }}</td>
                                 <td class="font-data tabnum">{{ $booking->check_out->format('M d, Y') }}</td>
                                 <td><span class="cell-tag font-data">{{ $res->room_number }}</span></td>
-                                <td class="text-faint text-[11px] font-bold uppercase tracking-wide">{{ $res->room->room_type ?? '—' }}</td>
+                                <td class="text-faint text-2xs font-bold uppercase tracking-wide">{{ $res->room->room_type ?? '—' }}</td>
                             </tr>
                         @endforeach
                     @endforeach

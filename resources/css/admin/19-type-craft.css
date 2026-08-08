@@ -1,0 +1,314 @@
+/* Part 19 of the admin bundle — legibility + component craft.
+   Imported after every component layer so these rules settle on top of the
+   per-component sizing; see resources/css/admin.css for the import order.
+
+   The console is run all day by front-desk staff across a wide age range, on
+   1080p monitors at arm's length. That audience — not a design trend — is
+   what this layer is tuned for:
+
+     1. numerals that line up in a column,
+     2. text that is large and solid enough to read without leaning in,
+     3. controls big enough to hit and obviously clickable,
+     4. focus and status that survive imperfect colour vision.
+
+   Where a rule trades density for legibility, legibility wins: the topbar's
+   compact density toggle is there for staff who want the rows back.
+   ============================================================ */
+
+/* ============================================================
+   1. TABULAR FIGURES
+   ------------------------------------------------------------
+   Geist ships proportional figures by default, so a column of money or
+   room counts jitters: the "1" is narrower than the "8", and totals stop
+   lining up on the decimal. Every surface that stacks numbers vertically
+   — or that the eye compares across a row — opts into lining tabular
+   figures. Prose keeps proportional figures, which is why this is a list
+   of data surfaces rather than a blanket rule on <body>.
+   ============================================================ */
+.data-table td,
+.data-table th,
+.stat-value,
+.stat-card__value,
+.mini-stat__value,
+.map-stat__n,
+.kpi-value,
+.dash-revenue__value,
+.dash-revenue__cents,
+.ops-log-table td,
+.room-card__meta,
+.booking-ref,
+.money,
+.font-data,
+time,
+[data-count-to] {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/* Reference codes and money read as data, not prose: the mono face keeps
+   the character count visually constant so a mistyped ref is easier to
+   spot against its neighbours. */
+.booking-ref,
+.money {
+    font-family: var(--font-mono);
+    letter-spacing: -.01em;
+}
+
+/* ============================================================
+   2. LEGIBLE TEXT
+   ------------------------------------------------------------
+   Two separate problems, both of which read to a user as "the text is
+   too small": actual size, and stroke weight. Geist at 400 on a light
+   sage surface has thin stems that fill in at small sizes.
+
+   --fs-2xs (13px) is the floor. These are the classes that used to sit
+   under it, pinned so a future edit cannot quietly drop below again.
+   ============================================================ */
+.sidebar-section-label,
+.stat-period,
+.topbar-search-kbd,
+.room-type-label,
+.room-updated,
+.filter-row-label,
+.cell-name-secondary,
+.quick-action-sub,
+.map-stat__top,
+.section-label,
+.kv-label {
+    font-size: var(--fs-2xs);
+}
+
+/* Tertiary text is the most-reported "I can't read that" surface: it is
+   the smallest *and* the lightest colour. It does not get to be light
+   weight as well — --color-faint already carries the recession. */
+.cell-name-secondary,
+.room-updated,
+.quick-action-sub,
+.stat-period,
+.text-faint,
+.text-muted {
+    font-weight: var(--fw-medium);
+}
+
+/* Uppercase micro-labels stay uppercase — they are short, and caps is a
+   real signal for "this names the thing below it". But caps removes the
+   word-shape cue that makes reading fast, so they have to pay for it in
+   size and weight, and they keep generous tracking (caps need *more*
+   letter-spacing, not less, or the forms crowd). */
+.sidebar-section-label,
+.stat-period,
+.room-type-label,
+.filter-row-label,
+.section-label,
+.kv-label,
+.data-table thead th {
+    font-weight: 700;
+    letter-spacing: .07em;
+}
+
+/* Body copy and table cells: the reading surfaces. */
+.data-table tbody td {
+    font-weight: var(--fw-body);
+    line-height: 1.5;
+}
+
+/* Row-leading identifiers (guest name, room number, reference) are what
+   the eye scans for; they get weight so the row has an anchor. */
+.data-table tbody td:first-child,
+.cell-name-primary {
+    font-weight: var(--fw-strong);
+}
+
+/* ============================================================
+   3. POINTER TARGETS
+   ------------------------------------------------------------
+   The audit found 71 controls under 32px — the worst being the room
+   card's edit/kebab pair (28×28, 44 of them on one page) and the room
+   type tile's edit affordance (24×24). Small targets cost everyone time
+   and cost anyone with a tremor or reduced fine motor control far more,
+   so this is the 44px touch guideline rather than a mouse-only 32px.
+
+   The area is grown with a pseudo-element rather than min-width /
+   padding: these buttons sit in tight card headers and absolutely
+   positioned corners, so changing their box would move the layout. The
+   ::after costs nothing visually and clicks on it still resolve to the
+   button. `border-radius: inherit` keeps the (invisible) target the
+   same shape as the control, which matters for the round kebabs.
+   ============================================================ */
+.room-edit-btn,
+.room-kebab-btn,
+.filter-chip,
+.report-type-btn,
+.date-type-btn,
+.stay-preset {
+    position: relative;
+}
+
+/* .type-edit-btn is already absolutely positioned — it is deliberately
+   left out of the rule above so its own offsets are not overridden. */
+.room-edit-btn::after,
+.room-kebab-btn::after,
+.type-edit-btn::after,
+.filter-chip::after,
+.report-type-btn::after,
+.date-type-btn::after,
+.stay-preset::after {
+    content: '';
+    position: absolute;
+    inset: -8px;              /* 24→40, 28→44, 30→46 */
+    border-radius: inherit;
+}
+
+/* Buttons and inputs are the two things staff touch all day. 44px is the
+   floor for both, and the text inside is set at body size — a 13px label
+   in a 44px button is the "accessible but still unreadable" trap. */
+.btn,
+.btn-sm,
+.dash-btn,
+.filter-chip,
+.filter-tab,
+.report-type-btn,
+.date-type-btn,
+.stay-preset,
+.pager-btn,
+.section-nav-link,
+.quick-nav-item {
+    min-height: 44px;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-strong);
+}
+
+/* Square icon-only controls: sized as squares so min-height alone does not
+   stretch them into rectangles. */
+.sidebar-collapse-btn,
+.sidebar-action-btn,
+.topbar-icon-btn,
+.room-edit-btn,
+.room-kebab-btn,
+.type-edit-btn,
+.pager-btn,
+.filter-clear {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.btn-lg { min-height: 52px; }
+
+/* .btn-icon is square by definition — keep it square at the new floor
+   rather than letting min-height alone stretch it into a rectangle. */
+.btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="number"], input[type="search"], input[type="tel"],
+input[type="date"], input[type="time"], input[type="datetime-local"],
+select, textarea,
+.form-input, .form-select, .input-field {
+    min-height: 44px;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-body);
+}
+
+textarea { min-height: 96px; }
+
+/* A form is unusable if you cannot tell which field you are in. The
+   label sits at body size and full strength rather than the whispered
+   micro-caps that dashboards default to. */
+label, .form-label {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
+    line-height: 1.4;
+}
+
+.sidebar-link,
+.mb-step,
+.press,
+.user-menu-link {
+    min-height: 44px;
+}
+
+/* Small inline links ("Ledger", "View all") get a hit area without
+   gaining visual bulk: the padding is negative-margined back out so
+   surrounding layout is untouched. */
+.dash-revenue__link,
+.section-link {
+    padding: 11px 6px;
+    margin: -11px -6px;
+}
+
+/* Controls that sit *inside* a table cell or beside a reference string
+   cannot grow their box without pushing the row taller — ten "Copy"
+   buttons setting a 44px row height would undo the density the table
+   needs. They get the pseudo-element hit area instead, so the target is
+   full size while the row keeps its height. */
+.copy-ref,
+.cell-action,
+button.text-stone-300 {
+    position: relative;
+}
+
+.copy-ref::after,
+.cell-action::after,
+button.text-stone-300::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: inherit;
+}
+
+/* ============================================================
+   4. FOCUS, AND STATUS THAT IS NOT ONLY COLOUR
+   ------------------------------------------------------------
+   A thin 1px focus ring in a mid-tone green is the first thing to
+   disappear for a user with cataracts or a cheap monitor. This one is
+   3px, in the darkest brand green, and carries a white outer edge so it
+   stays visible on both the white cards and the sage page background.
+   ============================================================ */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-g-800);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+    /* The white halo is what keeps the ring readable where it lands on a
+       dark button fill rather than a light surface. */
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, .95);
+}
+
+/* Status badges carry a shape/weight difference as well as a hue, so
+   "paid" and "pending" are still distinguishable to the ~8% of men with
+   a red-green deficiency — which, on a hostel front desk, is not a
+   hypothetical user. */
+.badge,
+.status-badge,
+.status-chip {
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 5px 11px;
+    border-width: 1.5px;
+    border-style: solid;
+}
+
+/* ============================================================
+   5. STRUCTURE THE EYE CAN FOLLOW
+   ------------------------------------------------------------
+   Hairline dividers at 4% opacity are invisible to the audience this
+   console is for. Rows and card edges get a border that is actually a
+   border, and rows get a hover band wide enough to track across a
+   1640px table without losing your place.
+   ============================================================ */
+.data-table tbody td {
+    border-bottom-color: var(--color-border);
+}
+
+.data-table tbody tr:hover td {
+    background: var(--color-g-50);
+}
+
+/* Zebra banding is the cheapest way to stop the eye slipping a row on a
+   wide table. Kept very light so it reads as texture, not as state —
+   hover and selection still win. */
+.data-table tbody tr:nth-child(even):not(:hover) td {
+    background: color-mix(in srgb, var(--color-surface) 55%, #fff);
+}

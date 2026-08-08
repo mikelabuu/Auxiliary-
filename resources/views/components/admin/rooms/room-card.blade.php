@@ -41,15 +41,15 @@
     <div class="status-bar h-1 rounded-t-xl {{ $meta['bar'] }}"></div>
 
     <div class="absolute top-3 right-2.5 flex items-center gap-1 z-10">
-        <button type="button" class="room-edit-btn w-7 h-7 rounded-lg bg-white/95 border border-stone-200 text-stone-400 hover:text-clsu-700 hover:border-clsu-300 hover:bg-clsu-50 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40" data-id="{{ $room->id }}" title="Edit room" aria-label="Edit room">
+        <button type="button" class="room-edit-btn w-7 h-7 rounded-lg bg-white/95 border border-stone-200 text-faint hover:text-clsu-700 hover:border-clsu-300 hover:bg-clsu-50 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40" data-id="{{ $room->id }}" title="Edit room" aria-label="Edit room">
             <x-admin.ui.icon name="edit" class="w-3.5 h-3.5" />
         </button>
         <div class="relative">
-            <button type="button" class="room-kebab-btn w-7 h-7 rounded-lg bg-white/95 border border-stone-200 text-stone-400 hover:text-clsu-700 hover:border-clsu-300 hover:bg-clsu-50 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40" data-id="{{ $room->id }}" title="More actions" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
+            <button type="button" class="room-kebab-btn w-7 h-7 rounded-lg bg-white/95 border border-stone-200 text-faint hover:text-clsu-700 hover:border-clsu-300 hover:bg-clsu-50 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40" data-id="{{ $room->id }}" title="More actions" aria-label="More actions" aria-haspopup="true" aria-expanded="false">
                 <x-admin.ui.icon name="kebab" class="w-3.5 h-3.5" stroke-width="2" />
             </button>
             <div data-kebab-panel class="hidden animate-pop absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl border border-stone-200 shadow-card-lg overflow-hidden z-20 py-1">
-                <p class="px-3.5 pt-1.5 pb-1 text-[10px] font-bold text-stone-400 tracking-wide uppercase">Set status</p>
+                <p class="px-3.5 pt-1.5 pb-1 text-2xs font-bold text-faint tracking-wide uppercase">Set status</p>
                 @foreach($settable as $statusKey => $sm)
                     <button type="button" class="quick-status-btn w-full flex items-center gap-2 px-3.5 py-1.5 text-xs text-stone-600 hover:bg-clsu-50 hover:text-clsu-800 transition-colors" data-status-value="{{ $statusKey }}">
                         <span class="w-1.5 h-1.5 rounded-full {{ $sm['dot'] }}"></span>
@@ -58,7 +58,7 @@
                     </button>
                 @endforeach
                 @if(in_array($room->status, \App\Models\Room::DERIVED_STATUSES, true))
-                    <p class="px-3.5 pt-1 pb-1.5 text-[10px] text-clsu-700 bg-clsu-50/70 leading-snug">
+                    <p class="px-3.5 pt-1 pb-1.5 text-2xs text-clsu-700 bg-clsu-50/70 leading-snug">
                         Occupied by check-in{{ $current ? ' · ' . $current['guest'] : '' }} — check out to free this room.
                     </p>
                 @endif
@@ -80,7 +80,7 @@
         </div>
 
         <div class="room-card-chips">
-            <span class="room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $meta['badge'] }}">
+            <span class="room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border {{ $meta['badge'] }}">
                 <span class="room-status-dot w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
                 <span class="room-status-text">{{ $meta['label'] }}</span>
             </span>
@@ -92,14 +92,14 @@
                  utilities, and Tailwind emits `inline-flex` after `hidden`, so
                  the two together left this badge permanently visible — every
                  room read "Unpaid hold" regardless of its bookings. --}}
-            <span class="room-hold-badge items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border border-palay-200 bg-palay-50 text-palay-800">
+            <span class="room-hold-badge items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border border-palay-200 bg-palay-50 text-palay-800">
                 <span class="w-1.5 h-1.5 rounded-full bg-palay-500"></span>
                 Unpaid hold
             </span>
         </div>
 
         <div class="room-stay-block">
-            <p class="room-stay-line flex items-center gap-1 text-[10px] {{ $stayClass }}" data-kind="{{ $stayKind }}" @if($stayTitle) title="{{ $stayTitle }}" @endif>
+            <p class="room-stay-line flex items-center gap-1 text-2xs {{ $stayClass }}" data-kind="{{ $stayKind }}" @if($stayTitle) title="{{ $stayTitle }}" @endif>
                 <x-admin.ui.icon :name="$stayIcon" class="w-3 h-3 shrink-0" stroke-width="2" />
                 <span class="room-stay-text">{{ $stayLabel }}</span>
             </p>

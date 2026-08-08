@@ -75,7 +75,7 @@ function initAdminRooms() {
             const isActive = activeTypeFilter === t.slug;
             return (
                 '<div class="type-tile relative bg-white rounded-xl border ' + (isActive ? 'border-clsu-400 ring-1 ring-clsu-200' : 'border-stone-200') + ' shadow-subtle hover:shadow-card overflow-hidden cursor-pointer" data-type-tile="' + t.slug + '">' +
-                    '<button type="button" class="type-edit-btn absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/95 border border-stone-200 text-stone-400 hover:text-clsu-700 hover:border-clsu-300 flex items-center justify-center transition-colors" data-edit-type="' + t.id + '" aria-label="Edit ' + t.name + '">' +
+                    '<button type="button" class="type-edit-btn absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/95 border border-stone-200 text-faint hover:text-clsu-700 hover:border-clsu-300 flex items-center justify-center transition-colors" data-edit-type="' + t.id + '" aria-label="Edit ' + t.name + '">' +
                         '<svg class="icon w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
                     '</button>' +
                     '<div class="h-14 bg-gradient-to-br from-clsu-50 via-white to-palay-50 flex items-center justify-center">' +
@@ -84,17 +84,17 @@ function initAdminRooms() {
                     '<div class="p-3.5">' +
                         '<p class="text-xs font-bold text-stone-800 tracking-wide uppercase truncate">' + t.name + '</p>' +
                         '<p class="text-clsu-700 font-bold text-sm mt-1 font-data tabnum">' + peso(t.base_price) + '</p>' +
-                        '<p class="text-[10px] text-stone-400 mt-1">Sleeps ' + t.capacity + ' · ' + t.room_count + (t.room_count === 1 ? ' room' : ' rooms') + '</p>' +
+                        '<p class="text-2xs text-faint mt-1">Sleeps ' + t.capacity + ' · ' + t.room_count + (t.room_count === 1 ? ' room' : ' rooms') + '</p>' +
                         (t.room_count > 0
-                            ? '<p class="text-[10px] font-bold mt-1 ' + (t.available_now > 0 ? 'text-clsu-600' : 'text-ember-500') + '">' + (t.available_now > 0 ? t.available_now + ' open today' : 'None open today') + '</p>'
-                            : '<p class="text-[10px] font-semibold text-stone-300 mt-1">No rooms yet</p>') +
+                            ? '<p class="text-2xs font-bold mt-1 ' + (t.available_now > 0 ? 'text-clsu-700' : 'text-ember-700') + '">' + (t.available_now > 0 ? t.available_now + ' open today' : 'None open today') + '</p>'
+                            : '<p class="text-2xs font-semibold text-stone-300 mt-1">No rooms yet</p>') +
                     '</div>' +
                 '</div>'
             );
         }).join('');
 
         const addTile = (
-            '<button type="button" id="addTypeTile" class="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-stone-200 hover:border-clsu-300 hover:bg-clsu-50/40 transition-colors text-stone-400 hover:text-clsu-700 py-6 min-h-[120px] cursor-pointer">' +
+            '<button type="button" id="addTypeTile" class="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-stone-200 hover:border-clsu-300 hover:bg-clsu-50/40 transition-colors text-faint hover:text-clsu-700 py-6 min-h-[120px] cursor-pointer">' +
                 '<svg class="icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
                 '<span class="text-xs font-semibold">Add Room Type</span>' +
             '</button>'
@@ -209,19 +209,19 @@ function initAdminRooms() {
         if ($(e.target).closest('.room-edit-btn, .room-kebab-btn, [data-kebab-panel]').length) return;
         const roomId = $(this).data('room-id');
         const modalBody = $('#occupancyModalBody');
-        modalBody.html('<p class="text-center text-stone-400 text-sm py-6">Loading…</p>');
+        modalBody.html('<p class="text-center text-faint text-sm py-6">Loading…</p>');
         openModal('occupancyModal');
 
         $.get(`${base}/${roomId}/occupancy`)
             .done(function (res) {
                 if (!res.success) {
-                    modalBody.html('<p class="text-center text-ember-600 text-sm py-6">Could not load bookings.</p>');
+                    modalBody.html('<p class="text-center text-ember-700 text-sm py-6">Could not load bookings.</p>');
                     return;
                 }
                 renderOccupancy(res);
             })
             .fail(function () {
-                modalBody.html('<p class="text-center text-ember-600 text-sm py-6">Error fetching booking info.</p>');
+                modalBody.html('<p class="text-center text-ember-700 text-sm py-6">Error fetching booking info.</p>');
             });
     });
 
@@ -237,9 +237,9 @@ function initAdminRooms() {
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold text-stone-800 truncate">${b.guest_name || 'Guest'}</p>
-                    <p class="text-xs text-stone-500 mt-0.5">#${b.id} · ${b.check_in_formatted} → ${b.check_out_formatted} · ${b.nights} night${b.nights === 1 ? '' : 's'}</p>
+                    <p class="text-xs text-muted mt-0.5">#${b.id} · ${b.check_in_formatted} → ${b.check_out_formatted} · ${b.nights} night${b.nights === 1 ? '' : 's'}</p>
                 </div>
-                <span class="text-[10px] font-bold rounded-full px-2.5 py-1 border shrink-0 whitespace-nowrap ${badge}">${b.status}</span>
+                <span class="text-2xs font-bold rounded-full px-2.5 py-1 border shrink-0 whitespace-nowrap ${badge}">${b.status}</span>
             </div>`;
     }
 
@@ -251,8 +251,8 @@ function initAdminRooms() {
             const label = STATUS_META[res.room_status]?.label || 'Available';
             modalBody.html(
                 '<div class="text-center py-8">' +
-                    '<p class="text-sm text-stone-500">No current or upcoming reservations for this room.</p>' +
-                    '<p class="text-xs text-stone-400 mt-1.5">Room ' + res.room_number + ' is currently marked <span class="font-semibold">' + label + '</span>.</p>' +
+                    '<p class="text-sm text-muted">No current or upcoming reservations for this room.</p>' +
+                    '<p class="text-xs text-faint mt-1.5">Room ' + res.room_number + ' is currently marked <span class="font-semibold">' + label + '</span>.</p>' +
                 '</div>'
             );
             return;
@@ -260,14 +260,14 @@ function initAdminRooms() {
 
         const current = bookings.filter(b => b.timeline === 'current');
         const upcoming = bookings.filter(b => b.timeline === 'upcoming');
-        let html = '<p class="text-xs text-stone-400 mb-3">Room ' + res.room_number + ' · ' + bookings.length + ' reservation' + (bookings.length === 1 ? '' : 's') + '</p>';
+        let html = '<p class="text-xs text-faint mb-3">Room ' + res.room_number + ' · ' + bookings.length + ' reservation' + (bookings.length === 1 ? '' : 's') + '</p>';
 
         if (current.length) {
-            html += '<p class="text-[10px] font-bold uppercase tracking-widest text-clsu-600 mb-2">Staying now</p>';
+            html += '<p class="text-2xs font-bold uppercase tracking-widest text-clsu-700 mb-2">Staying now</p>';
             html += current.map(occupancyRow).join('<div class="h-2.5"></div>');
         }
         if (upcoming.length) {
-            html += '<p class="text-[10px] font-bold uppercase tracking-widest text-palay-700 mb-2 ' + (current.length ? 'mt-4' : '') + '">Upcoming</p>';
+            html += '<p class="text-2xs font-bold uppercase tracking-widest text-palay-700 mb-2 ' + (current.length ? 'mt-4' : '') + '">Upcoming</p>';
             html += upcoming.map(occupancyRow).join('<div class="h-2.5"></div>');
         }
         modalBody.html(html);
@@ -380,7 +380,7 @@ function initAdminRooms() {
         const meta = STATUS_META[status];
         card.attr('data-status', status);
         card.find('.status-bar').attr('class', 'status-bar h-1 rounded-t-2xl ' + meta.bar);
-        card.find('.room-status-badge').attr('class', 'room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ' + meta.badge);
+        card.find('.room-status-badge').attr('class', 'room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border ' + meta.badge);
         card.find('.room-status-dot').attr('class', 'room-status-dot w-1.5 h-1.5 rounded-full ' + meta.dot);
         card.find('.room-status-text').text(meta.label);
         card.find('.room-updated').text('Updated just now');
@@ -549,11 +549,11 @@ function initAdminRooms() {
         none: '<polyline points="20 6 9 17 4 12"/>',
     };
     const STAY_LINE_CLASS = {
-        current: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-clsu-700',
-        'current-pending': 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
-        next: 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
-        'next-pending': 'room-stay-line flex items-center gap-1 text-[10px] font-semibold text-palay-700',
-        none: 'room-stay-line flex items-center gap-1 text-[10px] font-medium text-stone-400',
+        current: 'room-stay-line flex items-center gap-1 text-2xs font-semibold text-clsu-700',
+        'current-pending': 'room-stay-line flex items-center gap-1 text-2xs font-semibold text-palay-700',
+        next: 'room-stay-line flex items-center gap-1 text-2xs font-semibold text-palay-700',
+        'next-pending': 'room-stay-line flex items-center gap-1 text-2xs font-semibold text-palay-700',
+        none: 'room-stay-line flex items-center gap-1 text-2xs font-medium text-faint',
     };
 
     function applyStayToCard(card, stay, held, pending) {
