@@ -31,6 +31,65 @@ class Booking extends Model
     ];
 
     /**
+     * The blocking statuses that never lapse on their own. A booking in one of
+     * these holds its rooms until a person or a lifecycle event moves it.
+     * `pending_payment` is deliberately absent — it is the one hold with a
+     * clock on it. See applyActiveHold().
+     */
+    public const SETTLED_BLOCKING_STATUSES = [
+        'pending_discount',
+        'paid',
+        'active',
+    ];
+
+    /**
+     * Narrow a query to the bookings that are holding their rooms *right now*.
+     *
+     * BLOCKING_STATUSES answers "which statuses can hold a room", which is not
+     * the same question. A `pending_payment` booking holds its rooms only until
+     * its payment window runs out; past that the hold is already dead, and
+     * `bookings:expire` is just the bookkeeping that writes it down.
+     *
+     * Reading the raw status list made that bookkeeping load-bearing. With the
+     * scheduler not running — a deleted task, a moved folder, a reboot, or the
+     * wrong path in a runbook — lapsed holds went on blocking their rooms
+     * forever, and nothing on any screen said so. The room simply stopped being
+     * sellable. Availability now reads the clock directly, so a dead scheduler
+     * costs stale statuses and missing notifications, never inventory.
+     *
+     * Only sellability questions should use this. Staff-facing boards and
+     * dashboards still list by raw status on purpose: until the command runs,
+     * the booking genuinely is still `pending_payment`, and hiding it would
+     * misreport the desk's own workload.
+     *
+     * @param  \Illuminate\Contracts\Database\Query\Builder  $query
+     * @param  string  $table  Qualifier for the columns. Joined queries need
+     *                         'bookings'; pass '' inside a whereHas closure.
+     */
+    public static function applyActiveHold($query, string $table = 'bookings')
+    {
+        $status = $table === '' ? 'status' : "{$table}.status";
+        $since  = $table === '' ? 'pending_payment_since' : "{$table}.pending_payment_since";
+
+        $lapsedBefore = now()->subMinutes((int) config('bookings.expiry_minutes'));
+
+        return $query->where(function ($q) use ($status, $since, $lapsedBefore) {
+            $q->whereIn($status, self::SETTLED_BLOCKING_STATUSES)
+                ->orWhere(function ($q) use ($status, $since, $lapsedBefore) {
+                    $q->where($status, 'pending_payment')
+                        // A missing stamp cannot be reasoned about. The status
+                        // mutator below always sets one, so this should be
+                        // unreachable — but treat it as still holding rather
+                        // than release a room somebody may be paying for.
+                        ->where(function ($q) use ($since, $lapsedBefore) {
+                            $q->whereNull($since)
+                                ->orWhere($since, '>', $lapsedBefore);
+                        });
+                });
+        });
+    }
+
+    /**
      * Every status a booking may legitimately hold. This is the single source
      * of truth now that `status` is a plain VARCHAR rather than a MySQL enum —
      * validate against this list instead of relying on the column type. Keep it

@@ -31,17 +31,31 @@ disappears from the public calendar, from the room board, and from both staff
 booking screens — and no error is raised anywhere, because nothing is wrong.
 The room is simply, quietly, unsellable.
 
-Windows Task Scheduler, running every minute:
+Windows Task Scheduler, running every minute. **Check the path before running
+this** — it must match where the project actually lives. The command below was
+wrong for a year (it pointed at `C:\xampp\htdocs\Auxiliary\aux_system\artisan`,
+a directory that does not exist), and because a task whose target is missing
+fails silently, following this page produced exactly the outage it warns about.
 
 ```bash
-schtasks /create /tn "FarmersHostel Scheduler" /sc minute /mo 1 /tr "C:\xampp\php\php.exe C:\xampp\htdocs\Auxiliary\aux_system\artisan schedule:run" /ru SYSTEM
+schtasks /create /tn "FarmersHostel Scheduler" /sc minute /mo 1 /tr "C:\xampp\php\php.exe C:\xampp\htdocs\Auxiliary-\artisan schedule:run" /ru SYSTEM
 ```
 
-Check it is alive — the expiry command runs every minute, so this should never
-be more than a minute or two stale:
+Confirm it exists and has actually run — `Last Run Time` is the field that
+matters, and `Last Result` must be `0`:
 
 ```bash
-php artisan schedule:list
+schtasks /query /tn "FarmersHostel Scheduler" /v /fo LIST
+```
+
+`php artisan schedule:list` only shows what *would* run. It says nothing about
+whether anything is calling it, so it cannot tell you the scheduler is alive.
+
+The honest check is to ask the data instead — this counts holds that should
+already have been released, and it must be `0`:
+
+```bash
+php artisan tinker --execute='echo App\Models\Booking::where("status","pending_payment")->where("pending_payment_since","<=",now()->subMinutes(config("bookings.expiry_minutes")))->count();'
 ```
 
 ### Reverb

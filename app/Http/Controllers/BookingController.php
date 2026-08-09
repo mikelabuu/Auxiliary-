@@ -358,7 +358,7 @@ class BookingController extends Controller
                 $overlappingRooms = Reservation::query()
                     ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
                     ->whereIn('reservations.room_number', $allRoomNumbers)
-                    ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+                    ->tap(fn ($q) => Booking::applyActiveHold($q))
                     ->whereDate('bookings.check_in', '<', $request->check_out)
                     ->whereDate('bookings.check_out', '>', $request->check_in)
                     ->pluck('reservations.room_number')
@@ -551,7 +551,7 @@ class BookingController extends Controller
         // honestly — it is every bit as unselectable, just not yet money.
         $holds = Reservation::query()
             ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
-            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+            ->tap(fn ($q) => Booking::applyActiveHold($q))
             ->where('bookings.check_in', '<', $checkOut)
             ->where('bookings.check_out', '>', $checkIn)
             ->get(['reservations.room_number', 'bookings.status as booking_status']);
@@ -654,7 +654,7 @@ class BookingController extends Controller
         // window is bounded so the loop is too.
         $rows = Reservation::query()
             ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
-            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
+            ->tap(fn ($q) => Booking::applyActiveHold($q))
             ->where('bookings.check_in', '<', $end)
             ->where('bookings.check_out', '>', $start)
             ->get(['reservations.room_number', 'bookings.check_in', 'bookings.check_out']);
@@ -736,7 +736,7 @@ class BookingController extends Controller
         // Room numbers held by any blocking booking that overlaps the range,
         // read from reservations (the authoritative per-room source).
         $bookedRoomNumbers = Reservation::whereHas('booking', fn ($q) =>
-                $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                Booking::applyActiveHold($q, '')
                   ->where('check_in', '<', $checkOut)
                   ->where('check_out', '>', $checkIn))
             ->pluck('room_number')->map(fn ($n) => trim($n))->filter()->unique()->all();

@@ -223,7 +223,7 @@ trait CreatesStaffBooking
             // double-booked.
             $overlappingRooms = Reservation::whereIn('room_number', $allRoomNumbers)
                 ->whereHas('booking', function ($q) use ($request) {
-                    $q->whereIn('status', Booking::BLOCKING_STATUSES)
+                    Booking::applyActiveHold($q, '')
                         ->where('check_in', '<', $request->check_out)
                         ->where('check_out', '>', $request->check_in);
                 })
@@ -361,7 +361,7 @@ trait CreatesStaffBooking
         $rooms = Room::orderBy('room_number')->get();
 
         $bookedRoomNumbers = Reservation::whereHas('booking', function ($q) use ($checkIn, $checkOut) {
-            $q->whereIn('status', Booking::BLOCKING_STATUSES)
+            Booking::applyActiveHold($q, '')
                 ->where('check_in', '<', $checkOut)
                 ->where('check_out', '>', $checkIn);
         })->pluck('room_number')->all();
