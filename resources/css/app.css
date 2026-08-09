@@ -66,6 +66,13 @@
 @import './public/15-checkout-flow.css';
 @import './public/16-hold-countdown.css';
 @import './public/17-stay-card.css';
+/* Compositor-driven hover elevation. After the component layers because it
+   overrides their box-shadow transitions. */
+@import './public/18-shadow-lift.css';
+@import './public/19-gallery-masonry.css';
+/* MUST come after the form layers it raises (14-auth, 15-checkout-flow): it is
+   a floor on control font-size, and an earlier import would lose to them. */
+@import './public/20-ios-input-zoom.css';
 /* Shared with the admin bundle — window.toast() is available on every page,
    so its styling has to be too. See resources/css/shared/toast.css. */
 @import './shared/toast.css';

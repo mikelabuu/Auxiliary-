@@ -10,27 +10,23 @@
         A walk through the <span class="italic text-gold">grounds</span>
     </x-booking.sections.heading>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:h-[560px] lg:grid-cols-4 lg:grid-rows-6" data-aos="fade-up" data-aos-delay="100">
+    {{-- All 12 shots are on the page now. The previous bento grid had room for
+         six, and 7-12 were rendered as `hidden` anchors purely to keep the
+         lightbox chain complete — so half the gallery was downloaded and
+         hidden. Masonry sizes to its content, so nothing has to be hidden.
+         Layout mechanics live in public/19-gallery-masonry.css. --}}
+    <div class="gallery-masonry" data-aos="fade-up" data-aos-delay="100">
         @php
-            $bento = [
-                ['img' => 'image/gallery/1.jpg', 'span' => 'lg:col-span-2 lg:row-span-4 aspect-[4/3] sm:aspect-square lg:aspect-auto', 'prlx' => '0.06'],
-                ['img' => 'image/gallery/2.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.1'],
-                ['img' => 'image/gallery/3.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.14'],
-                ['img' => 'image/gallery/4.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.08'],
-                ['img' => 'image/gallery/5.jpg', 'span' => 'lg:col-span-1 lg:row-span-3 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.12'],
-                ['img' => 'image/gallery/6.jpg', 'span' => 'sm:col-span-2 lg:col-span-2 lg:row-span-2 aspect-[4/3] lg:aspect-auto', 'prlx' => '0.05'],
-            ];
+            // Shot 4 is the only portrait frame; everything else is 4:3.
+            $portrait = [4];
         @endphp
-        @foreach ($bento as $tile)
-            <a href="{{ asset($tile['img']) }}" data-lightbox="visual-tour" class="group relative block overflow-hidden rounded-2xl ring-1 ring-white/10 {{ $tile['span'] }}" data-prlx-y="{{ $tile['prlx'] }}" data-prlx-scale="0.03">
-                <x-img :src="$tile['img']" alt="Farmers Hostel visual tour" loading="lazy" decoding="async"
+        @for ($i = 1; $i <= 12; $i++)
+            <a href="{{ asset('image/gallery/' . $i . '.jpg') }}" data-lightbox="visual-tour"
+               class="gallery-masonry__item group ring-1 ring-white/10 {{ in_array($i, $portrait, true) ? 'gallery-masonry__item--tall' : '' }}">
+                <x-img :src="'image/gallery/' . $i . '.jpg'" alt="Farmers Hostel visual tour" loading="lazy" decoding="async"
                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                        class="h-full w-full object-cover brightness-[0.82] saturate-[0.85] transition duration-700 group-hover:scale-105 group-hover:brightness-100 group-hover:saturate-100" />
             </a>
-        @endforeach
-        {{-- Remaining shots stay in the same lightbox chain --}}
-        @for ($i = 7; $i <= 12; $i++)
-            <a href="{{ asset('image/gallery/' . $i . '.jpg') }}" data-lightbox="visual-tour" class="hidden" aria-hidden="true" tabindex="-1"></a>
         @endfor
     </div>
 

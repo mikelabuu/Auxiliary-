@@ -1,8 +1,9 @@
 @php
-    // Does this page carry a Livewire component? Only checkout does, via the
-    // address-selector in step-guest. Sections are registered before the layout
-    // renders, so this is readable up here in <head>. Drives the one-Alpine
-    // choice below and whether @livewireScripts is emitted at all.
+    // Does this page carry a Livewire component? As of 2026-08-09 no public
+    // page does — checkout was the last one, via the address-selector, which is
+    // Blade + Alpine now. The gate stays because it is what keeps a future
+    // Livewire component from loading a second Alpine. Sections are registered
+    // before the layout renders, so this is readable up here in <head>.
     $usesLivewire = trim($__env->yieldContent('livewire')) === '1';
 @endphp
 <!DOCTYPE html>
@@ -69,11 +70,10 @@
 
          Livewire's runtime bundles its own Alpine, so a page that has a
          Livewire component must NOT also load the standalone build - two
-         Alpines on one page throw on init. Only checkout has one (the
-         address-selector inside step-guest), and it declares
-         @section('livewire', '1'). Every other public page uses Alpine
-         directives without any Livewire, and used to pull the entire 340 KB
-         Livewire bundle just to get them; standalone Alpine is ~46 KB. --}}
+         Alpines on one page throw on init. No public page carries one today,
+         so every page takes the ~46 KB standalone build. A page that adds a
+         Livewire component must declare @section('livewire', '1') to flip
+         this, or it will end up with two Alpines. --}}
     @if ($usesLivewire)
         @livewireStyles
     @else

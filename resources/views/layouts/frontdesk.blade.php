@@ -32,6 +32,11 @@
      the admin console; it is usually the screen someone is actually sitting at. --}}
 <body class="bg-surface text-ink antialiased" data-staff-alerts>
 
+  {{-- Both first in the body on purpose — see the note in layouts/admin.
+       Curtain for full document loads, bar for in-page Livewire work. --}}
+  @include('partials.page-loader')
+  @include('partials.page-progress')
+
   {{-- Keyboard users land here first: one Tab jumps past the band's pill nav
        to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}
   <a href="#main-content" class="skip-link">Skip to main content</a>

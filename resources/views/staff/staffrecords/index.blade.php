@@ -308,7 +308,7 @@
                 </div>
                 <div id="saLogs" class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden"></div>
                 <p id="saEmpty" class="hidden text-sm text-faint text-center py-4">No recorded activity yet.</p>
-                <p class="text-2xs text-faint">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="text-clsu-700 font-semibold hover:underline">Audit Logs</a>.</p>
+                <p class="text-2xs text-faint">Showing the 10 most recent entries. Full history is in the <a href="{{ route('staff.audit.index') }}" class="link-underline text-clsu-700 font-semibold">Audit Logs</a>.</p>
             </div>
         </div>
     </x-admin.ui.modal>

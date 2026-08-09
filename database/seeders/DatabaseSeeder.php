@@ -37,6 +37,18 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
+        // Create Front Desk Staff. The front-desk console is its own role with
+        // its own four screens, and `admin` cannot reach them (those routes are
+        // `staff.role:frontdesk,master_admin`). Without a seeded account here
+        // the entire console is unreachable on a fresh database.
+        Staff::create([
+            'name' => 'Front Desk',
+            'email' => 'frontdesk@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'frontdesk',
+            'email_verified_at' => now(),
+        ]);
+
         // Create Regular User
         User::create([
             'username' => 'testuser',

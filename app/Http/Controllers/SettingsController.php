@@ -11,6 +11,7 @@ use App\Events\RoomStatusChanged;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\CancellationLog;
+use App\Support\GuestNotice;
 use App\Support\Realtime;
 use Carbon\Carbon;
 
@@ -239,6 +240,10 @@ class SettingsController extends Controller
         // so the freed rooms stayed spoken-for until the next poll.
         Realtime::emit(new BookingChanged());
         Realtime::emit(new RoomStatusChanged());
+
+        // The guest knows they cancelled — this is their written record of it,
+        // and the only copy that lives outside our own CancellationLog.
+        GuestNotice::bookingCancelled($booking, $request->reason);
 
         return back()->with('status', 'Booking cancelled successfully.');
     }

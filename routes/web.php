@@ -10,6 +10,7 @@ use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\PsgcController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffDashboardController;
@@ -59,6 +60,26 @@ Route::get('/rooms/calendar-availability', [BookingController::class, 'calendarA
 // Public room detail page. Declared after the POST availability endpoints so
 // the literal /rooms/* paths above always win over this wildcard.
 Route::get('/rooms/{slug}', [BookingController::class, 'showRoomType'])->name('rooms.show');
+
+// Address data for the booking forms, served from the committed PSGC payload
+// (see `php artisan psgc:sync`). Public and unauthenticated on purpose: it is
+// the same published government reference list for everyone, it carries
+// nothing about any guest, and the staff booking forms behind auth read the
+// very same endpoints.
+Route::get('/psgc/locations', [PsgcController::class, 'locations'])->name('psgc.locations');
+Route::get('/psgc/barangays/{cityCode}', [PsgcController::class, 'barangays'])->name('psgc.barangays');
+
+// Receipt verification. Deliberately OUTSIDE the staff group: the QR printed on
+// a receipt carries a signed URL, and holding the receipt is what entitles a
+// guest to check it — behind `auth:staff` that path was unreachable, so the
+// guest half of the feature could never run.
+//
+// This is not an open endpoint. ReceiptController::verify() does its own
+// authorization and refuses anything that is neither a valid signature nor a
+// staff session; receipt numbers run in sequence from the booking id, so an
+// unguarded version would be trivially enumerable.
+Route::get('/verify-receipt/{number}', [ReceiptController::class, 'verify'])
+    ->name('receipts.verify');
 
 // Both guards: one login form serves guests and staff, so an already
 // authenticated session of EITHER kind should be sent to its home instead.
@@ -271,12 +292,24 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
         return redirect()->route('login');
     })->name('staff.logout');
 
+});
+
+/*
+| The two lookups the desk opens mid-conversation with a guest: what this guest
+| has stayed before, and what is happening in a given room.
+|
+| These sat in the group above, which asks only for *a* staff session. Every
+| other staff route names the roles that may reach it, and these two were the
+| exception — access was inherited rather than declared. Front desk genuinely
+| needs both, so the behaviour was right; what was missing was saying so. The
+| roles are spelled out here because `guestHistory` returns a guest's stay
+| record, and `Staff::ROLES` also contains `housekeeping` — a role with no
+| landing route today, which would have silently picked up guest history the
+| moment it got one.
+*/
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,admin,master_admin'])->group(function () {
     Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
-    
-    //verify receipt route
-    Route::get('/verify-receipt/{number}', [ReceiptController::class, 'verify'])
-    ->name('receipts.verify');
 });
 
 /*

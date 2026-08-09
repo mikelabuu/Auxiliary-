@@ -12,7 +12,7 @@ isn't. Everything here is silent when it fails — nothing on any screen says
 | **MySQL** | XAMPP MySQL | Everything | Obvious |
 | **Scheduler** | `php artisan schedule:run`, every minute | Holds expiring, no-shows, auto check-out | **Rooms stay blocked forever** |
 | **Reverb** | `php artisan reverb:start` | Live console updates | Boards go stale until refresh |
-| **Queue worker** | `php artisan queue:work` | Nothing *yet* — see below | n/a today |
+| **Queue worker** | `php artisan queue:work` | Nothing *yet* — see below | n/a today (nothing implements `ShouldQueue`) |
 
 ### Scheduler — the one that actually costs money
 
@@ -57,17 +57,24 @@ refresh. Degraded, not broken.
 
 ### Queue worker
 
-`QUEUE_CONNECTION=sync` today, so there is nothing to work. Mail therefore goes
-out **inside the web request**: a booking submission and a staff login both wait
-on Gmail's SMTP. `App\Support\StaffAlert` and `App\Support\GuestNotice` wrap
-every send in a try/catch precisely because of this — a dead mail server must
-not cost a guest the booking they just made.
+`QUEUE_CONNECTION=database`, but **nothing in the app implements `ShouldQueue`**,
+so in practice there is still nothing to work and no worker is required. The
+connection setting is where jobs *would* go, not evidence that any exist —
+`select count(*) from jobs` is the check that settles it.
 
-Moving to `QUEUE_CONNECTION=database` would drop that latency and make retries
-possible, but **do not make that change until a worker is supervised.** The
-staff OTP goes out over the same path, and an unworked queue means no OTP,
-which means nobody can log in at all. That is a worse failure than a slow login.
-See `docs/security-auth-hardening.md` for the full reasoning.
+Mail therefore still goes out **inside the web request**: a booking submission
+and a staff login both wait on Gmail's SMTP. `App\Support\StaffAlert` and
+`App\Support\GuestNotice` wrap every send in a try/catch precisely because of
+this — a dead mail server must not cost a guest the booking they just made.
+
+`App\Notifications\StaffLoginOtpNotification` imports `ShouldQueue` but
+deliberately does **not** implement it, for the reason below. The unused import
+is misleading; do not "tidy" it by adding the interface.
+
+**Before you queue anything, supervise a worker first.** The staff OTP travels
+this path, and an unworked queue means no OTP, which means nobody can log in at
+all. That is a worse failure than a slow login. See
+`docs/security-auth-hardening.md` for the full reasoning.
 
 ## Deploying a change
 

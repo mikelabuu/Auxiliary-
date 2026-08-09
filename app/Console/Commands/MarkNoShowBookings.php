@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\NoShowLog;
 use App\Events\BookingChanged;
 use App\Events\RoomStatusChanged;
+use App\Support\GuestNotice;
 use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,15 @@ class MarkNoShowBookings extends Command
         // A no-show stops blocking its rooms, so panels and the map both care.
         Realtime::emit(new BookingChanged());
         Realtime::emit(new RoomStatusChanged());
+
+        // Every booking in this batch is one the guest paid for, and this runs
+        // at 00:05 — so without a mail the first they would know is a paid stay
+        // marked against them, discovered at some unrelated later date. Sent
+        // after the transaction commits so a slow mail host cannot hold the
+        // rows locked.
+        foreach ($bookings as $booking) {
+            GuestNotice::bookingNoShow($booking);
+        }
 
         $this->info(" Marked {$bookings->count()} bookings as no_show.");
     }

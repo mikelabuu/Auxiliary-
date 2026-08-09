@@ -47,6 +47,21 @@
             <option value="today_checkout">Check-out today</option>
             <option value="tomorrow_checkout">Check-out tomorrow</option>
         </select>
+        {{-- Sorting has to live somewhere other than the headers: below ~1200px
+             the table folds to four columns, and check-out and status are not
+             among them. Matches the sort selects on payment logs and completed
+             bookings; the column headers keep working where they are shown. --}}
+        @php $currentSort = $this->sortValue(); @endphp
+        <select wire:change="setSort($event.target.value)" class="filter-select" aria-label="Sort bookings">
+            <option value="" @selected($currentSort === '')>Newest first</option>
+            <option value="check_in:asc" @selected($currentSort === 'check_in:asc')>Check-in, earliest</option>
+            <option value="check_in:desc" @selected($currentSort === 'check_in:desc')>Check-in, latest</option>
+            <option value="check_out:asc" @selected($currentSort === 'check_out:asc')>Check-out, earliest</option>
+            <option value="check_out:desc" @selected($currentSort === 'check_out:desc')>Check-out, latest</option>
+            <option value="guest_name:asc" @selected($currentSort === 'guest_name:asc')>Guest, A to Z</option>
+            <option value="guest_name:desc" @selected($currentSort === 'guest_name:desc')>Guest, Z to A</option>
+            <option value="status:asc" @selected($currentSort === 'status:asc')>Status, A to Z</option>
+        </select>
         <div class="filter-toolbar-spacer"></div>
         <span class="refresh-chip" wire:loading.delay.flex wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
             <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
@@ -83,17 +98,28 @@
     @if($bookings->isEmpty())
         <x-admin.ui.empty-state icon="clipboard" title="No bookings found." />
     @else
-        <div class="wire-panel" wire:loading.delay.class="is-refreshing" wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
+        {{-- table-fold makes this the query container for the four-column
+             layout (see 20-table-fold.css). It sits on .wire-panel rather than
+             on .scroll-x on purpose: container-type applies containment, and
+             putting that on the scroll container itself disturbs the sticky
+             Actions column it holds. --}}
+        <div class="wire-panel table-fold" wire:loading.delay.class="is-refreshing" wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
         <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
-            <table class="data-table" data-server-sort>
+            <table class="data-table data-table-foldable" data-server-sort>
                 <thead>
                     <tr>
+                        {{-- Three columns fold away below the breakpoint; their
+                             content reappears inside the columns that remain,
+                             and their sorts stay reachable from the toolbar
+                             select. --}}
                         <x-admin.ui.sort-th field="id" :active="$sortField" :dir="$sortDirection">Ref code</x-admin.ui.sort-th>
                         <x-admin.ui.sort-th field="guest_name" :active="$sortField" :dir="$sortDirection">Guest</x-admin.ui.sort-th>
-                        <th>Room(s)</th>
-                        <x-admin.ui.sort-th field="check_in" :active="$sortField" :dir="$sortDirection">Check-in</x-admin.ui.sort-th>
-                        <x-admin.ui.sort-th field="check_out" :active="$sortField" :dir="$sortDirection">Check-out</x-admin.ui.sort-th>
-                        <x-admin.ui.sort-th field="status" :active="$sortField" :dir="$sortDirection">Status</x-admin.ui.sort-th>
+                        <th class="col-fold">Room(s)</th>
+                        <x-admin.ui.sort-th field="check_in" :active="$sortField" :dir="$sortDirection">
+                            <span class="fold-hide">Check-in</span><span class="fold-show">Stay</span>
+                        </x-admin.ui.sort-th>
+                        <x-admin.ui.sort-th field="check_out" :active="$sortField" :dir="$sortDirection" class="col-fold">Check-out</x-admin.ui.sort-th>
+                        <x-admin.ui.sort-th field="status" :active="$sortField" :dir="$sortDirection" class="col-fold">Status</x-admin.ui.sort-th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -107,6 +133,10 @@
                                 ->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
                             $initials = strtoupper($initials ?: 'G');
                             $rooms = $booking->reservations->pluck('room_number')->filter()->implode(', ');
+                            // Shown only in the folded layout, where check-out
+                            // has no column of its own and the span has to read
+                            // as one thing.
+                            $nights = $booking->check_in->diffInDays($booking->check_out);
                         @endphp
                         <tr>
                             <td>
@@ -118,6 +148,7 @@
                                             Copy
                                         </button>
                                     </div>
+                                    <span class="status {{ $statusClass }} fold-show">{{ $statusText }}</span>
                                     <span class="ref-cell-sub">Booked {{ $booking->created_at?->format('M d') ?? '—' }}</span>
                                 </div>
                             </td>
@@ -126,20 +157,29 @@
                                     <span class="avatar-initials">{{ $initials }}</span>
                                     <div class="cell-name-text">
                                         <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</p>
-                                        <p class="cell-name-secondary">#{{ $booking->id }}</p>
+                                        <p class="cell-name-secondary">
+                                            <span class="fold-hide">#{{ $booking->id }}</span>
+                                            <span class="fold-show">{{ $rooms ? 'Room ' . $rooms : 'No room assigned' }}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td class="col-fold">
                                 @if($rooms)
                                     <span class="cell-tag font-data">{{ $rooms }}</span>
                                 @else
                                     <span class="text-faint">—</span>
                                 @endif
                             </td>
-                            <td class="font-data tabnum">{{ $booking->check_in->format('M d, Y') }}</td>
-                            <td class="font-data tabnum">{{ $booking->check_out->format('M d, Y') }}</td>
-                            <td><span class="status {{ $statusClass }}">{{ $statusText }}</span></td>
+                            <td class="font-data tabnum">
+                                {{ $booking->check_in->format('M d, Y') }}
+                                <span class="fold-show stay-span">
+                                    to {{ $booking->check_out->format('M d, Y') }}
+                                    <span class="stay-nights">{{ $nights }} {{ Str::plural('night', $nights) }}</span>
+                                </span>
+                            </td>
+                            <td class="font-data tabnum col-fold">{{ $booking->check_out->format('M d, Y') }}</td>
+                            <td class="col-fold"><span class="status {{ $statusClass }}">{{ $statusText }}</span></td>
                             <td>
                                 <div class="table-actions">
                                     <button type="button" class="password-verify btn btn-outline btn-sm cursor-pointer" data-action="view" data-id="{{ $booking->id }}">

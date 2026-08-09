@@ -56,7 +56,7 @@
         <h4 class="text-sm font-bold text-ink tracking-tight">Home Address</h4>
     </div>
     <div class="night-fields">
-        <livewire:address-selector theme="tailwind" />
+        <x-address-selector theme="tailwind" />
     </div>
 </div>
 

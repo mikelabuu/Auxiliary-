@@ -1,0 +1,95 @@
+/* ============================================================
+   18. SHADOW LIFT — animating elevation without repainting
+
+   Technique from Tobias Ahlin, "How to animate box-shadow with
+   silky smooth performance". Animating box-shadow repaints the
+   element on every frame; a transparent pseudo-element carrying
+   the raised shadow, faded in with opacity, runs on the
+   compositor instead.
+
+   Applied to the two public surfaces that animate a large
+   shadow on hover: the hero badge and the stay card.
+
+   NOT applied to .hover-lift-premium, which is the room card in
+   components/booking/cards/room.blade.php. That element sets
+   overflow-hidden (it clips a photo to a rounded rect), so an
+   outer shadow drawn by a child pseudo-element would be clipped
+   away. Moving its shadow would mean adding a wrapper element
+   purely to hang a pseudo on, which is a markup change for a
+   frame-rate win on one card - not worth it. It keeps its
+   box-shadow transition.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+    /* ── Hero badge ──────────────────────────────────────────
+       Both pseudo-elements were free here, so this is the plain
+       form of the technique. */
+    .fh-badge {
+        transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .fh-badge::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        box-shadow: 0 40px 80px rgba(4, 18, 36, 0.36);
+        opacity: 0;
+        transition: opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+        pointer-events: none;
+    }
+
+    .fh-badge:hover::after { opacity: 1; }
+
+    /* The resting shadow stays on the element itself and never animates,
+       so the raised one is the only thing the pseudo has to carry. */
+    .fh-badge:hover {
+        box-shadow: 0 2px 4px rgba(6, 26, 45, 0.06), 0 30px 66px rgba(4, 18, 36, 0.3);
+    }
+
+    /* ── Stay card ───────────────────────────────────────────
+       ::before is already the accent bar down the left edge, so this uses
+       ::after, which was free. */
+    .stay-card {
+        transition: transform 240ms ease;
+    }
+
+    .stay-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        /* Only the OUTER shadow moves here. The card's inset highlight stays
+           on the card itself: it barely changes between states (alpha .9 to
+           .95) and an inset shadow on a pseudo would paint over the card's
+           own top edge rather than under it. */
+        box-shadow: 0 24px 46px -26px rgba(6, 40, 30, 0.36);
+        opacity: 0;
+        transition: opacity 240ms ease;
+        pointer-events: none;
+    }
+
+    .stay-card:hover::after { opacity: 1; }
+
+    /* Hold the resting shadow through hover so the pseudo is the only thing
+       that changes. Without this the original hover rule still fires, and
+       with box-shadow dropped from the transition it would snap instead of
+       fade, on top of the pseudo already fading in. */
+    .stay-card:hover {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.95),
+            0 1px 2px rgba(6, 40, 30, 0.05),
+            0 16px 34px -26px rgba(6, 40, 30, 0.28);
+    }
+}
+
+/* Reduced motion keeps the elevation change - it is the meaningful part -
+   and simply drops the fade. */
+@media (prefers-reduced-motion: reduce) {
+    .fh-badge:hover {
+        box-shadow: 0 40px 80px rgba(4, 18, 36, 0.36);
+    }
+}

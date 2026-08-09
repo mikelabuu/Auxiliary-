@@ -74,7 +74,7 @@
                 <div>
                     <x-staff.booking.label>Guest Address</x-staff.booking.label>
                     <div class="mb-selects">
-                        <livewire:address-selector />
+                        <x-address-selector />
                     </div>
                 </div>
                 <div>

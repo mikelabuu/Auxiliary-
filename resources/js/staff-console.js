@@ -50,9 +50,23 @@ document.addEventListener(
     );
 })();
 
-/* ── Animated count-up for plain numeric KPI values (skips mixed markup) ── */
+/* ── Animated count-up for plain numeric KPI values (skips mixed markup) ──
+   The count is decorative; the number underneath it is not. Browsers suspend
+   requestAnimationFrame in a hidden tab, and this used to call tick() straight
+   away — so the first frame (zero) was written, the second never came, and a
+   dashboard opened in a background tab sat there reporting "0 available" and
+   "₱0.00" until something else repainted it. On the dashboard the 30s
+   wire:poll eventually covered for it; on a page without a poll it was
+   permanent. Freezing partway through, when the tab is hidden mid-count, is
+   the same failure wearing a plausible number.
+
+   So every exit lands on the true value: don't start at all when the page is
+   already hidden (the server-rendered text is correct — leave it), and snap to
+   target if it goes hidden while running. */
 (function countUp() {
     if (reduceMotion()) return;
+
+    const settlers = [];
 
     document.querySelectorAll('.stat-value, .mini-stat-value').forEach((el) => {
         if (el.children.length > 0) return;
@@ -66,12 +80,30 @@ document.addEventListener(
         const start = performance.now();
         const fmt = (v) =>
             m[1] + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[4];
+        const settle = () => { el.textContent = fmt(target); };
+
+        // Nothing will drive the animation, so writing frame zero here would
+        // be writing it for good.
+        if (document.hidden) return;
+
+        settlers.push(settle);
 
         (function tick(t) {
+            if (document.hidden) { settle(); return; }
             const p = Math.min(1, (t - start) / dur);
             el.textContent = fmt(target * (1 - Math.pow(1 - p, 3)));
             if (p < 1) requestAnimationFrame(tick);
         })(start);
+    });
+
+    if (!settlers.length) return;
+
+    // rAF stops the moment the tab is backgrounded, which leaves whatever
+    // partial figure the last frame happened to draw. Land them all.
+    document.addEventListener('visibilitychange', function snap() {
+        if (!document.hidden) return;
+        settlers.forEach((settle) => settle());
+        document.removeEventListener('visibilitychange', snap);
     });
 })();
 

@@ -4,6 +4,54 @@ Each plan is self-contained: exact file:line, current code, target code, steps, 
 and a feel-check. Execute with `improve-animations execute <plan>` or hand any plan to an
 agent as-is.
 
+## Batch 3 — post-loader audit (commit `770cf6a`, 2026-08-09)
+
+Scope: the whole motion surface again, with emphasis on what landed between
+`ac773f6` and `770cf6a` — the SpinKit loaders, the page-load curtain, the
+Livewire progress bar, the compositor shadow-lift layers and the animated link
+underlines. Headline: the older system held up (no `ease-in`, no
+`transition: all`, no `scale(0)` entrances, toasts and admin modals still
+exemplary); three of the five findings are in motion added on 2026-08-09.
+
+| # | Plan | Severity | Status |
+| --- | --- | --- | --- |
+| 014 | [Progress bar interruptibility](014-progress-bar-interruptibility.md) | HIGH | TODO |
+| 015 | [Live-dot off the paint path](015-live-dot-off-the-paint-path.md) | MEDIUM | TODO |
+| 016 | [Easing token consolidation](016-easing-token-consolidation.md) | MEDIUM | TODO |
+| 017 | [SweetAlert reduced motion](017-sweetalert-reduced-motion.md) | MEDIUM | TODO |
+| 018 | [Loader easing literals](018-loader-easing-literals.md) | LOW | TODO |
+
+### Recommended execution order
+
+**014** (a real defect in the interaction the bar exists for — smallest fix,
+highest leverage) → **015** (stops an infinite repaint on an all-day page) →
+**017** (self-contained, no interactions) → **018** (5 lines; do it *before* 016
+so the consolidation sweep runs over settled files) → **016** (largest, purely
+mechanical, best done last and alone).
+
+### Dependencies
+
+- **018 before 016.** 016 explicitly excludes the two inline loader partials
+  because `var()` cannot resolve there; 018 settles their literals first so the
+  exclusion is verifiable rather than a moving target.
+- 014 and 018 touch the *same two files* (`partials/page-progress.blade.php`,
+  `partials/page-loader.blade.php`) but different concerns — 014 is JavaScript
+  only, 018 is CSS timing functions only. Either order; no conflict.
+- 015 and 017 are independent of everything.
+- CSS-touching plans (015, 016, 017) finish with `npm run build:only`; one build
+  at the end covers several in a session. Blade-touching plans (014, 016, 018)
+  need `php artisan view:clear && php artisan view:cache`.
+
+### Raised but deliberately NOT planned
+
+- **`MIN_VISIBLE = 900ms` on the page-load curtain**
+  (`partials/page-loader.blade.php`). The audit's frequency rule puts navigation
+  at *tens of times/day → remove or drastically reduce*, and this enforces a
+  0.9s floor on every one. It is left unplanned because the curtain and its
+  readable verse were requested deliberately and the tradeoff was stated when it
+  was built — this is a feel decision, not a defect. If it starts to drag, the
+  change is one number: drop it to ~450ms.
+
 ## Batch 2 — whole-system audit (commit `ac773f6`, 2026-07-21)
 
 Scope: admin console, frontdesk, and remaining public surfaces (the booking flow was
@@ -54,6 +102,20 @@ reservation-block enter/exit, progress-rail check pop, and the 400ms fully-booke
 - Easing-token consolidation: `--ease-boutique` (app.css:305) defined but barely referenced;
   ~7 distinct cubic-beziers hand-typed ~25×. A `@theme` token would unlock a Tailwind utility.
 - Hero `flip-fade-text` infinite loop (judgment call; consider `:loop="false"`).
+
+## Vetted and NOT planned (batch 3)
+
+- Every `scale(0)` hit in the repo is exempt: `chartRise` (data draw-on, already
+  exempted in batch 2), the alert lifeline bar `scaleX(0)`
+  (15-alert-popup.css:233), the `.link-underline` wipes (22-link-underline.css:41,64)
+  and the SpinKit dot pulses (23-spinkit.css:148,172). None is an element entrance.
+- `public/10-view-transitions.css` has keyframes and no reduced-motion block —
+  correct, they animate `opacity` only, which reduced motion explicitly permits.
+- `public/18-shadow-lift.css` uses `240ms ease` on hover — `ease` is the
+  sanctioned curve for hover, not a finding.
+- `.fh-badge` 500ms hover (06-hero.css:431) — pre-existing marketing hero.
+- Livewire table rows do not animate on re-render — that is plan 007's
+  deliberate outcome (stagger on first paint only). Not re-litigated.
 
 ## Vetted and NOT planned (batch 2)
 

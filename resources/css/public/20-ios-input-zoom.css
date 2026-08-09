@@ -1,0 +1,51 @@
+/* ============================================================
+   20. iOS INPUT ZOOM GUARD
+
+   Safari on iOS auto-zooms the viewport when a text field is
+   focused whose computed font-size is under 16px — and it does
+   not zoom back out afterwards. The guest then has to pinch out
+   between every field.
+
+   Measured on /checkout at 375px: 22 controls at 14px. That is a
+   zoom-and-pinch on every single field of the longest form in the
+   product, on the device most guests book from.
+
+   The other way to stop it is `maximum-scale=1` on the viewport
+   meta, which disables pinch-zoom for everyone. That is an
+   accessibility regression and layouts/public/base.blade.php
+   correctly does not do it — so the fix has to be font-size.
+
+   16px is a floor, not a redesign: it applies only to controls
+   the guest types into, only below the tablet breakpoint, and it
+   deliberately does not touch labels, helper text, buttons or
+   any of the small-caps detail the boutique styling depends on.
+   Desktop is untouched entirely.
+   ============================================================ */
+
+@media (max-width: 767px) {
+    /* Checkboxes and radios have no text to zoom toward and are sized by
+       width/height, so bumping their font-size would only disturb layout.
+       Buttons are excluded for the same reason — iOS does not zoom for them. */
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']),
+    select,
+    textarea {
+        /* 16px exactly. Anything below it, including 15.9px, still triggers
+           the zoom. */
+        font-size: 16px;
+    }
+
+    /* The controls were drawn for 14px text, so at 16px the taller line box
+       makes them look inflated against their labels. Trimming the vertical
+       padding keeps the original control height while the text inside grows. */
+    .flatpickr-date,
+    input[type='text'],
+    input[type='email'],
+    input[type='tel'],
+    input[type='number'],
+    input[type='date'],
+    select,
+    textarea {
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+    }
+}

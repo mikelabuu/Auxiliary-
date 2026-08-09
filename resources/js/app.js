@@ -111,12 +111,41 @@ import './expandable-bento';
 (function () {
     let raf = null;
 
+    // A clipped region holding nothing focusable is mouse-only: there is no
+    // tab stop inside it, so the columns past the right edge cannot be reached
+    // by keyboard at all (axe `scrollable-region-focusable`). Give those, and
+    // only those, a tab stop — tables whose rows carry View/Checkout buttons
+    // already scroll on tab and would just collect a redundant one. The name
+    // comes off the panel heading so it announces as "Active Stays" rather
+    // than an anonymous region.
+    function keyboardAccess(el, clipped) {
+        const needed = clipped && !el.querySelector('a, button, input, select, textarea, [tabindex]');
+
+        if (!needed) {
+            if (el.dataset.scrollFocusable) {
+                el.removeAttribute('tabindex');
+                el.removeAttribute('role');
+                el.removeAttribute('aria-label');
+                delete el.dataset.scrollFocusable;
+            }
+            return;
+        }
+        if (el.dataset.scrollFocusable) return;
+
+        const title = el.closest('.card')?.querySelector('.card-title')?.textContent.replace(/\s+/g, ' ').trim();
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'region');
+        el.setAttribute('aria-label', title ? `${title}, scrollable` : 'Scrollable table');
+        el.dataset.scrollFocusable = '1';
+    }
+
     function update() {
         raf = null;
         document.querySelectorAll('.scroll-x').forEach((el) => {
             const clipped = el.scrollWidth - el.clientWidth > 1;
             const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
             el.classList.toggle('is-clipped', clipped && !atEnd);
+            keyboardAccess(el, clipped);
         });
     }
 

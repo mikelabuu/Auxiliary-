@@ -1,10 +1,16 @@
 /* ============================================================
-   DASHBOARD HERO — welcome panel + gross-revenue card
+   DASHBOARD HERO — welcome panel + booking calendar
    The dashboard's top row. Card language follows the reference
    set (soft neutral page, white cards, generous radii, roomy
    padding); the palette stays CLSU green so it still reads as
    Farmers Hostel. Typography inherits the console's Geist/Sora
    tokens — no new families.
+
+   This row used to end in a dark-pine revenue card, the last
+   surface on the console still wearing the pre-v3 palette. It is
+   gone: revenue is a KPI now, and the slot holds the booking
+   calendar, which front desk reads hour to hour. Both cards are
+   light — a month grid on a saturated fill is a legibility fight.
    ============================================================ */
 
 .dash-hero-row {
@@ -14,11 +20,12 @@
     align-items: stretch;
 }
 
-/* The revenue card is the smaller column — it's one number, while the
-   welcome panel carries a sentence, four counts and four actions. */
+/* The calendar needs seven readable columns, so it takes a slightly wider
+   share than the revenue card did — a 7-col grid below ~380px starts
+   clipping two-digit dates against their dots. */
 @media (min-width: 1100px) {
     .dash-hero-row {
-        grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     }
 }
 
@@ -281,145 +288,290 @@
     box-shadow: 0 10px 22px -12px rgba(8, 92, 55, 0.7);
 }
 
-/* ── Gross revenue card ────────────────────────────────────── */
-.dash-revenue {
+/* ── Booking calendar card ─────────────────────────────────── */
+/* White body, mint header band. The band is what gives the row a focal
+   point now that nothing on it is saturated — it reads as a title bar
+   rather than as a second, competing block of colour. */
+.dash-cal {
     position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
     border-radius: var(--radius-xl);
-    padding: clamp(1.25rem, 2vw, 1.75rem);
-    color: #eaf6ef;
-    background:
-        radial-gradient(120% 80% at 85% 8%, rgba(60, 203, 127, 0.22) 0%, rgba(60, 203, 127, 0) 60%),
-        linear-gradient(158deg, #0b5133 0%, #08402a 45%, #052e1c 100%);
-    box-shadow: 0 1px 2px rgba(5, 46, 28, 0.2), 0 26px 54px -30px rgba(5, 46, 28, 0.8);
+    box-shadow: 0 1px 2px rgba(9, 60, 36, 0.04), 0 18px 40px -28px rgba(9, 60, 36, 0.24);
 }
 
-.dash-revenue__head {
+.dash-cal__head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    padding: 1rem clamp(1rem, 1.6vw, 1.35rem);
+    background: linear-gradient(180deg, #f2faf5 0%, #ecf7f0 100%);
+    border-bottom: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
 }
 
-.dash-revenue__eyebrow {
+.dash-cal__eyebrow {
+    display: block;
     font-size: var(--fs-2xs);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(234, 246, 239, 0.62);
+    color: var(--color-clsu-700);
 }
 
-.dash-revenue__badge {
+.dash-cal__month {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+}
+
+.dash-cal__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: none;
+}
+
+.dash-cal__nav-btn {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     flex: none;
-    border-radius: 11px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #a7e9c4;
+    border-radius: 9px;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.12));
+    background: #fff;
+    color: var(--color-muted, #6b7c72);
+    cursor: pointer;
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
 }
 
-.dash-revenue__value {
-    margin: 0.75rem 0 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.9rem, 3vw, 2.6rem);
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: #fff;
-}
-
-/* Centavos ride smaller and dimmer so the peso figure reads first. */
-.dash-revenue__cents {
-    font-size: 0.55em;
-    color: rgba(255, 255, 255, 0.55);
-}
-
-.dash-revenue__delta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 0.85rem;
-}
-
-.dash-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.28rem 0.6rem;
+.dash-cal__today {
+    padding: 0.34rem 0.7rem;
     border-radius: 999px;
+    border: 1px solid var(--color-line, rgba(20, 32, 26, 0.12));
+    background: #fff;
     font-size: var(--fs-2xs);
     font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
 }
 
-.dash-chip--up {
-    background: rgba(60, 203, 127, 0.18);
-    color: #7ff0b0;
+@media (hover: hover) and (pointer: fine) {
+
+    .dash-cal__nav-btn:hover,
+    .dash-cal__today:hover {
+        background: var(--color-clsu-50);
+        border-color: var(--color-clsu-200);
+        color: var(--color-clsu-800);
+    }
 }
 
-.dash-chip--down {
-    background: rgba(248, 113, 113, 0.16);
-    color: #fca5a5;
+.dash-cal__nav-btn:active,
+.dash-cal__today:active {
+    transform: scale(0.94);
 }
 
-.dash-revenue__delta-note {
-    font-size: var(--fs-xs);
-    color: rgba(234, 246, 239, 0.58);
-}
-
-/* Chart fills the slack between the figure and the footer, so the card
-   matches the welcome panel's height without a hardcoded number. */
-.dash-revenue__chart {
+/* The grid takes the slack so the card matches the welcome panel's height
+   without a hardcoded number — same trick the revenue chart used. */
+.dash-cal__body {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
-    min-height: 82px;
-    margin: 1rem -0.35rem 0;
+    padding: 0.9rem clamp(0.85rem, 1.4vw, 1.15rem) 0.5rem;
 }
 
-.dash-revenue__chart svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    min-height: 82px;
+.dash-cal__dow,
+.dash-cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
 }
 
-.dash-revenue__foot {
+.dash-cal__dow {
+    margin-bottom: 0.35rem;
+    text-align: center;
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-faint, #93a49b);
+}
+
+.dash-cal__grid {
+    flex: 1 1 auto;
+    align-content: start;
+}
+
+/* One cell shape for every day, button or not, so the grid never shifts
+   between a populated month and an empty one. */
+.dash-cal__day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    min-height: 40px;
+    padding: 0.3rem 0 0.25rem;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    font: inherit;
+    color: var(--color-ink);
+    text-align: center;
+    transition: background var(--transition);
+}
+
+/* Adjacent-month days recede by colour and weight, not by opacity. Fading a
+   date to 45% put it at 1.9:1 against the card — a number nobody could read,
+   which is a worse answer than not drawing it. The ink/faint gap (16.8:1 vs
+   5.2:1) is already a clear hierarchy at full strength. */
+.dash-cal__day.is-muted {
+    color: var(--color-faint, #93a49b);
+}
+
+.dash-cal__day.is-muted .dash-cal__num {
+    font-weight: 400;
+}
+
+/* An occupied night gets a mint wash, so a busy stretch reads as a block
+   of colour across the row before you count a single dot. */
+.dash-cal__day.has-stay {
+    background: var(--color-clsu-50);
+}
+
+.dash-cal__day.is-open {
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .dash-cal__day.is-open:hover {
+        background: var(--color-clsu-100);
+    }
+}
+
+.dash-cal__num {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dash-cal__day.is-today .dash-cal__num {
+    background: var(--color-clsu-600);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* A fixed-height dot rail keeps every cell the same height whether or not
+   the day has traffic — otherwise the grid jitters row to row. */
+.dash-cal__dots {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: var(--fs-xs);
-    color: rgba(234, 246, 239, 0.6);
+    justify-content: center;
+    gap: 3px;
+    height: 6px;
 }
 
-.dash-revenue__link {
+.dash-cal__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+
+.dash-cal__dot--arrival {
+    background: var(--color-clsu-500);
+}
+
+.dash-cal__dot--departure {
+    background: var(--color-palay-400);
+}
+
+.dash-cal__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    padding: 0.8rem clamp(1rem, 1.6vw, 1.35rem);
+    border-top: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    color: var(--color-muted, #6b7c72);
+}
+
+.dash-cal__legend {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
+}
+
+.dash-cal__key {
+    width: 7px;
+    height: 7px;
+    flex: none;
+    border-radius: 50%;
+}
+
+.dash-cal__key--arrival {
+    background: var(--color-clsu-500);
+}
+
+.dash-cal__key--departure {
+    background: var(--color-palay-400);
+}
+
+.dash-cal__key--stay {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: var(--color-clsu-50);
+    border: 1px solid var(--color-clsu-200);
+}
+
+.dash-cal__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+    border: 0;
+    background: none;
+    font: inherit;
     font-weight: 700;
-    color: #a7e9c4;
+    color: var(--color-clsu-700);
+    cursor: pointer;
     transition: color var(--transition);
 }
 
 /* The chevron slides on transform rather than the row animating `gap`, which
    would re-lay-out the footer on every hover frame. */
-.dash-revenue__link svg {
+.dash-cal__link svg {
     transition: transform 180ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
-    .dash-revenue__link:hover {
-        color: #fff;
+    .dash-cal__link:hover {
+        color: var(--color-clsu-800);
     }
 
-    .dash-revenue__link:hover svg {
+    .dash-cal__link:hover svg {
         transform: translateX(3px);
     }
 }
@@ -583,12 +735,15 @@
 
     .stat-meter__fill,
     .dash-btn,
-    .dash-revenue__link svg,
+    .dash-cal__link svg,
+    .dash-cal__day,
     .stat-card-link {
         transition: none;
     }
 
-    .dash-btn:active {
+    .dash-btn:active,
+    .dash-cal__nav-btn:active,
+    .dash-cal__today:active {
         transform: none;
     }
 }

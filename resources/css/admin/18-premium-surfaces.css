@@ -41,22 +41,15 @@
    — so the eye lands on the hero, then the numbers, then the detail, in that
    order, without a single extra pixel of chrome.
    ============================================================ */
+/* Both hero cards are light now (the dark revenue card is gone), so they
+   share one tier-1 shadow — no dark-surface exception to carve out. */
 .dash-welcome,
-.dash-revenue {
+.dash-cal {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.9),
         0 2px 3px rgba(9, 60, 38, 0.04),
         0 10px 20px -10px rgba(9, 60, 38, 0.09),
         0 34px 60px -30px rgba(9, 60, 38, 0.24);
-}
-
-/* The revenue card is dark, so a white top edge would read as a seam. */
-.dash-revenue {
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        0 2px 3px rgba(9, 60, 38, 0.06),
-        0 12px 24px -10px rgba(8, 76, 46, 0.28),
-        0 34px 60px -30px rgba(8, 76, 46, 0.45);
 }
 
 .stat-card,
@@ -155,6 +148,37 @@
     background-size: 100% 100%;
 }
 
+/* The hero card's brand-green sparkline and footnote were invisible against
+   its own brand-green fill — those two parts were written for white cards and
+   never restated here. On saturated ground the only readable ink is white at
+   varying opacity, so the trend reads by opacity rather than by hue. */
+.stat-card-hero .stat-spark__bar {
+    background: #fff;
+    opacity: 0.3;
+}
+
+.stat-card-hero .stat-spark__bar:nth-last-child(-n + 4) {
+    opacity: 0.6;
+}
+
+.stat-card-hero .stat-spark__bar:last-child {
+    opacity: 1;
+}
+
+.stat-card-hero .stat-foot,
+.stat-card-hero .stat-foot.is-up,
+.stat-card-hero .stat-foot.is-down {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-card-hero .stat-meter {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.stat-card-hero .stat-meter__fill {
+    background: #fff;
+}
+
 /* ============================================================
    3 · NUMERALS
    Lining tabular figures so the four KPIs align on the decimal, and a touch
@@ -164,7 +188,7 @@
    ============================================================ */
 .stat-value,
 .mini-stat-value,
-.dash-revenue__value,
+.dash-cal__month,
 .dash-ops__value {
     font-variant-numeric: tabular-nums lining-nums;
     font-feature-settings: "tnum" 1, "lnum" 1;
@@ -172,10 +196,6 @@
 
 .stat-value {
     letter-spacing: -0.042em;
-}
-
-.dash-revenue__value {
-    letter-spacing: -0.038em;
 }
 
 /* The label sits closer to the figure it names than to the card edge —

@@ -1,0 +1,75 @@
+/* ============================================================
+   22. ANIMATED LINK UNDERLINES
+
+   Technique from Tobias Ahlin, "Animating Link Underlines": a
+   pseudo-element rule scaled with transform rather than an
+   animated border or text-decoration, so the wipe runs on the
+   compositor and the link's layout never moves.
+
+   The public site already does this as .gold-underline
+   (07-checkout-night). This brings the same behaviour to the
+   console, where inline text links previously had either a
+   static underline or nothing at all, and adds the directional
+   variants the article describes.
+
+   Deliberately opt-in via .link-underline rather than applied to
+   every `a`. The console is full of anchors that are not prose
+   links - sidebar items, stat cards wrapped in <a>, table row
+   actions, pagination - and a blanket rule would draw a bar
+   under all of them.
+   ============================================================ */
+
+.link-underline {
+    position: relative;
+    text-decoration: none;
+    /* Keeps the bar off descenders without shifting the text box. */
+    padding-bottom: 1px;
+}
+
+.link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    border-radius: 1px;
+    background-color: currentColor;
+
+    /* Scaled, not grown: width would reflow the line box every frame. */
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 280ms var(--ease-out);
+}
+
+.link-underline:hover::after,
+.link-underline:focus-visible::after {
+    transform: scaleX(1);
+    /* Flipping the origin between states is what makes it wipe IN from the
+       left and OUT to the right, instead of retracting back the way it came.
+       That directionality is the whole point of the effect. */
+    transform-origin: bottom left;
+}
+
+/* Reverse: starts underlined, wipes away on hover. For links that are
+   already obviously links and want a lighter touch on interaction. */
+.link-underline-out::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.link-underline-out:hover::after,
+.link-underline-out:focus-visible::after {
+    transform: scaleX(0);
+    transform-origin: bottom right;
+}
+
+/* The bar is decoration; the colour change is the real state signal, so
+   reduced-motion keeps a plain static underline rather than nothing. */
+@media (prefers-reduced-motion: reduce) {
+    .link-underline::after,
+    .link-underline-out::after {
+        transition: none;
+    }
+}

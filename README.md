@@ -1,61 +1,109 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Farmers Hostel — Booking & Operations System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Booking and front-desk system for Farmers Hostel, CLSU Auxiliary Services
+Program (Science City of Muñoz, Nueva Ecija).
 
-## About Laravel
+Guests search availability, reserve rooms and upload proof of payment. Staff run
+the front desk, room board, payment verification and records behind the same
+data. One login form serves both — `LoginController` resolves the identity, then
+hands off to the `web` guard for guests or the `staff` guard for staff.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Laravel 12 · PHP 8.2+ · MySQL · Blade + Alpine · Tailwind via Vite**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Setup
 
-## Learning Laravel
+Requires PHP 8.2+, Composer, Node 18+, and MySQL running (XAMPP is what this is
+developed against).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Create an empty database named `aux_system` (or change `DB_DATABASE` in `.env`),
+then:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan migrate --seed
+php artisan storage:link
+npm run build
+php artisan serve
+```
 
-## Laravel Sponsors
+The app is at **http://127.0.0.1:8000**.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+> `npm run build`, never a bare `vite build` — the build script runs
+> `php artisan view:cache` first, and Tailwind scans *compiled* Blade. Building
+> against a cold view cache silently drops utility classes.
 
-### Premium Partners
+## Test accounts
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+All seeded with the password `password`.
 
-## Contributing
+| Role | Email | Lands on |
+|---|---|---|
+| Master admin | `master@example.com` | `/staff/dashboard` |
+| Admin | `admin@example.com` | `/staff/dashboard` |
+| Front desk | `frontdesk@example.com` | `/front-desk/dashboard` |
+| Guest | `user@example.com` | `/` |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Staff and guests sign in at the **same** form, `/login`. (`/staff/login`
+redirects there; it is not a second form.)
 
-## Code of Conduct
+The seeder also creates 6 room types and 12 rooms across three wings, so
+availability, the room board and the booking calendar all have something to
+show on a fresh database.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Things that will confuse you otherwise
 
-## Security Vulnerabilities
+- **Blade edits appear to do nothing.** Views are cached in this repo. Run
+  `php artisan view:clear && php artisan view:cache` after editing a template.
+- **The site renders unstyled.** Check for a leftover `public/hot` file and
+  delete it — it points every asset at a Vite dev server that is no longer
+  listening. This is the first thing to check for any "the site looks broken or
+  slow" report.
+- **Staff OTP is off by default** (`STAFF_OTP_ENABLED=false`). Turn it on to
+  exercise that path, but with `MAIL_MAILER=log` the code is written to
+  `storage/logs/laravel.log`, not emailed.
+- **No email is actually sent** with the default `MAIL_MAILER=log`. Booking
+  confirmations, receipts and OTPs all land in `storage/logs/laravel.log`.
+- **Live console updates need Reverb.** Not required — with
+  `BROADCAST_CONNECTION=log` the consoles fall back to polling and nothing
+  breaks. See `docs/operations.md` to turn it on.
+- **Unpaid holds only expire if the scheduler runs.** Without
+  `php artisan schedule:run` firing every minute, a `pending_payment` booking
+  holds its room forever and the room quietly disappears from availability. Not
+  a bug — a missing process. `docs/operations.md` covers this in detail.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Running the tests
 
-## License
+```bash
+php artisan test
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Where things are
+
+| Path | What |
+|---|---|
+| `docs/operations.md` | What must be running, and what silently breaks when it isn't. **Read this one.** |
+| `docs/security-auth-hardening.md` | Login, guards, OTP, rate limiting |
+| `docs/security-input-hardening.md` | Validation rules and why each exists |
+| `docs/security-payment-hardening.md` | Payment proof handling and verification |
+| `PRODUCT.md` | Who the users are and what the product is for |
+| `DESIGN.md` | Design system and visual language |
+| `plans/` | Per-change implementation plans |
+
+## Notes on the domain
+
+- Prices are **always** recomputed server-side from the room catalog. Anything
+  posted by the client for price or capacity is display continuity only and is
+  never trusted.
+- `pending_payment` blocks a room exactly as hard as a paid booking does. That
+  is deliberate — see the availability logic in `BookingController`.
+- Addresses use the Philippine Standard Geographic Code. The full dataset is
+  committed at `resources/data/psgc.json` and served by `PsgcController`; the
+  form selects post `code|name` pairs, not bare codes.

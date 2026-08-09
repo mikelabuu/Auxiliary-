@@ -41,10 +41,6 @@ class StatCards extends Component
             ? (($bookingsThisMonth - $bookingsLastMonth) / $bookingsLastMonth) * 100
             : ($bookingsThisMonth > 0 ? 100 : 0);
 
-        // Revenue moved to the hero card (App\Livewire\Dashboard\Hero), which
-        // owns the gross total, the month-on-month delta and the 12-month
-        // chart — computing any of it here again would just be duplicate SQL.
-
         // Secondary strip — availableCount uses the shared RoomBoard state so
         // it always matches the Room Status Map legend.
         $availableCount = RoomBoard::state()->where('display_status', 'available')->count();
@@ -54,9 +50,8 @@ class StatCards extends Component
 
         // ── Share-of-total for each card's meter ─────────────────────────
         // Each bar has a real denominator; none of them are decoration.
-        $roomsServiceablePct = $totalRooms > 0
-            ? (($totalRooms - $roomsUnderMaintenance) / $totalRooms) * 100 : 0;
-
+        // The rooms meter went with the Total Rooms card when it moved to the
+        // secondary strip, which has no meter — so it is no longer computed.
         $bookingsFulfilled = Booking::whereIn('status', ['active', 'completed'])->count();
         $bookingsFulfilledPct = $totalBookings > 0 ? ($bookingsFulfilled / $totalBookings) * 100 : 0;
 
@@ -93,12 +88,42 @@ class StatCards extends Component
                 ->groupBy('yw')->pluck('c', 'yw')
         );
 
-        // Revenue for the current month — the hero card shows all-time gross,
-        // so without this the dashboard never states what this month earned.
+        // ── Revenue ──────────────────────────────────────────────────────
+        // This used to be the hero card, where an all-time gross total carried
+        // a month-on-month delta and a trailing-12-month chart. Three time
+        // windows in one card meant a quiet month rendered as "-100%" beside a
+        // seven-figure lifetime number, which reads as a collapse. The headline
+        // is the month now, so the delta beneath it compares like with like;
+        // all-time gross survives as the footnote, where a reference figure
+        // belongs.
         $revenueThisMonth = (float) Payment::where('status', 'success')
             ->whereYear('created_at', $now->year)
             ->whereMonth('created_at', $now->month)
             ->sum('amount');
+
+        $revenueLastMonth = (float) Payment::where('status', 'success')
+            ->whereYear('created_at', $lastMonth->year)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->sum('amount');
+
+        $revenuePercentChange = $revenueLastMonth > 0
+            ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
+            : ($revenueThisMonth > 0 ? 100 : 0);
+
+        $grossRevenue = (float) Payment::where('status', 'success')->sum('amount');
+
+        // Trailing 12 months in one grouped query rather than twelve.
+        $monthWindow = $now->copy()->subMonths(11)->startOfMonth();
+        $revenueByMonth = Payment::where('status', 'success')
+            ->where('created_at', '>=', $monthWindow)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, SUM(amount) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        $revenueSpark = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $revenueSpark[] = (float) ($revenueByMonth[$now->copy()->subMonths($i)->format('Y-m')] ?? 0);
+        }
 
         return view('livewire.dashboard.stat-cards', compact(
             'totalRooms',
@@ -111,7 +136,6 @@ class StatCards extends Component
             'checkinsThisWeek',
             'checkoutsThisWeek',
             'pendingDiscounts',
-            'roomsServiceablePct',
             'bookingsFulfilled',
             'bookingsFulfilledPct',
             'usersWithBooking',
@@ -119,7 +143,10 @@ class StatCards extends Component
             'sellablePct',
             'bookingSpark',
             'userSpark',
-            'revenueThisMonth'
+            'revenueThisMonth',
+            'revenuePercentChange',
+            'revenueSpark',
+            'grossRevenue'
         ));
     }
 }

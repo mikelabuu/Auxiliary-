@@ -8,6 +8,53 @@
     AddType image/webp .webp
 </IfModule>
 
+# Nothing was leaving the server compressed: every asset arrived with
+# transferSize equal to its decoded size, so one admin page shipped ~1.1MB in
+# full — livewire.js 340KB, admin.css 251KB, app.js 131KB, Font Awesome 89KB,
+# jQuery 86KB, SweetAlert2 78KB. Text compresses roughly 3-4x.
+#
+# This block does nothing until mod_deflate and mod_filter are loaded, and
+# XAMPP ships both commented out in apache/conf/httpd.conf. Uncommenting them
+# there is a per-machine step that does not travel with the repo, so it has to
+# be repeated on any other machine or on the production host.
+#
+# woff2/woff are compressed formats already; deflating them burns CPU for
+# nothing, which is why no font types are listed.
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml
+        AddOutputFilterByType DEFLATE text/css text/javascript
+        AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+        AddOutputFilterByType DEFLATE application/json application/xml
+        AddOutputFilterByType DEFLATE image/svg+xml
+    </IfModule>
+</IfModule>
+
+# mod_headers is the one XAMPP does enable by default, so the caching half
+# takes effect without touching httpd.conf.
+#
+# The patterns are deliberately unanchored: served through a vhost the paths
+# are /build/… and /vendor/…, but under htdocs they arrive as
+# /Auxiliary-/public/build/… — anchoring on ^/ would quietly match neither.
+<IfModule mod_headers.c>
+    # Vite writes content-hashed filenames into build/assets, so the bytes
+    # behind a given URL never change: a rebuild produces a new URL. Safe to
+    # pin hard, and `immutable` also drops the revalidation round-trip that
+    # otherwise costs a request per asset per navigation.
+    <If "%{REQUEST_URI} =~ m#/build/assets/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+
+    # public/vendor holds pinned library copies written by
+    # scripts/sync-vendor.mjs. Those filenames carry no hash, so this is a week
+    # rather than a year on purpose: bumping a vendor package leaves returning
+    # browsers holding the old copy until the entry lapses, and a week is short
+    # enough to survive while still covering a normal shift pattern.
+    <If "%{REQUEST_URI} =~ m#/vendor/#">
+        Header set Cache-Control "public, max-age=604800"
+    </If>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

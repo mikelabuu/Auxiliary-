@@ -11,6 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class BookingPaidMail extends Mailable
 {
@@ -33,9 +34,15 @@ class BookingPaidMail extends Mailable
         // (this mailable may be queued/serialized without the relation loaded).
         $booking->loadMissing('reservations');
 
-        // Generate receipt number and verification URL
+        // Generate receipt number and verification URL.
+        //
+        // Signed, and with no expiry: the QR below is printed into a PDF the
+        // guest keeps, so a link that ages out would turn every archived receipt
+        // unverifiable. The signature is what authorises the reader — receipt
+        // numbers are sequential from the booking id, so an unsigned link would
+        // let anyone enumerate the receipt table.
         $receiptNumber = 'R-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
-        $verificationUrl = url("/verify-receipt/{$receiptNumber}");
+        $verificationUrl = URL::signedRoute('receipts.verify', ['number' => $receiptNumber]);
 
         // Generate QR code as raw PNG
         $qr = Builder::create()

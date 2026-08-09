@@ -6,8 +6,13 @@
       </div>
       <p class="font-semibold text-stone-900 text-sm">Occupancy</p>
     </div>
+    {{-- wire:target names forceRecalculate specifically. Without it the 15s
+         keep-alive poll below would spin this every quarter minute, which
+         reads as the page doing something the user did not ask for. --}}
     <button wire:click="forceRecalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
-      <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <svg wire:loading.remove wire:target="forceRecalculate" class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <x-admin.ui.spinner wire:loading.flex wire:target="forceRecalculate"
+                          variant="bounce" size="sm" current label="Recalculating occupancy" class="text-clsu-600" />
     </button>
   </div>
 

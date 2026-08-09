@@ -1,10 +1,13 @@
 @extends('layouts.public.base')
 @section('title', 'Checkout | Farmers Hostel')
 
-{{-- The only public page carrying a Livewire component: the address-selector
-     inside step-guest. This flag makes the layout emit @livewireScripts and
-     skip the standalone Alpine build, since Livewire brings its own. --}}
-@section('livewire', '1')
+{{-- No @section('livewire') here on purpose. The address-selector inside
+     step-guest was the only Livewire component on any public page, and it was
+     pulling the whole 339 KB Livewire bundle onto checkout so that three
+     dropdowns could round-trip to the server. It is a Blade + Alpine component
+     now, so checkout takes the same ~45 KB standalone Alpine as every other
+     public page. Re-adding a Livewire component here means restoring the flag,
+     or Alpine will be doubled — see the vendor loading contract. --}}
 
 {{-- Date fields are flatpickr instances built by public/js/booking.js. --}}
 @push('vendor')

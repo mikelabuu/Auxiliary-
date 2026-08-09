@@ -32,6 +32,44 @@ function initAdminRooms() {
         window.toast(message, icon); // unified console toasts (resources/js/app.js)
     }
 
+    /* ── SpinKit helpers (admin/23-spinkit.css) ──────────────────────
+       These pages build their markup in JS, so they cannot use the
+       <x-admin.ui.spinner> Blade component. Same classes, same shapes. */
+
+    // Centred spinner + message, for a panel that has nothing in it yet.
+    function skBlock(label) {
+        return '<div class="sk-block" role="status">'
+             + '<span class="sk sk-fading-circle" aria-hidden="true">' + '<span></span>'.repeat(12) + '</span>'
+             + '<span class="sk-block__label">' + label + '</span>'
+             + '</div>';
+    }
+
+    // Swaps a button's label for dots while a request is in flight, and
+    // returns the undo. Width is frozen first so the row does not reflow
+    // as the label is replaced — the same trick shared/busy.css uses.
+    function btnBusy(el) {
+        const $b = $(el);
+        if ($b.data('sk-busy')) return function () {};
+
+        const html = $b.html();
+        const w = $b.outerWidth();
+
+        $b.data('sk-busy', true)
+          .css('min-width', w + 'px')
+          .attr('aria-busy', 'true')
+          // Not `disabled`: that would drop the element from the tab order
+          // mid-interaction and move focus somewhere unrelated.
+          .css('pointer-events', 'none')
+          .html('<span class="sk sk-bounce sk-sm sk-current" aria-hidden="true"><span></span><span></span><span></span></span>');
+
+        return function () {
+            $b.removeData('sk-busy')
+              .css({ 'min-width': '', 'pointer-events': '' })
+              .removeAttr('aria-busy')
+              .html(html);
+        };
+    }
+
     // Animated modal helpers (focus management included) live in layouts/admin.
     const openModal = (id) => window.openModal(id);
     const closeModal = (id) => window.closeModal(id);
@@ -209,7 +247,7 @@ function initAdminRooms() {
         if ($(e.target).closest('.room-edit-btn, .room-kebab-btn, [data-kebab-panel]').length) return;
         const roomId = $(this).data('room-id');
         const modalBody = $('#occupancyModalBody');
-        modalBody.html('<p class="text-center text-faint text-sm py-6">Loading…</p>');
+        modalBody.html(skBlock('Loading bookings'));
         openModal('occupancyModal');
 
         $.get(`${base}/${roomId}/occupancy`)
@@ -279,7 +317,12 @@ function initAdminRooms() {
         e.stopPropagation();
         const roomId = $(this).data('id');
 
-        $.get(`${base}/${roomId}/edit`).done(function (res) {
+        // The modal only opens inside .done(), so without this the button
+        // absorbs the click and nothing happens until the round-trip finishes.
+        // Feedback belongs at the point of the action, not just at its result.
+        const restore = btnBusy(this);
+
+        $.get(`${base}/${roomId}/edit`).always(restore).done(function (res) {
             if (!res.success) return;
             const room = res.room;
 

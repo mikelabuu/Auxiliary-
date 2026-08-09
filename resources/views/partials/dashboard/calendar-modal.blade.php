@@ -1,7 +1,12 @@
 {{--
     Booking Calendar modal — shared by the admin and front-desk dashboards.
-    Opened by a header button with id="openCalendarBtn".
+    Opened by any button with id="openCalendarBtn".
     Expects: $calendarData — { 'YYYY-MM-DD': { a:arrivals, d:departures, s:in-house, guests:[{n,r,t,k,st}] } }
+
+    This partial also owns the renderer for the inline hero card
+    (partials/dashboard/calendar-card) when that card is on the page, so
+    $calendarData is serialised once and both grids stay in step. The front-desk
+    dashboard includes only the modal; the inline branch simply no-ops there.
 --}}
 <x-admin.ui.modal id="calendarModal" icon="calendar" title="Booking Calendar" max-width="2xl" scroll-body>
     <div class="modal-body">
@@ -142,6 +147,62 @@
         else showMonthSummary(y, m);
     }
 
+    /* ── Inline hero card ──────────────────────────────────────────────────
+       Same data, its own month cursor: navigating the card should not silently
+       move the modal underneath it, and vice versa. Cells carry the counts as
+       a title so the dots are never the only channel. */
+    let dashDate = new Date();
+
+    function dashCell(y, m, d, muted) {
+        const ds = ymd(y, m, d);
+        const info = muted ? null : calData[ds];
+        const t = new Date();
+        const isToday = !muted && d === t.getDate() && m === t.getMonth() && y === t.getFullYear();
+
+        let cls = 'dash-cal__day';
+        if (muted) cls += ' is-muted';
+        if (info && info.s > 0) cls += ' has-stay';
+        if (info) cls += ' is-open';
+        if (isToday) cls += ' is-today';
+
+        let dots = '';
+        let label = '';
+        if (info) {
+            const bits = [];
+            if (info.a > 0) { dots += '<span class="dash-cal__dot dash-cal__dot--arrival"></span>'; bits.push(`${info.a} arrival${info.a > 1 ? 's' : ''}`); }
+            if (info.d > 0) { dots += '<span class="dash-cal__dot dash-cal__dot--departure"></span>'; bits.push(`${info.d} departure${info.d > 1 ? 's' : ''}`); }
+            if (info.s > 0) bits.push(`${info.s} in-house`);
+            label = bits.join(', ');
+        }
+
+        // Only real, populated days are buttons — an empty date is not an action.
+        if (!info) {
+            return `<span class="${cls}"><span class="dash-cal__num">${d}</span></span>`;
+        }
+        return `<button type="button" class="${cls}" data-dash-date="${ds}" title="${esc(label)}">`
+            + `<span class="dash-cal__num">${d}</span>`
+            + `<span class="dash-cal__dots" aria-hidden="true">${dots}</span>`
+            + `<span class="sr-only">${esc(label)}</span></button>`;
+    }
+
+    function renderDash() {
+        if (!el('dashCalGrid')) return;
+        const y = dashDate.getFullYear();
+        const m = dashDate.getMonth();
+        el('dashCalMonthYear').textContent = `${monthsLong[m]} ${y}`;
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        const prevLast = new Date(y, m, 0).getDate();
+
+        let html = '';
+        for (let i = firstDay; i > 0; i--) html += dashCell(y, m - 1, prevLast - i + 1, true);
+        for (let d = 1; d <= lastDate; d++) html += dashCell(y, m, d, false);
+        const nextDays = (7 - ((firstDay + lastDate) % 7)) % 7;
+        for (let i = 1; i <= nextDays; i++) html += dashCell(y, m + 1, i, true);
+        el('dashCalGrid').innerHTML = html;
+    }
+
     // Expose so the header button can (re)render on open.
     window.renderDashCalendar = render;
 
@@ -151,10 +212,29 @@
             $(document).on('click', '#calGrid [data-date]', function () { selected = this.getAttribute('data-date'); render(); });
             $(document).on('click', '#calPrev', function () { calDate.setMonth(calDate.getMonth() - 1); selected = null; render(); });
             $(document).on('click', '#calNext', function () { calDate.setMonth(calDate.getMonth() + 1); selected = null; render(); });
-            $(document).on('click', '#openCalendarBtn', function () { window.openModal('calendarModal'); requestAnimationFrame(render); });
+            // Paint before opening, not on the next frame. render() only writes
+            // innerHTML — it measures nothing — so waiting for a frame bought
+            // nothing and cost correctness: requestAnimationFrame does not fire
+            // in a backgrounded tab, which left the modal showing whatever the
+            // last open had selected.
+            $(document).on('click', '#openCalendarBtn', function () { render(); window.openModal('calendarModal'); });
             $('#calendarModal').on('click', '[data-modal-close]', function () { window.closeModal('calendarModal'); });
             $(document).on('keydown', function (e) { if (e.key === 'Escape' && $('#calendarModal').hasClass('flex')) window.closeModal('calendarModal'); });
+
+            // Inline card: navigate in place, but a day opens the modal on that
+            // date — the card has no room for a guest list.
+            $(document).on('click', '#dashCalPrev', function () { dashDate.setMonth(dashDate.getMonth() - 1); renderDash(); });
+            $(document).on('click', '#dashCalNext', function () { dashDate.setMonth(dashDate.getMonth() + 1); renderDash(); });
+            $(document).on('click', '#dashCalToday', function () { dashDate = new Date(); renderDash(); });
+            $(document).on('click', '#dashCalGrid [data-dash-date]', function () {
+                selected = this.getAttribute('data-dash-date');
+                calDate = new Date(selected + 'T00:00:00');
+                render();
+                window.openModal('calendarModal');
+            });
+
             render();
+            renderDash();
         });
     }
 })();

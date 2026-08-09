@@ -71,6 +71,17 @@
       }"
       :class="{ 'sidebar-collapsed': sidebarCollapsed, 'density-compact': density === 'compact', 'density-large': density === 'large' }">
 
+  {{-- Both are first in the body on purpose: they have to be parsed and
+       running before the stylesheet and script requests resolve, since those
+       are what they are reporting on.
+
+       Two indicators, two different waits. The curtain covers a full document
+       load (~790ms here, mostly asset parsing). The bar covers in-page
+       Livewire work — pagination, filters, sorting — where a full-screen
+       takeover for a 36ms request would be absurd. --}}
+  @include('partials.page-loader')
+  @include('partials.page-progress')
+
   {{-- Apply saved rail/density state before Alpine boots so nothing flashes --}}
   <script>
     if (localStorage.getItem('adminSidebarCollapsed') === '1') {

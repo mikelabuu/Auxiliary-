@@ -36,6 +36,16 @@
 /* Tabular figures, the label size floor and pointer-target minimums. Sits
    after the component layers because it deliberately overrides their sizing. */
 @import './admin/19-type-craft.css';
+/* Container-query column folding for the wide log tables. After 19 because it
+   overrides the display of cells those layers style. */
+@import './admin/20-table-fold.css';
+/* Compositor-driven hover elevation. MUST come after 04-components and
+   05-motion-ux: it overrides the transition list on .card-hover and hangs a
+   shadow on the spotlight pseudo those layers define. */
+@import './admin/21-shadow-lift.css';
+@import './admin/22-link-underline.css';
+/* SpinKit loaders, shared by the admin and front desk shells. */
+@import './admin/23-spinkit.css';
 
 /* MUST STAY LAST: the coarse-pointer neutraliser only wins if it is imported
    after every layer that sets a hover transform. See the file header. */

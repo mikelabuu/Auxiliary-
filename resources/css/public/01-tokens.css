@@ -147,10 +147,35 @@
     --color-cherry-red: #DC2626;
     /* ember-600 */
 
-    /* Shadows */
+    /* Shadows
+
+       Layered per Tobias Ahlin, "Smoother & sharper shadows with layered
+       box-shadows": several shadows with doubling offset and blur rather than
+       one or two large ones, so the falloff has no visible edge where the
+       blur stops. Alphas descend down the stack, which keeps the cream
+       surface from going grey under the card.
+
+       These are the CREAM (boutique) tokens. The night theme keeps its own
+       single-bloom shadows in 04-theme-night — on a near-black canvas the
+       layered stack is invisible and only costs paint work. */
     --shadow-soft: 0px 4px 20px rgba(0, 0, 0, 0.03);
     --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-card: 0 1px 2px rgba(8, 36, 20, 0.04), 0 10px 30px -10px rgba(8, 36, 20, 0.10);
-    --shadow-card-lg: 0 4px 10px rgba(8, 36, 20, 0.05), 0 22px 45px -14px rgba(8, 36, 20, 0.18);
+
+    --shadow-card:
+        0 1px 1px rgba(8, 36, 20, 0.035),
+        0 2px 2px rgba(8, 36, 20, 0.032),
+        0 4px 4px rgba(8, 36, 20, 0.028),
+        0 8px 8px -2px rgba(8, 36, 20, 0.024),
+        0 16px 16px -8px rgba(8, 36, 20, 0.018);
+
+    --shadow-card-lg:
+        0 1px 1px rgba(8, 36, 20, 0.050),
+        0 2px 2px rgba(8, 36, 20, 0.046),
+        0 4px 4px rgba(8, 36, 20, 0.042),
+        0 8px 8px rgba(8, 36, 20, 0.036),
+        0 16px 16px -4px rgba(8, 36, 20, 0.030),
+        0 32px 32px -12px rgba(8, 36, 20, 0.024);
+
+    /* A light source, not a cast shadow — the layered falloff would fight it. */
     --shadow-glow: 0 1px 1px rgba(255, 255, 255, 0.06) inset, 0 18px 40px -14px rgba(8, 36, 20, 0.55);
 }

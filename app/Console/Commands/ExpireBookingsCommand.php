@@ -9,6 +9,7 @@ use App\Models\ExpiryLog;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\RoomStatusChanged;
+use App\Support\GuestNotice;
 use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -72,6 +73,18 @@ class ExpireBookingsCommand extends Command
             if (BookingStatusChanged::shouldEmitFor($booking)) {
                 Realtime::emit(new BookingStatusChanged($booking->id, 'expired'));
             }
+        }
+
+        // ...and tell the ones who are not sitting on the page, which is nearly
+        // all of them. The broadcast above only reaches an open tab; before this
+        // mail existed, everyone else learned that their rooms were gone by
+        // coming back and finding the booking missing.
+        //
+        // Outside the transaction on purpose: SMTP is slow and can hang, and
+        // holding a write transaction open across a network call to a mail host
+        // would lock these rows for the duration.
+        foreach ($expiredBookings as $booking) {
+            GuestNotice::bookingExpired($booking);
         }
 
         $this->info(" Marked {$expiredBookings->count()} bookings as expired and logged them.");

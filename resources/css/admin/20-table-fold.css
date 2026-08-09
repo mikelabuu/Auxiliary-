@@ -1,0 +1,84 @@
+/* ============================================================
+   20. FOLDING WIDE TABLES
+
+   The Complete Booking Log wants seven columns and about 1530px to
+   draw them. On a 1366px laptop it gets 917px, so 605px sat off the
+   right edge — and because the Actions column is pinned, the two
+   that actually fell off were Check-out and Status. Status is the
+   column the filter pills act on, so filtering by "Paid" produced a
+   table where the result of the filter was off-screen.
+
+   Below the breakpoint the seven columns fold into four. Nothing is
+   dropped: the three that fold away reappear inside the columns that
+   remain, and their sorts move to the toolbar select (a header can
+   only offer a sort for a column that is on screen).
+
+       REF / STATUS   GUEST / ROOM   STAY              ACTIONS
+       BK-0029        ZV zx, vxc     Jul 31 -> Aug 01  [View]
+       PAID              Room 107    1 night
+       BOOKED JUL 31
+
+   The query container is .table-fold on .wire-panel, NOT on .scroll-x:
+   container-type applies containment, and applying that to the scroll
+   container disturbs the sticky Actions column living inside it.
+
+   The 1500px threshold is the table's own intrinsic width rather than
+   a device size — it is the point below which something would have to
+   be clipped, which is the only width that actually means anything
+   here. The sidebar rail toggle changes available width by 200px at a
+   fixed viewport size, so a viewport media query would be wrong twice
+   over.
+   ============================================================ */
+
+.table-fold {
+    container-type: inline-size;
+    container-name: tablefold;
+}
+
+/* Folded-layout content is inert until the fold happens. */
+.fold-show { display: none; }
+
+@container tablefold (max-width: 1500px) {
+    .data-table-foldable .col-fold { display: none; }
+
+    .data-table-foldable .fold-hide { display: none; }
+    .data-table-foldable .fold-show { display: inline; }
+
+    /* The pill is a flex item in .ref-cell's column, so it would stretch
+       the full cell width without this. */
+    .data-table-foldable .ref-cell .status.fold-show {
+        display: inline-flex;
+        align-self: flex-start;
+        margin-top: 1px;
+    }
+
+    /* Check-in and check-out have to read as one span, not two dates that
+       happen to be adjacent. */
+    .data-table-foldable .stay-span {
+        display: block;
+        color: var(--color-muted);
+    }
+    .data-table-foldable .stay-nights {
+        display: block;
+        margin-top: 2px;
+        font-size: var(--fs-2xs);
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--color-faint);
+    }
+
+    /* Guest is the one column with unbounded content, so it is the one that
+       decides whether the other three fit. Capped, the four columns come in
+       just under the container and the table stops scrolling sideways
+       altogether; uncapped, a long name reintroduces the clipping this layer
+       exists to remove. The name already has ellipsis machinery from
+       .cell-name-secondary, so the overflow is handled rather than wrapped. */
+    .data-table-foldable thead th:nth-child(2),
+    .data-table-foldable tbody td:nth-child(2) { max-width: 250px; }
+    .data-table-foldable .cell-name-primary {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

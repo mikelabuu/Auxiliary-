@@ -32,8 +32,8 @@
 .mini-stat__value,
 .map-stat__n,
 .kpi-value,
-.dash-revenue__value,
-.dash-revenue__cents,
+.dash-cal__month,
+.dash-cal__num,
 .ops-log-table td,
 .room-card__meta,
 .booking-ref,
@@ -232,7 +232,7 @@ label, .form-label {
 /* Small inline links ("Ledger", "View all") get a hit area without
    gaining visual bulk: the padding is negative-margined back out so
    surrounding layout is untouched. */
-.dash-revenue__link,
+.dash-cal__link,
 .section-link {
     padding: 11px 6px;
     margin: -11px -6px;

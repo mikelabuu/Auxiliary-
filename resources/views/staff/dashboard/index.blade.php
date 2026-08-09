@@ -9,17 +9,27 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    {{-- Top row: welcome panel (today's ops at a glance + the four actions that
-         start a task) beside the gross-revenue hero. Replaces the old
-         page-header — its buttons live in the panel now — and the quick-action
-         tile grid, which repeated those same destinations a second time. --}}
-    <livewire:dashboard.hero />
+    {{-- Top row: welcome panel (today's ops at a glance + the actions that start
+         a task) beside the booking calendar. Replaces the old page-header — its
+         buttons live in the panel now — and the quick-action tile grid, which
+         repeated those same destinations a second time.
+
+         The calendar card is a plain include rather than part of the Livewire
+         component: the panel polls every 15s, and a re-render would wipe the
+         grid the shared renderer paints into it. Revenue used to hold this
+         slot; it is a KPI now (livewire/dashboard/stat-cards). --}}
+    <div class="dash-hero-row">
+        <livewire:dashboard.hero />
+        @include('partials.dashboard.calendar-card')
+    </div>
 
     {{-- Stat cards + secondary strip: live Livewire component (polls + follows
          the same broadcast pushes as the room map). --}}
     <livewire:dashboard.stat-cards />
 
-    {{-- Booking Insights + Calendar modals (opened from the header buttons)
+    {{-- Booking Insights + Calendar modals. Insights opens from the panel
+         button; the calendar modal is now the detail layer behind the inline
+         card, opened by clicking a day or "Full calendar".
          Pushed to the body level so they aren't trapped in the animated content flow --}}
     @push('modals')
         @include('partials.dashboard.insights-modal')
