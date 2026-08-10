@@ -9,23 +9,31 @@
 @php
     use App\Models\Room;
 
-    $wingLabel = fn ($w) => ucwords(str_replace('_', ' ', $w));
+    // Wing labelling and ordering come from the model, so this page and the
+    // dashboard's Room Status Map lay the building out identically.
+    $wingLabel = fn ($w) => Room::wingLabel($w);
+
+    // Cards show the DERIVED state (App\Support\RoomHold::displayStatus), not
+    // the raw housekeeping column: 'reserved' and 'pending' come from a booking
+    // holding the room tonight and never appear in `rooms.status`.
     $statusMeta = [
         'available'   => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200', 'dot' => 'bg-clsu-400', 'bar' => 'bg-clsu-400', 'label' => 'Available'],
         'occupied'    => ['badge' => 'bg-clsu-700 text-white border-clsu-700', 'dot' => 'bg-white/70', 'bar' => 'bg-clsu-700', 'label' => 'Occupied'],
+        'reserved'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-300', 'dot' => 'bg-palay-600', 'bar' => 'bg-palay-500', 'label' => 'Reserved'],
+        'pending'     => ['badge' => 'bg-palay-50 text-palay-700 border-palay-300', 'dot' => 'bg-palay-400', 'bar' => 'bg-palay-300', 'label' => 'Reserved · unpaid'],
         'maintenance' => ['badge' => 'bg-ember-50 text-ember-700 border-ember-200', 'dot' => 'bg-ember-500', 'bar' => 'bg-ember-500', 'label' => 'Maintenance'],
-        'cleaning'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200', 'dot' => 'bg-palay-500', 'bar' => 'bg-palay-400', 'label' => 'Cleaning'],
+        'cleaning'    => ['badge' => 'bg-sky-50 text-sky-800 border-sky-200', 'dot' => 'bg-sky-500', 'bar' => 'bg-sky-400', 'label' => 'Cleaning'],
     ];
 
-    // "Occupied" is owned by the booking lifecycle — check-in sets it, check-out
-    // clears it — so it is shown and filterable but never hand-picked. Setting it
-    // by hand produced a room with no guest, no end date and nothing to clear it.
-    // Housekeeping states below are the ones staff actually control.
-    $settableStatuses = collect($statusMeta)->except(Room::DERIVED_STATUSES)->all();
-    $roomsByWing = $rooms->groupBy('wing');
-    $wingOrder = ['rooster', 'tumana', 'chev_re', 'torii'];
-    $orderedWings = collect($wingOrder)->filter(fn ($w) => $roomsByWing->has($w))
-        ->concat($roomsByWing->keys()->diff($wingOrder)->sort());
+    // What the kebab menu may set. "Occupied" is owned by the booking lifecycle
+    // — check-in sets it, check-out clears it — so it is shown and filterable
+    // but never hand-picked; setting it by hand produced a room with no guest,
+    // no end date and nothing to clear it. 'reserved'/'pending' are derived the
+    // same way and are likewise not staff's to assign.
+    $settableStatuses = collect($statusMeta)->only(Room::SETTABLE_STATUSES)->all();
+    $roomsByWing = Room::groupByWing($rooms);
+    $wingOrder = Room::WING_ORDER;
+    $orderedWings = $roomsByWing->keys();
 
     // Everything resources/js/pages/admin-rooms.js needs, as one payload.
     // Built here (not via @json in a script) because Blade's @json directive
@@ -83,7 +91,7 @@
 
         <x-admin.ui.stat-card icon="check-circle" badge="READY" label="Available" :delay="80" value-id="statAvailableNum">
             {{ $availableRooms }}
-            <x-slot:footnote><p class="text-xs text-faint">Ready for check-in</p></x-slot:footnote>
+            <x-slot:footnote><p class="text-xs text-faint">Free to give out tonight</p></x-slot:footnote>
         </x-admin.ui.stat-card>
 
         <x-admin.ui.stat-card icon="users" badge="IN USE" label="Occupied" :delay="120" value-id="statOccupiedNum" dark>
@@ -98,8 +106,11 @@
     </div>
 
     <!-- Secondary metrics strip -->
-    <div class="animate-in grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6" style="animation-delay:200ms">
-        <x-admin.ui.mini-stat icon="droplet" color="palay" label="Rooms being cleaned" value-id="statCleaningNum">{{ $cleaningRooms }}</x-admin.ui.mini-stat>
+    <div class="animate-in grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6" style="animation-delay:200ms">
+        {{-- Booked for tonight but nobody checked in yet. Without this the
+             rooms simply vanished from Available with nothing to explain it. --}}
+        <x-admin.ui.mini-stat icon="arrival" color="palay" label="Reserved tonight" value-id="statReservedNum">{{ $reservedRooms + $pendingRooms }}</x-admin.ui.mini-stat>
+        <x-admin.ui.mini-stat icon="droplet" color="sky" label="Rooms being cleaned" value-id="statCleaningNum">{{ $cleaningRooms }}</x-admin.ui.mini-stat>
         <x-admin.ui.mini-stat icon="grid" label="Wings in use" value-id="statWingsNum">{{ $roomsByWing->count() }}</x-admin.ui.mini-stat>
         <x-admin.ui.mini-stat icon="tag" label="Room types offered" value-id="statTypesNum">{{ $roomTypes->count() }}</x-admin.ui.mini-stat>
     </div>
@@ -120,7 +131,9 @@
         <x-slot:actions>
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-clsu-400"></span>Available · <span id="legendAvailable">{{ $availableRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-clsu-600"></span>Occupied · <span id="legendOccupied">{{ $occupiedRooms }}</span></span>
-            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Cleaning · <span id="legendCleaning">{{ $cleaningRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-palay-600"></span>Reserved · <span id="legendReserved">{{ $reservedRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Unpaid hold · <span id="legendPending">{{ $pendingRooms }}</span></span>
+            <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-sky-400"></span>Cleaning · <span id="legendCleaning">{{ $cleaningRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span id="legendMaintenance">{{ $maintenanceRooms }}</span></span>
         </x-slot:actions>
 
@@ -152,7 +165,7 @@
         @forelse($orderedWings as $wing)
             @php
                 $group = $roomsByWing[$wing];
-                $wingOpen = $group->where('status', 'available')->count();
+                $wingOpen = $group->filter(fn ($r) => $displayStatuses[$r->id] === 'available')->count();
             @endphp
             <div class="wing-group mb-7 last:mb-0" data-wing-group>
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
@@ -169,7 +182,9 @@
                      phone wrapped every status chip onto its own line. --}}
                 <div class="rooms-grid">
                     @foreach($group as $room)
-                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :settable-statuses="$settableStatuses" :stay="$stayContext[trim($room->room_number)] ?? null" />
+                        <x-admin.rooms.room-card :room="$room" :status-meta="$statusMeta" :settable-statuses="$settableStatuses"
+                                                 :display-status="$displayStatuses[$room->id]"
+                                                 :stay="$stayContext[trim($room->room_number)] ?? null" />
                     @endforeach
                 </div>
             </div>

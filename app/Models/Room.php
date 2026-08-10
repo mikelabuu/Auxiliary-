@@ -4,10 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 class Room extends Model
 {
     protected $table = 'rooms';
+
+    /**
+     * The order the building is walked in. Wings outside this list still show
+     * — alphabetically, after these — so a wing added tomorrow is never
+     * silently dropped from a board.
+     */
+    public const WING_ORDER = ['rooster', 'tumana', 'chev_re', 'torii'];
 
     /**
      * Housekeeping states staff set by hand. 'occupied' is deliberately absent:
@@ -57,5 +65,35 @@ class Room extends Model
         return $this->hasMany(\App\Models\Reservation::class, 'room_number', 'room_number');
     }
 
+    /**
+     * Rooms grouped into wings, in walking order.
+     *
+     * Both room boards lay themselves out this way, and this is the one place
+     * that decides how. The dashboard map used to group by room type instead,
+     * from filters it built itself — which is how it came to draw the deluxe
+     * rooms twice under a heading that promised "all 22 rooms".
+     *
+     * Accepts models or the plain arrays App\Support\RoomBoard::state()
+     * returns, since the two boards feed it different shapes.
+     *
+     * @param  iterable  $rooms
+     * @return Collection<string, Collection> wing slug => its rooms
+     */
+    public static function groupByWing($rooms): Collection
+    {
+        $byWing = Collection::wrap($rooms)->groupBy(fn ($room) => data_get($room, 'wing') ?: 'unassigned');
+
+        return collect(self::WING_ORDER)
+            ->filter(fn ($wing) => $byWing->has($wing))
+            // Anything not in WING_ORDER lands here rather than nowhere.
+            ->concat($byWing->keys()->diff(self::WING_ORDER)->sort())
+            ->mapWithKeys(fn ($wing) => [$wing => $byWing[$wing]]);
+    }
+
+    /** 'chev_re' => 'Chev Re'. */
+    public static function wingLabel(?string $wing): string
+    {
+        return ucwords(str_replace('_', ' ', (string) $wing));
+    }
 }
 

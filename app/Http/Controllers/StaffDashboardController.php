@@ -109,18 +109,16 @@ class StaffDashboardController extends Controller
         // Room Status Map Data — shared with the real-time roomMapFeed() endpoint.
         $rooms = $this->roomMapState();
 
-        // Group rooms for the room map layout
-        $dormBeds = $rooms->filter(function($r) {
-            return in_array($r['room_type'], RoomCatalog::dormTypes());
-        })->sortBy('room_number')->values();
-
-        $standardRooms = $rooms->filter(function($r) {
-            return in_array($r['room_type'], RoomCatalog::standardTypes());
-        })->sortBy('room_number')->values();
-
-        $deluxeRooms = $rooms->filter(function($r) {
-            return $r['room_type'] === 'deluxe';
-        })->sortBy('room_number')->values();
+        // The map is laid out by wing, in the same order and from the same
+        // helper as Room Management — staff walk wings, and two boards that
+        // group the building differently are two boards to reconcile by eye.
+        //
+        // It used to group by room type, from three filters it built itself.
+        // standardTypes() means "not a dormitory", deluxe included, so the
+        // deluxe rooms were drawn in the Standard row AND the Deluxe row: 29
+        // tiles under a heading that read "All 22 rooms at a glance".
+        $roomsByWing = Room::groupByWing($rooms)
+            ->map(fn ($wingRooms) => $wingRooms->sortBy('room_number')->values());
 
         // Global status counts
         $availableCount = $rooms->where('display_status', 'available')->count();
@@ -144,9 +142,7 @@ class StaffDashboardController extends Controller
             'calendarData',
 
             // Room Status Map variables
-            'dormBeds',
-            'standardRooms',
-            'deluxeRooms',
+            'roomsByWing',
             'availableCount',
             'occupiedCount',
             'reservedCount',
@@ -182,10 +178,15 @@ class StaffDashboardController extends Controller
                 'occupant' => $r['occupant'],
                 'updated_at' => $r['updated_at'],
             ])->values(),
+            // Every legend key the page renders. 'pending' was missing, so the
+            // "Unpaid hold" figure kept whatever the page was loaded with while
+            // the five beside it went live — and the proportional bars, which
+            // divide by the sum of these, were drawn against a short total.
             'counts'  => [
                 'available'   => $rooms->where('display_status', 'available')->count(),
                 'occupied'    => $rooms->where('display_status', 'occupied')->count(),
                 'reserved'    => $rooms->where('display_status', 'reserved')->count(),
+                'pending'     => $rooms->where('display_status', 'pending')->count(),
                 'cleaning'    => $rooms->where('display_status', 'cleaning')->count(),
                 'maintenance' => $rooms->where('display_status', 'maintenance')->count(),
             ],

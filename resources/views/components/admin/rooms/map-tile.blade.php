@@ -25,9 +25,13 @@
         'maintenance' => 'bg-ember-50 text-ember-800 border-ember-300 hover:bg-ember-100                         border-double border-[3px]',
     ];
 
+    // Short forms, because these are read off a 80px tile at the console's
+    // 13px floor — 'Dormitory' was the one label that had to ellipsise, and
+    // widening every tile in the building to fit four dorm rooms is the wrong
+    // trade. 'Dorm' is what the desk says out loud anyway.
     $typeLabels = [
-        'dormitory1' => 'Dormitory',
-        'dormitory2' => 'Dormitory',
+        'dormitory1' => 'Dorm',
+        'dormitory2' => 'Dorm',
         'double'     => '2-bed',
         'triple'     => '3-bed',
         'quadruple'  => '4-bed',
@@ -74,15 +78,22 @@
         aria-label="Room {{ $room['room_number'] }} — {{ $statusLabel }}. Show occupancy."
         @if(!empty($room['occupant'])) data-occupant="{{ $room['occupant'] }}" @endif
         title="{{ $title }}"
-        class="room-map-btn relative w-16 h-12 rounded-xl border text-2xs font-bold font-data flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">
-    <span data-bento-summary>{{ $room['room_number'] }}</span>
+        class="room-map-btn relative w-20 h-14 px-1.5 rounded-xl border font-data flex flex-col items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 {{ $btnClass }}">
+    {{-- Number and type together. The type used to live only in `title`, which
+         is unreachable on the tablets the desk carries and skipped by screen
+         readers — so "what kind of room is 210?" needed a trip to another page.
+         Now the rows are wings, a tile's type is no longer implied by which
+         row it sits in, which makes this load-bearing rather than decorative. --}}
+    <span data-bento-summary class="room-map-btn__num">{{ $room['room_number'] }}</span>
+    <span class="room-map-btn__type">{{ $typeLabel }}</span>
     <span data-status-dot class="absolute top-1.5 right-1.5 {{
         $status === 'available' ? 'w-1.5 h-1.5 rounded-full border border-clsu-400' : (
         $status === 'occupied' ? 'w-1.5 h-1.5 rounded-full bg-white' : (
         $status === 'reserved' ? 'w-1.5 h-1.5 rounded-full border border-dashed border-palay-500' : (
+        $status === 'pending' ? 'w-1.5 h-1.5 rounded-full border border-dashed border-palay-400' : (
         $status === 'cleaning' ? 'w-1.5 h-1.5 rounded-full border border-dotted border-sky-500' : (
         $status === 'maintenance' ? 'w-1.5 h-1.5 bg-ember-500 rotate-45' : ''
-        ))))
+        )))))
     }}" aria-hidden="true"></span>
     <div data-bento-detail></div>
 </div>
@@ -99,10 +110,11 @@
         available: 'bg-clsu-50 text-clsu-800 border-clsu-200',
         occupied: 'bg-clsu-700 text-white border-clsu-700',
         reserved: 'bg-palay-100 text-palay-800 border-palay-300',
+        pending: 'bg-palay-50 text-palay-700 border-palay-400',
         cleaning: 'bg-sky-50 text-sky-800 border-sky-300',
         maintenance: 'bg-ember-50 text-ember-800 border-ember-300',
     };
-    const LABELS = { available: 'Available', occupied: 'Occupied', reserved: 'Reserved', cleaning: 'Cleaning', maintenance: 'Maintenance' };
+    const LABELS = { available: 'Available', occupied: 'Occupied', reserved: 'Reserved', pending: 'Reserved · unpaid', cleaning: 'Cleaning', maintenance: 'Maintenance' };
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 

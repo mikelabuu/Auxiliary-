@@ -84,9 +84,14 @@
 }
 
 /* The fix for defect (1): default hidden, revealed only by the card's
-   own state attribute. Kept out of the utility cascade entirely. */
+   own state attribute. Kept out of the utility cascade entirely.
+
+   Suppressed on a card whose status badge already reads "Reserved ·
+   unpaid" — that is the same fact twice, side by side. The chip is
+   still what flags an unpaid hold arriving on a LATER date, which the
+   badge (deliberately about tonight) says nothing about. */
 .room-hold-badge { display: none; }
-.room-card[data-hold-pending='1'] .room-hold-badge { display: inline-flex; }
+.room-card[data-hold-pending='1']:not([data-status='pending']) .room-hold-badge { display: inline-flex; }
 
 .room-stay-block {
     display: flex;

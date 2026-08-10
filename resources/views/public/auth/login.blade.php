@@ -123,6 +123,11 @@
 
                 <form method="POST" action="{{ route('signup') }}" class="fha-form" novalidate data-busy-form>
                     @csrf
+                    {{-- Marks which panel a failed submit came from, so the page
+                         can reopen it. Reading old('username') instead meant a
+                         signup rejected for a blank username reopened the sign-in
+                         panel and showed its errors over the wrong form. --}}
+                    <input type="hidden" name="panel" value="register">
 
                     <div class="fha-row">
                         <div class="fha-field">
@@ -131,11 +136,17 @@
                             <label for="first_name" class="fha-label">First name</label>
                             <span class="fha-rule" aria-hidden="true"></span>
                         </div>
-                        <div class="fha-field fha-field--mi">
-                            <input type="text" id="middle_initial" name="middle_initial" required maxlength="2"
-                                   placeholder=" " value="{{ old('middle_initial') }}" class="fha-input">
-                            <label for="middle_initial" class="fha-label">M.I.</label>
-                            <span class="fha-rule" aria-hidden="true"></span>
+                        <div>
+                            <div class="fha-field fha-field--mi">
+                                <input type="text" id="middle_initial" name="middle_initial" required maxlength="2"
+                                       placeholder=" " value="{{ old('middle_initial') }}" class="fha-input"
+                                       autocomplete="additional-name" aria-describedby="middleInitialHelp">
+                                <label for="middle_initial" class="fha-label">M.I.</label>
+                                <span class="fha-rule" aria-hidden="true"></span>
+                            </div>
+                            {{-- The server takes a single letter. Saying so beats
+                                 bouncing the form back over one character. --}}
+                            <p id="middleInitialHelp" class="fha-help">One letter.</p>
                         </div>
                     </div>
 
@@ -293,8 +304,9 @@
         btn.addEventListener('click', () => show(btn.dataset.goto)));
 
     {{-- A failed signup re-renders this page; reopen the panel the user was in.
-         `username` only exists on the register form, so it identifies the source. --}}
-    @if ($errors->any() && old('username'))
+         The register form posts a hidden `panel` marker, so this holds even when
+         the field that failed is the one that was left empty. --}}
+    @if ($errors->any() && old('panel') === 'register')
         show('register', { focusPanel: false, animate: false });
     @endif
 })();

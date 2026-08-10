@@ -68,31 +68,40 @@
                 @endforeach
             </x-slot:actions>
 
+            {{-- Laid out by wing, in the same order and with the same
+                 "N available" bar as Room Management, so the two boards read
+                 as one building rather than two ways of slicing it.
+
+                 The wing header carries data-wing-* hooks; admin-dashboard.js
+                 recomputes the counts and bars from the live feed, so a
+                 check-in elsewhere moves them without a reload. --}}
             <div class="space-y-5">
-                <div>
-                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Dorm Rooms · {{ $dormBeds->count() }}</p>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($dormBeds as $room)
-                            <x-admin.rooms.map-tile :room="$room" />
-                        @endforeach
+                @foreach($roomsByWing as $wing => $wingRooms)
+                    @php
+                        $wingOpen = $wingRooms->where('display_status', 'available')->count();
+                    @endphp
+                    <div data-map-wing="{{ $wing }}">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <p class="text-2xs font-bold text-faint tracking-widest uppercase">
+                                {{ \App\Models\Room::wingLabel($wing) }} Wing · {{ $wingRooms->count() }} room{{ $wingRooms->count() === 1 ? '' : 's' }}
+                            </p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xs font-semibold text-faint">
+                                    <span data-wing-open class="text-clsu-700 font-bold">{{ $wingOpen }}</span> available
+                                </span>
+                                <div class="h-1.5 w-20 rounded-full bg-stone-200/70 overflow-hidden">
+                                    <div data-wing-bar class="h-full rounded-full bg-clsu-400 transition-[width] duration-300"
+                                         style="width: {{ $wingRooms->count() ? round($wingOpen / $wingRooms->count() * 100) : 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($wingRooms as $room)
+                                <x-admin.rooms.map-tile :room="$room" />
+                            @endforeach
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Standard Rooms · {{ $standardRooms->count() }}</p>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($standardRooms as $room)
-                            <x-admin.rooms.map-tile :room="$room" />
-                        @endforeach
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xs font-bold text-faint tracking-widest mb-2 uppercase">Deluxe Rooms · {{ $deluxeRooms->count() }}</p>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($deluxeRooms as $room)
-                            <x-admin.rooms.map-tile :room="$room" />
-                        @endforeach
-                    </div>
-                </div>
+                @endforeach
             </div>
         </x-admin.ui.section-card>
 

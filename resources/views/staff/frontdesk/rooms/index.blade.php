@@ -4,17 +4,22 @@
 @section('content')
 
 {{-- Status overview --}}
-<div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+<div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
     <x-admin.ui.stat-card icon="bed" label="Total Rooms" delay="0">
         {{ $totalRooms }}
     </x-admin.ui.stat-card>
     <x-admin.ui.stat-card icon="users" color="palay" label="Occupied" delay="40">
         {{ $occupiedRooms }}
     </x-admin.ui.stat-card>
-    <x-admin.ui.stat-card icon="wrench" color="ember" label="Under Maintenance" delay="80">
+    {{-- Booked for tonight, guest not checked in yet. These are not rooms the
+         desk can give a walk-in, so they are counted apart from Available. --}}
+    <x-admin.ui.stat-card icon="arrival" color="palay" label="Reserved" delay="80">
+        {{ $reservedRooms }}
+    </x-admin.ui.stat-card>
+    <x-admin.ui.stat-card icon="wrench" color="ember" label="Under Maintenance" delay="120">
         {{ $maintenanceRooms }}
     </x-admin.ui.stat-card>
-    <x-admin.ui.stat-card icon="droplet" color="sky" label="Cleaning" delay="120">
+    <x-admin.ui.stat-card icon="droplet" color="sky" label="Cleaning" delay="160">
         {{ $cleaningRooms }}
     </x-admin.ui.stat-card>
 </div>
@@ -69,6 +74,8 @@
                 <option value="all">All statuses</option>
                 <option value="available">Available</option>
                 <option value="occupied">Occupied</option>
+                <option value="reserved">Reserved</option>
+                <option value="pending">Reserved · unpaid</option>
                 <option value="maintenance">Under Maintenance</option>
                 <option value="cleaning">Cleaning</option>
             </select>
@@ -79,27 +86,37 @@
         </div>
 
         @php
+            // Keyed on the DERIVED status (App\Support\RoomHold::displayStatus),
+            // not the raw housekeeping column — 'reserved' and 'pending' come
+            // from a booking holding the room tonight.
             $statusMeta = [
-                'available'   => ['bar' => 'bg-g-500'],
-                'occupied'    => ['bar' => 'bg-au-500'],
-                'maintenance' => ['bar' => 'bg-ember-500'],
-                'cleaning'    => ['bar' => 'bg-sky-500'],
+                'available'   => ['bar' => 'bg-g-500',     'label' => 'Available'],
+                'occupied'    => ['bar' => 'bg-au-500',    'label' => 'Occupied'],
+                'reserved'    => ['bar' => 'bg-palay-500', 'label' => 'Reserved'],
+                'pending'     => ['bar' => 'bg-palay-300', 'label' => 'Reserved · unpaid'],
+                'maintenance' => ['bar' => 'bg-ember-500', 'label' => 'Maintenance'],
+                'cleaning'    => ['bar' => 'bg-sky-500',   'label' => 'Cleaning'],
             ];
         @endphp
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
             @foreach($rooms as $room)
+                @php
+                    $display = $displayStatuses[$room->id] ?? $room->status;
+                    $meta = $statusMeta[$display] ?? $statusMeta['available'];
+                @endphp
                 <div class="room-card group/card relative cursor-pointer overflow-hidden rounded-xl border border-stone-200 bg-white shadow-subtle hover:border-clsu-200 hover:shadow-card-lg"
                      data-room-id="{{ $room->id }}"
                      data-room-number="{{ strtolower($room->room_number) }}"
+                     data-status="{{ $display }}"
                      data-type="{{ $room->room_type }}"
                      data-wing="{{ $room->wing }}">
-                    <div class="status-bar h-1 {{ ($statusMeta[$room->status] ?? $statusMeta['available'])['bar'] }}"></div>
+                    <div class="status-bar h-1 {{ $meta['bar'] }}"></div>
                     <div class="flex flex-col items-center gap-2 p-4 pb-3 text-center">
                         <div>
                             <p class="font-data text-base font-extrabold text-stone-900 tabnum">Room {{ $room->room_number }}</p>
                             <p class="mt-0.5 text-2xs font-bold uppercase tracking-wide text-faint">{{ ucfirst($room->room_type) }} · {{ ucfirst($room->wing) }} wing</p>
                         </div>
-                        <span class="room-status status status-{{ $room->status }}">{{ ucfirst($room->status) }}</span>
+                        <span class="room-status status status-{{ $display }}">{{ $meta['label'] }}</span>
                         <p class="text-2xs italic text-faint">Updated {{ $room->updated_at->diffForHumans() }}</p>
                     </div>
                     <div class="flex items-center justify-center gap-1.5 border-t border-stone-100 px-4 py-2 text-2xs font-semibold text-faint transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
@@ -167,7 +184,10 @@ $(function() {
         const q = ($('#roomSearch').val() || '').trim().toLowerCase();
 
         $('.room-card').each(function() {
-            const cardStatus = $(this).find('.room-status').text().trim().toLowerCase();
+            // Read from the attribute, not the pill's text: the label a status
+            // shows and the value it filters on are no longer the same string
+            // ("Reserved · unpaid" is `pending`).
+            const cardStatus = $(this).attr('data-status');
             const hay = [$(this).data('room-number'), $(this).data('type'), $(this).data('wing')].join(' ').toLowerCase();
 
             const okStatus = status === 'all' || cardStatus === status;

@@ -20,6 +20,9 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'username',
+        // Signup builds this from the name fields it collects. Missing from
+        // this list, it was dropped on every registration without a word.
+        'full_name',
         'email',
         'password',
         'phone',

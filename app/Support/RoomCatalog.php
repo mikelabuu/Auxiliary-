@@ -167,6 +167,21 @@ class RoomCatalog
         ));
     }
 
+    /*
+     * NOTE: the dashboard's Room Status Map used to group by room type, from
+     * three filters it built itself — dorm, standard, deluxe. standardTypes()
+     * is *everything that is not a dormitory*, deluxe included, so the seven
+     * deluxe rooms were drawn in both the Standard row and the Deluxe row: 29
+     * tiles under a heading reading "All 22 rooms at a glance", with the live
+     * feed patching only the first copy so the two disagreed on colour.
+     *
+     * The map is laid out by wing now (App\Models\Room::groupByWing), which is
+     * how Room Management already reads and how staff actually walk the
+     * building, so no type partition lives here. dormTypes()/standardTypes()
+     * remain for the occupancy snapshot, where "shared occupancy vs private
+     * room" is the real question.
+     */
+
     /**
      * Short display label for a room-type slug: 'double' => 'Double', and every
      * dormitory variant collapsed to a single 'Dormitory', because guests and

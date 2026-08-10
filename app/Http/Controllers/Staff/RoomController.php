@@ -18,6 +18,7 @@ use App\Events\RoomStatusChanged;
 use App\Events\StaffNotification;
 use App\Support\Realtime;
 use App\Support\RoomHold;
+use App\Support\RoomStays;
 
 class RoomController extends Controller
 {
@@ -46,18 +47,27 @@ class RoomController extends Controller
 
         $rooms = Room::all();
 
-        $stayContext = $this->buildStayContext($today);
+        $stayContext = RoomStays::context($today);
+
+        // The badge answers "can the desk give this room out tonight", so a
+        // stay covering today outranks the housekeeping column. Rendering
+        // `rooms.status` raw is what let a room a guest had paid for — and was
+        // due in tonight — go on reading AVAILABLE until someone checked them in.
+        $displayStatuses = RoomStays::displayStatuses($rooms, $stayContext);
 
         $totalRooms = $rooms->count();
-        $occupiedRooms = $rooms->where('status', 'occupied')->count();
-        $availableRooms = $rooms->where('status', 'available')->count();
-        $maintenanceRooms = $rooms->where('status', 'maintenance')->count();
-        $cleaningRooms = $rooms->where('status', 'cleaning')->count();
+        $counts = collect($displayStatuses)->countBy();
+        $occupiedRooms = $counts->get('occupied', 0);
+        $availableRooms = $counts->get('available', 0);
+        $reservedRooms = $counts->get('reserved', 0);
+        $pendingRooms = $counts->get('pending', 0);
+        $maintenanceRooms = $counts->get('maintenance', 0);
+        $cleaningRooms = $counts->get('cleaning', 0);
 
-        // Bookable today = housekeeping-available AND no stay spanning today.
+        // Bookable today is now exactly what the badge says: 'available' already
+        // means housekeeping-ready with no stay spanning today.
         $availableNowByType = $rooms->groupBy(fn ($r) => strtolower($r->room_type))
-            ->map(fn ($group) => $group->filter(fn ($r) => $r->status === 'available'
-                && !isset($stayContext[trim($r->room_number)]['current']))->count());
+            ->map(fn ($group) => $group->filter(fn ($r) => $displayStatuses[$r->id] === 'available')->count());
 
         $roomTypes = RoomType::withCount('rooms')->orderBy('name')->get();
 
@@ -66,59 +76,15 @@ class RoomController extends Controller
             'totalRooms',
             'occupiedRooms',
             'availableRooms',
+            'reservedRooms',
+            'pendingRooms',
             'maintenanceRooms',
             'cleaningRooms',
             'roomTypes',
             'stayContext',
+            'displayStatuses',
             'availableNowByType'
         ));
-    }
-
-    /**
-     * Stay context per room number: the stay spanning today ("current")
-     * and the soonest upcoming arrival ("next"), from blocking bookings.
-     * Shared by index() and statusFeed().
-     */
-    private function buildStayContext(Carbon $today): array
-    {
-        $stays = Reservation::query()
-            ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
-            ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->whereDate('bookings.check_out', '>=', $today)
-            ->orderBy('bookings.check_in')
-            ->get([
-                'reservations.room_number',
-                'bookings.guest_name',
-                'bookings.check_in',
-                'bookings.check_out',
-                // Carried so the card can say whether the hold is paid for —
-                // see App\Support\RoomHold. Aliased because `status` would
-                // otherwise collide with the room's own housekeeping status.
-                'bookings.status as booking_status',
-            ]);
-
-        $stayContext = [];
-        foreach ($stays as $stay) {
-            $roomNumber = trim($stay->room_number);
-            $checkIn  = Carbon::parse($stay->check_in);
-            $checkOut = Carbon::parse($stay->check_out);
-
-            if ($checkIn->lte($today) && $checkOut->gte($today)) {
-                $stayContext[$roomNumber]['current'] ??= [
-                    'guest'  => $stay->guest_name,
-                    'until'  => $checkOut->format('M d'),
-                    'status' => $stay->booking_status,
-                ];
-            } elseif (!isset($stayContext[$roomNumber]['next']) && $checkIn->gt($today)) {
-                $stayContext[$roomNumber]['next'] = [
-                    'guest'  => $stay->guest_name,
-                    'from'   => $checkIn->format('M d'),
-                    'status' => $stay->booking_status,
-                ];
-            }
-        }
-
-        return $stayContext;
     }
 
     /**
@@ -128,9 +94,12 @@ class RoomController extends Controller
     public function statusFeed()
     {
         $today = Carbon::today(config('hostel.timezone'));
-        $stayContext = $this->buildStayContext($today);
+        $stayContext = RoomStays::context($today);
 
-        $rooms = Room::all(['id', 'room_number', 'status'])->map(function ($room) use ($stayContext) {
+        $rooms = Room::all(['id', 'room_number', 'status']);
+        $displayStatuses = RoomStays::displayStatuses($rooms, $stayContext);
+
+        $rooms = $rooms->map(function ($room) use ($stayContext, $displayStatuses) {
             $ctx = $stayContext[trim($room->room_number)] ?? [];
             $current = $ctx['current'] ?? null;
             $next = $ctx['next'] ?? null;
@@ -148,7 +117,10 @@ class RoomController extends Controller
 
             return [
                 'id'      => $room->id,
+                // The housekeeping column, kept for the kebab's checkmark; the
+                // badge and every count follow display_status.
                 'status'  => $room->status,
+                'display_status' => $displayStatuses[$room->id],
                 'held'    => (bool) $current,
                 // Held, but nobody has been paid yet — the front desk can act
                 // on this (chase the guest, or let it expire).
@@ -331,9 +303,15 @@ public function occupancyForRoom(Room $room)
             Realtime::emit(StaffNotification::roomMaintenance($room->fresh()));
         }
 
+        // Marking a room available does not necessarily make the badge say
+        // Available — a booking may still be holding it tonight — so the
+        // board is told what to render rather than left to guess.
+        $stayContext = RoomStays::context(Carbon::today(config('hostel.timezone')));
+
         return response()->json([
             'success' => true,
             'room' => $room,
+            'display_status' => RoomStays::displayStatuses([$room], $stayContext)[$room->id],
         ]);
     }
 

@@ -49,7 +49,7 @@ screen, so this surface is step one of two for its primary user.
 ## Capabilities and Constraints
 
 - `GET /login` renders the single sign-in surface; `POST /login` (`login.attempt`) authenticates.
-- `POST /signup` registers a guest. The registration form currently shares the login page as a second panel, and stays there (confirmed).
+- `POST /signup` registers a guest. The registration form shares the login page as a second panel; on success it redirects back to `GET /login` with a "sign in to continue" note, because registering does not sign anyone in. On failure the page reopens the register panel (hidden `panel` marker in the form).
 - Throttle: 5 attempts per `email|IP`, 15-minute decay, checked **before** any account lookup.
 - Every failure returns one identical message, "Invalid email or password." A miss still costs one bcrypt comparison so timing reveals nothing. Neither property may be weakened by a design change.
 - Suspension is reported only after the password is proven.

@@ -9,6 +9,7 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\User;
 use App\Services\ReportService;
+use App\Support\RoomBoard;
 use App\Support\RoomCatalog;
 use App\Support\StaySchedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,6 +46,90 @@ class StayScheduleAndReportingTest extends TestCase
         }
 
         $this->assertSame(count($all), count($dorm) + count($standard));
+    }
+
+    // ── The room map's layout ────────────────────────────────────────────────
+
+    /** $rooms as [room_number, room_type, wing]. */
+    private function seedRooms(array $rooms): void
+    {
+        foreach ($rooms as [$number, $type, $wing]) {
+            Room::create([
+                'room_number' => $number,
+                'room_type' => $type,
+                'wing' => $wing,
+                'status' => 'available',
+                'price' => 3000,
+            ]);
+        }
+    }
+
+    public function test_the_room_map_draws_every_room_exactly_once(): void
+    {
+        // The invariant as the page experiences it: tiles rendered must equal
+        // rooms owned. The map used to group by room type from three filters
+        // it built itself, and standardTypes() means "not a dormitory" —
+        // deluxe included — so every deluxe room was drawn in the Standard row
+        // AND the Deluxe row. 29 tiles for 22 rooms, under a subtitle reading
+        // "All 22 rooms at a glance".
+        $this->seedRooms([
+            ['101', 'deluxe', 'rooster'], ['102', 'deluxe', 'rooster'],
+            ['201', 'dormitory1', 'chev_re'], ['202', 'dormitory2', 'chev_re'],
+            ['301', 'double', 'tumana'], ['302', 'triple', 'torii'],
+            ['303', 'quadruple', 'torii'],
+        ]);
+
+        $rooms = RoomBoard::state();
+        $drawn = Room::groupByWing($rooms)->flatten(1);
+
+        $this->assertSame($rooms->count(), $drawn->count());
+        $this->assertSame($rooms->count(), $drawn->pluck('id')->unique()->count());
+    }
+
+    public function test_the_map_walks_the_wings_in_order(): void
+    {
+        // Same order Room Management uses, from the same helper, so the two
+        // boards read as one building.
+        $this->seedRooms([
+            ['401', 'deluxe', 'torii'],
+            ['402', 'deluxe', 'rooster'],
+            ['403', 'deluxe', 'chev_re'],
+            ['404', 'deluxe', 'tumana'],
+        ]);
+
+        $this->assertSame(
+            ['rooster', 'tumana', 'chev_re', 'torii'],
+            Room::groupByWing(Room::all())->keys()->all()
+        );
+    }
+
+    public function test_a_wing_nobody_listed_still_gets_drawn(): void
+    {
+        // A wing added in Room Management that is not in WING_ORDER must show
+        // up somewhere rather than silently vanish from both boards.
+        $this->seedRooms([
+            ['501', 'deluxe', 'rooster'],
+            ['502', 'deluxe', 'annex'],
+        ]);
+
+        $wings = Room::groupByWing(Room::all());
+
+        $this->assertSame(['rooster', 'annex'], $wings->keys()->all());
+        $this->assertSame(2, $wings->flatten(1)->count());
+    }
+
+    public function test_a_room_with_no_wing_is_not_dropped(): void
+    {
+        $this->seedRooms([['601', 'deluxe', 'rooster']]);
+        Room::create([
+            'room_number' => '602',
+            'room_type' => 'deluxe',
+            'wing' => '',
+            'status' => 'available',
+            'price' => 3000,
+        ]);
+
+        $this->assertSame(2, Room::groupByWing(Room::all())->flatten(1)->count());
     }
 
     public function test_room_capacity_follows_the_database_not_a_hardcoded_map(): void

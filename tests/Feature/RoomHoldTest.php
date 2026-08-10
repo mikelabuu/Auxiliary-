@@ -6,8 +6,12 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\Staff;
 use App\Models\User;
+use App\Support\RoomBoard;
 use App\Support\RoomHold;
+use App\Support\RoomStays;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -264,6 +268,132 @@ class RoomHoldTest extends TestCase
 
         $this->assertSame('next-pending', $line['kind']);
         $this->assertStringContainsString('unpaid', $line['label']);
+    }
+
+    // ---------------------------------------------------------------
+    // What the room boards show
+    //
+    // `rooms.status` is a housekeeping column and stays one; the boards
+    // render a status DERIVED from it plus the booking holding the room.
+    // Rendering the column raw is what let a room a guest had paid for,
+    // and was due into that night, go on reading AVAILABLE to the desk.
+    // ---------------------------------------------------------------
+
+    /** The derived board status for one room, as the admin board computes it. */
+    private function boardStatus(Room $room): string
+    {
+        $today = Carbon::today(config('hostel.timezone'));
+
+        return RoomStays::displayStatuses([$room], RoomStays::context($today))[$room->id];
+    }
+
+    public function test_a_room_paid_for_and_occupied_tonight_is_not_available(): void
+    {
+        $room = $this->room('401');
+        $this->holdRoom($room, 'paid', 'today', 'tomorrow');
+
+        // Nobody has pressed check-in, so the housekeeping column is untouched
+        // — and that is exactly the case that used to read "Available".
+        $this->assertSame('available', $room->fresh()->status);
+        $this->assertSame('reserved', $this->boardStatus($room));
+    }
+
+    public function test_an_unpaid_hold_for_tonight_reads_as_a_pending_one(): void
+    {
+        $room = $this->room('402');
+        $this->holdRoom($room, 'pending_payment', 'today', 'tomorrow');
+
+        $this->assertSame('pending', $this->boardStatus($room));
+    }
+
+    public function test_a_stay_starting_today_counts_as_current_not_upcoming(): void
+    {
+        // check_in is a date read back at UTC midnight; today() is midnight in
+        // Manila, eight hours earlier. Compared as instants, a stay starting
+        // today came out "later than today" and was filed as a future arrival,
+        // so the room it was sitting in reported itself free.
+        $room = $this->room('403');
+        $this->holdRoom($room, 'paid', 'today', 'tomorrow');
+
+        $context = RoomStays::context(Carbon::today(config('hostel.timezone')));
+
+        $this->assertArrayHasKey('current', $context['403']);
+        $this->assertArrayNotHasKey('next', $context['403']);
+    }
+
+    public function test_housekeeping_outranks_a_hold(): void
+    {
+        // A room under maintenance cannot be given to the guest who reserved
+        // it either, so the harder fact is the one that shows.
+        foreach (['maintenance', 'cleaning'] as $i => $state) {
+            $room = $this->room('41' . $i);
+            $room->update(['status' => $state]);
+            $this->holdRoom($room, 'paid', 'today', 'tomorrow');
+
+            $this->assertSame($state, $this->boardStatus($room));
+        }
+    }
+
+    public function test_a_future_arrival_leaves_the_room_free_tonight(): void
+    {
+        $room = $this->room('404');
+        $this->holdRoom($room, 'paid', '+6 days', '+8 days');
+
+        // The admin board answers "can I give this room out tonight", so a
+        // stay next week does not take it off the board...
+        $this->assertSame('available', $this->boardStatus($room));
+
+        // ...while the dashboard map, which colours upcoming arrivals too,
+        // still shows the hold.
+        $context = RoomStays::context(Carbon::today(config('hostel.timezone')));
+        $this->assertSame(
+            'reserved',
+            RoomStays::displayStatuses([$room], $context, 'upcoming')[$room->id]
+        );
+    }
+
+    public function test_a_free_room_still_reads_available_on_the_board(): void
+    {
+        $this->assertSame('available', $this->boardStatus($this->room('405')));
+    }
+
+    public function test_the_dashboard_map_agrees_with_the_room_board(): void
+    {
+        $room = $this->room('406');
+        $this->holdRoom($room, 'paid', 'today', 'tomorrow');
+
+        $tile = RoomBoard::state()->firstWhere('room_number', '406');
+
+        // Two consoles telling the desk different things about the same room
+        // is how someone ends up promising a bed that is already sold.
+        $this->assertSame('reserved', $tile['display_status']);
+        $this->assertStringContainsString('Holder', $tile['occupant']);
+    }
+
+    public function test_the_admin_board_reports_a_held_room_as_reserved(): void
+    {
+        $room = $this->room('407');
+        $this->holdRoom($room, 'paid', 'today', 'tomorrow');
+
+        $admin = Staff::create([
+            'name' => 'Board Admin',
+            'email' => 'board-admin@example.test',
+            'password' => 'password-12345',
+            'role' => 'admin',
+            'is_suspended' => false,
+        ]);
+
+        $feed = $this->actingAs($admin, 'staff')
+            ->getJson('/staff/rooms/status-feed')
+            ->assertOk()
+            ->json('rooms');
+
+        $entry = collect($feed)->firstWhere('id', $room->id);
+
+        // The housekeeping column is still what the kebab ticks; the badge and
+        // every count follow the derived status.
+        $this->assertSame('available', $entry['status']);
+        $this->assertSame('reserved', $entry['display_status']);
     }
 
     // ---------------------------------------------------------------

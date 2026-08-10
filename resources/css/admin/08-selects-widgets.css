@@ -136,13 +136,43 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
 
 /* ── Room map buttons ── */
 .room-map-btn {
-    /* Base sizing set via Tailwind: w-16 h-12 rounded-xl */
+    /* Base sizing set via Tailwind: w-20 h-14 rounded-xl */
     /* Color variants also via Tailwind on the element */
     position: relative;
     transition: background-color var(--transition), border-color var(--transition),
         color var(--transition), transform 120ms var(--ease-out);
 }
 .room-map-btn:active { transform: scale(.93); }
+
+/* A tile carries two lines now: the number, and what kind of room it is.
+   The type used to exist only in the `title` tooltip — unreachable on a
+   tablet, skipped by screen readers — and once the map's rows became wings
+   rather than types, nothing on screen said what a room was at all.
+
+   Both lines sit at or above the console's 13px floor (see 19-type-craft):
+   that floor is the reason the tile grew from 64x48 to 80x56 instead of the
+   label being set small enough to fit the old box. Hierarchy comes from
+   weight and one step of size, never from dropping under the floor.
+
+   Colour is inherited, not overridden: the tile's own status variant sets
+   the foreground, and half these variants are light-on-dark. A fixed muted
+   colour would fail on those; an opacity would eat the contrast the same
+   readability pass was fixing. */
+.room-map-btn__num {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+}
+.room-map-btn__type {
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    line-height: 1.15;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* ── Legend swatches ── */
 .map-key {

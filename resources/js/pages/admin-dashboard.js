@@ -79,11 +79,13 @@ function initAdminDashboard() {
 
         // Tooltip: number · type (from existing title if present) · status · occupant [· Updated last-updated]
         const existing = btn.title || '';
-        const numMatch = existing.match(/^([^\s·]+)/);
         const typeMatch = existing.match(/·\s*([^·]+?)\s*·/);
-        const num  = numMatch  ? numMatch[1]  : (btn.dataset.roomNumber || btn.textContent.trim());
+        // The data attribute first: the tile renders two lines now, so
+        // textContent is "102Deluxe" rather than a bare room number.
+        const num  = btn.dataset.roomNumber || (existing.match(/^([^\s·]+)/) || [])[1] || '';
         const type = typeMatch ? typeMatch[1].trim() : '';
-        let newTitle = num + (type ? ' · ' + type : '') + ' · ' + (STATUS_LABELS[status] || cap(status));
+        const label = STATUS_LABELS[status] || cap(status);
+        let newTitle = num + (type ? ' · ' + type : '') + ' · ' + label;
         if (occupant) {
             newTitle += ' · ' + occupant;
         }
@@ -91,6 +93,29 @@ function initAdminDashboard() {
             newTitle += ' · Updated ' + updatedAt;
         }
         btn.title = newTitle;
+
+        // The tile is a role=button announced by its label; leaving that at
+        // the status the page loaded with told a screen reader the opposite
+        // of what the colour said.
+        btn.setAttribute('aria-label', 'Room ' + num + ' — ' + label + '. Show occupancy.');
+    }
+
+    /**
+     * Per-wing "N available" figure and bar, recomputed from the tiles after a
+     * feed lands. Same numbers the server renders, so a check-in made anywhere
+     * moves the wing header without a reload — otherwise the headline said one
+     * thing and the tiles under it another.
+     */
+    function updateWingBars() {
+        document.querySelectorAll('[data-map-wing]').forEach(group => {
+            const tiles = group.querySelectorAll('.room-map-btn');
+            const open = group.querySelectorAll('.room-map-btn[data-display-status="available"]').length;
+            const openEl = group.querySelector('[data-wing-open]');
+            const barEl = group.querySelector('[data-wing-bar]');
+
+            if (openEl) openEl.textContent = open;
+            if (barEl) barEl.style.width = (tiles.length ? Math.round((open / tiles.length) * 100) : 0) + '%';
+        });
     }
 
     function updateLegendBars(counts) {
@@ -106,9 +131,15 @@ function initAdminDashboard() {
     function applyFeed(data) {
         if (!data || !data.success) return;
         (data.rooms || []).forEach(r => {
-            const btn = document.querySelector('.room-map-btn[data-room-btn="' + r.id + '"]');
-            if (btn) patchButton(btn, r.display_status, r.occupant, r.updated_at);
+            // querySelectorAll, not querySelector: a room drawn more than once
+            // must not have one copy left on a stale colour while the other
+            // updates. The map no longer duplicates tiles (it groups by wing
+            // now, from Room::groupByWing), but a patcher that silently only
+            // half-applies is how that stayed invisible for so long.
+            document.querySelectorAll('.room-map-btn[data-room-btn="' + r.id + '"]')
+                .forEach(btn => patchButton(btn, r.display_status, r.occupant, r.updated_at));
         });
+        updateWingBars();
         if (data.counts) {
             Object.keys(data.counts).forEach(k => {
                 document.querySelectorAll('[data-map-count="' + k + '"]').forEach(el => {

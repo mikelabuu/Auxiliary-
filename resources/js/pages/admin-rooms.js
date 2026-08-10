@@ -410,7 +410,11 @@ function initAdminRooms() {
         $.ajax({ url: `${base}/${roomId}/status`, method: 'PATCH', data: { status: newStatus } })
             .done(function (res) {
                 if (!res.success) { toast('Could not update status.', 'error'); return; }
-                applyStatusToCard(card, newStatus);
+                // Marking a room available does not always make the badge say
+                // Available — a booking may still hold it tonight — so the
+                // badge follows the status the server derived, not the one
+                // that was clicked.
+                applyStatusToCard(card, res.display_status || newStatus, newStatus);
                 panel.addClass('hidden');
                 recomputeAggregates();
                 applyFilters();
@@ -419,16 +423,25 @@ function initAdminRooms() {
             .fail(function () { toast('Could not update status.', 'error'); });
     });
 
-    function applyStatusToCard(card, status) {
-        const meta = STATUS_META[status];
-        card.attr('data-status', status);
-        card.find('.status-bar').attr('class', 'status-bar h-1 rounded-t-2xl ' + meta.bar);
+    /**
+     * Two statuses, deliberately: `display` is what the board shows (and what
+     * every count and filter reads), `housekeeping` is the rooms.status column
+     * the kebab writes to and ticks. They differ whenever a booking holds a
+     * room the housekeeping column still calls available.
+     */
+    function applyStatusToCard(card, display, housekeeping) {
+        const meta = STATUS_META[display] || STATUS_META.available;
+        card.attr('data-status', display);
+        if (housekeeping) card.attr('data-housekeeping', housekeeping);
+        card.find('.status-bar').attr('class', 'status-bar h-1 rounded-t-xl ' + meta.bar);
         card.find('.room-status-badge').attr('class', 'room-status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold border ' + meta.badge);
         card.find('.room-status-dot').attr('class', 'room-status-dot w-1.5 h-1.5 rounded-full ' + meta.dot);
         card.find('.room-status-text').text(meta.label);
         card.find('.room-updated').text('Updated just now');
+
+        const owned = housekeeping || card.attr('data-housekeeping');
         card.find('.quick-status-btn').each(function () {
-            const isMatch = $(this).data('status-value').toString() === status;
+            const isMatch = $(this).data('status-value').toString() === owned;
             $(this).find('.quick-status-check').toggleClass('invisible', !isMatch);
         });
     }
@@ -481,7 +494,9 @@ function initAdminRooms() {
     /* ------------------- AGGREGATE RECOMPUTE (after status change / delete) ------------------- */
     function recomputeAggregates() {
         const cards = $('.room-card');
-        const counts = { available: 0, occupied: 0, maintenance: 0, cleaning: 0 };
+        // Keyed on the DERIVED status, so "Available" here means the same
+        // thing the badge does: nothing is holding the room tonight.
+        const counts = { available: 0, occupied: 0, reserved: 0, pending: 0, maintenance: 0, cleaning: 0 };
         cards.each(function () {
             const s = $(this).attr('data-status');
             if (counts[s] !== undefined) counts[s]++;
@@ -491,10 +506,13 @@ function initAdminRooms() {
         $('#statTotalNum').text(total);
         $('#statAvailableNum').text(counts.available);
         $('#statOccupiedNum').text(counts.occupied);
+        $('#statReservedNum').text(counts.reserved + counts.pending);
         $('#statMaintenanceNum').text(counts.maintenance);
         $('#statCleaningNum').text(counts.cleaning);
         $('#legendAvailable').text(counts.available);
         $('#legendOccupied').text(counts.occupied);
+        $('#legendReserved').text(counts.reserved);
+        $('#legendPending').text(counts.pending);
         $('#legendCleaning').text(counts.cleaning);
         $('#legendMaintenance').text(counts.maintenance);
 
@@ -510,10 +528,11 @@ function initAdminRooms() {
         $('#statTotalFoot').text('Across ' + wingsInUse + ' wings');
         $('#allRoomsSubtitle').text(total + ' rooms across ' + wingsInUse + ' wings');
 
-        // Bookable-today counts per type: housekeeping-available and not
-        // held by a stay spanning today (data-held set server-side).
+        // Bookable-today counts per type. data-status is the derived state, so
+        // a room held by a stay spanning today is already not 'available' —
+        // the old `.not('[data-held]')` pass is now built into the status.
         roomTypes.forEach(function (t) {
-            t.available_now = $('.room-card[data-type="' + t.slug + '"][data-status="available"]').not('[data-held]').length;
+            t.available_now = $('.room-card[data-type="' + t.slug + '"][data-status="available"]').length;
         });
         renderTypeTiles();
     }
@@ -645,8 +664,9 @@ function initAdminRooms() {
                     const card = $('.room-card[data-room-id="' + r.id + '"]');
                     if (!card.length) return;
 
-                    if (card.attr('data-status') !== r.status) {
-                        applyStatusToCard(card, r.status);
+                    if (card.attr('data-status') !== r.display_status
+                        || card.attr('data-housekeeping') !== r.status) {
+                        applyStatusToCard(card, r.display_status, r.status);
                         changed = true;
                     }
 

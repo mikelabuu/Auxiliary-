@@ -28,9 +28,59 @@ class RoomHold
      */
     public const PENDING_STATUSES = ['pending_payment', 'pending_discount'];
 
+    /**
+     * What a room board shows on the tile. The first three are housekeeping
+     * facts staff own; 'reserved' and 'pending' are derived from bookings and
+     * exist only here — `rooms.status` never holds either.
+     */
+    public const DISPLAY_STATUSES = [
+        'available',
+        'occupied',
+        'reserved',
+        'pending',
+        'cleaning',
+        'maintenance',
+    ];
+
     public static function isPending(?string $bookingStatus): bool
     {
         return in_array($bookingStatus, self::PENDING_STATUSES, true);
+    }
+
+    /**
+     * Resolve the housekeeping column and a booking's hold into the one state
+     * a board should show.
+     *
+     * Every room board used to render `rooms.status` raw, which meant a room
+     * a guest had paid for and was sleeping in tonight still read AVAILABLE
+     * until someone pressed check-in. The hold is the thing that decides
+     * whether the desk can sell the room, so it has to reach the badge.
+     *
+     * Housekeeping wins where it is a harder fact than the booking: a room
+     * under maintenance cannot be given to the guest who reserved it, and
+     * `occupied` already means a guest was checked in.
+     *
+     * @param  string|null  $housekeeping  the `rooms.status` column
+     * @param  string|null  $holdStatus    booking status of the hold the board
+     *                                     is reporting on, or null for none.
+     *                                     Which hold that is belongs to the
+     *                                     caller: the admin room board answers
+     *                                     "can I give this room out tonight",
+     *                                     so it passes the stay covering today;
+     *                                     the dashboard map also counts the
+     *                                     next arrival.
+     */
+    public static function displayStatus(?string $housekeeping, ?string $holdStatus): string
+    {
+        if (in_array($housekeeping, ['maintenance', 'cleaning', 'occupied'], true)) {
+            return $housekeeping;
+        }
+
+        if ($holdStatus === null) {
+            return $housekeeping ?: 'available';
+        }
+
+        return self::isPending($holdStatus) ? 'pending' : 'reserved';
     }
 
     /**
