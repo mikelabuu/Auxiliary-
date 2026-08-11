@@ -126,6 +126,68 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
 }
 .swal2-cancel { border-radius: var(--radius-sm) !important; font-weight: 700 !important; }
 
+/* ------------------------------------------------------------
+   TOASTS
+
+   window.toast() routes through Swal wherever sweetalert2 is loaded
+   (see resources/js/app.js), so session flashes now arrive looking
+   like the confirmations they sit beside instead of like a second,
+   unrelated notification system.
+
+   The dialog rules above are written for a centred modal, so a few
+   have to be undone here: the 4px top rule reads as a stray green
+   bar on something 56px tall, the entrance animation drops in from
+   the wrong axis for a corner toast, and the modal's bottom padding
+   leaves it lopsided.
+
+   No accent bar down the side, either. Severity is already carried by
+   SweetAlert's own icon — the green tick, the red cross — so a
+   coloured stripe beside it restates what the icon just said, and a
+   thick edge on a small rounded card fights its own corners. A plain
+   hairline border and the icon do the whole job.
+   ------------------------------------------------------------ */
+.swal2-popup.fh-swal-toast {
+    border-top: none !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius) !important;
+    padding: 12px 16px !important;
+    box-shadow: var(--shadow-lg) !important;
+    /* --ease-out, not the --ease-spring the modal entrance uses. The overshoot
+       reads fine on a centred dialog you open deliberately once; on a corner
+       notice that fires on every save it is a bounce you watch all day. The
+       exit below already decelerates, so this also makes the toast's own two
+       halves agree. */
+    animation: swalToastIn 0.24s var(--ease-out) !important;
+}
+.swal2-popup.fh-swal-toast.swal2-hide {
+    animation: swalToastOut 0.18s var(--ease-out) forwards !important;
+}
+
+.fh-swal-toast .swal2-title {
+    font-size: var(--fs-base) !important;
+    font-weight: 650 !important;
+    font-family: var(--font-sans) !important;
+    color: var(--color-ink) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+.fh-swal-toast .swal2-timer-progress-bar { background: var(--color-g-500) !important; }
+
+@keyframes swalToastIn {
+    0%   { transform: translateX(14px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes swalToastOut {
+    0%   { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(14px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .swal2-popup.fh-swal-toast,
+    .swal2-popup.fh-swal-toast.swal2-hide { animation: none !important; }
+}
+
 /* ============================================================
    ROOM STATUS MAP — original flat-button edition
    ─────────────────────────────────────────────────────────────

@@ -25,7 +25,6 @@
         'master_admin' => ['badge' => 'bg-stone-900 text-white border-stone-900',        'label' => 'Master Admin'],
         'admin'        => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200',        'label' => 'Admin'],
         'frontdesk'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200',    'label' => 'Front Desk'],
-        'housekeeping' => ['badge' => 'bg-sky-50 text-sky-700 border-sky-200',           'label' => 'Housekeeping'],
     ];
     $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors';
     $labelClasses = 'block text-2xs font-bold uppercase tracking-widest text-muted mb-1.5';
@@ -96,7 +95,6 @@
                 <option value="master_admin" @selected($role === 'master_admin')>Master Admin</option>
                 <option value="admin" @selected($role === 'admin')>Admin</option>
                 <option value="frontdesk" @selected($role === 'frontdesk')>Front Desk</option>
-                <option value="housekeeping" @selected($role === 'housekeeping')>Housekeeping</option>
             </select>
             <select name="sort" class="filter-select" aria-label="Sort order">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>
@@ -187,6 +185,16 @@
                                                     Unsuspend
                                                 </button>
                                             @endif
+                                            {{-- For someone who has left, as opposed to someone
+                                                 who has stepped away. Irreversible, so the
+                                                 confirmation spells out what it costs. --}}
+                                            <button class="delete-staff-btn btn btn-ghost btn-sm btn-icon cursor-pointer text-ember-600"
+                                                    data-staff-id="{{ $staff->id }}"
+                                                    data-name="{{ $staff->name }}"
+                                                    data-email="{{ $staff->email }}"
+                                                    title="Delete account permanently" aria-label="Delete account permanently">
+                                                <x-admin.ui.icon name="trash" class="w-4 h-4" />
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
@@ -224,21 +232,29 @@
                 </div>
                 <div>
                     <label class="{{ $labelClasses }}">Role</label>
+                    {{-- Driven by ASSIGNABLE_ROLES, not a hand-written list: the
+                         two were maintained separately and drifted, so the form
+                         offered Housekeeping while nothing could sign into it. --}}
                     <select name="role" class="{{ $inputClasses }} cursor-pointer" required>
                         <option value="">Select role</option>
-                        <option value="admin" @selected($errorForm === 'create-staff' && old('role') === 'admin')>Admin</option>
-                        <option value="frontdesk" @selected($errorForm === 'create-staff' && old('role') === 'frontdesk')>Front Desk</option>
-                        <option value="housekeeping" @selected($errorForm === 'create-staff' && old('role') === 'housekeeping')>Housekeeping</option>
+                        @foreach (\App\Models\Staff::ASSIGNABLE_ROLES as $assignable)
+                            <option value="{{ $assignable }}" @selected($errorForm === 'create-staff' && old('role') === $assignable)>
+                                {{ $roleMeta[$assignable]['label'] ?? ucfirst($assignable) }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="{{ $labelClasses }}">Password</label>
-                        <input type="password" name="password" placeholder="Enter password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6" required>
+                        {{-- 10, matching StaffRecordsController::PASSWORD_RULES. The
+                             attribute still said 6 after the floor was raised, so the
+                             browser accepted a password the server then rejected. --}}
+                        <input type="password" name="password" placeholder="At least 10 characters" class="{{ $inputClasses }}" autocomplete="new-password" minlength="10" maxlength="72" required>
                     </div>
                     <div>
                         <label class="{{ $labelClasses }}">Confirm Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6" required>
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="10" maxlength="72" required>
                     </div>
                 </div>
 
@@ -274,19 +290,21 @@
                     <label class="{{ $labelClasses }}">Role</label>
                     <select name="role" id="esRole" class="{{ $inputClasses }} cursor-pointer" required>
                         <option value="">Select role</option>
-                        <option value="admin" @selected($errorForm === 'edit-staff' && old('role') === 'admin')>Admin</option>
-                        <option value="frontdesk" @selected($errorForm === 'edit-staff' && old('role') === 'frontdesk')>Front Desk</option>
-                        <option value="housekeeping" @selected($errorForm === 'edit-staff' && old('role') === 'housekeeping')>Housekeeping</option>
+                        @foreach (\App\Models\Staff::ASSIGNABLE_ROLES as $assignable)
+                            <option value="{{ $assignable }}" @selected($errorForm === 'edit-staff' && old('role') === $assignable)>
+                                {{ $roleMeta[$assignable]['label'] ?? ucfirst($assignable) }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="{{ $labelClasses }}">New Password <span class="normal-case font-medium text-faint">(optional)</span></label>
-                        <input type="password" name="password" placeholder="Enter new password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6">
+                        <input type="password" name="password" placeholder="At least 10 characters" class="{{ $inputClasses }}" autocomplete="new-password" minlength="10" maxlength="72">
                     </div>
                     <div>
                         <label class="{{ $labelClasses }}">Confirm Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="6">
+                        <input type="password" name="password_confirmation" placeholder="Confirm password" class="{{ $inputClasses }}" autocomplete="new-password" minlength="10" maxlength="72">
                     </div>
                 </div>
 
@@ -425,6 +443,53 @@ $(document).on('click', '.password-verify-btn', function(e) {
                 }
             });
         }
+    });
+});
+
+// ── Delete permanently ───────────────────────────────────────────────────────
+// Suspension is for someone who has stepped away; this is for someone who has
+// left. It cannot be undone, so the dialog names the account and says plainly
+// what happens to the work they logged, rather than asking "are you sure?".
+$(document).on('click', '.delete-staff-btn', function(e) {
+    e.preventDefault();
+    const staffId = $(this).data('staff-id');
+    const name    = $(this).data('name');
+    const email   = $(this).data('email');
+
+    Swal.fire({
+        target: 'body',
+        icon: 'warning',
+        title: 'Delete this staff account?',
+        html: `<p class="mb-2"><strong>${$('<div>').text(name).html()}</strong><br>`
+            + `<span class="text-xs text-stone-500">${$('<div>').text(email).html()}</span></p>`
+            + `<p class="text-sm">This cannot be undone. Their bookings, check-ins and payment `
+            + `verifications stay in the records, but those entries will no longer name them. `
+            + `To only block access instead, use <em>Suspend</em>.</p>`,
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete permanently',
+        confirmButtonColor: '#b91c1c',
+        cancelButtonText: 'Cancel',
+        focusCancel: true,
+        scrollbarPadding: false
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            url: `/staff/staff-records/${staffId}`,
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(data) {
+                Swal.fire({
+                    icon: data.success ? 'success' : 'error',
+                    title: data.message,
+                    timer: 1600,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            },
+            error: function(xhr) {
+                Swal.fire('Error', xhr.responseJSON?.message || 'Delete failed. Please try again.', 'error');
+            }
+        });
     });
 });
 </script>

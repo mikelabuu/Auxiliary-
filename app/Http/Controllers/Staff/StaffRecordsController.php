@@ -13,6 +13,18 @@ use App\Services\AuditLogger;
 
 class StaffRecordsController extends Controller
 {
+    /**
+     * The password floor for a staff account.
+     *
+     * Higher than the guest side's 8. These accounts reach the console —
+     * bookings, payment verification, guest records, the audit log — there are
+     * only a handful of them, and each is created by hand by the master admin,
+     * so a longer minimum costs almost nothing to operate. `max:72` is not a
+     * policy choice: bcrypt ignores everything past the 72nd byte, so without
+     * it a longer password would not be the password on the account.
+     */
+    private const PASSWORD_RULES = ['string', 'min:10', 'max:72', 'confirmed'];
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -64,7 +76,7 @@ class StaffRecordsController extends Controller
                 Rule::unique('users', 'email'),
             ],
             'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
-            'password' => 'required|string|min:6|confirmed', // add confirmation if you want
+            'password' => ['required', ...self::PASSWORD_RULES],
         ], [
             'email.unique' => 'That email address is already in use by a guest or staff account.',
         ]);
@@ -100,7 +112,7 @@ class StaffRecordsController extends Controller
         $request->validate([
             'name'                  => 'required|string|min:3|max:50',
             'email'                 => 'required|email|unique:staff,email,' . $staff->id,
-            'password'              => 'nullable|string|min:6|confirmed',
+            'password'              => ['nullable', ...self::PASSWORD_RULES],
             'current_password'      => 'required',
         ]);
 
@@ -163,14 +175,156 @@ class StaffRecordsController extends Controller
 
     public function suspend(Staff $staff)
     {
+        if ($denied = $this->denyUnlessMayManage($staff, 'change staff access', 'suspended')) {
+            return $denied;
+        }
+
         $staff->update(['is_suspended' => true]);
+
+        $this->logSuspensionChange($staff, true);
+
         return response()->json(['success' => true, 'message' => 'User suspended successfully']);
     }
 
     public function unsuspend(Staff $staff)
     {
+        if ($denied = $this->denyUnlessMayManage($staff, 'change staff access', 'suspended')) {
+            return $denied;
+        }
+
         $staff->update(['is_suspended' => false]);
+
+        $this->logSuspensionChange($staff, false);
+
         return response()->json(['success' => true, 'message' => 'User unsuspended successfully']);
+    }
+
+    /**
+     * Remove a staff account for good — the D the staff console never had.
+     *
+     * Suspension covers someone who has stepped away; this covers someone who
+     * has left. Until now the only way to do it was straight in the database,
+     * which is precisely the operation you least want performed by hand.
+     *
+     * Deleting is not free, and the console should not pretend otherwise. Every
+     * foreign key into `staff` is ON DELETE SET NULL, so the rows a person
+     * touched — audit entries, check-ins, check-outs, payment verifications,
+     * discount reviews — survive the deletion but stop naming anybody. The
+     * audit log is the system's account of who did what, so losing the "who"
+     * quietly would defeat it.
+     *
+     * That is why the identity is written into the log BEFORE the row goes:
+     * the deletion entry carries the id, name, email and role, so the trail can
+     * still answer "who was staff #11" long after staff #11 stopped existing.
+     */
+    public function destroy(Staff $staff)
+    {
+        if ($denied = $this->denyUnlessMayManage($staff, 'remove staff accounts', 'deleted')) {
+            return $denied;
+        }
+
+        $actor = Auth::guard('staff')->user();
+        $removed = $staff->only(['id', 'name', 'email', 'role', 'is_suspended']);
+
+        // Logged first: once the row is gone the FKs have already nulled every
+        // reference to it, and there is nothing left to describe.
+        AuditLogger::log(
+            'staff_deleted',
+            $staff,
+            $removed,
+            null,
+            sprintf(
+                'Master Admin %s permanently deleted staff account: #%d %s <%s>, role %s. '
+                . 'Records this account touched remain but no longer reference a staff row.',
+                $actor->name,
+                $staff->id,
+                $staff->name,
+                $staff->email,
+                $staff->role
+            ),
+            $actor
+        );
+
+        $staff->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Staff account deleted permanently',
+        ]);
+    }
+
+    /**
+     * Who may act on somebody else's staff account.
+     *
+     * The staff records page has always drawn the Suspend/Unsuspend buttons
+     * behind `$isMaster && $staff->role !== 'master_admin'` — but that rule
+     * lived only in the Blade template, and those endpoints checked nothing at
+     * all. The route group admits `admin` as well as `master_admin`, so any
+     * admin could POST the id of the master account and switch it off.
+     *
+     * That is not merely a missing check, it is an inversion: `master_admin`
+     * is the role this system treats as above the others — it is the only one
+     * that may create staff (createStaff), the only one that may edit them
+     * (updateByMasterAdmin), and it is deliberately kept out of
+     * ASSIGNABLE_ROLES so no form can ever hand it out. A subordinate role
+     * being able to disable it undoes all of that in one request, and
+     * EnsureStaffNotSuspended makes it immediate: the master's live session is
+     * torn down on its very next request and the login refuses them after.
+     *
+     * So the server states the same rule the buttons do. Acting on yourself
+     * falls out of it for free — the only actor who passes the first test is a
+     * master_admin, and the second test refuses every master_admin target,
+     * including themselves. That is what stops the last master account
+     * suspending or deleting itself and leaving nobody able to manage staff.
+     *
+     * @param string $verb  What the actor was trying to do, for the 403.
+     * @param string $past  Past participle used in the master-account refusal.
+     */
+    private function denyUnlessMayManage(Staff $target, string $verb, string $past)
+    {
+        $actor = Auth::guard('staff')->user();
+
+        if ($actor->role !== 'master_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => "Only the master account may {$verb}.",
+            ], 403);
+        }
+
+        if ($target->role === 'master_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => "The master account cannot be {$past}.",
+            ], 403);
+        }
+
+        return null;
+    }
+
+    /**
+     * Disabling a colleague's access is exactly the kind of act the audit log
+     * exists to record, and it was the one staff action that wrote nothing —
+     * the guest-side equivalents in UserRecordsController have logged from the
+     * start, so the trail simply stopped at the staff table.
+     */
+    private function logSuspensionChange(Staff $staff, bool $suspended): void
+    {
+        $actor = Auth::guard('staff')->user();
+
+        AuditLogger::log(
+            $suspended ? 'staff_suspended' : 'staff_unsuspended',
+            $staff,
+            ['is_suspended' => ! $suspended],
+            ['is_suspended' => $suspended],
+            sprintf(
+                'Master Admin %s %s staff account: %s (%s).',
+                $actor->name,
+                $suspended ? 'suspended' : 'unsuspended',
+                $staff->name,
+                $staff->role
+            ),
+            $actor
+        );
     }
 
     public function updateByMasterAdmin(Request $request)
@@ -186,7 +340,7 @@ class StaffRecordsController extends Controller
             'name'     => 'required|string|min:3|max:50',
             'email'    => 'required|email|unique:staff,email,' . $request->staff_id,
             'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => ['nullable', ...self::PASSWORD_RULES],
         ]);
 
         $staff = Staff::findOrFail($request->staff_id);

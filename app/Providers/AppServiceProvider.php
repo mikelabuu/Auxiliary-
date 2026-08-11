@@ -203,5 +203,21 @@ class AppServiceProvider extends ServiceProvider
                 strtolower((string) $request->input('email')) . '|' . $request->ip()
             );
         });
+
+        // The unauthenticated read endpoints the booking UI calls while a
+        // guest picks dates: room availability, the sold-out calendar, and the
+        // PSGC address lists. None of them expose anything about a guest, so
+        // this is not an authorisation control — it is a cost control. Each
+        // one runs real queries, and without a cap a single host can drive
+        // them as fast as the database will answer.
+        //
+        // Deliberately generous. A guest changing dates fires several of these
+        // in quick succession, and a hostel's guests can easily share one
+        // public address behind NAT, so the limit has to sit well above what
+        // ordinary use looks like while still being far below what a script
+        // does. 120/minute is roughly two requests a second from one address.
+        RateLimiter::for('public-lookup', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
     }
 }

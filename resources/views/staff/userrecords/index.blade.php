@@ -30,16 +30,19 @@
 
     <x-admin.ui.page-header subtitle="Every guest account on the platform — activity, verification, and standing.">
         User Hub
+        {{-- data-no-loader: these serve a spreadsheet download and leave the
+             page where it is, so the navigation curtain
+             (partials/page-loader) must not be raised for them. --}}
         <x-slot:actions>
-            <x-admin.ui.button variant="secondary" :href="route('reports.users.all')">
+            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.all')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 All
             </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" :href="route('reports.users.active')">
+            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.active')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Active
             </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" :href="route('reports.users.suspended')">
+            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.suspended')">
                 <x-admin.ui.icon name="download" class="w-4 h-4" />
                 Suspended
             </x-admin.ui.button>
@@ -107,16 +110,21 @@
         @if($users->isEmpty())
             <x-admin.ui.empty-state icon="users" title="No users match this view." />
         @else
+            {{-- table-fold is the query container for the folded layout (see
+                 20-table-fold.css). It wraps .scroll-x rather than sitting on
+                 it: container-type applies containment, which would disturb
+                 the sticky Actions column living inside the scroll region. --}}
+            <div class="table-fold">
             <div class="scroll-x -mx-6 -mb-6 border-t border-stone-100">
-                <table class="data-table">
+                <table class="data-table data-table-records">
                     <thead>
                         <tr>
                             <th>User</th>
-                            <th>Phone</th>
-                            <th>Email Status</th>
+                            <th class="col-fold">Phone</th>
+                            <th class="col-fold">Email Status</th>
                             <th class="text-right">Stays</th>
                             <th>Standing</th>
-                            <th>Last Login</th>
+                            <th class="col-fold">Last Login</th>
                             <th>Joined</th>
                             <th class="text-right">Action</th>
                         </tr>
@@ -130,11 +138,19 @@
                                         <div class="cell-name-text">
                                             <p class="cell-name-primary truncate">{{ $user->username }}</p>
                                             <p class="cell-name-secondary truncate">{{ $user->email }}</p>
+                                            {{-- The folded-away columns reappear here, so narrowing
+                                                 the table hides no information. --}}
+                                            <span class="cell-name-secondary fold-show">{{ $user->phone ?? 'No phone' }}</span>
+                                            @if($user->email_verified_at)
+                                                <span class="status status-success fold-show">Verified</span>
+                                            @else
+                                                <span class="status status-neutral fold-show">Unverified</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
-                                <td class="font-data tabnum whitespace-nowrap text-muted">{{ $user->phone ?? '—' }}</td>
-                                <td>
+                                <td class="font-data tabnum whitespace-nowrap text-muted col-fold">{{ $user->phone ?? '—' }}</td>
+                                <td class="col-fold">
                                     @if($user->email_verified_at)
                                         <span class="status status-success">Verified</span>
                                     @else
@@ -149,10 +165,19 @@
                                         <span class="status status-active">Active</span>
                                     @endif
                                 </td>
-                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint col-fold">
                                     {{ $user->last_login_at ? \Carbon\Carbon::parse($user->last_login_at)->timezone(config('hostel.timezone'))->format('M d, Y · h:i A') : '—' }}
                                 </td>
-                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">{{ $user->created_at->timezone(config('hostel.timezone'))->format('M d, Y') }}</td>
+                                <td class="font-data tabnum text-xs whitespace-nowrap text-faint">
+                                    {{ $user->created_at->timezone(config('hostel.timezone'))->format('M d, Y') }}
+                                    {{-- Last login travels with the date it belongs beside. Kept
+                                         terse (no year, no "last") because this cell is
+                                         whitespace-nowrap: every extra word here widens the
+                                         column and pushes it back under the pinned Actions. --}}
+                                    <span class="fold-show fold-sub">
+                                        {{ $user->last_login_at ? 'Seen ' . \Carbon\Carbon::parse($user->last_login_at)->timezone(config('hostel.timezone'))->format('M d') : 'Never seen' }}
+                                    </span>
+                                </td>
                                 <td class="text-right">
                                     <div class="table-actions justify-end">
                                         <button class="view-user-btn btn btn-ghost btn-sm btn-icon cursor-pointer"
@@ -179,6 +204,7 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
             </div>
 
             <div class="mt-6">

@@ -24,8 +24,13 @@
                     <div class="fha-field">
                         {{-- Fixed by the reset link. Read-only rather than disabled, so it
                              still posts and is still announced by screen readers. --}}
-                        <input type="email" id="email" name="email" required readonly
-                               placeholder=" " value="{{ old('email', $email) }}"
+                        {{-- Readonly only when the link supplied the address, which
+                             is the normal path. Without that guard a link that
+                             arrived without ?email= would render a locked, empty
+                             field that could never be submitted. --}}
+                        <input type="email" id="email" name="email" required
+                               @readonly(filled($email ?? ''))
+                               placeholder=" " value="{{ old('email', $email ?? '') }}"
                                class="fha-input" autocomplete="email">
                         <label for="email" class="fha-label">Email address</label>
                     </div>
@@ -35,6 +40,7 @@
                             <input type="password" id="password" name="password" required
                                    placeholder=" " autocomplete="new-password"
                                    class="fha-input fha-input--pw" data-caps-for="resetCaps" autofocus
+                                   minlength="8" maxlength="72"
                                    aria-describedby="resetPwHelp" data-confirm-source="password_confirmation">
                             <label for="password" class="fha-label">New password</label>
                             <span class="fha-rule" aria-hidden="true"></span>
@@ -44,7 +50,9 @@
                             </button>
                         </div>
                         @include('public.auth.partials.caps', ['id' => 'resetCaps'])
-                        <p id="resetPwHelp" class="fha-help">At least 6 characters.</p>
+                        {{-- Same floor as signup — NewPasswordController::store
+                             validates min:8, max:72. --}}
+                        <p id="resetPwHelp" class="fha-help">At least 8 characters.</p>
                     </div>
 
                     <div>

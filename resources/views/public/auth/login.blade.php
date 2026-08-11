@@ -184,6 +184,7 @@
                         <div class="fha-field">
                             <input type="password" id="register_password" name="password" required placeholder=" "
                                    autocomplete="new-password" class="fha-input fha-input--pw"
+                                   minlength="8" maxlength="72"
                                    data-caps-for="registerCaps" aria-describedby="registerPwHelp"
                                    data-confirm-source="password_confirmation">
                             <label for="register_password" class="fha-label">Password</label>
@@ -194,7 +195,10 @@
                             </button>
                         </div>
                         @include('public.auth.partials.caps', ['id' => 'registerCaps'])
-                        <p id="registerPwHelp" class="fha-help">At least 6 characters.</p>
+                        {{-- Must match AuthController::signup — min:8, max:72. The
+                             hint said 6 after the floor was raised, so the form
+                             invited a password the server then refused. --}}
+                        <p id="registerPwHelp" class="fha-help">At least 8 characters.</p>
                     </div>
 
                     <div>

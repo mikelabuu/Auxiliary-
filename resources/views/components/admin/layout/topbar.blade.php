@@ -47,7 +47,13 @@
           },
           goFirst() {
               const first = this.results.bookings[0] || this.results.users[0] || this.results.rooms[0];
-              if (first) window.location.href = first.url;
+              if (!first) return;
+              {{-- Navigating from script skips the click handler that normally
+                   raises the loading curtain (partials/page-loader), so ask for
+                   it directly — otherwise Enter here is the one navigation in
+                   the console with no feedback at all. --}}
+              if (window.showPageLoader) window.showPageLoader();
+              window.location.href = first.url;
           },
           {{-- Keyboard flow: arrows walk every visible row (quick nav or results), Enter opens it --}}
           navRows() {

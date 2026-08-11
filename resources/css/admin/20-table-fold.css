@@ -35,6 +35,92 @@
     container-name: tablefold;
 }
 
+/* ------------------------------------------------------------
+   RECORDS TABLES (users)
+
+   Same problem as the booking log. Eight columns measure 1494px
+   laid out — User 309, Phone 152, Email Status 167, Stays 98,
+   Standing 133, Last Login 275, Joined 162, Actions 197 — against
+   a container that is 831px on a 1280px laptop and 1240px even at
+   1680px with the sidebar out. So the table always overflowed, and
+   because Actions is pinned right it was Joined that ended up
+   underneath it: a date that read as truncated with nothing on
+   screen to say it was merely scrolled out of view.
+
+   Below 1500px the eight columns fold into five. Nothing is
+   dropped — phone and verification move under the username, last
+   login moves under the joined date.
+
+       USER                 STAYS  STANDING  JOINED        ACTIONS
+       P patz                   0  Active    Aug 10, 2026  [Suspend]
+       francisworkvid@gm…                    SEEN AUG 10
+       0917…  VERIFIED
+   ------------------------------------------------------------ */
+
+@container tablefold (max-width: 1500px) {
+    /* Release the 860px floor from .data-table (04-components) — with it in
+       place the table cannot shrink to its container no matter how many
+       columns fold away, so the Joined date stayed pinned under the Actions
+       cell and folding bought nothing. Specificity is deliberate: the density
+       switches set the same property at (0,2,1) via `body.density-large
+       .data-table`, and this has to win against all three of them. */
+    body .data-table.data-table-records { min-width: 0; }
+
+    .data-table-records .col-fold { display: none; }
+    .data-table-records .fold-hide { display: none; }
+    .data-table-records .fold-show { display: inline; }
+
+    /* Folded-away values reappear beneath the name and the date they
+       belong with, so nothing is actually dropped. */
+    .data-table-records .cell-name-text .fold-show,
+    .data-table-records .stacked-fold.fold-show {
+        display: block;
+        margin-top: 3px;
+    }
+
+    .data-table-records .cell-name-text .status.fold-show {
+        display: inline-flex;
+        margin-top: 5px;
+    }
+
+    .data-table-records .fold-sub {
+        display: block;
+        margin-top: 2px;
+        font-size: var(--fs-2xs);
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--color-faint);
+    }
+
+    /* The one column with unbounded content decides whether the rest
+       fit; capped, the remaining five come in under the container and
+       the table stops scrolling sideways at all. */
+    .data-table-records thead th:first-child,
+    .data-table-records tbody td:first-child { max-width: 240px; }
+
+    .data-table-records .cell-name-primary,
+    .data-table-records .cell-name-secondary {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .data-table-records .fold-sub { letter-spacing: .02em; }
+
+    /* The last 30px come from the gutters rather than from the content.
+       At 20px each side the five folded columns measured 860px against
+       831px of container — still overlapping. Trimming to 13px gives
+       back ~70px across the row, which is the difference between the
+       Joined date sitting under the pinned Actions cell and clearing
+       it, and costs nothing anyone can see. */
+    .data-table-records thead th,
+    .data-table-records tbody td {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+}
+
 /* Folded-layout content is inert until the fold happens. */
 .fold-show { display: none; }
 

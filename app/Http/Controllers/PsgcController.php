@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PsgcDirectory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -62,27 +63,16 @@ class PsgcController extends Controller
     /**
      * The whole file, memoised for the life of the request.
      *
-     * Returns an empty shape rather than throwing when the file is missing:
-     * an address form with empty dropdowns is recoverable, a 500 on checkout
-     * is not. `psgc:sync` is what puts the file there.
+     * Read through PsgcDirectory, which is also what the booking forms use to
+     * turn a posted code into a name — one reader, so the endpoint that offers
+     * an address and the validation that accepts it can never disagree about
+     * which places exist. Returns an empty shape rather than throwing when the
+     * file is missing: an address form with empty dropdowns is recoverable, a
+     * 500 on checkout is not. `psgc:sync` is what puts the file there.
      */
     private function payload(): array
     {
-        static $decoded = null;
-
-        if ($decoded !== null) {
-            return $decoded;
-        }
-
-        $path = resource_path('data/psgc.json');
-
-        if (! is_readable($path)) {
-            report(new \RuntimeException("PSGC payload missing at {$path}. Run `php artisan psgc:sync`."));
-
-            return $decoded = ['regions' => [], 'provinces' => [], 'cities' => [], 'barangays' => []];
-        }
-
-        return $decoded = json_decode(file_get_contents($path), true) ?: [];
+        return app(PsgcDirectory::class)->payload();
     }
 
     private function cached(array $data): JsonResponse

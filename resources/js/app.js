@@ -33,16 +33,56 @@ import './expandable-bento';
         return el;
     }
 
+    /**
+     * SweetAlert2 toast, where SweetAlert2 exists.
+     *
+     * The admin and front-desk layouts both load sweetalert2, and the console
+     * already uses Swal.fire() for every confirmation — so a flash arriving as
+     * something that looks nothing like those confirmations was the odd one
+     * out. Routing through Swal makes the whole console speak with one voice.
+     *
+     * The public side deliberately ships SweetAlert v1 (`swal()`), which has
+     * no toast mode, so those pages keep the hand-rolled stack below. Hence a
+     * capability check rather than a hard swap: one entry point, and each side
+     * gets the best thing it actually has loaded.
+     */
+    function swalToast(message, type, life) {
+        const Toast = window.Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: life,
+            timerProgressBar: true,
+            customClass: { popup: 'fh-swal-toast' },
+            didOpen: function (el) {
+                // Match the hand-rolled engine's behaviour: hovering holds the
+                // notice open, which matters when it carries a reference number.
+                el.addEventListener('mouseenter', window.Swal.stopTimer);
+                el.addEventListener('mouseleave', window.Swal.resumeTimer);
+            },
+        });
+
+        Toast.fire({ icon: type, title: String(message) });
+
+        return function () { window.Swal.close(); };
+    }
+
     window.toast = function (message, type, opts) {
         if (!message) return;
         type = type === 'danger' ? 'error' : (type || 'success');
         if (!ICONS[type]) type = 'info';
+
+        const life = (opts && opts.duration) || DURATIONS[type];
+
+        if (window.Swal && typeof window.Swal.mixin === 'function') {
+            return swalToast(message, type, life);
+        }
+
         const host = stack();
 
         // Keep the stack shallow — drop the oldest notice past four
         while (host.children.length >= 4) host.firstElementChild.remove();
 
-        const life = (opts && opts.duration) || DURATIONS[type];
         const slot = document.createElement('div');
         slot.className = 'toast-slot';
         const card = document.createElement('div');

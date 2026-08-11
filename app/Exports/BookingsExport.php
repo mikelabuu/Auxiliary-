@@ -51,7 +51,10 @@ class BookingsExport implements FromCollection, WithHeadings
                 'Status' => $booking->status,
                 'Room Numbers' => $booking->reservations->pluck('room_number')->implode(', '),
                 'Total Price' => $booking->total_price,
-                'Payable Amount' => $booking->payable_amount,
+                // Falls back the same way every payment path does. Bookings
+                // created before payable_amount was set at creation carry NULL,
+                // and a blank money column in an export reads as zero owed.
+                'Payable Amount' => $booking->payable_amount ?? $booking->total_price,
                 'Payment ID' => $booking->payments?->id ?? '',
                 'Reference No' => $booking->payments?->reference_no ?? '',
                 'Booking Created At' => $booking->created_at ? Carbon::parse($booking->created_at)->setTimezone(config('hostel.timezone'))->format('Y-m-d H:i:s') : '',

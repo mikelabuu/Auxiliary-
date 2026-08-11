@@ -51,11 +51,17 @@ use App\Http\Controllers\ReceiptController;
 
 Route::get('/', [BookingController::class, 'welcome'])->name('home');
 
-Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
-Route::post('/rooms/availability-summary', [BookingController::class, 'availabilitySummary'])->name('rooms.availability_summary');
-// Sold-out nights for the checkout date pickers. GET because it takes no
-// guest input and the answer is the same for everyone looking at the calendar.
-Route::get('/rooms/calendar-availability', [BookingController::class, 'calendarAvailability'])->name('rooms.calendar_availability');
+// Unauthenticated and unthrottled is how these started. They expose nothing
+// about any guest, so the cap is about cost rather than access: each runs real
+// availability queries, and one host should not be able to drive them flat out.
+// See the `public-lookup` limiter for why the ceiling is set as high as it is.
+Route::middleware('throttle:public-lookup')->group(function () {
+    Route::post('/rooms/available', [BookingController::class, 'getAvailableRooms'])->name('rooms.available');
+    Route::post('/rooms/availability-summary', [BookingController::class, 'availabilitySummary'])->name('rooms.availability_summary');
+    // Sold-out nights for the checkout date pickers. GET because it takes no
+    // guest input and the answer is the same for everyone looking at the calendar.
+    Route::get('/rooms/calendar-availability', [BookingController::class, 'calendarAvailability'])->name('rooms.calendar_availability');
+});
 
 // Public room detail page. Declared after the POST availability endpoints so
 // the literal /rooms/* paths above always win over this wildcard.
@@ -66,8 +72,10 @@ Route::get('/rooms/{slug}', [BookingController::class, 'showRoomType'])->name('r
 // the same published government reference list for everyone, it carries
 // nothing about any guest, and the staff booking forms behind auth read the
 // very same endpoints.
-Route::get('/psgc/locations', [PsgcController::class, 'locations'])->name('psgc.locations');
-Route::get('/psgc/barangays/{cityCode}', [PsgcController::class, 'barangays'])->name('psgc.barangays');
+Route::middleware('throttle:public-lookup')->group(function () {
+    Route::get('/psgc/locations', [PsgcController::class, 'locations'])->name('psgc.locations');
+    Route::get('/psgc/barangays/{cityCode}', [PsgcController::class, 'barangays'])->name('psgc.barangays');
+});
 
 // Receipt verification. Deliberately OUTSIDE the staff group: the QR printed on
 // a receipt carries a signed URL, and holding the receipt is what entitles a
@@ -205,6 +213,15 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::post('/user-records/{user}/suspend', [UserRecordsController::class, 'suspend'])->name('staff.userrecords.suspend');
         Route::post('/user-records/{user}/unsuspend', [UserRecordsController::class, 'unsuspend'])->name('staff.userrecords.unsuspend');
 
+        // NOTE: there is deliberately no delete for guest accounts. The foreign
+        // keys into `users` are ON DELETE CASCADE — `bookings`, `payments` and
+        // `balances` go with the account, and reservations, receipts, check-ins
+        // and check-outs follow the bookings down. Removing one guest would
+        // erase the hostel's record of money it took, so suspension is the only
+        // way to switch a guest off. Staff accounts are a different case and do
+        // have a delete: every key into `staff` is ON DELETE SET NULL, so the
+        // records survive and only the attribution is lost.
+
         // User detail modal (JSON) + manual email verification
         Route::get('/user-records/{user}/details', [UserRecordsController::class, 'show'])->name('staff.userrecords.show');
         Route::post('/user-records/{user}/verify-email', [UserRecordsController::class, 'verifyEmail'])->name('staff.userrecords.verify-email');
@@ -215,6 +232,12 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
 
         Route::post('/staff-records/{staff}/suspend', [StaffRecordsController::class, 'suspend'])->name('staff.staffrecords.suspend');
         Route::post('/staff-records/{staff}/unsuspend', [StaffRecordsController::class, 'unsuspend'])->name('staff.staffrecords.unsuspend');
+
+        // The D in the staff console's CRUD. Same guard as suspend — master
+        // only, and never aimed at a master account — because it is the same
+        // question with a harsher answer. Removing a colleague who has left
+        // used to mean opening the database by hand.
+        Route::delete('/staff-records/{staff}', [StaffRecordsController::class, 'destroy'])->name('staff.staffrecords.destroy');
 
         // Staff activity modal (JSON)
         Route::get('/staff-records/{staff}/activity', [StaffRecordsController::class, 'activity'])->name('staff.staffrecords.activity');
@@ -303,9 +326,9 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
 | exception — access was inherited rather than declared. Front desk genuinely
 | needs both, so the behaviour was right; what was missing was saying so. The
 | roles are spelled out here because `guestHistory` returns a guest's stay
-| record, and `Staff::ROLES` also contains `housekeeping` — a role with no
-| landing route today, which would have silently picked up guest history the
-| moment it got one.
+| record, and access to that should be granted rather than inherited: any role
+| added to `Staff::ROLES` later must be named here before it can read a guest's
+| stay history, instead of picking it up silently.
 */
 Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,admin,master_admin'])->group(function () {
     Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');

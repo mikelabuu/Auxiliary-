@@ -176,10 +176,15 @@ class BookingController extends Controller
             'reservations.*.num_seniors'     => 'nullable|integer|min:0',
             'reservations.*.meal' => 'nullable|array',
             'reservations.*.meal.*' => 'integer|min:0|max:40',
-            'region_code' => 'required|string|max:255',
-            'province_code' => 'nullable|string|max:255',
-            'city_code' => 'required|string|max:255',
-            'barangay_code' => 'required|string|max:255',
+            // Posted as "CODE|NAME". Only the NAME half was ever read, so a
+            // malformed value stored an address with a level missing and said
+            // nothing about it. PsgcCode checks the shape and that the code is
+            // a real place; the names below are then read from the gazetteer
+            // rather than taken from the client.
+            'region_code' => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('regions')],
+            'province_code' => ['nullable', 'string', 'max:255', new \App\Rules\PsgcCode('provinces')],
+            'city_code' => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('cities')],
+            'barangay_code' => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('barangays')],
         ], [
             'guest_phone.regex'        => 'Enter a Philippine mobile number as 09xxxxxxxxx or +639xxxxxxxxx.',
             'check_in.before_or_equal' => 'We only take bookings up to ' . self::BOOKING_HORIZON_DAYS . ' days ahead.',
@@ -202,9 +207,13 @@ class BookingController extends Controller
             $guestName .= ' ' . $request->suffix;
         }
 
-        $brgyName = explode('|', $request->barangay_code)[1] ?? '';
-        $cityName = explode('|', $request->city_code)[1] ?? '';
-        $provName = $request->province_code ? (explode('|', $request->province_code)[1] ?? '') : '';
+        // Resolved from the code, not from the label the form posted, so the
+        // stored address always matches the published PSGC list.
+        $psgc = app(\App\Services\PsgcDirectory::class);
+
+        $brgyName = $psgc->name('barangays', $request->barangay_code, $request->city_code);
+        $cityName = $psgc->name('cities', $request->city_code);
+        $provName = $request->province_code ? $psgc->name('provinces', $request->province_code) : '';
 
         $guest_address = collect([
             $brgyName,
@@ -407,6 +416,15 @@ class BookingController extends Controller
                     'accepted_terms_at' => now(),
                     'discount'        => 0,
                     'total_price'     => $totalPrice,
+                    // What the guest actually owes. Left unset here for a long
+                    // time, so every guest booking without a discount carried
+                    // NULL — harmless to the payment paths, which all read
+                    // `payable_amount ?? total_price`, but the financial report
+                    // and the bookings export select the column directly and
+                    // showed those rows blank. Equal to total_price at
+                    // creation; DiscountAdminController rewrites it when a
+                    // discount is approved.
+                    'payable_amount'  => $totalPrice,
                     'num_seniors'     => $totalSeniors,
                     'wants_discount'  => $request->boolean('request_discount'),
                     'status'          => $status,

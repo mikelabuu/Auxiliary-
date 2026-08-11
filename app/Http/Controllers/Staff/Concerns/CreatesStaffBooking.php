@@ -94,15 +94,21 @@ trait CreatesStaffBooking
             'reservations.*.num_guests'      => 'required|integer|min:1',
             'reservations.*.num_seniors'     => 'nullable|integer|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
-            'region_code'     => 'required|string|max:255',
-            'province_code'   => 'nullable|string|max:255',
-            'city_code'       => 'required|string|max:255',
-            'barangay_code'   => 'required|string|max:255',
+            // Same "CODE|NAME" contract as the public form, and the same rule.
+            // The desk types these on a guest's behalf, so an address that
+            // silently loses its barangay is if anything worse here.
+            'region_code'     => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('regions')],
+            'province_code'   => ['nullable', 'string', 'max:255', new \App\Rules\PsgcCode('provinces')],
+            'city_code'       => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('cities')],
+            'barangay_code'   => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('barangays')],
         ]);
 
-        $brgyName = explode('|', $request->barangay_code)[1] ?? '';
-        $cityName = explode('|', $request->city_code)[1] ?? '';
-        $provName = $request->province_code ? (explode('|', $request->province_code)[1] ?? '') : '';
+        // Names come from the gazetteer, not from the posted labels.
+        $psgc = app(\App\Services\PsgcDirectory::class);
+
+        $brgyName = $psgc->name('barangays', $request->barangay_code, $request->city_code);
+        $cityName = $psgc->name('cities', $request->city_code);
+        $provName = $request->province_code ? $psgc->name('provinces', $request->province_code) : '';
 
         $guest_address = collect([$brgyName, $cityName, $provName])->filter()->implode(', ');
 

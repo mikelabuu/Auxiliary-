@@ -130,11 +130,28 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
-        // If this request is for password update
-        if ($request->filled('current_password') || $request->filled('password')) {
+        // Which card on the settings page was submitted.
+        //
+        // Both post here, and they used to be told apart by "did
+        // current_password arrive?". That is why the profile card could never
+        // ask for a password: adding the field would have routed every profile
+        // save into the password branch, which then fails for want of a new
+        // password. The discriminator and the missing re-authentication below
+        // were the same bug wearing two hats.
+        //
+        // `_form` is the explicit answer, and matches what the staff records
+        // page already does. The fallback keeps the old reading for any
+        // request that predates the hidden field.
+        $isPasswordChange = $request->has('_form')
+            ? $request->input('_form') === 'password'
+            : ($request->filled('current_password') || $request->filled('password'));
+
+        if ($isPasswordChange) {
             $request->validate([
                 'current_password' => ['required'],
-                'password' => ['required', 'confirmed', 'min:6'],
+                // bcrypt ignores anything past the 72nd byte, so a longer
+                // password would not be the password on the account.
+                'password' => ['required', 'confirmed', 'min:8', 'max:72'],
             ]);
 
             if (!Hash::check($request->current_password, $user->password)) {
@@ -162,6 +179,23 @@ class SettingsController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
+
+        // Moving the email address is an account-recovery change, not a
+        // profile detail: whoever holds the new inbox can drive a password
+        // reset back into this account. A session alone should not be enough
+        // to do it — the password branch above has always re-authenticated
+        // before touching a credential, and this is the other credential.
+        //
+        // Only asked for when the address actually changes, so editing a
+        // username or a phone number stays a one-field edit.
+        if ($request->email !== $user->email) {
+            $request->validate([
+                'current_password' => ['required', 'current_password'],
+            ], [
+                'current_password.required' => 'Enter your current password to change the email address on this account.',
+                'current_password.current_password' => 'That password is incorrect.',
+            ]);
+        }
 
         $logout = false;
 

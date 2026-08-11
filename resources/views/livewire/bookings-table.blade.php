@@ -1,14 +1,17 @@
 <x-admin.ui.section-card wire:poll.15s icon="clipboard" title="Complete Booking Log" subtitle="Every booking that has not been checked out yet.">
+    {{-- data-no-loader: these serve a spreadsheet download and leave the page
+         where it is, so the navigation curtain (partials/page-loader) must not
+         be raised for them. --}}
     <x-slot:actions>
-        <a href="{{ route('reports.bookings.full') }}" class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
+        <a href="{{ route('reports.bookings.full') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             All
         </a>
-        <a href="{{ route('reports.bookings.paid') }}" class="flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-3 py-1.5 hover:bg-palay-50 transition-colors !no-underline">
+        <a href="{{ route('reports.bookings.paid') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-3 py-1.5 hover:bg-palay-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Paid
         </a>
-        <a href="{{ route('reports.bookings.completed') }}" class="flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors !no-underline">
+        <a href="{{ route('reports.bookings.completed') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Completed
         </a>

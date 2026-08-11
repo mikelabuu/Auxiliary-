@@ -47,7 +47,7 @@ class AuthController extends Controller
             ],
             // bcrypt silently ignores anything past the 72nd byte, so a longer
             // password would not be the password on the account.
-            'password' => ['required', 'string', 'min:6', 'max:72', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
             // 'required' passes on any truthy value; 'accepted' is the rule
             // that actually means a checkbox was ticked.
             'terms'    => ['accepted'],
