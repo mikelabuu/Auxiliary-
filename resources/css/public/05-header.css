@@ -87,6 +87,59 @@
     max-width: min(1400px, calc(100% - 2 * var(--fh-nav-inset)));
 }
 
+/* Legibility scrim for the rest state ─────────────────────────────
+   At rest the header is transparent over the hero photograph, and every
+   measurement of it failed WCAG AA: the nav links came out at 4.39:1, SIGN IN
+   at 4.31:1 and the brand tagline at 3.00:1, all against 4.5:1 for text this
+   size. That is Lighthouse's contrast failure, and it is a legibility problem
+   before it is an audit one — white 300-weight type on a mid-blue sky is thin.
+
+   A scrim is the fix rather than heavier type or darker text, because the sky
+   is a gradient that keeps getting lighter: any colour that works at the top of
+   the hero stops working further down, while a scrim moves with the bar.
+
+   It is one composited gradient with nothing behind it but opacity, so it costs
+   a layer and no per-frame work — and it retires the moment the pill takes over,
+   because the pill's own fill is doing the same job by then. Sized in the
+   element's own height so it always covers the bar plus a soft tail below. */
+#navWrap::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 220%;
+    z-index: -1;
+    pointer-events: none;
+    /* Tuned by measurement, then pulled back. The first pass at 0.52 cleared AA
+       by miles (11:1 on the nav links) and that is not a win — it is a dark band
+       laid over the sky the hero exists to show. These stops put the weakest
+       element at 5.78:1 against a 4.5 floor: enough headroom for the parts of
+       the sky this gradient model does not capture (it brightens toward the
+       right, under SIGN IN, and the radial lights in .fh-hero-lights lift it
+       further) without dimming the photograph to buy margin nobody asked for. */
+    background: linear-gradient(to bottom,
+            rgba(4, 18, 36, 0.32),
+            rgba(4, 18, 36, 0.17) 42%,
+            rgba(4, 18, 36, 0.05) 72%,
+            transparent);
+    opacity: 1;
+    /* Coming BACK to rest: wait for the pill to have gone before returning, or
+       the two dark layers stack and the top of the page flashes heavy. */
+    transition: opacity 0.34s var(--fh-ease) 0.14s;
+}
+
+/* Condensed wears the pill; static pages are light-on-light and never needed it. */
+#navWrap.is-condensed::before,
+#navWrap.is-static::before {
+    opacity: 0;
+    /* Leaving FAST, and first. This scrim is full-width; the pill's fill is
+       full-width too until max-width has finished narrowing it. Cross-fading
+       them at the same rate put two dark full-width layers on screen at once
+       and produced a heavy navy band across the whole top of the page — the
+       single worst frame of the whole scroll. Clearing in 0.2s gets this one
+       out of the way before the fill arrives (which is delayed to match). */
+    transition: opacity 0.2s var(--fh-ease);
+}
+
 #navWrap.nav-hidden {
     /* -140% clears the pill plus its drop shadow. */
     transform: translateY(-140%);
@@ -99,6 +152,30 @@
     transition:
         max-width 0.42s var(--fh-ease),
         transform 0.34s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Focus ring for the dark header ──────────────────────────────────
+   The global ring is emerald (app.css / 07-checkout-night), which is chosen for
+   light surfaces and measured 1.08:1 against the header at rest, 1.29:1 on the
+   nav capsule and 2.48:1 on the condensed pill — all under the 3:1 that WCAG
+   2.2 asks of a focus indicator. In practice a keyboard user tabbing the nav
+   saw nothing at all until they reached the white CTA, which was the only
+   control whose ring had anything to sit against.
+
+   theme-night already solves this by swapping the ring to gold; the landing page
+   is theme-boutique, so it never inherited that. Same idea, scoped to the header
+   instead of the theme, because this bar is a dark surface regardless of which
+   theme the page is wearing. gold-soft over gold: it measures 5.25 / 6.26 /
+   12.05 against those three backdrops rather than 3.61 / 4.31 / 8.30, and it is
+   already the accent the hero eyebrow uses.
+
+   Deliberately NOT applied to the CTA: that pill is white, where gold-soft is
+   1.54:1 and the emerald it already has is 7.45:1. And `:not(.is-static)`
+   because checkout/account wear the light pill, where emerald is correct too. */
+#navWrap:not(.is-static) .fh-brand:focus-visible,
+#navWrap:not(.is-static) .fh-nav-link:focus-visible,
+#navWrap:not(.is-static) #mobileMenuBtn:focus-visible {
+    outline-color: var(--color-gold-soft);
 }
 
 /* The content row ────────────────────────────────────────────────── */
@@ -161,18 +238,27 @@
        so it never haunts the photo, which is what the 0s was guarding against. */
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    /* Leaving: the fill drops in 0.2s while max-width takes 0.42s to widen back
+       out. That ordering is the whole point. Run them together (both 0.42s, as
+       they were) and the bar reaches full width while the fill is still half
+       opaque — a full-width dark band sweeping the top of the page. Emptying the
+       fill first means what widens is already transparent, so the pill reads as
+       dissolving in place rather than spreading. */
     transition:
-        opacity 0.42s var(--fh-ease),
-        backdrop-filter 0s linear 0.26s,
-        -webkit-backdrop-filter 0s linear 0.26s;
+        opacity 0.2s var(--fh-ease),
+        backdrop-filter 0s linear 0.18s,
+        -webkit-backdrop-filter 0s linear 0.18s;
 }
 
 #navWrap.is-condensed #siteNav::before {
     opacity: 1;
     backdrop-filter: blur(18px) saturate(1.1);
     -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    /* Arriving: delayed, so the fill lands on a box that has already mostly
+       narrowed. The shape forms first and then darkens, instead of the whole
+       width darkening and then pulling in. */
     transition:
-        opacity 0.42s var(--fh-ease),
+        opacity 0.3s var(--fh-ease) 0.14s,
         backdrop-filter 0s linear 0.4s,
         -webkit-backdrop-filter 0s linear 0.4s;
 }
@@ -283,7 +369,13 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     letter-spacing: 0.24em;
     text-transform: uppercase;
     white-space: nowrap;
-    color: rgba(255, 255, 255, 0.6);
+    /* Was 0.6, which measured 3.00:1 over the sky — the worst contrast in the
+       header by some way. At 9.5px with 0.24em tracking this line is already
+       working hard; the scrim on #navWrap does most of the repair, and the
+       extra alpha finishes it. It still reads as secondary next to the
+       full-white brand name above it, because the size and tracking carry that
+       hierarchy — the transparency was never what made it subordinate. */
+    color: rgba(255, 255, 255, 0.86);
     opacity: 1;
     transform: translateY(0);
     transition:
@@ -319,7 +411,14 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     gap: clamp(12px, 1.6vw, 26px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    /* A 10% WHITE fill used to sit here, which was backwards: it lightened the
+       sky underneath white 300-weight links and pushed them to 4.39:1. The
+       capsule is supposed to hold the links up, so it has to darken. This is
+       the same navy the hero scrim and the condensed pill are mixed from
+       (rgba(4,18,36) / rgb(9,20,34)), which also means the rest capsule and the
+       pill it dissolves into now belong to one family instead of reading as a
+       light object becoming a dark one. */
+    background: rgba(4, 18, 36, 0.18);
     padding: 9px clamp(16px, 1.6vw, 24px);
     /* No backdrop-filter. This capsule is only ever visible in the rest state,
        i.e. over the hero — which is exactly where the parallax loop is busiest

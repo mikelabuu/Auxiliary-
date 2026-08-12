@@ -200,7 +200,10 @@
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="focus-ring press grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/30 bg-current/10 md:hidden cursor-pointer" aria-label="Open navigation menu">
+                {{-- aria-expanded starts false and is kept in sync by
+                     toggleDrawer(); aria-controls ties it to the panel it
+                     opens. --}}
+                <button id="mobileMenuBtn" class="focus-ring press grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/30 bg-current/10 md:hidden cursor-pointer" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileDrawer">
                     <x-booking.ui.icon name="menu" class="h-4 w-4" />
                 </button>
             </div>
@@ -403,6 +406,24 @@
                 const SHOW_AFTER = 40;   // px of continuous upward travel
                 const HIDE_BELOW = 420;  // never retreat this near the top
 
+                // The condense used to be one threshold: `y > 36`. A single
+                // value means the state can change on a 1px move, and the
+                // moment you rest anywhere near it — a trackpad easing off, a
+                // momentum tail, the bounce at the top of the page — it flips
+                // back and forth. Walking y from 30 to 40 and back flipped it
+                // four times, and every flip restarts a 0.42s transition that
+                // was already mid-flight, so the pill reverses direction
+                // partway and reads as a wobble rather than a change of state.
+                //
+                // A Schmitt trigger fixes it: condense on the way down at 56,
+                // release on the way back up at 16, and inside that band keep
+                // whatever state you already have. Crossing has to be
+                // deliberate, and once crossed the transition gets to finish.
+                // Same shape as the HIDE/SHOW pair above — the asymmetry is the
+                // point, not an oversight.
+                const CONDENSE_AT = 56;  // px down before the pill forms
+                const RELEASE_AT = 16;   // px — must return this close to release
+
                 function update() {
                     queued = false;
                     const y = window.scrollY;
@@ -410,7 +431,11 @@
                     lastY = y;
 
                     if (condenses) {
-                        const want = y > 36;
+                        // null on the first pass (page load / bfcache restore):
+                        // pick a state outright rather than inheriting one.
+                        const want = condensed === null
+                            ? y > CONDENSE_AT
+                            : (condensed ? y > RELEASE_AT : y > CONDENSE_AT);
                         if (want !== condensed) {
                             condensed = want;
                             navWrap.classList.toggle('is-condensed', want);
@@ -473,6 +498,15 @@
                 if (!drawer) return;
                 drawer.classList.toggle('drawer-open', open);
                 drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+                // The burger is a disclosure control, so its state has to be
+                // announced. Without aria-expanded a screen reader reads the
+                // same "Open navigation menu" whether the drawer is open or
+                // shut, and the only way to find out is to activate it and
+                // listen for what changes. aria-hidden on the drawer above is
+                // not a substitute: it hides the panel, it says nothing about
+                // the button.
+                menuBtn && menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                menuBtn && menuBtn.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
                 // Bring the header back before the drawer covers it, so closing
                 // never returns you to a page with no visible nav.
                 if (open) window.fhRevealNav && window.fhRevealNav();
