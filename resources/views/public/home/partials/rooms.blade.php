@@ -43,16 +43,25 @@
                     :capacity="$type['capacity']"
                     :badge="$type['badge'] ?? null"
                     :amenities="$type['amenities'] ?? []"
+                    {{-- tags differentiate the room, includes is the spec list.
+                         Both already existed in config/room_types.php and
+                         neither had ever reached the card. --}}
+                    :tags="$type['tags'] ?? []"
+                    :includes="$type['includes'] ?? []"
                     :floor="$type['floor'] ?? ''"
-                    :description="\Illuminate\Support\Str::limit($type['description'] ?? '', 90)"
+                    {{-- Full text: the card clamps it to two rendered lines in
+                         CSS. Str::limit(90) cut at a character count and shipped
+                         broken words to the page ("or friend..."). --}}
+                    :description="$type['description'] ?? ''"
                     :index="$loop->iteration"
                 />
             </div>
         @endforeach
     </div>
 
-    <!-- Filter empty state -->
-    <div id="roomFilterEmpty" class="hidden mt-4 rounded-3xl border border-dashed border-ink/15 bg-ink/[0.02] px-8 py-16 text-center">
+    {{-- Filter empty state. rounded-2xl, not 3xl: this section runs one
+         radius for surfaces and a full pill for anything interactive. --}}
+    <div id="roomFilterEmpty" class="hidden mt-4 rounded-2xl border border-dashed border-ink/15 bg-ink/[0.02] px-8 py-16 text-center">
         <x-booking.ui.icon name="bed" class="mx-auto h-8 w-8 text-ink/25" />
         <p class="mt-4 font-display text-2xl text-ink">No rooms in this range</p>
         <p class="mt-2 text-sm text-ink/55">Try a different capacity, or the dormitories for larger groups.</p>

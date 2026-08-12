@@ -208,12 +208,89 @@ body.theme-night .room-tile.unavailable {
     transform: scale(0.97);
 }
 
-/* Room capacity filter pills — .active is toggled by room-filters.js */
+/* ── Room card ───────────────────────────────────────────────────
+   The hover shadow is painted once on a pseudo-element and faded in,
+   instead of sitting in the card's own transition list.
+
+   Animating box-shadow re-rasterises the blur every frame, and this is a
+   50px blur around a 380px card. Opacity on a pre-painted layer is
+   composited, so the lift stays on the GPU. The shadow reaches outside the
+   card's box, which is why ::after can live behind the card's own
+   background and still be visible.
+
+   This is also why .room-card must NOT carry overflow-hidden: it would clip
+   the pseudo-element and the shadow would vanish. The image rounds its own
+   top corners instead (rounded-t-2xl in the component). */
+.room-card {
+    position: relative;
+    transition:
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.5s ease;
+}
+
+.room-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: 0 24px 54px -26px rgba(8, 36, 20, 0.34);
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Gated: touch devices fire a false hover on tap and the card sticks lifted */
+@media (hover: hover) and (pointer: fine) {
+    .room-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .room-card:hover::after {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .room-card,
+    .room-card::after {
+        transition: none;
+    }
+
+    .room-card:hover {
+        transform: none;
+    }
+}
+
+/* Room capacity filter pills — .active is toggled by room-filters.js.
+   The transition lives here rather than on the utility class so the swap
+   between idle and selected eases instead of snapping.
+
+   `transform` has to be in this list even though nothing here sets one.
+   .press above is unlayered, this rule is unlayered, and this one comes
+   later, so it wins outright and replaces .press's transition wholesale.
+   Leaving transform out silently killed the easing on .press:active and the
+   pills snapped to scale(0.97) on click. */
+.room-filter-pill {
+    transition:
+        transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.28s ease,
+        border-color 0.28s ease,
+        color 0.28s ease,
+        box-shadow 0.28s ease;
+}
+
 .room-filter-pill.active {
     background: var(--color-emerald-deep);
     border-color: var(--color-emerald-deep);
     color: var(--color-cream);
     box-shadow: 0 10px 24px -12px oklch(32% 0.06 160 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .room-filter-pill {
+        transition: none;
+    }
 }
 
 .focus-ring:focus-visible {

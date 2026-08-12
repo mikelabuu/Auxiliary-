@@ -90,10 +90,20 @@
         const p = smooth((viewH - r.top) / (viewH * 0.78));
         if (p >= 1) {
             // Fully revealed: hand back an unclipped element so nothing is
-            // left masking while the band just sits there.
-            if (!item.done) { item.el.style.clipPath = ''; item.done = true; }
+            // left masking while the band just sits there. The compositor
+            // layer goes back too — [data-fx-band] carries
+            // `will-change: clip-path` in 12-scroll-effects.css, and once the
+            // reveal has played there is no clip left to animate, so holding
+            // the hint just pins a full-bleed layer for the rest of the
+            // session. Same reasoning as .fx-words-rest below.
+            if (!item.done) {
+                item.el.style.clipPath = '';
+                item.el.style.willChange = 'auto';
+                item.done = true;
+            }
             return;
         }
+        if (item.done) item.el.style.willChange = '';
         item.done = false;
         const inv = 1 - p;
         const x = (inv * 0.07 * viewW).toFixed(1);

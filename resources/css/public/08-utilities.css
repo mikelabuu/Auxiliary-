@@ -126,9 +126,29 @@
     grid-area: 1 / 1;
 }
 
-/* Progressive bottom-edge blur — public pages soft-exit under the viewport
-   (ported from reactbits gradual-blur: stacked backdrop-filter layers, each
-   masked to its own band so the blur ramps up toward the edge) */
+/* Bottom-edge soft exit — content fades out under the viewport.
+
+   This was a reactbits gradual-blur port: three stacked backdrop-filter
+   layers, each masked to its own band so the blur ramped toward the edge.
+   It is now a plain gradient scrim, and the reason is cost. A fixed,
+   full-width backdrop-filter forces the compositor to re-snapshot the page
+   behind the strip and re-blur it on every scrolled frame — work that scales
+   with window width, so a 1920px desktop paid several times what a phone did,
+   on every public page, forever. That asymmetry was a large part of why
+   scrolling felt heavy on Windows while mobile stayed smooth. A gradient is a
+   single paint of a static layer: the compositor reads nothing back.
+
+   The trade-off is that a scrim is not content-agnostic the way a blur is —
+   it fades to one colour rather than softening whatever is behind it. That
+   colour is --color-canvas, which is already theme-scoped (cream under
+   .theme-boutique, near-black under .theme-night), so the scrim tracks the
+   page it sits on. The multi-stop ramp approximates an ease-in so the fade
+   reads smoothly instead of banding, which a two-stop linear gradient does
+   visibly across 6.5rem of flat colour.
+
+   The dark footer is the one place the canvas colour would be wrong — see
+   the z-index note on #Footer in layouts/public/base.blade.php, which paints
+   the footer above this strip so the scrim never hazes it. */
 .gradual-blur {
     position: fixed;
     left: 0;
@@ -137,41 +157,13 @@
     height: 6.5rem;
     z-index: 30;
     pointer-events: none;
-}
-
-.gradual-blur>div {
-    position: absolute;
-    inset: 0;
-}
-
-/* Three layers, not six.
-   Every backdrop-filter layer makes the compositor re-snapshot and re-blur
-   the page behind this strip on each scrolled frame, and the strip is fixed
-   and full-width — so the cost scales with viewport width and was paid on
-   every public page, every frame. Halving the layer count halves that work.
-   The ramp survives because the bands overlap: each mask fades in while the
-   previous fades out, so the eye reads a continuous gradient rather than
-   three steps. The blur endpoints (0.9px → 14px) are unchanged, so the
-   softest and strongest edges look exactly as they did. */
-.gradual-blur>div:nth-child(1) {
-    -webkit-backdrop-filter: blur(0.9px);
-    backdrop-filter: blur(0.9px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 40%, transparent 62%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 40%, transparent 62%);
-}
-
-.gradual-blur>div:nth-child(2) {
-    -webkit-backdrop-filter: blur(3.5px);
-    backdrop-filter: blur(3.5px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 28%, black 50%, black 68%, transparent 86%);
-    mask-image: linear-gradient(to bottom, transparent 28%, black 50%, black 68%, transparent 86%);
-}
-
-.gradual-blur>div:nth-child(3) {
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 58%, black 82%, black 100%);
-    mask-image: linear-gradient(to bottom, transparent 58%, black 82%, black 100%);
+    background: linear-gradient(to bottom,
+            transparent 0%,
+            color-mix(in oklch, var(--color-canvas) 12%, transparent) 30%,
+            color-mix(in oklch, var(--color-canvas) 38%, transparent) 54%,
+            color-mix(in oklch, var(--color-canvas) 70%, transparent) 74%,
+            color-mix(in oklch, var(--color-canvas) 92%, transparent) 89%,
+            var(--color-canvas) 100%);
 }
 
 /* Soft legibility glow for the hero headline over the photo backdrop */

@@ -5,6 +5,10 @@
      panel, so the nav rides transparent/white over it and swaps to the solid
      light skin on scroll. --}}
 @section('nav_dark', '1')
+{{-- defer_icons: this page renders no Font Awesome glyph at first paint (its
+     icons are inline SVG), so the layout skips the eager 117 KB font preload
+     and loads the FA sheet off the critical path. See layouts/public/base. --}}
+@section('defer_icons', '1')
 
 @section('content')
 

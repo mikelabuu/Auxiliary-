@@ -108,6 +108,16 @@
     will-change: transform;
 }
 
+/* home.js adds this once the wordmark leaves the viewport. `will-change` is a
+   promise that something is about to animate; off screen nothing is, and the
+   hint was pinning the wordmark plus all thirteen of its characters on the
+   compositor for the life of the page. Same stance as .fx-words-rest in
+   12-scroll-effects.css and .fha-word-in.is-done in 14-auth.css. */
+.fh-wordmark.is-offscreen,
+.fh-wordmark.is-offscreen .fh-wm-char {
+    will-change: auto;
+}
+
 .fh-wordmark-line {
     margin: 0;
     font-family: var(--font-display);
@@ -757,6 +767,14 @@
     white-space: pre;
     will-change: transform, opacity;
     backface-visibility: hidden;
+}
+
+/* home.js adds this when the hero scrolls out of view, where it also stops
+   the swap timer. Twenty characters were each holding a layer while nothing
+   was cycling. `display` and `backface-visibility` stay: dropping those would
+   re-wrap the line and reflow the headline. */
+.word-rotate.is-live.is-offscreen .rt-char {
+    will-change: auto;
 }
 
 /* ── Hero subtitle: BlurText (reactbits.dev/text-animations/blur-text) ──

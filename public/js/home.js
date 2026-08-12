@@ -279,7 +279,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const ref = document.querySelector('#heroTitle .split-word');
         if (ref && window.ResizeObserver) new ResizeObserver(measure).observe(ref);
 
-        timer = setInterval(function () { if (!document.hidden) swap(); }, INTERVAL);
+        // The rotator only pauses for a hidden *tab*. It kept cycling while the
+        // hero was scrolled past, flipping twenty characters through WAAPI on a
+        // timer nobody could see, and `.word-rotate.is-live .rt-char` held
+        // `will-change: transform, opacity` on all twenty for the session.
+        //
+        // Gating on the hero's own visibility stops both: no swap runs
+        // off-screen, and `is-offscreen` hands the layers back (see
+        // 06-hero.css). A generous rootMargin means it is already running again
+        // before it can be seen, so scrolling back up never catches a static
+        // word mid-cycle.
+        let onScreen = true;
+        if (window.IntersectionObserver) {
+            new IntersectionObserver(function (entries) {
+                onScreen = entries[0].isIntersecting;
+                host.classList.toggle('is-offscreen', !onScreen);
+            }, { rootMargin: '200px 0px' }).observe(host);
+        }
+
+        timer = setInterval(function () {
+            if (!document.hidden && onScreen) swap();
+        }, INTERVAL);
     }
 
     function swap() {
@@ -433,11 +453,35 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('resize', invalidate);
     window.addEventListener('scroll', invalidate, { passive: true });
 
-    window.addEventListener('mousemove', function (e) {
+    // The mousemove handler is rAF-throttled rather than run inline.
+    //
+    // Three costs stacked up in the inline version, and all three were paid at
+    // the mouse's polling rate — 500-1000Hz on the gaming mice that are common
+    // on Windows, i.e. up to 16 times per frame:
+    //
+    //  1. `centres || measure()` reads 13 getBoundingClientRect()s. The scroll
+    //     listener above nulls `centres` on every scroll, so wheel-scrolling
+    //     with the cursor over the page (the normal desktop posture) meant a
+    //     forced synchronous layout on the very next mousemove — the classic
+    //     read-after-write thrash, interleaved with the parallax loop's writes.
+    //  2. Writing `style.color` repaints the glyph, and these are 178-238px
+    //     Playfair characters. Transform is composited; colour is not.
+    //  3. `.fh-wm-char` carries a CSS transition on transform/colour, so each
+    //     write retargets a running transition instead of finishing one.
+    //
+    // Coalescing to one paint per frame caps all of it at 60Hz, and doing the
+    // rect reads inside rAF puts them at a point in the frame where layout is
+    // already clean. Pointer-coarse devices never ran any of this, which is why
+    // the jank only ever showed up on desktop.
+    let pending = false;
+    let mouseX = 0, mouseY = 0;
+
+    function paint() {
+        pending = false;
         const cs = centres || measure();
         for (let i = 0; i < chars.length; i++) {
-            const dx = e.clientX - cs[i].x;
-            const dy = e.clientY - cs[i].y;
+            const dx = mouseX - cs[i].x;
+            const dy = mouseY - cs[i].y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist >= RADIUS) {
@@ -445,12 +489,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     chars[i].style.transform = '';
                     chars[i].style.color = '';
                     chars[i].__lit = false;
+                    chars[i].__f = -1;
                 }
                 continue;
             }
 
             // gaussian falloff, as in the reactbits original
             const f = Math.exp(-Math.pow(dist / (RADIUS / 2), 2) / 2);
+            // Sub-perceptual changes still cost a repaint on a glyph this
+            // large, so hold the last value until the falloff actually moves.
+            if (chars[i].__f !== undefined && Math.abs(f - chars[i].__f) < 0.004) continue;
+            chars[i].__f = f;
             chars[i].style.transform =
                 'translate3d(0,' + (-f * LIFT).toFixed(2) + 'px,0) scale(' + (1 + f * GROW).toFixed(4) + ')';
             chars[i].style.color = 'rgb('
@@ -459,6 +508,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 + Math.round(WHITE[2] + (GOLD[2] - WHITE[2]) * f) + ')';
             chars[i].__lit = true;
         }
+    }
+
+    // The wave can only be seen while the wordmark is on screen, but the
+    // handler ran for the whole page: every mousemove anywhere on the site
+    // queued a frame that measured and wrote thirteen characters sitting far
+    // above the fold. `is-offscreen` also releases the `will-change: transform`
+    // those characters hold (see 06-hero.css), so the hero stops costing
+    // thirteen compositor layers the moment it is scrolled past.
+    let inView = true;
+    if (window.IntersectionObserver) {
+        new IntersectionObserver(function (entries) {
+            inView = entries[0].isIntersecting;
+            wrap.classList.toggle('is-offscreen', !inView);
+            if (!inView) invalidate();
+        }, { rootMargin: '150px 0px' }).observe(wrap);
+    }
+
+    window.addEventListener('mousemove', function (e) {
+        if (!inView) return;
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        if (!pending) { pending = true; requestAnimationFrame(paint); }
     }, { passive: true });
 })();
 
@@ -478,14 +549,42 @@ document.addEventListener('DOMContentLoaded', function () {
     const EASE_OUT = 'transform .5s cubic-bezier(.2,.7,.2,1)' + REST;
 
     document.querySelectorAll('[data-magnetic]').forEach(function (el) {
-        el.addEventListener('mousemove', function (e) {
-            const r = el.getBoundingClientRect();
-            const dx = ((e.clientX - (r.left + r.width / 2)) / Math.max(r.width, 1)) * 15;
-            const dy = ((e.clientY - (r.top + r.height / 2)) / Math.max(r.height, 1)) * 9 - 3;
+        // The rect is measured once on enter, not on every move.
+        //
+        // Reading getBoundingClientRect() inside the mousemove handler forced a
+        // synchronous layout on each event — and because the handler's previous
+        // pass had just written `transform` on this same element, that read had
+        // to flush the pending style change first. Read-after-write, at the
+        // mouse's polling rate, on the hero's three buttons.
+        //
+        // The element cannot move relative to the cursor between enter and
+        // leave without the pointer crossing its edge (which re-fires enter), so
+        // one measurement per hover is all the maths needs. `transform` is
+        // excluded from the read by construction now — we never read it back.
+        let rect = null;
+        let queued = false;
+        let px = 0, py = 0;
+
+        function apply() {
+            queued = false;
+            if (!rect) return;
+            const dx = ((px - (rect.left + rect.width / 2)) / Math.max(rect.width, 1)) * 15;
+            const dy = ((py - (rect.top + rect.height / 2)) / Math.max(rect.height, 1)) * 9 - 3;
             el.style.transform = 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px)';
             el.style.transition = EASE_IN;
+        }
+
+        el.addEventListener('mouseenter', function () {
+            rect = el.getBoundingClientRect();
         });
+        el.addEventListener('mousemove', function (e) {
+            if (!rect) rect = el.getBoundingClientRect();
+            px = e.clientX;
+            py = e.clientY;
+            if (!queued) { queued = true; requestAnimationFrame(apply); }
+        }, { passive: true });
         el.addEventListener('mouseleave', function () {
+            rect = null;
             el.style.transform = 'translate(0, 0)';
             el.style.transition = EASE_OUT;
         });

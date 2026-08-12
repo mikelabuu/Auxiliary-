@@ -50,10 +50,33 @@
 
     {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs). One icon set
          across the public site and both staff consoles; replaced the Material
-         Icons CDN font the booking flow used to pull. --}}
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-          href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
-    <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
+         Icons CDN font the booking flow used to pull.
+
+         Pages opt out of the eager path with @section('defer_icons', '1').
+
+         The preload is a high-priority fetch of a 117 KB font, and the sheet
+         is 90 KB of render-blocking CSS. On checkout, account and booking that
+         is correct: those pages render FA glyphs in their first paint. The
+         landing does not render a single one. Its icons are inline SVG from
+         x-booking.ui.icon, and the only Font Awesome on it is the three
+         availability pills that availability-search.js injects after the guest
+         runs a date search. So the landing was spending ~207 KB, some of it
+         competing with the hero image for bandwidth, on glyphs that in most
+         visits never appear.
+
+         Deferred pages still get the exact same stylesheet, just off the
+         critical path: media="print" makes it non-blocking and the onload
+         hands it back to all. The noscript copy covers JS-off, where the
+         swap would never fire. --}}
+    @if (trim($__env->yieldContent('defer_icons')) !== '')
+        <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"
+              media="print" onload="this.media='all'; this.onload=null;">
+        <noscript><link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"></noscript>
+    @else
+        <link rel="preload" as="font" type="font/woff2" crossorigin
+              href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
+        <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
+    @endif
 
     {{-- Vendor libraries are self-hosted from public/vendor (see
          scripts/sync-vendor.mjs) and are now OPT-IN. Each one is a partial in
@@ -104,7 +127,10 @@
         <nav id="siteNav" aria-label="Primary" data-dark="{{ $navDark ? '1' : '0' }}">
             <!-- Brand lockup -->
             <a href="{{ route('home') }}" aria-label="Farmers Hostel home" class="fh-brand focus-ring rounded-full">
-                <x-img src="image/fh-mark.png" alt="" aria-hidden="true" sizes="30px"
+                {{-- sizes matches the mark's largest painted size (40px box,
+                     scaled to 1.15 in the rest state); it said 30px, which had
+                     the pipeline serving a source too small for the lockup. --}}
+                <x-img src="image/fh-mark.png" alt="" aria-hidden="true" sizes="46px"
                        width="60" height="60" decoding="async" class="fh-brand-mark" />
                 <span class="grid min-w-0">
                     <span class="fh-brand-name truncate">Farmers Hostel</span>
@@ -252,7 +278,13 @@
     </main>
 
     <!-- Editorial Footer (Night Estate; shared across cream and night pages) -->
-    <footer class="relative overflow-hidden border-t border-white/10 bg-clsu-950 text-bone/85 mt-auto" id="Footer">
+    {{-- z-31 puts the footer above .gradual-blur (z-30). The scrim fades to
+         --color-canvas, which is cream on the light pages, and the footer is
+         dark — without this it would sit as a pale haze over the footer once
+         you reach the bottom. The footer is the end of the page, so there is
+         nothing there that needs a soft exit anyway. Stays below the mobile
+         sticky bar (z-40) and the nav, so their stacking is unchanged. --}}
+    <footer class="relative z-[31] overflow-hidden border-t border-white/10 bg-clsu-950 text-bone/85 mt-auto" id="Footer">
         <div class="mx-auto max-w-7xl px-6 pt-20 pb-14 md:pt-24">
             <div class="grid gap-12 md:grid-cols-3 md:gap-16">
                 <!-- Brand column -->
@@ -317,14 +349,12 @@
         </div>
     </footer>
 
-    {{-- Gradual blur — content softly blurs as it exits the bottom of the
-         viewport. Three layers, down from six: each one is a backdrop-filter
-         the compositor re-blurs every scrolled frame across the full width of
-         the window. See .gradual-blur in 08-utilities.css — the mask bands
-         there are spaced to this exact count, so the two must change together. --}}
-    <div class="gradual-blur" aria-hidden="true">
-        <div></div><div></div><div></div>
-    </div>
+    {{-- Bottom-edge soft exit — content fades out as it leaves the viewport.
+         Now a single gradient scrim rather than three stacked backdrop-filter
+         layers; the element carries the whole effect itself, so the layer divs
+         that used to live here are gone. See .gradual-blur in 08-utilities.css
+         for why the blur was retired. --}}
+    <div class="gradual-blur" aria-hidden="true"></div>
 
     @if ($usesLivewire)
         @livewireScripts
@@ -334,36 +364,95 @@
     <!-- Nav, drawer & footer behaviours -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Header condense: full-width and transparent over the hero, then
-            // narrower with a dark-glass pill past the fold. Pages with no dark
-            // hero carry `is-static` from Blade and opt out entirely — they
-            // wear the light pill from first paint.
+            // Header behaviour: condense past the fold, and retreat while
+            // reading down. Both used to be their own scroll listener, each
+            // reading window.scrollY and writing classes straight out of the
+            // event — two handlers firing at the scroll event's rate, on a
+            // fixed element, interleaved with the parallax loop's own reads.
+            // They are one rAF-coalesced pass now: at most one read and one
+            // class write per frame, no matter how fast the events arrive.
             const nav = document.getElementById('siteNav');
             const navWrap = document.getElementById('navWrap');
-            if (navWrap && nav && nav.dataset.dark === '1') {
-                let condensed = null;
-                const applyNavState = () => {
-                    const want = window.scrollY > 36;
-                    if (want === condensed) return;
-                    condensed = want;
-                    navWrap.classList.toggle('is-condensed', want);
-                };
-                applyNavState();
-                window.addEventListener('scroll', applyNavState, { passive: true });
-            }
-
-            // Nav retreats while reading down, returns on the first upward
-            // scroll. Large single-frame jumps (anchor landings, page
-            // restores) are ignored so arriving at /#rooms keeps the nav.
             if (navWrap) {
+                const condenses = nav && nav.dataset.dark === '1';
+                let condensed = null;
+                let hidden = null;
                 let lastY = window.scrollY;
-                window.addEventListener('scroll', () => {
+                let travel = 0;          // signed distance since the last reversal
+                let queued = false;
+
+                // The retreat used to key off a single frame's delta:
+                //   if (Math.abs(delta) < 8 || Math.abs(delta) > 320) return;
+                //   toggle('nav-hidden', delta > 0 && y > 420);
+                // which had two failure modes. A trackpad or a momentum tail
+                // delivers a long run of 1-7px frames, and every one of those
+                // hit the `< 8` guard and returned — so easing back up the page
+                // slowly never un-hid the nav, and it stayed gone until you
+                // flicked hard enough to clear the threshold. Meanwhile a
+                // single 9px twitch downward was enough to hide it.
+                //
+                // Accumulating into `travel` and resetting on reversal fixes
+                // both: small movements still count, they just have to add up
+                // to something intentional. The reveal threshold is lower than
+                // the hide threshold because getting the nav *back* should feel
+                // eager, while losing it should take a deliberate read-down.
+                const HIDE_AFTER = 72;   // px of continuous downward travel
+                const SHOW_AFTER = 40;   // px of continuous upward travel
+                const HIDE_BELOW = 420;  // never retreat this near the top
+
+                function update() {
+                    queued = false;
                     const y = window.scrollY;
                     const delta = y - lastY;
                     lastY = y;
-                    if (Math.abs(delta) < 8 || Math.abs(delta) > 320) return;
-                    navWrap.classList.toggle('nav-hidden', delta > 0 && y > 420);
-                }, { passive: true });
+
+                    if (condenses) {
+                        const want = y > 36;
+                        if (want !== condensed) {
+                            condensed = want;
+                            navWrap.classList.toggle('is-condensed', want);
+                        }
+                    }
+
+                    // Anchor landings and bfcache restores arrive as one huge
+                    // jump; treat them as a fresh start rather than as reading.
+                    if (Math.abs(delta) > 320) { travel = 0; return; }
+                    if (!delta) return;
+
+                    travel = (travel > 0) === (delta > 0) ? travel + delta : delta;
+
+                    let want = hidden;
+                    if (y <= HIDE_BELOW) want = false;
+                    else if (travel > HIDE_AFTER) want = true;
+                    else if (travel < -SHOW_AFTER) want = false;
+
+                    if (want !== hidden) {
+                        hidden = want;
+                        navWrap.classList.toggle('nav-hidden', !!want);
+                    }
+                }
+
+                function onScroll() {
+                    if (!queued) { queued = true; requestAnimationFrame(update); }
+                }
+
+                update();
+                window.addEventListener('scroll', onScroll, { passive: true });
+
+                // An open drawer sits above the header, and the scroll lock
+                // means no scroll events arrive to bring it back — so a nav
+                // that retreated just before opening would still be gone on
+                // close. Reset when the drawer takes over.
+                // Unconditional rather than guarded on `hidden`: the class is
+                // the thing that matters, and gating the removal on our own
+                // state means any drift between the two (a stylesheet swap, a
+                // restore, anything that touches the class from outside) leaves
+                // the nav stuck off-screen with no way back.
+                window.fhRevealNav = function () {
+                    travel = 0;
+                    hidden = false;
+                    navWrap.classList.remove('nav-hidden');
+                };
             }
 
             // Mobile drawer
@@ -381,6 +470,9 @@
                 if (!drawer) return;
                 drawer.classList.toggle('drawer-open', open);
                 drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+                // Bring the header back before the drawer covers it, so closing
+                // never returns you to a page with no visible nav.
+                if (open) window.fhRevealNav && window.fhRevealNav();
                 if (open) window.openOverlay && window.openOverlay(drawer, () => toggleDrawer(false));
                 else window.closeOverlay && window.closeOverlay(drawer);
             }

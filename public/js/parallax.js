@@ -169,17 +169,28 @@
     }
 
     // ── Register element ────────────────────────────────────────────
+    // will-change is a promise about the *near future*, not a standing
+    // decoration. Setting it at registration and never clearing it meant every
+    // parallax element on the page held its own compositor layer for the whole
+    // session, including the ones metres below the fold that had never moved.
+    // The hint is now applied and withdrawn by the IntersectionObserver below,
+    // which was already tracking exactly the right thing.
+    function applyWillChange(item) {
+        item.el.style.willChange = item.visible ? item.wc : 'auto';
+    }
+
     function register(el) {
         const opts = parseOpts(el);
 
-        // Hint the browser to composite on GPU
-        el.style.willChange = 'transform';
-        if (opts.opacity) el.style.willChange += ', opacity';
-        if (opts.blur > 0) el.style.willChange += ', filter';
+        // Composite hint, held only while the element is on screen.
+        let wc = 'transform';
+        if (opts.opacity) wc += ', opacity';
+        if (opts.blur > 0) wc += ', filter';
 
         const item = {
             el,
             opts,
+            wc,
             rect: null,
             visible: true,
             hasAos: el.hasAttribute('data-aos'),
@@ -200,6 +211,7 @@
                 const item = items.find(i => i.el === e.target);
                 if (item) {
                     item.visible = e.isIntersecting;
+                    applyWillChange(item);
                     if (item.visible) {
                         woke = true;
                         // Give AOS a bounded window to run its own entrance
@@ -414,7 +426,20 @@
         }, 100);
     }, { passive: true });
 
-    if (allowMouseFX) {
+    // Cursor drift is wired up in init(), and only if something actually uses
+    // it — see bindPointerFX. Registering it here (as this file used to) meant
+    // every mouse movement called requestTick() and ran a full pass of the
+    // render loop, on a page where `mouse` resolves to 0 for every element:
+    // the drift magnitudes live only on the `prlx-hero-*` presets, and no view
+    // in this project applies those classes. The loop woke 60 times a second
+    // for the entire time a hand rested on the mouse, computed the same
+    // transforms it had already written, and wrote nothing. Mobile has no
+    // pointer, so it never paid this — one of the reasons desktop felt heavy
+    // and phones did not.
+    function bindPointerFX() {
+        if (!allowMouseFX) return;
+        if (!items.some(i => i.opts.mouse)) return;
+
         window.addEventListener('pointermove', (e) => {
             targetPointerX = e.clientX / window.innerWidth;
             targetPointerY = e.clientY / window.innerHeight;
@@ -464,6 +489,9 @@
             seen.add(el);
             register(el);
         });
+
+        // Now that opts are resolved we know whether cursor drift is live.
+        bindPointerFX();
 
         // Start the render loop. From here it's fully self-scheduling —
         // it re-arms itself every frame while anything is still settling

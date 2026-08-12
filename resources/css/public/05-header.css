@@ -4,18 +4,45 @@
 /* ══════════════════════════════════════════════════════════════════
    HEADER — spans the viewport edge-to-edge and transparent at rest,
    then condenses into a narrower dark-glass pill past the fold.
-   #navWrap owns position/width/top (and the read-down retreat);
-   #siteNav owns the skin (padding/background/radius) so the two
-   transforms never fight over the same property.
+
+   Division of labour, so no two rules ever fight over one property:
+     #navWrap        → horizontal geometry (max-width) + the read-down
+                       retreat (transform). Owns nothing visual.
+     #siteNav        → the content row: padding, colour, layout.
+     #siteNav::before → the *surface*: fill, hairline, radius, shadow,
+                       blur. Sized to the pill by inset:0, painted
+                       behind the row by z-index:-1, and revealed with
+                       nothing but opacity.
+
+   That third layer is the point of the refactor. Every skin change —
+   rest → condensed, or the light `is-static` pill — is now a composited
+   opacity fade on one pseudo-element instead of a repaint of the nav box
+   through background + border-color + box-shadow + backdrop-filter.
+
+   MOTION BUDGET. Animating a layout property inside a fixed header is
+   paid while the user is scrolling, which is the worst possible moment.
+   This file used to transition seven of them: max-width, top, padding,
+   the brand mark's width/height, the tagline's max-height, and the CTA's
+   gap. Five are gone — see each rule for what replaced it. The two that
+   remain (max-width here, padding-inline on #siteNav) genuinely change
+   the bar's shape and cannot be faked with a transform without distorting
+   text; they reflow ~20 nodes that are out of document flow, which is
+   cheap, and they fire once per fold crossing rather than per frame.
    ══════════════════════════════════════════════════════════════════ */
-/* Anchored with left/right rather than a percentage width: for a fixed
-   element `100%` resolves against the layout viewport *including* the
-   scrollbar, which pushed the bar 16px off the right edge on phones.
-   left:0/right:0 spans the visible area exactly, and margin-inline:auto
-   centres the narrower condensed pill. Full-bleed at rest so the brand
-   lines up with the hero's gutter — #siteNav repeats .fh-hero-stage's
-   padding, putting the logo on the same left edge as FARMERS. */
+
 #navWrap {
+    /* Matches .fh-hero-stage's padding (06-hero.css) so the brand lockup and
+       the giant FARMERS wordmark share a left edge at rest. Change both. */
+    --fh-nav-gutter: clamp(20px, 3.4vw, 56px);
+    --fh-nav-inset: clamp(26px, 4vw, 76px);
+    --fh-nav-drop: clamp(10px, 1.2vw, 18px);
+    --fh-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    /* Anchored with left/right rather than a percentage width: for a fixed
+       element `100%` resolves against the layout viewport *including* the
+       scrollbar, which pushed the bar 16px off the right edge on phones.
+       left:0/right:0 spans the visible area exactly, and margin-inline:auto
+       centres the narrower condensed pill. */
     position: fixed;
     top: 0;
     left: 0;
@@ -24,79 +51,130 @@
     margin-inline: auto;
     max-width: none;
     z-index: 50;
+
+    /* Was `top: 0` → `top: clamp(10px,1.2vw,18px)` on condense. `top` is a
+       layout property and cannot be composited, so the drop repainted the bar
+       on every frame. The offset is now static padding — both states sit at
+       the same y, which also means the pill no longer appears to jump down as
+       it forms. The bar reads as settling in place rather than relocating. */
+    padding-top: var(--fh-nav-drop);
+
+    /* A fixed header is promoted to its own layer regardless, so declaring the
+       transform hint costs no extra memory and keeps the retreat off the main
+       thread. Deliberately the only will-change in this file. */
+    will-change: transform;
     transition:
-        max-width 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
-        top 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
-        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        max-width 0.55s var(--fh-ease),
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-#navWrap.is-condensed {
-    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
-    top: clamp(10px, 1.2vw, 18px);
+#navWrap.is-condensed,
+#navWrap.is-static {
+    max-width: min(1400px, calc(100% - 2 * var(--fh-nav-inset)));
 }
 
 #navWrap.nav-hidden {
-    transform: translateY(-170%);
+    /* -140% clears the pill plus its drop shadow. */
+    transform: translateY(-140%);
 }
 
+/* The content row ────────────────────────────────────────────────── */
 #siteNav {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 18px clamp(16px, 2vw, 28px);
-    /* Horizontal padding mirrors .fh-hero-stage so brand and wordmark share
-       a left edge. */
-    padding: 22px clamp(20px, 3.4vw, 56px) 0;
-    border: 1px solid transparent;
-    border-radius: 0;
-    background: transparent;
+    /* Vertical padding is constant: the row's height is set by the 40px brand
+       mark, not by the text beside it, so the pill never changes height and
+       there is nothing to animate. Only the inline padding moves, pulling the
+       content in from the hero gutter to the pill's edge. */
+    padding: 10px var(--fh-nav-gutter);
     color: #fff;
     transition:
-        padding 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
-        background 0.55s,
-        border-radius 0.55s,
-        box-shadow 0.55s,
-        border-color 0.55s,
-        color 0.55s,
-        -webkit-backdrop-filter 0.55s,
-        backdrop-filter 0.55s;
+        padding 0.55s var(--fh-ease),
+        color 0.45s;
 }
 
-#navWrap.is-condensed #siteNav {
-    padding: 9px 10px 9px 16px;
-    background: rgba(9, 20, 34, 0.74);
-    -webkit-backdrop-filter: blur(18px) saturate(1.1);
-    backdrop-filter: blur(18px) saturate(1.1);
+#navWrap.is-condensed #siteNav,
+#navWrap.is-static #siteNav {
+    padding-inline: 16px 10px;
+}
+
+/* The surface ─────────────────────────────────────────────────────
+   One pseudo-element carrying the whole pill skin, revealed by opacity.
+   z-index:-1 keeps it behind the row's own content while staying inside
+   #navWrap's stacking context (which z-index:50 already established), so
+   it can never cover the links. */
+#siteNav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     border-radius: 999px;
-    border-color: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: rgba(9, 20, 34, 0.74);
     box-shadow: 0 18px 44px rgba(4, 18, 36, 0.36);
+    opacity: 0;
+
+    /* backdrop-filter is toggled, never eased — and the toggle is *delayed*
+       out to the end of the shape change.
+
+       Easing it would animate the blur radius, and every intermediate frame is
+       a fresh re-blur of whatever is behind the bar. Worse, the pill is still
+       changing width across those same frames, so the compositor would be
+       re-snapshotting a moving box 30+ times per crossing. The 0s duration
+       with a 0.5s delay lands the blur once, after max-width and padding have
+       settled, underneath a fill that has already faded up to 74% opaque —
+       where a blur arriving is not something the eye can catch.
+
+       The base rule's `0s linear 0s` is what applies on the way back out, so
+       un-condensing drops the blur immediately rather than leaving it to haunt
+       a transparent bar over the hero. */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition:
+        opacity 0.45s var(--fh-ease),
+        backdrop-filter 0s linear 0s,
+        -webkit-backdrop-filter 0s linear 0s;
+}
+
+#navWrap.is-condensed #siteNav::before {
+    opacity: 1;
+    backdrop-filter: blur(18px) saturate(1.1);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    transition:
+        opacity 0.45s var(--fh-ease),
+        backdrop-filter 0s linear 0.5s,
+        -webkit-backdrop-filter 0s linear 0.5s;
 }
 
 /* Pages with no dark hero (checkout, account, auth) never sit over a
    photo, so they skip the transparent rest state entirely and wear a
-   light glass pill from the first paint. */
-#navWrap.is-static {
-    max-width: min(1400px, calc(100% - 2 * clamp(26px, 4vw, 76px)));
-    top: clamp(10px, 1.2vw, 18px);
+   light glass pill from the first paint. No transition to run — the
+   class is present before the first frame. */
+#navWrap.is-static #siteNav {
+    color: var(--color-ink);
 }
 
-#navWrap.is-static #siteNav {
-    padding: 9px 10px 9px 16px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.5) 100%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
-    border-radius: 999px;
+#navWrap.is-static #siteNav::before {
+    opacity: 1;
     border-color: rgba(16, 22, 28, 0.08);
-    color: var(--color-ink);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.5) 100%);
     box-shadow: 0 18px 44px -18px rgba(6, 40, 30, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
 }
 
 /* Night-theme pages (checkout, booking detail) keep a dark pill — the
    light `is-static` skin would sit as a bright slab on a near-black page. */
 body.theme-night #navWrap.is-static #siteNav {
-    background: linear-gradient(135deg, rgba(30, 40, 50, 0.62) 0%, rgba(10, 15, 25, 0.44) 100%);
-    border-color: rgba(255, 255, 255, 0.15);
     color: var(--color-bone);
+}
+
+body.theme-night #navWrap.is-static #siteNav::before {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, rgba(30, 40, 50, 0.62) 0%, rgba(10, 15, 25, 0.44) 100%);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 18px 50px -20px oklch(0% 0 0 / 0.65);
 }
 
@@ -107,7 +185,6 @@ body.theme-night #navWrap.is-static .fh-nav-link {
 body.theme-night #navWrap.is-static .fh-nav-link:hover,
 body.theme-night #navWrap.is-static .fh-nav-link.is-active {
     color: #fff;
-    border-color: #edd39b;
 }
 
 body.theme-night #navWrap.is-static .fh-hdr-ghost {
@@ -126,20 +203,30 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 
 /* The hostel's sunflower mark. It carries its own colour and silhouette, so
    it stands free rather than sitting in the monogram ring the design used —
-   a bordered disc would just fight the petals. */
+   a bordered disc would just fight the petals.
+
+   The rest-state enlargement is a scale, not a width/height change. Sizing an
+   <img> per frame re-rasterises it at each intermediate size; the box now
+   stays a constant 40px — which is also what fixes the row's height in place —
+   and only the painted result grows. transform-origin keeps the left edge
+   pinned so the lockup never drifts against the hero wordmark, and the 6px of
+   overflow at rest is absorbed by the 13px gap. */
 .fh-brand-mark {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
     flex: none;
     object-fit: contain;
+    transform: scale(1.15);
+    transform-origin: left center;
     filter: drop-shadow(0 2px 8px rgba(4, 18, 36, 0.45));
-    transition: width 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.45s;
+    transition:
+        transform 0.5s var(--fh-ease),
+        filter 0.45s;
 }
 
 #navWrap.is-condensed .fh-brand-mark,
 #navWrap.is-static .fh-brand-mark {
-    width: 38px;
-    height: 38px;
+    transform: scale(1);
 }
 
 #navWrap.is-static .fh-brand-mark {
@@ -155,14 +242,13 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     color: inherit;
 }
 
-/* Tagline collapses (not display:none) so the lockup height eases
-   rather than snapping when the header condenses. */
+/* The tagline fades and lifts rather than collapsing its max-height.
+   Collapsing was a layout animation, and it bought nothing: the row's height
+   comes from the 40px mark, so the reclaimed 14px never changed the pill's
+   size. Keeping the space reserved makes the whole header height constant. */
 .fh-brand-tag {
     display: block;
-    overflow: hidden;
     margin-top: 3px;
-    max-height: 14px;
-    opacity: 1;
     font-family: var(--font-label);
     font-weight: 300;
     font-size: 9.5px;
@@ -170,14 +256,21 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     text-transform: uppercase;
     white-space: nowrap;
     color: rgba(255, 255, 255, 0.6);
-    transition: max-height 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.3s, margin-top 0.45s;
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        opacity 0.3s ease,
+        transform 0.45s var(--fh-ease);
 }
 
 #navWrap.is-condensed .fh-brand-tag,
 #navWrap.is-static .fh-brand-tag {
-    max-height: 0;
-    margin-top: 0;
     opacity: 0;
+    transform: translateY(-4px);
+}
+
+#navWrap.is-static .fh-brand-tag {
+    color: color-mix(in oklch, var(--color-ink) 55%, transparent);
 }
 
 /* Centre nav — a glass capsule at rest that dissolves into the
@@ -189,39 +282,71 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.1);
-    padding: 11px clamp(16px, 1.6vw, 24px) 8px;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    /* No `padding` here: nothing changes .fh-nav's padding between the rest,
-       condensed and static states, so transitioning it only asked the browser
-       to watch a layout property that never moves. */
-    transition: background 0.5s, border-color 0.5s, -webkit-backdrop-filter 0.5s, backdrop-filter 0.5s;
+    padding: 9px clamp(16px, 1.6vw, 24px);
+    /* No backdrop-filter. This capsule is only ever visible in the rest state,
+       i.e. over the hero — which is exactly where the parallax loop is busiest
+       and where every frame counts. A blur here made the compositor re-snapshot
+       the photo behind the capsule for the whole time the hero was on screen,
+       continuously, not just during a transition. The 10% white fill over the
+       hero's scrim carries the legibility on its own.
+       Padding is not transitioned either: nothing changes it between the three
+       states, so listing it only asked the browser to watch a property that
+       never moves. */
+    transition:
+        background 0.45s ease,
+        border-color 0.45s ease;
 }
 
 #navWrap.is-condensed .fh-nav,
 #navWrap.is-static .fh-nav {
     background: transparent;
     border-color: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
 }
 
+/* Nav links ──────────────────────────────────────────────────────
+   The underline is a scaleX'd bar rather than a border-bottom whose colour
+   flips. A border toggle is a paint on the text box and it arrives all at
+   once; this wipes in from the left on the compositor, and gives the active
+   page a rule that is actually drawn rather than merely coloured. */
 .fh-nav-link {
-    padding-bottom: 5px;
-    border-bottom: 1px solid transparent;
+    position: relative;
+    padding-bottom: 6px;
     font-family: var(--font-label);
     font-weight: 300;
     font-size: 13.5px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.84);
-    transition: color 0.35s, border-color 0.35s;
+    transition: color 0.3s ease;
+}
+
+.fh-nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-gold);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.38s var(--fh-ease);
 }
 
 .fh-nav-link:hover,
 .fh-nav-link.is-active {
     color: #fff;
-    border-color: #edd39b;
+}
+
+.fh-nav-link:hover::after,
+.fh-nav-link.is-active::after {
+    transform: scaleX(1);
+}
+
+/* Leaving a link retracts the bar to the right, so hover out is the
+   reverse of hover in rather than a second left-to-right wipe. */
+.fh-nav-link:not(:hover):not(.is-active)::after {
+    transform-origin: right center;
 }
 
 #navWrap.is-static .fh-nav-link {
@@ -231,11 +356,10 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 #navWrap.is-static .fh-nav-link:hover,
 #navWrap.is-static .fh-nav-link.is-active {
     color: var(--color-ink);
-    border-color: var(--color-gold);
 }
 
 /* Header CTA / account trigger — cream pill with a dark arrow disc
-   that widens its gap on hover. */
+   that leans away on hover. */
 .fh-cta {
     display: inline-flex;
     align-items: center;
@@ -250,15 +374,23 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     font-weight: 400;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #10161c;
+    color: var(--color-ink);
     box-shadow: 0 12px 34px rgba(4, 18, 36, 0.26);
-    transition: background 0.4s, color 0.4s, gap 0.4s, box-shadow 0.4s, border-color 0.4s;
+    /* `gap` is not transitioned. Widening the gap on hover reflowed the button
+       and, because it sits in the header's flex row, nudged the row's
+       measurement with it — layout on hover, on a fixed element, while the
+       page is likely still scrolling. The disc now translates the same 6px
+       and the button's width never changes. */
+    transition:
+        background 0.35s ease,
+        color 0.35s ease,
+        box-shadow 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .fh-cta:hover {
-    background: #edd39b;
-    gap: 18px;
-    color: #10161c;
+    background: var(--color-gold-soft);
+    border-color: var(--color-gold-soft);
     box-shadow: 0 18px 40px rgba(4, 18, 36, 0.34);
 }
 
@@ -269,8 +401,13 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     height: 30px;
     flex: none;
     border-radius: 50%;
-    background: #10161c;
+    background: var(--color-ink);
     color: #fff;
+    transition: transform 0.35s var(--fh-ease);
+}
+
+.fh-cta:hover .fh-cta-disc {
+    transform: translateX(6px);
 }
 
 /* Ghost variant for the signed-in account trigger */
@@ -287,12 +424,14 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: inherit;
-    transition: background 0.4s, border-color 0.4s;
+    transition:
+        background 0.35s ease,
+        border-color 0.35s ease;
 }
 
 .fh-hdr-ghost:hover {
     background: rgba(255, 255, 255, 0.18);
-    border-color: #edd39b;
+    border-color: var(--color-gold);
     color: inherit;
 }
 
@@ -309,6 +448,11 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 /* Phones: the brand lockup + menu button don't fit a 375px bar once the
    nowrap tagline is in there, so the tagline drops and the lockup shrinks. */
 @media (max-width: 640px) {
+    #navWrap {
+        --fh-nav-gutter: 14px;
+        --fh-nav-inset: 12px;
+    }
+
     .fh-brand-tag {
         display: none;
     }
@@ -317,21 +461,23 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
         font-size: 17px;
     }
 
+    /* No rest-state enlargement on phones — 36px in both states. */
     .fh-brand-mark,
     #navWrap.is-condensed .fh-brand-mark,
     #navWrap.is-static .fh-brand-mark {
         width: 36px;
         height: 36px;
+        transform: scale(1);
     }
 
     #siteNav {
         gap: 10px;
-        padding: 14px 14px 0;
+        padding: 8px var(--fh-nav-gutter);
     }
 
     #navWrap.is-condensed #siteNav,
     #navWrap.is-static #siteNav {
-        padding: 8px 8px 8px 12px;
+        padding-inline: 12px 8px;
     }
 }
 
@@ -339,10 +485,33 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 
     #navWrap,
     #siteNav,
+    #siteNav::before,
     .fh-brand-mark,
     .fh-brand-tag,
-    .fh-nav {
+    .fh-nav,
+    .fh-nav-link,
+    .fh-nav-link::after,
+    .fh-cta,
+    .fh-cta-disc,
+    .fh-hdr-ghost {
         transition: none;
+    }
+}
+
+/* Some users keep motion on but want less glass. The surface stays, the
+   backdrop sampling goes — matching .glass-night / .glass-light in
+   04-theme-night.css, which already honour this. */
+@media (prefers-reduced-transparency: reduce) {
+
+    #siteNav::before,
+    #navWrap.is-condensed #siteNav::before,
+    #navWrap.is-static #siteNav::before {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    #navWrap.is-condensed #siteNav::before {
+        background: rgb(9, 20, 34);
     }
 }
 
