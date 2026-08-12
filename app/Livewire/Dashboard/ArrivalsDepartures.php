@@ -11,11 +11,13 @@ use App\Models\Checkin;
 use App\Models\Checkout;
 use App\Models\NoShowLog;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use App\Services\AuditLogger;
 use App\Events\RoomStatusChanged;
 use App\Events\BookingChanged;
+use App\Events\BookingStatusChanged;
 use App\Support\Realtime;
 
 class ArrivalsDepartures extends Component
@@ -92,13 +94,41 @@ class ArrivalsDepartures extends Component
             $this->confirmCheckIn($bookingId);
         } elseif ($action === 'checkout') {
             $this->confirmCheckOut($bookingId);
+        } elseif ($action === 'emergency') {
+            $this->confirmEmergencyCheckOut($bookingId, $payload['reason'] ?? null);
         } elseif ($action === 'noshow'){
             $this->confirmNoShow($bookingId);
         }
     }
+
+    /**
+     * Has this booking reached its check-out date?
+     *
+     * The line every check-out in this component is drawn on: true means the
+     * ordinary check-out applies (today, or overdue — the same window the
+     * auto-checkout command sweeps), false means the stay still has nights
+     * left on it and only an emergency check-out can end it.
+     */
+    protected function isDueOut(Booking $booking, ?string $asOf = null): bool
+    {
+        $asOf = $asOf
+            ? Carbon::parse($asOf)->startOfDay()
+            : Carbon::today(config('hostel.timezone'));
+
+        return Carbon::parse($booking->check_out)
+            ->timezone(config('hostel.timezone'))
+            ->startOfDay()
+            ->lte($asOf);
+    }
     public function render()
     {
         $today = $this->date;
+
+        // Is the panel showing the real "today"? Actions are only offered then,
+        // and the check-out rules below are all measured against it rather than
+        // against whichever day is being browsed.
+        $actualToday = Carbon::today(config('hostel.timezone'))->toDateString();
+        $isToday = $this->date === $actualToday;
 
         // get arrivals & departures
         $bookings = Booking::with('reservations')
@@ -110,17 +140,30 @@ class ArrivalsDepartures extends Component
                 ->orWhere(function ($q3) use ($today) {
                     $q3->whereDate('check_out', $today)
                         ->where('status', 'active');
+                })
+                // In-house: checked in on or before this date, not due out
+                // until after it. These used to be absent from the panel
+                // entirely — a guest who booked, paid and checked in the same
+                // morning dropped out of the arrivals branch the moment they
+                // were checked in and did not reappear until their departure
+                // day, so there was nothing on screen to act on if they had to
+                // leave early. They are the rows the emergency check-out is for.
+                ->orWhere(function ($q4) use ($today) {
+                    $q4->whereDate('check_in', '<=', $today)
+                        ->whereDate('check_out', '>', $today)
+                        ->where('status', 'active');
                 });
             })
             ->get();
 
-        $list = $bookings->map(function ($b) use ($today) {
+        $list = $bookings->map(function ($b) use ($today, $actualToday) {
             $isArrival = $b->check_in && Carbon::parse($b->check_in)->isSameDay(Carbon::parse($today));
             $isDeparture = $b->check_out && Carbon::parse($b->check_out)->isSameDay(Carbon::parse($today));
 
             $type = null;
             if ($isArrival && $b->status === 'paid') $type = 'arrival';
             if ($isDeparture && $b->status === 'active') $type = $type ? 'both' : 'departure';
+            if (!$type && $b->status === 'active') $type = 'staying';
 
             return (object) [
                 'id' => $b->id,
@@ -131,6 +174,12 @@ class ArrivalsDepartures extends Component
                 'room_numbers_str' => $b->reservations->pluck('room_number')->unique()->implode(', ') ?: '—',
                 'status' => $b->status,
                 'type' => $type,
+                // Which check-out the row may offer. Decided here, off the same
+                // date the handler checks, so the button on screen and the rule
+                // that runs it can never disagree: due out today (or overdue)
+                // is an ordinary check-out, anything still ahead of its date is
+                // the emergency one.
+                'due_out' => $this->isDueOut($b, $actualToday),
                 'detail_url' => route('staff.bookings.index'),
             ];
         });
@@ -140,8 +189,13 @@ class ArrivalsDepartures extends Component
         $arrivalsCount = $list->whereIn('type', ['arrival', 'both'])->count();
         $departuresCount = $list->whereIn('type', ['departure', 'both'])->count();
 
-        // Apply filter
-        if ($this->filterType !== 'all') {
+        // Apply filter. 'inhouse' is everyone actually in a room on this date,
+        // so a guest leaving today belongs in it as much as one staying on —
+        // which keeps the tab and the "in-house" chip above it reporting the
+        // same number.
+        if ($this->filterType === 'inhouse') {
+            $list = $list->whereIn('type', ['staying', 'departure', 'both']);
+        } elseif ($this->filterType !== 'all') {
             $list = $list->where('type', $this->filterType);
         }
 
@@ -201,10 +255,6 @@ class ArrivalsDepartures extends Component
                     'status' => strtoupper($b->status),
                 ];
             });
-
-        // Is the panel showing the real "today"? Actions are only offered then.
-        $actualToday = Carbon::today(config('hostel.timezone'))->toDateString();
-        $isToday = $this->date === $actualToday;
 
         // In-house on the viewed date: active stays spanning it.
         $inHouseCount = Booking::where('status', 'active')
@@ -329,9 +379,10 @@ class ArrivalsDepartures extends Component
         $booking = Booking::with('reservations.room')->findOrFail($bookingId);
 
         // Allow today OR overdue (checkout date already passed) — the same
-        // window the auto-checkout command uses. Only future checkouts are barred.
-        $checkOutInFuture = Carbon::parse($booking->check_out)->timezone(config('hostel.timezone'))->startOfDay()->gt(Carbon::today(config('hostel.timezone')));
-        if ($booking->status !== 'active' || $checkOutInFuture) {
+        // window the auto-checkout command uses. A stay that still has nights
+        // left is not refused outright any more; it is the emergency
+        // check-out's to end, and the panel offers that button instead.
+        if ($booking->status !== 'active' || !$this->isDueOut($booking)) {
             $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-out.');
             return;
         }
@@ -370,8 +421,101 @@ class ArrivalsDepartures extends Component
         Realtime::emit(new BookingChanged());
     }
 
+    /**
+     * End a stay before its check-out date.
+     *
+     * The ordinary check-out deliberately refuses this: a guest who booked,
+     * paid and checked in this morning for three nights is not due out, and
+     * letting the desk close their stay by pressing the same button people
+     * press all day would make an accident indistinguishable from a decision.
+     * Emergencies happen anyway — someone is taken ill, a family member calls
+     * — so the way out is a separate action that says what it is, records who
+     * did it and why, and leaves the reason in the booking's timeline.
+     *
+     * It does NOT touch money. The nights the guest paid for and did not use
+     * are a refund decision, and that belongs to whoever handles refunds.
+     */
+    public function confirmEmergencyCheckOut($bookingId, $reason = null)
+    {
+        $staff = auth('staff')->user();
+        $booking = Booking::with('reservations.room')->find($bookingId);
+
+        if (!$booking) {
+            $this->dispatch('toast', type: 'error', message: 'Booking not found.');
+            return;
+        }
+
+        // Only a stay actually under way, and only one that is not due out.
+        // Once the check-out date arrives the ordinary check-out covers it and
+        // there is no exception left to record.
+        if ($booking->status !== 'active') {
+            $this->dispatch('toast', type: 'error', message: 'Only a checked-in guest can be checked out early.');
+            return;
+        }
+
+        if ($this->isDueOut($booking)) {
+            $this->dispatch('toast', type: 'error', message: 'This stay is already due out — use the normal check-out.');
+            return;
+        }
+
+        // The reason is the whole point of routing this away from the ordinary
+        // check-out, so it is required here too and not only in the dialog.
+        $reason = trim((string) $reason);
+        if ($reason === '') {
+            $this->dispatch('toast', type: 'error', message: 'An emergency check-out needs a reason.');
+            return;
+        }
+        $reason = mb_substr($reason, 0, 255);
+
+        // Read off the booking before it is closed, for the toast below.
+        $dueOutOn = Carbon::parse($booking->check_out)->format('M d');
+
+        DB::transaction(function () use ($booking, $reason) {
+            $booking->update(['status' => 'completed']);
+
+            // Free rooms. The stay is over as far as the board is concerned,
+            // so the remaining nights go back on sale.
+            foreach ($booking->reservations as $reservation) {
+                $reservation->room->update(['status' => 'available']);
+            }
+
+            Checkout::create([
+                'booking_id' => $booking->id,
+                'checked_out_at' => Carbon::now(config('hostel.timezone')),
+                'method' => 'emergency',
+                'reason' => $reason,
+                'processed_by' => auth('staff')->id(),
+            ]);
+        });
+
+        AuditLogger::log(
+            'booking_checked_out_early',
+            $booking,
+            ['status' => 'active'],
+            ['status' => 'completed'],
+            "Booking #{$booking->id} checked out early by {$staff->name} — {$reason}"
+        );
+
+        // Says what was skipped and, plainly, what was not done about it —
+        // the desk should not walk away assuming the money sorted itself out.
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: "Checked out early — was due out {$dueOutOn}. No refund has been made."
+        );
+        $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
+        $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
+        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged());
+        // The guest is being sent home ahead of their own booking, so their
+        // booking page should not keep telling them the stay is under way.
+        if (BookingStatusChanged::shouldEmitFor($booking)) {
+            Realtime::emit(new BookingStatusChanged($booking->id, 'completed'));
+        }
+    }
+
     public function confirmNoShow($bookingId)
-    {   
+    {
         $staff = auth('staff')->user();
         $booking = Booking::with(['reservations.room', 'payments'])->find($bookingId);
 

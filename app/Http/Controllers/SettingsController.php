@@ -224,6 +224,20 @@ class SettingsController extends Controller
         return back()->with('status', 'Profile updated successfully.');
     }
 
+    /**
+     * A guest cancelling their own booking — which they may only do while it is
+     * still unpaid.
+     *
+     * The rule is the house policy, not a technical limitation: paying takes
+     * the rooms off sale, and once that has happened the money does not come
+     * back. A guest whose plans change after paying has exactly one thing they
+     * can do, and it is not this — they ask to move the stay, before check-in
+     * time on their arrival day. See App\Http\Controllers\RescheduleController.
+     *
+     * The check has always been here. What it lacked was a way out: it said
+     * "this booking cannot be cancelled" and stopped, which reads as a fault
+     * rather than a policy and left the guest with nowhere to go.
+     */
     public function cancelBooking(Request $request, Booking $booking)
     {
         $user = Auth::user();
@@ -233,9 +247,17 @@ class SettingsController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Only cancel if pending_payment
         if ($booking->status !== 'pending_payment') {
-            return back()->with('error', 'This booking cannot be cancelled.');
+            $message = match ($booking->status) {
+                'pending_discount' => 'This booking is waiting on your Senior / PWD discount review. Withdraw the discount request first, and you can cancel it after that.',
+                'paid' => \App\Models\RescheduleRequest::isOpenFor($booking)
+                    ? 'A paid booking cannot be cancelled. If you cannot make these dates, request a reschedule at least 24 hours before your check-in.'
+                    : 'A paid booking cannot be cancelled, and the deadline to move it has passed. Please contact our front desk.',
+                'active' => 'You are already checked in, so there is nothing to cancel. Please speak to our front desk.',
+                default => 'This booking can no longer be cancelled.',
+            };
+
+            return back()->with('error', $message);
         }
 
         // Check cooldown

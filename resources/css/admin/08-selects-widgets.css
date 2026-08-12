@@ -96,6 +96,17 @@ span.flatpickr-weekday { color: var(--color-faint); font-weight: 700; font-size:
     backdrop-filter: blur(8px) !important;
     background: rgba(12, 26, 18, 0.35) !important;
 }
+/* …but NOT when that container is holding a toast. SweetAlert2 reuses one
+   container for dialogs and toasts and puts `swal2-backdrop-show` on both, and
+   in toast mode it is a 360px-wide, full-viewport-height box pinned to the
+   corner — so the dim + blur above painted a frosted column down the right edge
+   of the console for the full life of every toast. SweetAlert2 already sets
+   `background-color: transparent` for that case; it cannot beat an !important,
+   so the undo has to be spelled out here, blur included. */
+body.swal2-toast-shown .swal2-container.swal2-backdrop-show {
+    backdrop-filter: none !important;
+    background: transparent !important;
+}
 .swal2-popup {
     border-radius: var(--radius-lg) !important;
     font-family: var(--font-sans) !important;

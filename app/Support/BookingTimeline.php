@@ -8,14 +8,16 @@ use App\Models\Checkin;
 use App\Models\Checkout;
 use App\Models\ExpiryLog;
 use App\Models\NoShowLog;
+use App\Models\RescheduleRequest;
 use App\Models\Staff;
+use App\Support\StaySchedule;
 use Carbon\Carbon;
 
 /**
  * Chronological event list for one booking, assembled from records the app
  * already keeps but never showed anywhere: Checkin, Checkout, NoShowLog,
- * ExpiryLog, CancellationLog, plus the payment and discount rows. Rendered
- * by <x-admin.bookings.timeline> inside the booking detail modal.
+ * ExpiryLog, CancellationLog, RescheduleRequest, plus the payment and discount
+ * rows. Rendered by <x-admin.bookings.timeline> inside the booking detail modal.
  *
  * Each event: ['at' => Carbon, 'label', 'detail', 'icon', 'color'] where
  * icon is an x-admin.ui.icon name and color is the badge class set.
@@ -106,6 +108,45 @@ class BookingTimeline
             );
         }
 
+        // Asking to move a paid stay, and what the desk said. Both belong here
+        // because between them they explain the one thing a reader of this
+        // timeline cannot otherwise account for: a booking whose check-in date
+        // is not the date it was made for.
+        foreach (RescheduleRequest::with('reviewer')->where('booking_id', $booking->id)->get() as $request) {
+            $push(
+                $utc($request->submitted_at ?? $request->created_at),
+                'Reschedule requested',
+                $request->requested_check_in->format('M d') . ' → ' . $request->requested_check_out->format('M d, Y')
+                    . ' · ' . $request->reason,
+                'calendar',
+                self::COLOR_WAIT
+            );
+
+            if ($request->status === RescheduleRequest::STATUS_PENDING) {
+                continue;
+            }
+
+            $by = $request->status === RescheduleRequest::STATUS_WITHDRAWN
+                ? 'By the guest'
+                : ($request->reviewer ? 'By ' . $request->reviewer->name : null);
+
+            $push(
+                $utc($request->reviewed_at ?? $request->updated_at),
+                match ($request->status) {
+                    RescheduleRequest::STATUS_APPROVED  => 'Stay moved',
+                    RescheduleRequest::STATUS_DECLINED  => 'Reschedule declined',
+                    default                             => 'Reschedule withdrawn',
+                },
+                trim(($by ?: '') . ($request->decision_note ? ' — ' . $request->decision_note : ''), ' —') ?: null,
+                $request->status === RescheduleRequest::STATUS_APPROVED ? 'check-circle' : 'x',
+                match ($request->status) {
+                    RescheduleRequest::STATUS_APPROVED => self::COLOR_GOOD,
+                    RescheduleRequest::STATUS_DECLINED => self::COLOR_BAD,
+                    default                            => self::COLOR_NEUTRAL,
+                }
+            );
+        }
+
         foreach (Checkin::with('staff')->where('booking_id', $booking->id)->get() as $checkin) {
             $push(
                 $manila($checkin->checked_in_at),
@@ -117,14 +158,26 @@ class BookingTimeline
         }
 
         foreach (Checkout::with('staff')->where('booking_id', $booking->id)->get() as $checkout) {
+            $by = $checkout->staff ? 'By ' . $checkout->staff->name : 'Manual';
+
+            // An emergency check-out ended the stay early, which is the one
+            // entry here someone will come back asking about — so it says so
+            // plainly and carries the reason the desk gave at the time.
+            $isEmergency = $checkout->method === 'emergency';
+
             $push(
                 $manila($checkout->checked_out_at),
-                'Checked out',
-                $checkout->method === 'auto'
-                    ? 'Automatic (2 PM checkout)'
-                    : ($checkout->staff ? 'By ' . $checkout->staff->name : 'Manual'),
+                $isEmergency ? 'Checked out early (emergency)' : 'Checked out',
+                match (true) {
+                    $isEmergency => $by . ($checkout->reason ? ' · ' . $checkout->reason : ''),
+                    // Read, not spelled. This said "2 PM checkout" and would
+                    // have gone on saying it after check-out moved to noon —
+                    // on a record whose whole job is to be believed later.
+                    $checkout->method === 'auto' => 'Automatic (' . StaySchedule::checkoutLabel() . ' checkout)',
+                    default => $by,
+                },
                 'log-out',
-                self::COLOR_GOOD
+                $isEmergency ? self::COLOR_BAD : self::COLOR_GOOD
             );
         }
 

@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Mail\StaffBookingAlertMail;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\RescheduleRequest;
 use App\Models\Staff;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +31,14 @@ class StaffAlert
         self::send(
             fn () => StaffBookingAlertMail::proofSubmitted($booking, $payment),
             'proof of payment for booking #' . $booking->id
+        );
+    }
+
+    public static function rescheduleRequested(Booking $booking, RescheduleRequest $reschedule): void
+    {
+        self::send(
+            fn () => StaffBookingAlertMail::rescheduleRequested($booking, $reschedule),
+            'reschedule request for booking #' . $booking->id
         );
     }
 

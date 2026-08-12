@@ -101,28 +101,28 @@
 
                     <div class="grid grid-cols-2 gap-y-2.5 gap-x-2 text-xs font-semibold text-stone-600 border-t border-stone-100 pt-3">
                         <div>
-                            <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Booking</span>
+                            <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Booking</span>
                             <a href="{{ route('booking.show', $payment->booking_id) }}" class="text-clsu-700 hover:underline font-bold">#{{ $payment->booking_id }}</a>
                         </div>
                         <div>
-                            <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Amount Paid</span>
+                            <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Amount Paid</span>
                             <span class="text-ink font-extrabold">₱{{ number_format($payment->amount, 2) }}</span>
                         </div>
                         <div>
-                            <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Gateway</span>
+                            <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Gateway</span>
                             <span class="text-stone-800 uppercase text-xs">{{ $payment->gateway }}</span>
                         </div>
                         <div>
-                            <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Date</span>
+                            <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Date</span>
                             <span class="text-stone-800 text-[10px]">{{ $payment->created_at->timezone(config('hostel.timezone'))->format('M d, Y h:i A') }}</span>
                         </div>
                         <div class="col-span-2 border-t border-stone-100 pt-2.5">
-                            <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Reference No</span>
+                            <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Reference No</span>
                             <span class="text-stone-800 font-mono text-[10px] block truncate">{{ $payment->reference_no }}</span>
                         </div>
                         @if($payment->landbank_transaction_id)
                             <div class="col-span-2">
-                                <span class="block text-[9px] text-stone-400 uppercase tracking-wider">Gateway Ref</span>
+                                <span class="block text-[10px] text-stone-400 uppercase tracking-wider">Gateway Ref</span>
                                 <span class="text-stone-800 font-mono text-[10px] block truncate">{{ $payment->landbank_transaction_id }}</span>
                             </div>
                         @endif

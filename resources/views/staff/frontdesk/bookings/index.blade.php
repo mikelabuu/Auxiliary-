@@ -122,6 +122,22 @@
                                             <x-admin.ui.icon name="eye" class="h-3.5 w-3.5" />
                                             View
                                         </a>
+                                        {{-- Counter payment. The only route to `paid`
+                                             for a Senior/PWD booking, which cannot be
+                                             settled online at all — and the first way
+                                             to record cash for any other. --}}
+                                        @if ($booking->status === 'pending_payment')
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                    data-settle
+                                                    data-settle-id="{{ $booking->id }}"
+                                                    data-settle-guest="{{ $booking->guest_name }}"
+                                                    data-settle-amount="{{ number_format((float) ($booking->payable_amount ?? $booking->total_price), 2) }}"
+                                                    data-settle-discount="{{ $booking->wants_discount ? '1' : '' }}"
+                                                    data-settle-action="{{ route('frontdesk.booking.settle', $booking->id) }}">
+                                                <x-admin.ui.icon name="credit-card" class="h-3.5 w-3.5" stroke-width="2" />
+                                                Settle
+                                            </button>
+                                        @endif
                                         @if ($booking->status == 'active')
                                             <form method="POST" action="{{ route('frontdesk.booking.checkout', $booking->id) }}"
                                                   data-busy-form
@@ -161,6 +177,53 @@
     </div>
 </div>
 
+{{-- Counter payment. One modal for the whole table — the row's button fills in
+     which booking it is talking about, the same way the guest-side cancel modal
+     rewrites its form action. --}}
+<x-admin.ui.modal id="settleModal" icon="credit-card" title="Record a counter payment">
+    <form id="settleForm" method="POST" class="px-6 py-5 space-y-4" data-busy-form>
+        @csrf
+
+        {{-- What is being settled, restated inside the dialog. The row that
+             opened it is behind a backdrop by now, and this action takes money
+             and cuts a receipt — the wrong booking is not a recoverable slip. --}}
+        <div class="rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Booking</p>
+            <p class="mt-1 text-sm font-semibold text-stone-800" data-settle-summary></p>
+            <p class="mt-3 text-[10px] font-bold uppercase tracking-widest text-stone-400">Amount due</p>
+            <p class="mt-1 text-lg font-black tabnum text-stone-800">₱<span data-settle-amount-text></span></p>
+        </div>
+
+        {{-- Shown only for a discounted booking, because that is the one where
+             the desk has a job to do before taking the money: the discount
+             exists precisely because nobody has yet seen the ID. --}}
+        <p class="hidden items-start gap-2 rounded-xl border border-palay-200 bg-palay-50 px-4 py-3 text-xs font-semibold leading-relaxed text-palay-800"
+           data-settle-discount-note>
+            <x-admin.ui.icon name="tag" class="mt-px h-3.5 w-3.5 shrink-0" stroke-width="2" />
+            <span>Senior&nbsp;/&nbsp;PWD booking — check the original ID for every discounted guest before recording this payment.</span>
+        </p>
+
+        <div>
+            <x-admin.ui.label for="settle_method">How did they pay?</x-admin.ui.label>
+            <x-admin.ui.field name="method" id="settle_method" control="select" required>
+                @foreach(\App\Http\Controllers\Staff\FrontDesk\BookingsController::DESK_PAYMENT_METHODS as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </x-admin.ui.field>
+        </div>
+
+        <div>
+            <x-admin.ui.label for="settle_reference" hint="(optional)">Reference number</x-admin.ui.label>
+            <x-admin.ui.field name="reference" id="settle_reference" maxlength="60" autocomplete="off"
+                              placeholder="OR number or e-wallet reference" />
+        </div>
+
+        <div class="flex gap-2.5 justify-end pt-2">
+            <x-admin.ui.modal-footer close-target="settleModal" submit-label="Record payment" data-busy-btn />
+        </div>
+    </form>
+</x-admin.ui.modal>
+
 @endsection
 
 @push('scripts')
@@ -170,6 +233,32 @@
 // frontdesk/walkin/show each carried a byte-identical copy, both ending in
 // form.submit() — which fires no submit event, so neither ever armed the
 // double-submit guard on an action that releases rooms.
+
+// Counter payment: the row's button carries which booking it is, the modal
+// is shared. Delegated, so it survives the live refresh below re-rendering
+// the table out from under any listener bound to a specific button.
+document.addEventListener('click', function (e) {
+    const trigger = e.target.closest('[data-settle]');
+    if (!trigger) return;
+
+    const form = document.getElementById('settleForm');
+    if (!form) return;
+
+    form.action = trigger.dataset.settleAction;
+    form.querySelector('[data-settle-summary]').textContent =
+        'BK-' + String(trigger.dataset.settleId).padStart(4, '0') + ' · ' + trigger.dataset.settleGuest;
+    form.querySelector('[data-settle-amount-text]').textContent = trigger.dataset.settleAmount;
+
+    // `flex`, not just un-hiding: the note lays its icon out beside the text.
+    const note = form.querySelector('[data-settle-discount-note]');
+    note.classList.toggle('hidden', !trigger.dataset.settleDiscount);
+    note.classList.toggle('flex', !!trigger.dataset.settleDiscount);
+
+    // A reference typed for the previous booking must not ride along.
+    form.querySelector('#settle_reference').value = '';
+
+    window.openModal('settleModal');
+});
 
 // Real-time push: a booking paid online, checked out at another desk, or
 // expired by the scheduler shows up here immediately. Held back while a

@@ -27,6 +27,11 @@
                     <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
                     <option value="pending_payment" {{ request('status') == 'pending_payment' ? 'selected' : '' }}>Pending Payment</option>
                     <option value="pending_discount" {{ request('status') == 'pending_discount' ? 'selected' : '' }}>Pending Discount</option>
+                    {{-- Paid was missing, which mattered little while it was a
+                         waypoint on the way to Active. It is now the status a
+                         guest comes looking for: the only one they can ask to
+                         move, and the only one they cannot cancel. --}}
+                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
@@ -179,13 +184,41 @@
                              is "Pay now", not "View" — the old row made a red
                              Cancel the widest, loudest control on the page. --}}
                         <div class="stay-card__actions">
-                            @if($booking->status === 'pending_payment')
+                            @if($booking->status === 'pending_payment' && $booking->wants_discount)
+                                {{-- A discounted rate is settled in person, so
+                                     "Pay now" would lead to a page that turns the
+                                     guest away (PaymentController::rejectIfNotPayable).
+                                     Cancelling is still theirs — nothing is paid yet. --}}
+                                <button type="button" onclick="openCancelModal({{ $booking->id }})" class="stay-card__quiet">Cancel</button>
+                                <span class="stay-card__meta text-palay-800">
+                                    <i class="fa-solid fa-building-columns text-[11px]"></i> Pay at front desk
+                                </span>
+                                <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-4 text-xs">View</x-booking.ui.button>
+                            @elseif($booking->status === 'pending_payment')
                                 <button type="button" onclick="openCancelModal({{ $booking->id }})" class="stay-card__quiet">Cancel</button>
                                 <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-3.5 text-xs">View</x-booking.ui.button>
                                 <x-booking.ui.button variant="primary" href="{{ route('bookings.pay', $booking->id) }}" class="py-1.5 px-4 text-xs">
                                     <i class="fa-solid fa-credit-card text-[12px]"></i> Pay now
                                 </x-booking.ui.button>
                             @else
+                                {{-- A paid booking has no Cancel, by policy: the money
+                                     is not coming back, so the only thing left to
+                                     offer is moving the stay. Three states, because
+                                     "nothing here" is the wrong answer to two of them
+                                     — a guest waiting on a decision should see that
+                                     from the list, and a button the server would
+                                     refuse is worse than no button. --}}
+                                @php $openReschedule = \App\Models\RescheduleRequest::openFor($booking); @endphp
+                                @if($openReschedule)
+                                    <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="stay-card__meta text-palay-800 !no-underline hover:text-palay-900">
+                                        <i class="fa-solid fa-hourglass text-[11px]"></i>
+                                        Reschedule pending &middot; {{ $openReschedule->requested_check_in->format('M d') }}
+                                    </a>
+                                @elseif(\App\Models\RescheduleRequest::isOpenFor($booking))
+                                    <x-booking.ui.button variant="outline" href="{{ route('booking.reschedule.create', $booking->id) }}" class="py-1.5 px-3.5 text-xs">
+                                        <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule
+                                    </x-booking.ui.button>
+                                @endif
                                 <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-4 text-xs">
                                     View details
                                     <i class="fa-solid fa-arrow-right text-[11px]"></i>

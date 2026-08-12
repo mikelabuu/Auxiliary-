@@ -10,6 +10,7 @@ use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\RescheduleController;
 use App\Http\Controllers\PsgcController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\SettingsController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Staff\CompletedBookingsController;
 use App\Http\Controllers\Staff\BookingLogsController;
 use App\Http\Controllers\Staff\PaymentLogsController;
 use App\Http\Controllers\Staff\PaymentVerificationController;
+use App\Http\Controllers\Staff\RescheduleAdminController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
@@ -151,8 +153,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/transactions', [SettingsController::class, 'transactions'])->name('settings.transactions');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    //cancel booking
+    //cancel booking — unpaid only; see SettingsController::cancelBooking
     Route::post('/booking/{booking}/cancel', [SettingsController::class, 'cancelBooking'])->name('booking.cancel');
+
+    /*
+    | Reschedule. The only thing a guest can do about a *paid* booking they
+    | cannot make, and only until check-in time on their arrival day. Asking is
+    | all that happens here — the dates are moved by staff.
+    */
+    Route::get('/booking/{booking}/reschedule', [RescheduleController::class, 'create'])->name('booking.reschedule.create');
+    Route::post('/booking/{booking}/reschedule', [RescheduleController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('booking.reschedule.store');
+    Route::post('/booking/{booking}/reschedule/withdraw', [RescheduleController::class, 'withdraw'])->name('booking.reschedule.withdraw');
 
     //payments
 
@@ -357,6 +370,25 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,
 
 /*
 |--------------------------------------------------------------------------
+| Reschedule requests — admin AND front desk
+|--------------------------------------------------------------------------
+| A paid booking cannot be cancelled, so a guest whose plans change asks to
+| move it instead. Not admin-only for the same reason payment verification
+| is not: the guest rings the desk about this, and the desk is who answers.
+| Approving is the one action in the system that rewrites a paid booking's
+| dates, so it re-checks room availability before it writes.
+*/
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,frontdesk'])
+    ->prefix('staff/reschedules')
+    ->name('staff.reschedules.')
+    ->group(function () {
+        Route::get('/', [RescheduleAdminController::class, 'index'])->name('index');
+        Route::post('/{reschedule}/approve', [RescheduleAdminController::class, 'approve'])->name('approve');
+        Route::post('/{reschedule}/decline', [RescheduleAdminController::class, 'decline'])->name('decline');
+    });
+
+/*
+|--------------------------------------------------------------------------
 | Front Desk Routes
 |--------------------------------------------------------------------------
 */
@@ -376,6 +408,11 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,master_ad
 
         route::get('/bookings', [BookingsController::class, 'viewBookings'])->name('frontdesk.booking');
         route::post('/booking/{booking}/checkout', [BookingsController::class, 'checkout'])->name('frontdesk.booking.checkout');
+
+        // Counter payment. A Senior/PWD booking cannot be settled online at
+        // all (the discount is granted against an original ID), so without
+        // this it had no route to `paid` and would simply expire.
+        route::post('/booking/{booking}/settle', [BookingsController::class, 'settle'])->name('frontdesk.booking.settle');
 
 });
 

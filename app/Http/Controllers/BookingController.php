@@ -75,7 +75,7 @@ class BookingController extends Controller
 
         return view('public.booking.checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests') + [
             'prefill'      => $this->checkoutPrefill($user),
-            'holdMinutes'  => (int) config('bookings.expiry_minutes'),
+            'holdLabel'    => \App\Support\PaymentWindow::label(),
         ]);
     }
 
@@ -91,7 +91,7 @@ class BookingController extends Controller
      */
     private function checkoutPrefill(?User $user): array
     {
-        $blank = ['first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '', 'guest_phone' => ''];
+        $blank = ['first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '', 'guest_phone' => '', 'guest_phone_alt' => ''];
 
         if (! $user) {
             return $blank;
@@ -107,6 +107,10 @@ class BookingController extends Controller
         if (! $last) {
             return $prefill;
         }
+
+        // Only the booking carries a second number — `users` has one phone
+        // column — so this one comes back from the last stay or not at all.
+        $prefill['guest_phone_alt'] = (string) ($last->guest_phone_alt ?? '');
 
         // store() writes "Last, First, Middle" and glues any suffix onto the
         // end, so unpick it the same way round.
@@ -152,6 +156,15 @@ class BookingController extends Controller
             // attribute; the server took any 20 characters, so anyone posting
             // around the form could store "call me maybe" as a contact number.
             'guest_phone'     => ['required', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/'],
+            // Optional, but held to the same shape as the first — a fallback
+            // number nobody can dial is worse than an empty field, because the
+            // desk stops looking once it sees one.
+            'guest_phone_alt' => ['nullable', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/', 'different:guest_phone'],
+            // Who endorsed this guest. Required on this form because the desk
+            // asked for it, but the column is nullable — walk-ins are typed at
+            // a counter and every booking made before this field existed has no
+            // answer. See the migration.
+            'referred_by'     => ['required', 'string', 'max:255'],
             'check_in'        => ['required', 'date', 'after_or_equal:today', 'before_or_equal:' . $horizon->toDateString()],
             'check_out'       => ['required', 'date', 'after:check_in', 'before_or_equal:' . $maxStay->toDateString()],
             'expected_guests' => 'required|integer|min:1|max:40',
@@ -164,7 +177,14 @@ class BookingController extends Controller
             'accept_terms'     => 'accepted',
             'reservations'    => 'required|array|min:1|max:10',
             'reservations.*.room_type'       => 'required|string',
-            'reservations.*.room_number'     => 'required|string', // CSV per block
+            // No room_number. A guest chooses a room *style* and how many of
+            // them; which physical rooms those are is assigned here, from what
+            // is actually free, inside the same locked transaction that checks
+            // the dates. Letting the client name the rooms meant the booking
+            // form had to publish the whole floor plan and its occupancy to
+            // anyone who opened it, and gave the desk no room to group a party
+            // together or hold a quiet wing back. Only staff pick numbers now
+            // (manual booking and walk-in still do).
             // Never validated, only read as `$block['num_guests'] ?? 0`. An
             // omitted value quietly became zero guests, and every per-block
             // capacity check below compares against zero and passes.
@@ -187,6 +207,9 @@ class BookingController extends Controller
             'barangay_code' => ['required', 'string', 'max:255', new \App\Rules\PsgcCode('barangays')],
         ], [
             'guest_phone.regex'        => 'Enter a Philippine mobile number as 09xxxxxxxxx or +639xxxxxxxxx.',
+            'guest_phone_alt.regex'    => 'Enter the second number as 09xxxxxxxxx or +639xxxxxxxxx, or leave it blank.',
+            'guest_phone_alt.different' => 'The second contact number has to be a different number from the first.',
+            'referred_by.required'     => 'Tell us which office or person is endorsing this stay — or say you are booking for yourself.',
             'check_in.before_or_equal' => 'We only take bookings up to ' . self::BOOKING_HORIZON_DAYS . ' days ahead.',
             'check_out.before_or_equal' => 'A single stay can run at most ' . self::MAX_STAY_NIGHTS . ' nights. Please contact us for longer stays.',
             'reservations.*.num_guests.required' => 'Say how many guests are staying in each room you picked.',
@@ -228,11 +251,13 @@ class BookingController extends Controller
         $cout = Carbon::parse($request->check_out);
         $days = max(1, $cin->diffInDays($cout));
 
-        $allRoomNumbers = [];
         $totalPrice = 0;
         $totalCapacity = 0;
         $totalSeniors = 0;
         $totalGuestsAssigned = 0;
+        // How many rooms of each style this booking is asking for. The
+        // transaction below turns these counts into actual room numbers.
+        $wantedByType = [];
         $cdate = Carbon::parse($request->check_in, config('hostel.timezone'));
         $now = Carbon::now(config('hostel.timezone'));
 
@@ -241,7 +266,6 @@ class BookingController extends Controller
         $catalog = RoomCatalog::all();
 
         foreach ($request->reservations as $block) {
-            $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
             $roomType = $block['room_type'];
             $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
 
@@ -251,18 +275,13 @@ class BookingController extends Controller
             }
             $pricePerNight = (float) $catalogType['price'];
 
-            // validate rooms exist AND actually belong to the claimed type
-            $rooms = Room::whereIn('room_number', $roomNumbersArray)
-                ->where('room_type', $roomType)
-                ->get();
-            if ($rooms->count() !== count($roomNumbersArray)) {
-                return back()->withErrors(['reservations' => 'Some selected rooms are invalid for the chosen room type.'])->withInput();
-            }
-
-            // capacity: trust backend catalog, not frontend "beds"
-            $beds = (int) $catalogType['beds'];
-            $blockCapacity = $beds * count($roomNumbersArray);
+            // One block is one room. It always was on this form — the picker
+            // only ever let a guest select a single tile per block — and now
+            // that nobody is naming rooms, saying so plainly is what lets the
+            // counts below be counts.
+            $blockCapacity = (int) $catalogType['beds'];
             $totalCapacity += $blockCapacity;
+            $wantedByType[$roomType] = ($wantedByType[$roomType] ?? 0) + 1;
 
             // seniors per block
             if ($numSeniorsBlock > $blockCapacity) {
@@ -294,15 +313,7 @@ class BookingController extends Controller
             $totalGuestsAssigned += $blockGuests;
 
             // price calc
-            $totalPrice += $pricePerNight * count($roomNumbersArray) * $days;
-
-            // collect all room numbers
-            $allRoomNumbers = array_merge($allRoomNumbers, $roomNumbersArray);
-        }
-
-        // prevent duplicate room numbers across blocks
-        if (count($allRoomNumbers) !== count(array_unique($allRoomNumbers))) {
-            return back()->withErrors(['reservations' => 'Duplicate room numbers detected.'])->withInput();
+            $totalPrice += $pricePerNight * $days;
         }
 
         // validate overall guest count (NEW FINAL CHECK)
@@ -319,10 +330,16 @@ class BookingController extends Controller
             ])->withInput();
         }
 
+        // A discount is only wanted if there is somebody to discount. Ticking
+        // the box with zero seniors declared used to store wants_discount=true
+        // against a booking that could never receive one — harmless while the
+        // flag only chose a starting status, but it now also decides whether
+        // the booking may be paid online, and that booking would have been
+        // sent to the front desk to prove an entitlement it never claimed.
+        $wantsDiscount = $request->boolean('request_discount') && $totalSeniors > 0;
+
         // status
-        $status = $request->boolean('request_discount') && $totalSeniors > 0
-            ? 'pending_discount'
-            : 'pending_payment';
+        $status = $wantsDiscount ? 'pending_discount' : 'pending_payment';
 
         if ($totalSeniors !== array_sum(array_column($request->reservations, 'num_seniors'))) {
             return back()->withErrors([
@@ -335,9 +352,13 @@ class BookingController extends Controller
         //                                          //
         //                                          //
         try{
-            $booking = DB::transaction(function() use ($request, $user, $allRoomNumbers, $guestName, $guest_address, $totalPrice, $totalSeniors, $status, $catalog) {
-                // lock rooms
-                $lockedRooms = Room::whereIn('room_number', $allRoomNumbers)
+            $booking = DB::transaction(function() use ($request, $user, $wantedByType, $guestName, $guest_address, $totalPrice, $totalSeniors, $status, $wantsDiscount, $catalog) {
+                // Lock every room of every style being asked for — not a named
+                // list, because there is no longer a named list. The lock has
+                // to cover the whole pool the assignment below draws from, or
+                // two guests picking the same style at the same moment could
+                // each be handed the same last room.
+                $lockedRooms = Room::whereIn('room_type', array_keys($wantedByType))
                         ->lockForUpdate()
                         ->get();
 
@@ -347,16 +368,16 @@ class BookingController extends Controller
                 // belongsToMany over booking_room — and that pivot is attached
                 // *after* this transaction commits. Every booking therefore
                 // spent the window between COMMIT and attach() invisible to
-                // this check, and `lockForUpdate` below hands the row to the
+                // this check, and `lockForUpdate` above hands the row to the
                 // next waiter at exactly that moment: two guests racing for
                 // room 112 both passed, and the room was sold twice. A pivot
                 // attach that ever failed left the room permanently rebookable.
                 //
                 // Reservations are written inside this same transaction, and
                 // are already the authoritative per-room source everywhere else
-                // — the room grid, availabilitySummary, calendarAvailability,
-                // manual booking and walk-in all read them. This is the last
-                // guard that disagreed.
+                // — availabilitySummary, calendarAvailability, manual booking
+                // and walk-in all read them. This is the last guard that
+                // disagreed.
                 // whereDate, not a plain comparison: bookings.check_in is a
                 // DATE column, but a driver that stores it with a midnight
                 // time component makes `'…12 00:00:00' > '…12'` true and
@@ -364,34 +385,50 @@ class BookingController extends Controller
                 // [check_in, check_out), so the turnover day belongs to the
                 // arriving guest — getting this wrong costs a night's revenue
                 // on every changeover.
-                $overlappingRooms = Reservation::query()
+                $takenRoomNumbers = Reservation::query()
                     ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
-                    ->whereIn('reservations.room_number', $allRoomNumbers)
+                    ->whereIn('reservations.room_number', $lockedRooms->pluck('room_number')->all())
                     ->tap(fn ($q) => Booking::applyActiveHold($q))
                     ->whereDate('bookings.check_in', '<', $request->check_out)
                     ->whereDate('bookings.check_out', '>', $request->check_in)
                     ->pluck('reservations.room_number')
                     ->map(fn ($number) => trim($number))
                     ->unique()
-                    ->values()
-                    ->all();
+                    ->flip();
 
-                if (!empty($overlappingRooms)) {
-                    throw new RoomUnavailable('The following rooms are already booked: ' . implode(', ', $overlappingRooms));
+                // What is actually sellable for these dates, per style. A room
+                // the front desk just moved to maintenance/cleaning/occupied is
+                // not inventory, whatever a stale tab still shows — the live UI
+                // is a convenience, this is the guarantee.
+                $poolByType = $lockedRooms
+                    ->filter(fn ($room) => $room->status === 'available'
+                        && ! $takenRoomNumbers->has(trim((string) $room->room_number)))
+                    ->groupBy('room_type');
+
+                // Assign. Shuffled rather than taken in order, so the same low
+                // room numbers are not worn out first while the far end of the
+                // corridor sits unused.
+                $assignments = [];   // room_type => list of Room, in the order blocks claim them
+
+                foreach ($wantedByType as $roomType => $wanted) {
+                    $pool = ($poolByType[$roomType] ?? collect())->shuffle()->values();
+
+                    if ($pool->count() < $wanted) {
+                        $title = $catalog[$roomType]['title'] ?? $roomType;
+                        $left = $pool->count();
+
+                        throw new RoomUnavailable(
+                            $left === 0
+                                ? "There are no {$title} rooms left for those dates. Try other dates or another room style."
+                                : "Only {$left} " . ($left === 1 ? 'room' : 'rooms') . " of the {$title} style "
+                                    . ($left === 1 ? 'is' : 'are') . " left for those dates, and you asked for {$wanted}."
+                        );
+                    }
+
+                    $assignments[$roomType] = $pool->take($wanted)->values();
                 }
 
-                // Authoritative status guard: a room the front desk just set to
-                // maintenance/cleaning/occupied must not be bookable, even if the
-                // guest's page still shows it as open (stale tab, no JS, etc.).
-                // The real-time UI is only a convenience — this is the guarantee.
-                $unavailableRooms = $lockedRooms->filter(fn($room) => $room->status !== 'available')
-                    ->pluck('room_number')->toArray();
-
-                if (!empty($unavailableRooms)) {
-                    throw new RoomUnavailable('The following rooms are no longer available: ' . implode(', ', $unavailableRooms));
-                }
-                
-                //Begin Booking 
+                //Begin Booking
 
                 $booking = Booking::create([
                     'user_id'         => $user->id,
@@ -399,6 +436,8 @@ class BookingController extends Controller
                     'guest_name'      => $guestName,
                     'guest_address'   => $guest_address,
                     'guest_phone'     => $request->guest_phone,
+                    'guest_phone_alt' => $request->guest_phone_alt ?: null,
+                    'referred_by'     => trim((string) $request->referred_by) ?: null,
                     'check_in'        => $request->check_in,
                     'check_out'       => $request->check_out,
                     // Blank means "not sure yet", which is a real answer and
@@ -426,45 +465,48 @@ class BookingController extends Controller
                     // discount is approved.
                     'payable_amount'  => $totalPrice,
                     'num_seniors'     => $totalSeniors,
-                    'wants_discount'  => $request->boolean('request_discount'),
+                    'wants_discount'  => $wantsDiscount,
                     'status'          => $status,
                     'payment_mode'    => 'system',
                 ]);
 
+                // Hand each block the next room assigned to its style. A
+                // per-type cursor rather than a shared one, so two blocks of
+                // different styles cannot take each other's rooms.
+                $cursor = array_fill_keys(array_keys($assignments), 0);
+                $bookedRooms = collect();
+
                 foreach ($request->reservations as $block) {
-                    $roomNumbersArray = array_map('trim', explode(',', $block['room_number']));
                     $roomType = $block['room_type'];
                     $pricePerNight = (float) ($catalog[$roomType]['price'] ?? 0);
                     $numSeniorsBlock = (int) ($block['num_seniors'] ?? 0);
                     $meals = $block['meal'] ?? null;
                     $beds = (int) ($catalog[$roomType]['beds'] ?? 1);
 
-                    foreach ($roomNumbersArray as $roomNumber) {
-                        $room = Room::where('room_number', $roomNumber)->first();
+                    $room = $assignments[$roomType][$cursor[$roomType]++];
+                    $bookedRooms->push($room);
 
-                        Reservation::create([
-                            'booking_id'      => $booking->id,
-                            'room_number'     => $roomNumber,
-                            'room_type'       => $roomType,
-                            'capacity'        => $beds,
-                            'price' => $pricePerNight,
-                            'num_seniors'     => min($numSeniorsBlock, $beds),
-                            'num_guests'  => (int) ($block['num_guests'] ?? 0),
-                            'meal'        => $meals,
-                        ]);
-
-                        $numSeniorsBlock -= $beds;
-                        if ($numSeniorsBlock < 0) {
-                            $numSeniorsBlock = 0;
-                        }
-                    }
+                    Reservation::create([
+                        'booking_id'      => $booking->id,
+                        'room_number'     => $room->room_number,
+                        'room_type'       => $roomType,
+                        'capacity'        => $beds,
+                        'price'           => $pricePerNight,
+                        'num_seniors'     => min($numSeniorsBlock, $beds),
+                        'num_guests'      => (int) ($block['num_guests'] ?? 0),
+                        'meal'            => $meals,
+                    ]);
                 }
 
                 // Inside the transaction, not after it. The room board
                 // (App\Support\RoomBoard) reads this pivot, so a booking that
                 // committed and then failed to attach would hold rooms the
                 // board showed as free.
-                $roomIds = $lockedRooms->pluck('id')->all();
+                //
+                // Only the rooms actually assigned — `$lockedRooms` is now the
+                // whole pool of every style asked for, and attaching that would
+                // hold the entire floor.
+                $roomIds = $bookedRooms->pluck('id')->unique()->all();
                 if (!empty($roomIds)) {
                     $booking->rooms()->attach($roomIds);
                 }
@@ -545,7 +587,16 @@ class BookingController extends Controller
         ]);
     }
 
-    // get available rooms
+    /**
+     * Which rooms of a style are free over a date range.
+     *
+     * No longer what the booking form runs on. It used to feed the tile grid a
+     * guest picked their room number from; that picker is gone and store()
+     * assigns the rooms itself, so nothing on the public site calls this any
+     * more. It stays because it is still the most direct answer to "is this
+     * room free on these dates", and because it is the probe the hold tests
+     * ask that question through.
+     */
     public function getAvailableRooms(Request $request)
     {
         $request->validate([

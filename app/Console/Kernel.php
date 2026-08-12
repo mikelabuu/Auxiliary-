@@ -20,12 +20,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('bookings:mark-no-show')
             ->timezone(config('hostel.timezone'))->dailyAt('00:05');
 
-        // The command no-ops before 2 PM Manila; half-hourly runs give it
+        // The command no-ops before the configured check-out time (Manila);
+        // half-hourly runs give it
         // same-day retries if a run is missed.
         $schedule->command('bookings:autocheckout')
             ->everyThirtyMinutes()->withoutOverlapping();
 
-        // Heads-up on today's departures, ahead of the 2 PM check-out the
+        // Heads-up on today's departures, ahead of the check-out the
         // command above enforces. Once daily, not repeated: the alert id is
         // keyed to the check-out date, so a second run the same day is
         // de-duplicated at the bell anyway.

@@ -10,11 +10,11 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 /**
- * Tells the desk which stays are leaving today, before the 2 PM deadline
+ * Tells the desk which stays are leaving today, before the check-out deadline
  * rather than after it.
  *
  * The gap this fills: every other signal about check-out is retrospective.
- * bookings:autocheckout closes the stay at 2 PM, and the dashboard's Needs
+ * bookings:autocheckout closes the stay at the configured check-out time, and the dashboard's Needs
  * Attention panel plus the `overdue` KPI only light up the day *after* a
  * check-out was missed. Nothing spoke up while the guest was still in the room
  * and something could still be done about it — chasing them, briefing

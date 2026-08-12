@@ -50,6 +50,13 @@
                     class="px-4 py-3 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'departure' ? 'bg-white text-clsu-800 shadow-sm' : 'text-faint hover:text-clsu-700' }}">
                     Departures
                 </button>
+                {{-- Everyone in a room right now, whether or not they are due
+                     out. The way to reach a guest who has to leave early: they
+                     are on no other tab until their own check-out day. --}}
+                <button wire:click="$set('filterType', 'inhouse')"
+                    class="px-4 py-3 rounded-full transition-[color,background-color,transform] duration-200 active:scale-95 cursor-pointer {{ $filterType === 'inhouse' ? 'bg-white text-clsu-800 shadow-sm' : 'text-faint hover:text-clsu-700' }}">
+                    In-house
+                </button>
             </div>
         </div>
     </div>
@@ -140,7 +147,18 @@
                                 <td class="font-data tabnum" title="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}">{{ \Carbon\Carbon::parse($item->check_out)->format('M d') }}</td>
                                 <td class="text-center font-data tabnum">{{ $item->nights }}</td>
                                 <td>
-                                    <span class="cell-tag" style="{{ $item->type === 'arrival' ? 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);' : 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;' }}">{{ ucfirst($item->type) }}</span>
+                                    @php
+                                        // 'staying' is the neutral one: nothing is due to happen
+                                        // to this guest today, so it gets neither the arrival
+                                        // green nor the departure amber.
+                                        $typeTag = match ($item->type) {
+                                            'arrival' => ['Arrival', 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);'],
+                                            'staying' => ['In-house', 'color:var(--color-stone-600);background:var(--color-stone-100);border-color:var(--color-stone-200);'],
+                                            'both' => ['Same-day', 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;'],
+                                            default => ['Departure', 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;'],
+                                        };
+                                    @endphp
+                                    <span class="cell-tag" style="{{ $typeTag[1] }}">{{ $typeTag[0] }}</span>
                                 </td>
                                 <td><span class="status {{ $sClass }}">{{ ucfirst($item->status) }}</span></td>
                                 <td class="text-right">
@@ -152,7 +170,22 @@
                                             </div>
                                         @elseif($item->status === 'active')
                                             <div class="table-actions justify-end">
-                                                <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $item->id }}">Check Out</button>
+                                                @if($item->due_out)
+                                                    <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $item->id }}">Check Out</button>
+                                                @else
+                                                    {{-- Not due out yet. Deliberately the quiet outline
+                                                         button and not the primary one: this is the
+                                                         exception, sitting in a column where the green
+                                                         button all day means "the expected thing". --}}
+                                                    <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer !text-ember-700 !border-ember-300 hover:!bg-ember-50"
+                                                            data-action="emergency"
+                                                            data-id="{{ $item->id }}"
+                                                            data-guest="{{ $item->guest_name }}"
+                                                            data-checkout="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}"
+                                                            title="End this stay before {{ \Carbon\Carbon::parse($item->check_out)->format('M d') }} — emergencies only">
+                                                        Emergency Check-Out
+                                                    </button>
+                                                @endif
                                             </div>
                                         @else
                                             <span class="text-faint text-xs italic">None</span>
@@ -209,7 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
         checkin:  { title: 'Check in this guest?',  confirmButtonText: 'Yes, check in',  icon: 'question' },
         checkout: { title: 'Check out this guest?', confirmButtonText: 'Yes, check out', icon: 'question' },
         noshow:   { title: 'Mark as no-show?',      confirmButtonText: 'Yes, no-show',   icon: 'warning'  },
+        emergency:{ title: 'End this stay early?',  confirmButtonText: 'Check out now',  icon: 'warning'  },
     };
+
+    // The guest supplies their own name, so it is escaped before it goes
+    // anywhere near innerHTML — same rule the room board follows with .text().
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
 
     const handleClick = (btn) => {
         const bookingId = btn.dataset.id;
@@ -217,14 +257,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const l = LABELS[action] || { title: 'Confirm this action?', confirmButtonText: 'Confirm', icon: 'question' };
 
         // Password re-auth dropped — a plain confirm still guards the state change.
-        Swal.fire({
+        const opts = {
             title: l.title,
             icon: l.icon,
             showCancelButton: true,
-            confirmButtonText: l.confirmButtonText
-        }).then(result => {
+            confirmButtonText: l.confirmButtonText,
+        };
+
+        // An early check-out is the one action here that undoes something the
+        // guest paid for, so it asks for more than a yes: it names who is being
+        // sent home and when they were actually due out, and it will not go
+        // through without a reason to put in the booking's history.
+        if (action === 'emergency') {
+            opts.html = '<p style="margin:0 0 .35rem"><strong>' + esc(btn.dataset.guest || 'This guest') + '</strong> is not due out until '
+                      + esc(btn.dataset.checkout || 'later') + '.</p>'
+                      + '<p style="margin:0">The room goes back on sale straight away. There is no refund.</p>';
+            opts.input = 'text';
+            opts.inputLabel = 'Reason for the early check-out';
+            opts.inputPlaceholder = 'e.g. medical emergency';
+            opts.inputAttributes = { maxlength: 255, autocapitalize: 'sentences' };
+            opts.inputValidator = (value) => (value || '').trim() ? undefined : 'Please give a reason.';
+        }
+
+        Swal.fire(opts).then(result => {
             if (result.isConfirmed) {
-                window.Livewire.dispatch('arrivalsPasswordConfirmed', { payload: { bookingId, action } });
+                window.Livewire.dispatch('arrivalsPasswordConfirmed', {
+                    payload: { bookingId, action, reason: result.value ?? null },
+                });
             }
         });
     };

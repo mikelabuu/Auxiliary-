@@ -1,5 +1,7 @@
-{{-- Says what happened and stops. No refund terms are stated anywhere in this
-     system, so none are stated here — see App\Mail\BookingNoShowMail. --}}
+{{-- States the forfeiture, because the guest agreed to it at checkout and it is
+     the outcome this mail is reporting — see App\Mail\BookingNoShowMail. Then
+     it hands the guest to a person, because the policy is the default and not
+     the last word on their circumstances. --}}
 @component('mail::message')
 # We missed you
 
@@ -16,8 +18,10 @@ Your check-in date for booking **#{{ $booking->id }}** has passed and you were n
 @endif
 
 @component('mail::panel')
-**If you were delayed, still travelling, or believe you did check in, contact the front desk.** This is a paid booking, and what happens next is a decision a person makes, not this system — please talk to us rather than rebooking straight away.
+**A booking nobody checks in to is forfeited, and there is no refund.** That is the arrangement you agreed to when you booked: a paid stay cannot be cancelled, only moved — and moving it had to be asked for by {{ $deadline->format('g:i A, M d') }}, a full 24 hours before your check-in.
 @endcomponent
+
+**If you were delayed, still travelling, or believe you did check in, contact the front desk.** Whether anything can be done here is a decision a person makes, not this system — please talk to us rather than rebooking straight away.
 
 @component('mail::button', ['url' => $bookingUrl, 'color' => 'primary'])
 View booking

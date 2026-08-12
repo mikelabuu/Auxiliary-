@@ -28,19 +28,19 @@
             <!-- Booking context strip -->
             <div class="mb-8 grid grid-cols-2 sm:grid-cols-4 rounded-3xl bg-cream-warm ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] divide-x divide-emerald-deep/5 text-center overflow-hidden">
                 <div class="px-3 py-4">
-                    <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Booking</span>
+                    <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Booking</span>
                     <span class="block text-sm font-extrabold text-ink mt-1 tabnum">#{{ $booking->id }}</span>
                 </div>
                 <div class="px-3 py-4">
-                    <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Stay</span>
+                    <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Stay</span>
                     <span class="block text-sm font-extrabold text-ink mt-1 tabnum">{{ $booking->check_in->format('M d') }} → {{ $booking->check_out->format('M d') }}</span>
                 </div>
                 <div class="px-3 py-4">
-                    <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
+                    <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
                     <span class="block text-sm font-extrabold text-ink mt-1 tabnum">{{ $nights }}</span>
                 </div>
                 <div class="px-3 py-4">
-                    <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Declared Seniors / PWD</span>
+                    <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Declared Seniors / PWD</span>
                     <span class="block text-sm font-extrabold text-emerald-deep mt-1 tabnum">{{ $booking->num_seniors }}</span>
                 </div>
             </div>
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-ink/70 text-cream backdrop-blur transition-colors hover:bg-ember-600 cursor-pointer">
                         <i class="fa-solid fa-xmark text-[14px]"></i>
                     </button>
-                    <span class="absolute bottom-1.5 left-1.5 rounded-full bg-ink/60 px-2 py-0.5 text-[9px] font-bold text-cream backdrop-blur">${(file.size / 1024 / 1024).toFixed(1)} MB</span>`;
+                    <span class="absolute bottom-1.5 left-1.5 rounded-full bg-ink/60 px-2 py-0.5 text-[10px] font-bold text-cream backdrop-blur">${(file.size / 1024 / 1024).toFixed(1)} MB</span>`;
                 previewGrid.appendChild(tile);
             });
         }

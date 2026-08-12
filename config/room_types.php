@@ -59,6 +59,32 @@ return [
             ['icon' => 'inventory_2', 'label' => 'Guest Kit'],
         ],
     ],
+    /*
+     | Family Room — added at the client's request (3 pax).
+     |
+     | Price and capacity here are only a fallback: RoomCatalog overlays both
+     | from the `room_types` table, which staff own from Room Types & Pricing.
+     | The migration that seeds that row uses the same ₱2,400 as the Triple,
+     | the property's other three-person room.
+     */
+    [
+        'id'          => 'family',
+        'title'       => 'Family Room',
+        'description' => 'A room laid out for a family travelling together: a double bed and a single, with space to keep everyone\'s things without climbing over them. Suited to a couple with a child, or three adults who would rather not share singles.',
+        'floor'       => 'Ground Floor · Block B',
+        'beds'        => 3,
+        'price'       => 2400,
+        'image'       => 'image/triple.jpg',
+        'gallery'     => ['image/gallery/4.jpg', 'image/gallery/5.jpg', 'image/gallery/6.jpg'],
+        'tags'        => ['Double + Single', 'Ground Floor', 'Families'],
+        'capacity'    => '1 Double + 1 Single (3pax)',
+        'includes'    => ['Free Breakfast (3 pax)', 'Complimentary Guest Kit', 'Free Wi-Fi', 'Daily Housekeeping', 'Hot & Cold Shower'],
+        'amenities'   => [
+            ['icon' => 'wifi',        'label' => 'Free Wi-Fi'],
+            ['icon' => 'shower',      'label' => 'Hot & Cold'],
+            ['icon' => 'inventory_2', 'label' => 'Guest Kit'],
+        ],
+    ],
     [
         'id'          => 'quadruple',
         'title'       => 'Quadruple Room',

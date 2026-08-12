@@ -39,6 +39,9 @@ const ICONS = {
     // the arrival icon flipped, and arrival/departure confusion is the one
     // mistake this alert exists to prevent.
     checkout_due: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+    // A calendar with an arrow through it: the stay is not being cancelled,
+    // it is being moved, and those are two very different desk actions.
+    reschedule: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="M9 16h6m-2-2 2 2-2 2"/></svg>',
 };
 
 // Which bell tile each alert type wears — same three tiles the dropdown uses.
@@ -50,6 +53,9 @@ const TILES = {
     // Gold, not rose. Rose is what the console uses for something already
     // wrong; a check-out that is merely due is on schedule.
     checkout_due: 'notif-icon-gold',
+    // Gold for the same reason: a guest asking to move a stay is a decision
+    // waiting, not something that has already gone wrong.
+    reschedule: 'notif-icon-gold',
 };
 
 const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';

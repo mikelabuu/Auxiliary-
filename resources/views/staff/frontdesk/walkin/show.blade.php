@@ -39,6 +39,7 @@
                 @foreach ([
                     'Guest name' => $booking->guest_name,
                     'Phone' => $booking->guest_phone,
+                    'Second phone' => $booking->guest_phone_alt,
                     'Address' => $booking->guest_address,
                     'Expected guests' => $booking->expected_guests,
                     'Seniors' => $booking->num_seniors,

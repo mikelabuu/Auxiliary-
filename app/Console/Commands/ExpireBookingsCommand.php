@@ -10,6 +10,7 @@ use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\RoomStatusChanged;
 use App\Support\GuestNotice;
+use App\Support\PaymentWindow;
 use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +22,24 @@ class ExpireBookingsCommand extends Command
 
     public function handle()
     {   
-        $expiryMinutes = config('bookings.expiry_minutes');
-        $threshold = Carbon::now()->subMinutes($expiryMinutes);
+        $threshold = Carbon::now()->subMinutes(PaymentWindow::minutes());
+        $liveFrom  = PaymentWindow::earliestLiveCheckInDate();
 
-        // Find all pending_payment bookings older than expiry window
+        // Two ways an unpaid hold dies, and this has to collect both or the
+        // rooms stay blocked in the console while availability already treats
+        // them as free (Booking::applyActiveHold reads the same two clocks).
+        //
+        //   · the payment window ran out
+        //   · the guest's own arrival time came and went while still unpaid,
+        //     which at a 24-hour window is the commoner of the two for
+        //     anything booked for tonight or tomorrow
         $expiredBookings = Booking::where('status', 'pending_payment')
-            ->whereNotNull('pending_payment_since')
-            ->where('pending_payment_since', '<=', $threshold)
+            ->where(function ($q) use ($threshold, $liveFrom) {
+                $q->where(function ($q) use ($threshold) {
+                    $q->whereNotNull('pending_payment_since')
+                        ->where('pending_payment_since', '<=', $threshold);
+                })->orWhereDate('check_in', '<', $liveFrom);
+            })
             ->get();
 
         if ($expiredBookings->isEmpty()) {
@@ -35,9 +47,15 @@ class ExpireBookingsCommand extends Command
             return;
         }
 
-        DB::transaction(function () use ($expiredBookings) {
+        DB::transaction(function () use ($expiredBookings, $liveFrom) {
             foreach ($expiredBookings as $booking) {
                 $previousStatus = $booking->status;
+
+                // Which clock ran out. Worth recording separately: "they never
+                // paid in 24 hours" and "they were due at 2 PM today and still
+                // had not paid" are the same status but different stories, and
+                // the second is the one a guest will ring up about.
+                $missedArrival = Carbon::parse($booking->check_in)->toDateString() < $liveFrom;
 
                 $pendingPayment = Payment::where('booking_id', $booking->id)
                     ->where('status', 'pending')
@@ -55,7 +73,9 @@ class ExpireBookingsCommand extends Command
                     'booking_id' => $booking->id,
                     'previous_status' => $previousStatus,
                     'new_status' => 'expired',
-                    'reason' => 'Booking did not complete payment before expiry window.',
+                    'reason' => $missedArrival
+                        ? 'Booking was still unpaid when its check-in time arrived.'
+                        : 'Booking did not complete payment before expiry window.',
                     'expired_at' => Carbon::now(config('hostel.timezone')),
                     'processed_by' => null,
                 ]);

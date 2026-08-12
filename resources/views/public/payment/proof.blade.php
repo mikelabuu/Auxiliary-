@@ -51,19 +51,19 @@
         <!-- Booking context strip -->
         <div class="mb-8 grid grid-cols-2 sm:grid-cols-4 rounded-3xl bg-cream-warm ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] divide-x divide-emerald-deep/5 text-center overflow-hidden">
             <div class="px-3 py-4">
-                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Booking</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Booking</span>
                 <span class="block text-sm font-extrabold text-ink mt-1 tabnum">#{{ $booking->id }}</span>
             </div>
             <div class="px-3 py-4">
-                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Stay</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Stay</span>
                 <span class="block text-sm font-extrabold text-ink mt-1 tabnum">{{ $booking->check_in->format('M d') }} → {{ $booking->check_out->format('M d') }}</span>
             </div>
             <div class="px-3 py-4">
-                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Nights</span>
                 <span class="block text-sm font-extrabold text-ink mt-1 tabnum">{{ $nights }}</span>
             </div>
             <div class="px-3 py-4">
-                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Amount due</span>
+                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Amount due</span>
                 <span class="block text-sm font-extrabold text-emerald-deep mt-1 tabnum">₱{{ number_format($amount, 2) }}</span>
             </div>
         </div>
@@ -98,15 +98,15 @@
                     <div class="payee-panel mt-4 rounded-2xl border border-emerald-deep/10 bg-white/60 px-5 py-4 {{ old('proof_method', 'gcash') === $key ? '' : 'hidden' }}" data-method="{{ $key }}">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center sm:text-left">
                             <div>
-                                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Send to</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Send to</span>
                                 <span class="block text-sm font-extrabold text-ink mt-1">{{ $details['label'] }}</span>
                             </div>
                             <div>
-                                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Account name</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Account name</span>
                                 <span class="block text-sm font-extrabold text-ink mt-1">{{ $details['name'] }}</span>
                             </div>
                             <div>
-                                <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-emerald/70">Account number</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-emerald/70">Account number</span>
                                 <span class="block text-sm font-extrabold text-emerald-deep mt-1 font-data tabnum">{{ $details['number'] }}</span>
                             </div>
                         </div>

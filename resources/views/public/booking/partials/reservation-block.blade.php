@@ -132,37 +132,20 @@
         </div>
     </div>
 
-    <!-- Availability section — loads automatically once dates + type are set -->
+    {{-- Where the room-number tile grid used to be.
+         Guests choose a style, not a door. The room is assigned by
+         BookingController::store from what is actually free at the moment the
+         booking commits, which is the only moment the answer is true — a tile
+         picked five minutes earlier was a promise the server then had to break
+         about a third of the time on a busy weekend. Front desk and admin still
+         pick numbers, because they are standing in the building. --}}
     <div class="mt-5 pt-4 border-t border-emerald-deep/10">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <p class="text-[11px] text-stone-500 font-medium flex items-center gap-1.5">
-                <i class="fa-solid fa-hand-pointer text-[14px] text-emerald"></i>
-                Pick a room style above and open rooms for your dates appear here. Tap a room number to reserve it.
-            </p>
-            <div class="flex items-center gap-2">
-                <button type="button" class="btn-autopick press inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-palay-800 transition-colors hover:bg-gold hover:text-night cursor-pointer">
-                    <i class="fa-solid fa-wand-magic-sparkles text-[13px]"></i>
-                    Pick for me
-                </button>
-                <button type="button" class="btn-check-availability press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/15 bg-white/60 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
-                    <i class="fa-solid fa-arrows-rotate text-[13px]"></i>
-                    Refresh
-                </button>
-            </div>
-        </div>
-
-        <!-- Tile status legend -->
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2">
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span class="w-2.5 h-2.5 rounded-[4px] bg-emerald/20 border border-emerald/50"></span> Available</span>
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span class="w-2.5 h-2.5 rounded-[4px] bg-emerald"></span> Selected</span>
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span class="w-2.5 h-2.5 rounded-[4px] bg-ember-600/25 border border-ember-600/50"></span> Booked</span>
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider" title="Someone has reserved this room and their payment is being verified"><span class="w-2.5 h-2.5 rounded-[4px] bg-gold/10 border border-dashed border-gold/60"></span> Reserved</span>
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span class="w-2.5 h-2.5 rounded-[4px] bg-gold/20 border border-gold/50"></span> Cleaning</span>
-            <span class="flex items-center gap-1.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider"><span class="w-2.5 h-2.5 rounded-[4px] bg-white border border-emerald-deep/25"></span> Maintenance</span>
-        </div>
-
-        <!-- Room Tiles wrapper populated via AJAX -->
-        <div class="room-tiles-wrapper mb-1"></div>
-        <input type="hidden" name="reservations[__INDEX__][room_number]" class="res-room-number-hidden">
+        <p class="flex items-start gap-2 text-[11px] font-semibold text-stone-600 leading-relaxed">
+            <i class="fa-solid fa-key mt-px text-[14px] text-emerald"></i>
+            <span>
+                We'll assign your room number when the booking is confirmed, and it's on your confirmation.
+                <span class="block font-medium text-stone-500 mt-0.5">Travelling together or need a particular floor? Add it to the requests box below and our front desk will do what it can.</span>
+            </span>
+        </p>
     </div>
 </div>

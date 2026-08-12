@@ -65,7 +65,7 @@
                 <a href="{{ route('rooms.show', $typeId) }}" class="focus-ring !no-underline rounded transition-colors hover:text-clsu-700">{{ $title }}</a>
             </h3>
             <div class="shrink-0 text-right">
-                <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-ink/50">From</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-ink/50">From</p>
                 <p class="font-display text-xl leading-none text-ink">₱{{ $formattedPrice }}</p>
                 <p class="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink/55">per night</p>
             </div>

@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Check-out, likewise — and this one was not merely repeated, it was
         // wrong. Five guest-facing places stated "12:00 NN" while
-        // bookings:autocheckout has always enforced 14:00, so the site
+        // bookings:autocheckout enforces config(hostel.checkout_time), so the site
         // promised guests two hours it was never going to give them. Reading
         // it from the same key the command enforces is what stops the promise
         // and the behaviour from disagreeing again.
@@ -108,6 +108,20 @@ class AppServiceProvider extends ServiceProvider
                         'level' => 'warning',
                         'at'    => ($p->proof_submitted_at ?? $p->created_at)?->timestamp ?? 0,
                     ]);
+                });
+
+            // Paid guests asking to move a stay. Built through the event
+            // factory rather than by hand, for the reason spelled out at the
+            // checkout-due block below: an id assembled even slightly
+            // differently here splits one alert into two rows, one of which
+            // can never be marked read.
+            \App\Models\RescheduleRequest::with('booking')
+                ->pending()
+                ->latest('submitted_at')
+                ->take(5)
+                ->get()
+                ->each(function ($r) use ($notifications) {
+                    $notifications->push(StaffNotification::rescheduleRequested($r)->broadcastWith());
                 });
 
             Booking::where('created_at', '>=', now()->subDays(2))

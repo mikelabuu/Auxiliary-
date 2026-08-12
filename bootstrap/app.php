@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,6 +13,34 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // In production nginx terminates TLS and forwards to PHP-FPM over plain
+        // HTTP on the loopback. Without this, Laravel only ever sees that inner
+        // hop: `$request->secure()` returns false on an HTTPS request, so
+        // `asset()` emits http:// URLs into a page the browser loaded over
+        // https:// — and the browser blocks every one of them as mixed content.
+        //
+        // The visible result is not an error page. It is Alpine failing to
+        // load, which means the five views using `x-cloak` stay permanently
+        // invisible (`[x-cloak] { display: none !important }`) and the nine
+        // using `x-data` render but ignore every click. Modals don't open,
+        // dropdowns don't drop. Nothing is logged, because nothing threw.
+        // The same bug also suppresses HSTS, which SecurityHeaders only sends
+        // when `$request->secure()` is true.
+        //
+        // Loopback only, and never '*': the trusted list is what decides
+        // whether X-Forwarded-For can be believed, and a spoofable one hands
+        // any client a fresh IP per request — which defeats the IP-keyed login
+        // limiter outright. If a proxy is ever added off-box, add its real
+        // address here; do not widen it. AWS ELB's header is left out of the
+        // set below because nothing here runs behind one.
+        $middleware->trustProxies(
+            at: ['127.0.0.1', '::1'],
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         // Global, not web-only: a hardening header is worth just as much on a
         // report download or an availability endpoint as on a rendered page.
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
@@ -38,10 +67,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // `$proxies = '*'`, which looks like this app trusts every forwarding
         // header and would let a client spoof X-Forwarded-For — and so defeat
         // the IP-keyed login limiter — the moment anyone wired the kernel up.
-        // They are all deleted. If this app is ever put behind a load balancer
-        // or a reverse proxy, declare the real thing here with
-        // `$middleware->trustProxies(at: [...])`, naming the proxy addresses.
-        // Never '*'.
+        // They are all deleted. The real declaration now lives at the top of
+        // this closure, naming the loopback rather than '*' — see the note
+        // there for what the wrong value costs.
 
         // NOTE: the CSRF exemption that used to live here covered
         // `sandbox/webhook/*`, the callback for the simulated card gateway.

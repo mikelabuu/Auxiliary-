@@ -30,6 +30,9 @@
         ['route' => 'frontdesk.room.index',      'icon' => 'bed',           'label' => 'Rooms'],
         ['route' => 'frontdesk.booking',         'icon' => 'clipboard',     'label' => 'Bookings'],
         ['route' => 'staff.paymentverification.index', 'icon' => 'receipt', 'label' => 'Verify Payments'],
+        // The desk is who a guest rings when they cannot make their dates, and
+        // a paid booking can only be moved — never cancelled.
+        ['route' => 'staff.reschedules.index',   'icon' => 'calendar',      'label' => 'Reschedules'],
     ];
 @endphp
 

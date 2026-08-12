@@ -9,7 +9,7 @@
         <div class="flex items-center gap-2.5">
             <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><i class="fa-solid fa-{{ $icon }} text-[18px]"></i></span>
             <div>
-                <span class="block text-[9px] font-black text-stone-500 uppercase tracking-[0.18em] leading-none">{{ $step }}</span>
+                <span class="block text-[10px] font-black text-stone-500 uppercase tracking-[0.18em] leading-none">{{ $step }}</span>
                 <h4 class="text-sm font-bold text-ink tracking-tight mt-1">{{ $title }}</h4>
             </div>
         </div>

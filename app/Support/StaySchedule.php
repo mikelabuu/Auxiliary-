@@ -47,13 +47,32 @@ class StaySchedule
     }
 
     /**
-     * The booking form's "estimated arrival" options: hourly from check-in
-     * until 11 PM, then a catch-all for later.
+     * How many hours before check-in a guest may ask to arrive.
      *
-     * Generated rather than listed so the first slot is always check-in.
-     * Written out, the list began at 2:00 PM regardless — move check-in later
-     * and the form would have gone on offering arrival slots before the desk
-     * would admit anyone.
+     * Bounded by the previous stay's departure, which is the real constraint:
+     * a room cannot be handed over before it has been vacated and cleaned. With
+     * check-out at noon and check-in at 2 PM there are two hours in between,
+     * and offering more than that would be offering somebody else's room.
+     */
+    public static function earlyCheckinHours(): int
+    {
+        $gap = static::deadlineOn()->diffInHours(static::parseTime(config('hostel.checkin_time', '14:00')), absolute: false);
+
+        return (int) max(0, $gap);
+    }
+
+    /**
+     * The booking form's "estimated arrival" options: hourly from the earliest
+     * arrival we can honour until 11 PM, then a catch-all for later.
+     *
+     * Generated rather than listed so the range always tracks the two config
+     * times. Written out, the list began at 2:00 PM regardless — move check-in
+     * later and the form would have gone on offering arrival slots before the
+     * desk would admit anyone.
+     *
+     * Slots before check-in are *requests*, not entitlements: the room may
+     * still be occupied. They are marked as such by {@see isEarlyArrival()} so
+     * the form can say so rather than implying a promise.
      *
      * `arrival_time` is validated as `date_format:H:i` and not against this
      * list, so generating it cannot put the form out of step with the
@@ -63,7 +82,8 @@ class StaySchedule
      */
     public static function arrivalSlots(): array
     {
-        $slot = static::parseTime(config('hostel.checkin_time', '14:00'));
+        $checkin = static::parseTime(config('hostel.checkin_time', '14:00'));
+        $slot = $checkin->copy()->subHours(static::earlyCheckinHours());
         $slots = [];
 
         while ($slot->hour <= 23) {
@@ -81,9 +101,25 @@ class StaySchedule
         return $slots;
     }
 
+    /**
+     * Is this arrival time before the desk normally admits anyone?
+     *
+     * '00:00' is the "after midnight" catch-all at the far end of the list, not
+     * an early arrival — it means very late, and reading it as 12 AM would call
+     * the latest slot on the form the earliest.
+     */
+    public static function isEarlyArrival(?string $time): bool
+    {
+        if (blank($time) || $time === '00:00') {
+            return false;
+        }
+
+        return $time < config('hostel.checkin_time', '14:00');
+    }
+
     // ── Check-out ────────────────────────────────────────────────────────────
 
-    /** Display form for staff copy and console output, e.g. "2:00 PM". */
+    /** Display form for staff copy and console output, e.g. "12:00 PM". */
     public static function checkoutLabel(): string
     {
         return static::deadlineOn()->format('g:i A');
@@ -98,7 +134,7 @@ class StaySchedule
         $tz = static::timezone();
         $date ??= Carbon::today($tz)->toDateString();
 
-        return Carbon::parse($date . ' ' . config('hostel.checkout_time', '14:00'), $tz);
+        return Carbon::parse($date . ' ' . config('hostel.checkout_time', '12:00'), $tz);
     }
 
     // ── Check-out reminder ───────────────────────────────────────────────────

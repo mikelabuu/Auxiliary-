@@ -18,7 +18,7 @@
 <!-- Mobile sticky reserve bar (revealed after the hero by home.js) -->
 <div id="mobileStickyBar" class="fixed bottom-0 left-0 right-0 z-40 flex translate-y-full items-center justify-between border-t border-ink/10 bg-cream-warm/95 p-4 backdrop-blur-xl transition-transform duration-500 md:hidden shadow-[0_-16px_40px_rgba(8,36,20,0.18)]">
     <div>
-        <p class="text-[9px] font-bold uppercase tracking-[0.28em] text-ink/50">Starting from</p>
+        <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-ink/50">Starting from</p>
         <p class="font-display text-lg text-ink">₱{{ number_format($minPrice ?? 1600) }} <span class="text-[10px] uppercase tracking-[0.2em] text-ink/50">/ night</span></p>
     </div>
     <button type="button" onclick="smoothScrollTo(document.getElementById('rooms'))" class="press inline-flex min-h-11 items-center rounded-full bg-emerald-deep px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-cream cursor-pointer">

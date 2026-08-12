@@ -71,6 +71,18 @@
                     <x-staff.booking.label for="guest_phone">Guest Phone</x-staff.booking.label>
                     <x-staff.booking.input type="text" name="guest_phone" id="guest_phone" :value="old('guest_phone')" placeholder="09xx xxx xxxx" required />
                 </div>
+                {{-- Second number, same as the guest-facing form. Optional: the
+                     desk cannot invent one the walk-in does not have. --}}
+                <div>
+                    <x-staff.booking.label for="guest_phone_alt">Second Phone <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
+                    <x-staff.booking.input type="text" name="guest_phone_alt" id="guest_phone_alt" :value="old('guest_phone_alt')" placeholder="Another number we can reach" />
+                </div>
+                <div>
+                    {{-- Optional at the desk, required on the public form: a
+                         walk-in is standing here, an online booking is not. --}}
+                    <x-staff.booking.label for="referred_by">Endorsed by <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
+                    <x-staff.booking.input type="text" name="referred_by" id="referred_by" :value="old('referred_by')" placeholder="Office or person endorsing this guest" />
+                </div>
                 <div>
                     <x-staff.booking.label>Guest Address</x-staff.booking.label>
                     <div class="mb-selects">

@@ -111,6 +111,33 @@ class StaffNotification implements ShouldBroadcastNow
     }
 
     /**
+     * A paid guest asking to move their stay.
+     *
+     * 'warning', not 'info': this one arrives against a clock the desk cannot
+     * stop. The guest had to ask a full 24 hours before check-in
+     * (RescheduleRequest::deadlineFor), so one landing at the deadline leaves a
+     * single day to answer before the booking it is about is forfeited by
+     * bookings:mark-no-show, with no refund.
+     */
+    public static function rescheduleRequested(\App\Models\RescheduleRequest $request): self
+    {
+        $at = $request->submitted_at ?? $request->created_at;
+
+        return new self(
+            id: 'reschedule:' . $request->id . ':' . ($at?->timestamp ?? 0),
+            type: 'reschedule',
+            title: 'Reschedule request',
+            text: 'Booking #' . $request->booking_id
+                . ($request->booking?->guest_name ? ' · ' . $request->booking->guest_name : '')
+                . ' → ' . $request->requested_check_in->format('M d')
+                . ' – ' . $request->requested_check_out->format('M d'),
+            url: route('staff.reschedules.index', [], absolute: false),
+            level: 'warning',
+            at: $at?->timestamp,
+        );
+    }
+
+    /**
      * A stay that is still in house and leaves today.
      *
      * This one is built differently from the four around it, because it is the

@@ -147,10 +147,17 @@ class DiscountController extends Controller
 
             $discount->delete();
 
-            // Reset booking's discount column and status
+            // Reset booking's discount column and status.
+            //
+            // wants_discount goes with it. Left true, the guest would be told
+            // here that they may now proceed to payment and then be turned
+            // away by PaymentController, which sends every discounted booking
+            // to the front desk — a dead end nothing on the page explains.
+            // Withdrawing the request means they are paying the ordinary rate.
             $booking->update([
-                'discount' => 0, 
+                'discount' => 0,
                 'payable_amount' => $booking->total_price,
+                'wants_discount' => false,
                 'status' => 'pending_payment',
             ]);
         });

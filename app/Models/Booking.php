@@ -47,7 +47,8 @@ class Booking extends Model
      *
      * BLOCKING_STATUSES answers "which statuses can hold a room", which is not
      * the same question. A `pending_payment` booking holds its rooms only until
-     * its payment window runs out; past that the hold is already dead, and
+     * its payment window runs out — or until the guest was due to arrive, if
+     * that comes sooner. Past either, the hold is already dead, and
      * `bookings:expire` is just the bookkeeping that writes it down.
      *
      * Reading the raw status list made that bookkeeping load-bearing. With the
@@ -68,14 +69,21 @@ class Booking extends Model
      */
     public static function applyActiveHold($query, string $table = 'bookings')
     {
-        $status = $table === '' ? 'status' : "{$table}.status";
-        $since  = $table === '' ? 'pending_payment_since' : "{$table}.pending_payment_since";
+        $status  = $table === '' ? 'status' : "{$table}.status";
+        $since   = $table === '' ? 'pending_payment_since' : "{$table}.pending_payment_since";
+        $checkIn = $table === '' ? 'check_in' : "{$table}.check_in";
 
-        $lapsedBefore = now()->subMinutes((int) config('bookings.expiry_minutes'));
+        $lapsedBefore = now()->subMinutes(\App\Support\PaymentWindow::minutes());
 
-        return $query->where(function ($q) use ($status, $since, $lapsedBefore) {
+        // The other end of the same clock. An unpaid hold dies at its deadline
+        // *or* at the moment its guests were due to arrive, whichever comes
+        // first — see PaymentWindow::deadlineFor for why the second half
+        // matters once the window is longer than a day.
+        $liveFrom = \App\Support\PaymentWindow::earliestLiveCheckInDate();
+
+        return $query->where(function ($q) use ($status, $since, $checkIn, $lapsedBefore, $liveFrom) {
             $q->whereIn($status, self::SETTLED_BLOCKING_STATUSES)
-                ->orWhere(function ($q) use ($status, $since, $lapsedBefore) {
+                ->orWhere(function ($q) use ($status, $since, $checkIn, $lapsedBefore, $liveFrom) {
                     $q->where($status, 'pending_payment')
                         // A missing stamp cannot be reasoned about. The status
                         // mutator below always sets one, so this should be
@@ -84,7 +92,13 @@ class Booking extends Model
                         ->where(function ($q) use ($since, $lapsedBefore) {
                             $q->whereNull($since)
                                 ->orWhere($since, '>', $lapsedBefore);
-                        });
+                        })
+                        // whereDate, not a plain comparison, for the reason
+                        // spelled out in BookingController::store: check_in is
+                        // a DATE column and a driver that stores it with a
+                        // midnight time component turns this into the wrong
+                        // question.
+                        ->whereDate($checkIn, '>=', $liveFrom);
                 });
         });
     }
@@ -112,6 +126,10 @@ class Booking extends Model
         'guest_name',
         'guest_address',
         'guest_phone',
+        'guest_phone_alt',
+        // The office or person who endorsed this guest. See the migration for
+        // why the column is nullable while the public form insists on it.
+        'referred_by',
         'check_in',
         'check_out',
         'arrival_time',
@@ -229,6 +247,16 @@ class Booking extends Model
     public function checkouts()
     {
         return $this->hasMany(\App\Models\Checkout::class, 'booking_id');
+    }
+
+    /**
+     * Asks to move this stay. Plural because a declined or withdrawn request
+     * does not stop the guest trying again — only a *pending* one does, and
+     * that guard lives in RescheduleRequest::isOpenFor().
+     */
+    public function rescheduleRequests()
+    {
+        return $this->hasMany(\App\Models\RescheduleRequest::class);
     }
 
     public function payments()

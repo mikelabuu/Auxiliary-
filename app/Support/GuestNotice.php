@@ -6,7 +6,9 @@ use App\Mail\BookingCancelledMail;
 use App\Mail\BookingExpiredMail;
 use App\Mail\BookingNoShowMail;
 use App\Mail\BookingReceivedMail;
+use App\Mail\RescheduleDecidedMail;
 use App\Models\Booking;
+use App\Models\RescheduleRequest;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -33,6 +35,21 @@ class GuestNotice
     }
 
     /**
+     * A discount decision landed and the booking is now payable.
+     *
+     * The moment that actually starts the clock for a Senior/PWD guest. Their
+     * booking sat in `pending_discount` — no amount, no deadline, nothing owed
+     * — until staff decided; approving or rejecting is what moves it to
+     * `pending_payment` and opens the payment window against them. Before this,
+     * the only way to learn that was to have the booking page open at the
+     * moment of the decision.
+     */
+    public static function discountDecided(Booking $booking): void
+    {
+        self::send($booking, new BookingReceivedMail($booking, afterDiscountDecision: true), 'discount decision notice');
+    }
+
+    /**
      * The payment window closed and bookings:expire released the rooms.
      *
      * The guest was promised a deadline by bookingReceived() above; this is the
@@ -54,6 +71,23 @@ class GuestNotice
     public static function bookingNoShow(Booking $booking): void
     {
         self::send($booking, new BookingNoShowMail($booking), 'no-show notice');
+    }
+
+    /**
+     * The desk's answer to a request to move a paid stay.
+     *
+     * The single most consequential mail here after the receipt. An approval
+     * changes the dates the guest is expected on; a decline leaves them holding
+     * a booking for dates they have already said they cannot make, with the
+     * no-show sweep still coming. Neither is something to learn by refreshing.
+     */
+    public static function rescheduleDecided(Booking $booking, RescheduleRequest $reschedule): void
+    {
+        self::send(
+            $booking,
+            new RescheduleDecidedMail($booking, $reschedule),
+            'reschedule decision notice'
+        );
     }
 
     /**

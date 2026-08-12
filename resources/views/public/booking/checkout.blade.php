@@ -74,7 +74,9 @@
                 @csrf
 
                 <!-- Hidden aggregate values needed for backend forms -->
-                <input type="hidden" name="room_numbers" id="selected_room_number">
+                {{-- `room_numbers` went with the picker. The guest chooses a
+                     room style; BookingController::store assigns the actual
+                     rooms from what is free at the moment it commits. --}}
                 <input type="hidden" name="num_seniors" id="num_seniors" value="0">
                 <input type="hidden" name="check_in" id="check_in_hidden">
                 <input type="hidden" name="check_out" id="check_out_hidden">
@@ -186,22 +188,35 @@
 
                         {{-- The badges below have always promised an "Instant hold"
                              without ever saying how long it lasts. It is
-                             config('bookings.expiry_minutes') and
-                             ExpireBookingsCommand really does drop the booking, so
-                             the number belongs on the page the guest is agreeing on
-                             — not only in the confirmation email. --}}
+                             App\Support\PaymentWindow and ExpireBookingsCommand
+                             really does drop the booking, so the number belongs on
+                             the page the guest is agreeing on — not only in the
+                             confirmation email. --}}
                         <div class="mb-4 rounded-2xl border border-emerald-deep/10 bg-white/50 p-3.5">
                             <p class="flex items-start gap-2 text-[11px] font-semibold text-stone-600 leading-relaxed">
                                 <i class="fa-solid fa-hourglass-half mt-px text-[13px] text-palay-800"></i>
-                                <span>Your rooms are held for <strong class="text-ink">{{ $holdMinutes >= 60 && $holdMinutes % 60 === 0 ? ($holdMinutes / 60) . ' hour' . ($holdMinutes > 60 ? 's' : '') : $holdMinutes . ' minutes' }}</strong> after you confirm. Pay within that window or they're released back to other guests.</span>
+                                <span>Your rooms are held for <strong class="text-ink">{{ $holdLabel }}</strong> after you confirm — or until check-in on your arrival day, if that comes first. Pay within that window or they're released back to other guests.</span>
+                            </p>
+                        </div>
+
+                        {{-- Ticking the Senior/PWD box changes how this booking is
+                             paid, and the guest ticked it two steps ago on a
+                             screen they can no longer see. Said here, next to the
+                             button, rather than discovered on the payment page. --}}
+                        <div id="deskPaymentNotice" class="mb-4 hidden rounded-2xl border border-gold/40 bg-gold/10 p-3.5">
+                            <p class="flex items-start gap-2 text-[11px] font-semibold text-palay-800 leading-relaxed">
+                                <i class="fa-solid fa-building-columns mt-px text-[13px]"></i>
+                                <span>You asked for the Senior&nbsp;/&nbsp;PWD discount, so this booking is <strong>settled at our front desk</strong> — not online. Bring the original ID for every discounted guest.</span>
                             </p>
                         </div>
 
                         {{-- A booking used to be agreed to in silence. The terms are
-                             stated inline rather than behind a link because they are
-                             three lines long and every one of them is enforced in
-                             code: the hold above, cancelBooking()'s unpaid-only rule,
-                             and the configured check-in time the confirmation page states. --}}
+                             stated inline rather than behind a link because every one
+                             of them is enforced in code: the hold above,
+                             cancelBooking()'s unpaid-only rule, the reschedule
+                             deadline in RescheduleRequestController, and the
+                             configured check-in time the confirmation page states.
+                             Nothing is promised here that the system does not do. --}}
                         <div class="mb-4">
                             <label for="accept_terms" class="flex items-start gap-2.5 cursor-pointer select-none">
                                 <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required
@@ -210,7 +225,7 @@
                                 <span class="text-[11px] font-semibold text-stone-600 leading-relaxed">
                                     I agree to the booking terms
                                     <span class="block font-medium text-stone-500 mt-1">
-                                        Check-in from {{ $checkinTime }} with a valid ID for every guest. Bookings can be cancelled free of charge while payment is still pending; once paid, cancellations are handled by the front desk. Unpaid bookings are released automatically.
+                                        Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong class="text-stone-600">A paid booking cannot be cancelled</strong> — if your plans change, request a reschedule before {{ $checkinTime }} on your check-in day. Miss that and the booking is forfeited with no refund.
                                     </span>
                                 </span>
                             </label>
@@ -221,13 +236,13 @@
                             Confirm Booking
                         </button>
                         <div class="mt-4 grid grid-cols-3 gap-1 text-center">
-                            <div class="text-[9px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
                                 <i class="fa-solid fa-lock text-[16px] text-palay-800"></i> Secure
                             </div>
-                            <div class="text-[9px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
                                 <i class="fa-solid fa-ban text-[16px] text-palay-800"></i> No prepayment
                             </div>
-                            <div class="text-[9px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
                                 <i class="fa-solid fa-circle-check text-[16px] text-palay-800"></i> Instant hold
                             </div>
                         </div>
@@ -240,7 +255,7 @@
     <!-- Mobile sticky total bar (summary column is off-screen on phones) -->
     <div class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-cream-warm/95 backdrop-blur-xl border-t border-emerald-deep/15 px-4 py-3 shadow-[0_-16px_40px_-20px_rgba(6,40,30,0.35)] flex items-center justify-between gap-3">
         <div>
-            <p class="text-[9px] font-bold text-stone-500 uppercase tracking-[0.28em] leading-none">Total due</p>
+            <p class="text-[10px] font-bold text-stone-500 uppercase tracking-[0.28em] leading-none">Total due</p>
             {{-- "—" until a real total exists; ₱0 due would be a false statement --}}
             <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">-</p>
             <p id="mobileMetaLine" class="text-[10px] font-semibold text-stone-500 mt-0.5"></p>
@@ -267,6 +282,43 @@
     window.ROOM_TYPES_CONFIG = @json($roomTypes);
 </script>
 <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
+
+<script>
+    // Senior/PWD bookings are settled in person (PaymentController refuses the
+    // online route for them), so the notice beside the confirm button follows
+    // the checkbox two steps up the form rather than waiting to surprise the
+    // guest on a payment page that turns them away.
+    document.addEventListener('DOMContentLoaded', function () {
+        const box = document.getElementById('request_discount');
+        const notice = document.getElementById('deskPaymentNotice');
+        if (!box || !notice) return;
+
+        const sync = () => notice.classList.toggle('hidden', !box.checked);
+        box.addEventListener('change', sync);
+        sync();
+    });
+
+    // Early check-in is a request the desk grants, not a slot the form sells.
+    // The caveat appears only when the guest picks a time before check-in, so
+    // it reads as an answer to what they just did rather than standing small
+    // print nobody attributes to anything.
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('arrival_time');
+        const note = document.getElementById('earlyCheckinNote');
+        if (!select || !note) return;
+
+        const checkinTime = @json(config('hostel.checkin_time', '14:00'));
+        const sync = () => {
+            const v = select.value;
+            // '00:00' is the "after midnight" catch-all at the end of the list,
+            // not an early arrival — same carve-out as StaySchedule.
+            const early = v !== '' && v !== '00:00' && v < checkinTime;
+            note.classList.toggle('hidden', !early);
+        };
+        select.addEventListener('change', sync);
+        sync();
+    });
+</script>
 
 @if ($errors->any() || session('error'))
 <script>

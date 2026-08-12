@@ -32,11 +32,11 @@ return [
     | The daily deadline bookings:autocheckout enforces, in the operating
     | timezone above. Anything that has to agree with check-out — the reminder
     | that fires ahead of it, a future grace period, the wording on a receipt —
-    | should read it from here rather than restating 14:00.
+    | should read it from here rather than restating the time.
     |
     */
 
-    'checkout_time' => env('HOSTEL_CHECKOUT_TIME', '14:00'),
+    'checkout_time' => env('HOSTEL_CHECKOUT_TIME', '12:00'),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,9 +46,12 @@ return [
     | When the desk starts admitting guests, and the first slot offered in the
     | booking form's "estimated arrival" list.
     |
-    | Separate from checkout_time on purpose. Both are 14:00 today, and that is
-    | a coincidence of policy, not one fact — folding them together would mean
-    | moving check-out silently rewrote what the site promises arriving guests.
+    | Separate from checkout_time on purpose, and the split has now earned
+    | itself: they were both 14:00 for a long time, which looked like one fact
+    | written twice. It was never one fact, and check-out has since moved to
+    | noon while check-in stayed at 2 PM. Folding them together would have made
+    | that change silently rewrite what the site promises arriving guests.
+    |
     | It was written out as "2:00 PM" in ten places across six guest-facing
     | pages and the confirmation email, so a change to it used to mean finding
     | all ten.

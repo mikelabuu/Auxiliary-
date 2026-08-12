@@ -29,15 +29,23 @@
                         // Step 1 names an action — so it IS the action: a link
                         // to the payment CTA (or the discount upload) instead of
                         // plain text that lives a scroll away from its button.
-                        $nextSteps = ($booking->wants_discount && $booking->status === 'pending_discount')
-                            ? [
+                        $nextSteps = match (true) {
+                            $booking->wants_discount && $booking->status === 'pending_discount' => [
                                 ['text' => 'Upload your Senior / PWD IDs for the 20% discount review.', 'href' => $discountRequested ? null : route('discount.create', $booking->id)],
-                                ['text' => 'Once approved, settle the discounted amount to confirm your stay.', 'href' => null],
-                            ]
-                            : [
+                                ['text' => 'Once approved, pay the discounted amount at our front desk with the original IDs.', 'href' => null],
+                            ],
+                            // Approved and now owed — but a discounted rate is
+                            // settled in person, so the step must not point at a
+                            // payment page PaymentController will turn them away from.
+                            (bool) $booking->wants_discount => [
+                                ['text' => 'Pay at our front desk — bring the original Senior / PWD ID for every discounted guest.', 'href' => '#paymentCta'],
+                                ['text' => 'Keep your receipt. You\'ll get it right after payment.', 'href' => null],
+                            ],
+                            default => [
                                 ['text' => 'Settle your payment to lock in the reservation.', 'href' => $booking->status === 'pending_payment' ? '#paymentCta' : null],
                                 ['text' => 'Keep your receipt. You\'ll get it right after payment.', 'href' => null],
-                            ];
+                            ],
+                        };
                         $nextSteps[] = ['text' => 'Check in from ' . $checkinTime . ' on ' . $booking->check_in->format('M d') . ' with a valid ID.', 'href' => null];
                     @endphp
                     {{-- .next-step-card: cards deal out in order after the checkmark draw (app.css) --}}
@@ -58,16 +66,21 @@
     {{-- ── Hold countdown ──────────────────────────────────────────────
          The page has always said the rooms are "on hold" without saying
          for how long, while bookings:expire silently cancels the booking
-         after config('bookings.expiry_minutes'). A guest could sit on this
-         screen and watch the reservation die with no warning. The window is
-         real, so state it and count it down. --}}
+         after the payment window. A guest could sit on this screen and watch
+         the reservation die with no warning. The window is real, so state it
+         and count it down. --}}
     @php
-        $holdEndsAt = null;
-        if ($booking->status === 'pending_payment' && $booking->pending_payment_since) {
-            $holdEndsAt = $booking->pending_payment_since->copy()
-                ->addMinutes((int) config('bookings.expiry_minutes'));
-        }
-        $holdWindow = (int) config('bookings.expiry_minutes') * 60;
+        $holdEndsAt = \App\Support\PaymentWindow::deadlineFor($booking);
+        // Per booking, not the configured window: a hold cut short by the
+        // check-in cap is genuinely shorter, and a bar measured against the
+        // full 24 hours would open two-thirds empty and drain at the wrong rate.
+        $holdWindow = \App\Support\PaymentWindow::secondsFor($booking);
+        $paysAtDesk = (bool) $booking->wants_discount;
+        // Whether the cap is what is ending this hold, rather than the window.
+        // "Pay within 24 hours" is not the instruction when the real deadline
+        // is this afternoon.
+        $holdEndsAtArrival = $holdEndsAt
+            && $holdEndsAt->equalTo(\App\Support\PaymentWindow::checkInMomentFor($booking));
     @endphp
 
     @if($holdEndsAt && $holdEndsAt->isFuture())
@@ -79,7 +92,17 @@
                 <div class="hold-bar__copy">
                     <p class="hold-bar__label">Rooms held for you</p>
                     <p class="hold-bar__note">
-                        Settle the payment before the timer runs out or these rooms go back on sale.
+                        @if($holdEndsAtArrival)
+                            {{-- The cap, not the window. Say which deadline this
+                                 is, because "you have 24 hours" would be a lie
+                                 on a stay that starts this afternoon. --}}
+                            Your stay starts {{ $booking->check_in->isToday() ? 'today' : $booking->check_in->format('M d') }},
+                            so this must be settled {{ $paysAtDesk ? 'at our front desk ' : '' }}by check-in at {{ $checkinTime }} — not the usual {{ \App\Support\PaymentWindow::label() }}.
+                        @elseif($paysAtDesk)
+                            Settle at our front desk before the timer runs out or these rooms go back on sale.
+                        @else
+                            Settle the payment before the timer runs out or these rooms go back on sale.
+                        @endif
                     </p>
                 </div>
                 {{-- aria-live on the wrapper, not the digits: announcing every
@@ -152,11 +175,20 @@
                     <div>
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Contact Number</span>
                         <span class="text-ink text-base font-bold">{{ $booking->guest_phone }}</span>
+                        @if($booking->guest_phone_alt)
+                            <span class="block text-stone-700 text-sm font-bold mt-0.5">{{ $booking->guest_phone_alt }}</span>
+                        @endif
                     </div>
                     <div class="sm:col-span-2">
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Address</span>
                         <span class="text-stone-700 leading-relaxed font-bold">{{ $booking->guest_address }}</span>
                     </div>
+                    @if ($booking->referred_by)
+                        <div class="sm:col-span-2">
+                            <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Endorsed by</span>
+                            <span class="text-stone-700 font-bold">{{ $booking->referred_by }}</span>
+                        </div>
+                    @endif
                     <div>
                         <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Expected Guests</span>
                         <span class="text-ink font-bold">{{ $booking->expected_guests }} Pax</span>
@@ -325,7 +357,26 @@
                         @endphp
 
                         <div id="paymentCta" class="pt-4 border-t border-emerald-deep/10 scroll-mt-28">
-                            @if($awaitingProof)
+                            @if($paysAtDesk)
+                                {{-- A discounted rate is granted against an original
+                                     ID, which cannot be handed over through a form.
+                                     PaymentController refuses this booking's online
+                                     route, so the page must not offer it — it says
+                                     where to go and what to bring instead. --}}
+                                <div class="flex flex-col gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
+                                    <div class="flex gap-2 text-palay-800">
+                                        <i class="fa-solid fa-building-columns text-[16px] flex-shrink-0 mt-0.5"></i>
+                                        <div class="font-bold leading-relaxed">
+                                            Settle this booking at our front desk. A Senior Citizen / PWD discount cannot be paid online — bring the original ID for every discounted guest and we will take payment in person.
+                                        </div>
+                                    </div>
+                                    @if($holdEndsAt)
+                                        <p class="text-[11px] font-semibold text-stone-500">
+                                            Come in before <span class="tabnum">{{ $holdEndsAt->timezone(config('hostel.timezone'))->format('g:i A, M d') }}</span> or the rooms go back on sale.
+                                        </p>
+                                    @endif
+                                </div>
+                            @elseif($awaitingProof)
                                 {{-- The guest has paid and proved it; the ball is with the front
                                      desk now, so the pay button would only invite a double payment. --}}
                                 <div class="flex flex-col gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
@@ -364,6 +415,57 @@
                     @endif
                 </div>
             </div>
+
+            {{-- ── Changing a paid stay ─────────────────────────────────
+                 There is no Cancel here, and that is the policy rather than an
+                 omission: the rooms came off sale when the money landed. What a
+                 guest can do is ask to move the stay, and only with a full
+                 day's notice before check-in — so the card says the deadline
+                 out loud and disappears once it has passed, because a button
+                 the server would refuse is worse than no button at all. --}}
+            @if(in_array($booking->status, \App\Models\RescheduleRequest::RESCHEDULABLE_STATUSES, true))
+                @php
+                    $openReschedule = \App\Models\RescheduleRequest::openFor($booking);
+                    $rescheduleDeadline = \App\Models\RescheduleRequest::deadlineFor($booking);
+                @endphp
+
+                <div class="bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] p-6">
+                    <div class="flex items-center gap-2.5 mb-4 border-b border-emerald-deep/10 pb-4">
+                        <span class="w-9 h-9 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-calendar-days text-[18px]"></i>
+                        </span>
+                        <h3 class="text-lg font-semibold text-ink tracking-tight font-display">Can't make it?</h3>
+                    </div>
+
+                    @if($openReschedule)
+                        <p class="text-xs font-semibold text-stone-600 leading-relaxed">
+                            You asked to move this stay to
+                            <strong class="text-ink">{{ $openReschedule->requested_check_in->format('M d') }} – {{ $openReschedule->requested_check_out->format('M d, Y') }}</strong>.
+                            Our front desk is checking whether your rooms are free and will email you the answer.
+                        </p>
+                        <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="press !no-underline mt-4 w-full py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-gold/12 text-palay-800 ring-1 ring-gold/40 hover:bg-gold hover:text-night transition-colors cursor-pointer">
+                            View request
+                        </a>
+                    @elseif($rescheduleDeadline->isFuture())
+                        <p class="text-xs font-semibold text-stone-600 leading-relaxed">
+                            A paid booking can't be cancelled, but we can move it. Tell us by
+                            <strong class="text-ink">{{ $rescheduleDeadline->format('g:i A') }} on {{ $rescheduleDeadline->format('M d') }}</strong>
+                            — 24 hours before your {{ $booking->check_in->format('M d') }} check-in — and we'll try to find you new dates.
+                        </p>
+                        <p class="text-[11px] font-medium text-stone-500 leading-relaxed mt-2">
+                            After that we can't move it, and a booking nobody checks in to is forfeited — no refund.
+                        </p>
+                        <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="press !no-underline mt-4 w-full py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-gold/12 text-palay-800 ring-1 ring-gold/40 hover:bg-gold hover:text-night transition-colors cursor-pointer">
+                            <i class="fa-solid fa-calendar-days text-[15px]"></i>
+                            Request a reschedule
+                        </a>
+                    @else
+                        <p class="text-xs font-semibold text-stone-600 leading-relaxed">
+                            The deadline to move this stay has passed — we needed 24 hours' notice, so it closed {{ $rescheduleDeadline->format('g:i A, M d') }}. Please call our front desk.
+                        </p>
+                    @endif
+                </div>
+            @endif
 
             <!-- Navigation control links -->
             <a href="{{ route('settings.bookings') }}" class="press !no-underline w-full py-3 rounded-full flex items-center justify-center gap-1.5 text-sm font-bold text-stone-700 bg-white/70 ring-1 ring-emerald-deep/10 hover:bg-white hover:text-ink transition-colors cursor-pointer">
@@ -432,6 +534,7 @@
         const window_ = Number(bar.dataset.holdWindow) * 1000;
         const clock = bar.querySelector('[data-hold-clock]');
         const fill = bar.querySelector('[data-hold-fill]');
+        const pad = (n) => String(n).padStart(2, '0');
         let lastMinute = null;
 
         function tick() {
@@ -448,20 +551,32 @@
                 return;
             }
 
+            // HH:MM:SS once the window is long enough to need it. The payment
+            // window is 24 hours, and MM:SS rendered that as "1439:59" — a
+            // number nobody reads as "a day".
             const total = Math.ceil(left / 1000);
-            const mins = Math.floor(total / 60);
+            const hours = Math.floor(total / 3600);
+            const mins = Math.floor(total / 60) % 60;
             const secs = total % 60;
-            clock.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            clock.textContent = hours > 0
+                ? pad(hours) + ':' + pad(mins) + ':' + pad(secs)
+                : pad(mins) + ':' + pad(secs);
 
             // Re-announce on the minute only — a per-second live region is
             // unusable with a screen reader.
-            if (mins !== lastMinute) {
-                clock.setAttribute('aria-label', mins + ' minutes left to pay');
-                lastMinute = mins;
+            const totalMins = Math.floor(total / 60);
+            if (totalMins !== lastMinute) {
+                clock.setAttribute('aria-label', hours > 0
+                    ? hours + ' hours ' + mins + ' minutes left to pay'
+                    : totalMins + ' minutes left to pay');
+                lastMinute = totalMins;
             }
 
             fill.style.transform = 'scaleX(' + Math.max(0, Math.min(1, left / window_)) + ')';
-            bar.classList.toggle('is-urgent', left <= 10 * 60 * 1000);
+            // Urgent in the last hour, or the last tenth of a shorter window —
+            // ten minutes out of twenty-four hours is a warning nobody is
+            // still on the page to see.
+            bar.classList.toggle('is-urgent', left <= Math.min(60 * 60 * 1000, window_ / 6));
 
             requestAnimationFrame(() => setTimeout(tick, 1000));
         }

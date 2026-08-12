@@ -198,10 +198,16 @@ class DiscountAdminController extends Controller
                 'reviewed_at' => now(),
             ]);
 
+            // wants_discount is cleared alongside the amount. There is no
+            // discount to prove at the desk any more, so this booking pays the
+            // ordinary rate online like any other — leaving the flag set would
+            // have PaymentController turn the guest away with an instruction
+            // to bring IDs that have just been rejected.
             $booking = $discount->booking;
             $booking->update([
                 'discount' => 0,
                 'payable_amount' => $booking->total_price,
+                'wants_discount' => false,
                 'status' => 'pending_payment',
             ]);
 
@@ -237,6 +243,13 @@ class DiscountAdminController extends Controller
         if (BookingStatusChanged::shouldEmitFor($booking)) {
             Realtime::emit(BookingStatusChanged::for($booking));
         }
+
+        // The broadcast above only reaches a browser that happens to be open on
+        // the booking page. Everyone else needs telling, because this decision
+        // is what put the booking on the payment clock: either it goes to the
+        // desk with an approved discount, or it can be paid online at the full
+        // rate — and in both cases the window is now running against them.
+        \App\Support\GuestNotice::discountDecided($booking);
     }
 
     public function previewFile(DiscountFile $file)

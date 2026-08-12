@@ -82,6 +82,16 @@ trait CreatesStaffBooking
         $request->validate([
             'guest_name'      => ['required', 'string', 'max:255', new PersonName],
             'guest_phone'     => 'required|string|max:20',
+            // Optional second number. Looser than the public form's regex on
+            // purpose: the desk takes whatever a walk-in actually gives them,
+            // landline included, and the first number was never held to the
+            // strict shape here either.
+            'guest_phone_alt' => 'nullable|string|max:20|different:guest_phone',
+            // Optional here, unlike the public form. The desk is typing this
+            // with a guest in front of them and already knows who walked in;
+            // holding up a counter over an endorsement field would be the
+            // wrong trade. See the migration.
+            'referred_by'     => 'nullable|string|max:255',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
             'expected_guests' => 'required|integer|min:1',
@@ -264,6 +274,8 @@ trait CreatesStaffBooking
                 'guest_name'      => $request->guest_name,
                 'guest_address'   => $guest_address,
                 'guest_phone'     => $request->guest_phone,
+                'guest_phone_alt' => $request->guest_phone_alt ?: null,
+                'referred_by'     => trim((string) $request->referred_by) ?: null,
                 'check_in'        => $request->check_in,
                 'check_out'       => $request->check_out,
                 'discount'        => $discount,

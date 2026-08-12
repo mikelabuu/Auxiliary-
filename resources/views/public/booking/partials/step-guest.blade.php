@@ -40,12 +40,53 @@
     </div>
 </div>
 
-<div class="mt-4">
-    <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Contact Number</label>
-    <div class="relative flex items-center">
-        <i class="fa-solid fa-phone text-stone-500 absolute left-3.5 text-[18px]"></i>
-        <input type="tel" name="guest_phone" id="guest_phone" value="{{ old('guest_phone', $prefill['guest_phone'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
-               inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13" required>
+{{-- Two numbers, not one. A single contact is a single point of failure on
+     the day it matters — the phone is off, or it is in the room the desk is
+     ringing about. The second is optional: a guest who genuinely has only one
+     number should not be blocked from booking over it. --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+    <div>
+        <label for="guest_phone" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Contact Number</label>
+        <div class="relative flex items-center">
+            <i class="fa-solid fa-phone text-stone-500 absolute left-3.5 text-[18px]"></i>
+            <input type="tel" name="guest_phone" id="guest_phone" value="{{ old('guest_phone', $prefill['guest_phone'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                   inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13" required>
+        </div>
+    </div>
+    <div>
+        <label for="guest_phone_alt" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
+            Second Contact Number <span class="text-stone-500 font-medium normal-case">(Optional)</span>
+        </label>
+        <div class="relative flex items-center">
+            <i class="fa-solid fa-phone-volume text-stone-500 absolute left-3.5 text-[18px]"></i>
+            <input type="tel" name="guest_phone_alt" id="guest_phone_alt" value="{{ old('guest_phone_alt', $prefill['guest_phone_alt'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                   inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13">
+        </div>
+        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Someone else we can reach if we can't get you.</p>
+    </div>
+
+    {{-- Who endorsed this guest.
+         A lot of stays here are arranged on somebody's word — a department
+         booking a visiting lecturer, an office putting up a contractor — and
+         the desk needs to know whose. Full width because the answer is a name
+         or an office, not a number, and it reads badly squeezed into a column.
+         "Booking for myself" is offered because it is the honest answer for a
+         guest nobody sent, and without it that guest will invent something. --}}
+    <div class="sm:col-span-2">
+        <label for="referred_by" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
+            Endorsed by
+        </label>
+        <div class="relative flex items-center">
+            <i class="fa-solid fa-user-tie text-stone-500 absolute left-3.5 text-[18px]"></i>
+            <input type="text" name="referred_by" id="referred_by" value="{{ old('referred_by') }}" maxlength="255" required
+                   list="referredBySuggestions"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                   placeholder="Office or person endorsing you — or “Booking for myself”">
+            <datalist id="referredBySuggestions">
+                <option value="Booking for myself"></option>
+            </datalist>
+        </div>
+        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Which CLSU office or staff member is endorsing this stay. If nobody sent you, say so — it is a perfectly good answer.</p>
     </div>
 </div>
 
@@ -92,12 +133,21 @@
             <select name="arrival_time" id="arrival_time" class="w-full appearance-none pl-10 pr-9 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold cursor-pointer">
                 <option value="">Not sure yet</option>
                 @foreach (\App\Support\StaySchedule::arrivalSlots() as $slot => $slotLabel)
-                    <option value="{{ $slot }}" @selected(old('arrival_time') === $slot)>{{ $slotLabel }}</option>
+                    {{-- Slots before check-in are labelled as requests, because
+                         that is what they are: the room may still have last
+                         night's guest in it until {{ $checkoutTime }}. --}}
+                    <option value="{{ $slot }}" @selected(old('arrival_time') === $slot)>
+                        {{ $slotLabel }}@if(\App\Support\StaySchedule::isEarlyArrival($slot)) — early check-in (on request)@endif
+                    </option>
                 @endforeach
             </select>
             <i class="fa-solid fa-chevron-down text-stone-500 absolute right-3.5 text-[13px] pointer-events-none"></i>
         </div>
         <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at {{ $checkinTime }}. The front desk is staffed 24/7, so a late arrival is fine. It just helps to know.</p>
+        <p id="earlyCheckinNote" class="hidden text-[11px] font-semibold text-palay-800 mt-1.5 leading-relaxed">
+            <i class="fa-solid fa-circle-info text-[12px]"></i>
+            Early check-in is a request, not a guarantee — the room has to be vacated and cleaned first ({{ $checkoutTime }} check-out). We'll hold your things at the desk if it isn't ready.
+        </p>
     </div>
     <div>
         <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5" for="special_requests">

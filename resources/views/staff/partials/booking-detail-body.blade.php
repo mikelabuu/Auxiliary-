@@ -97,6 +97,12 @@
                     @php
                         $contactRows = array_values(array_filter([
                             ['icon' => 'phone', 'label' => 'Phone', 'value' => $booking->guest_phone ?: '—', 'mono' => true],
+                            // Only when there is one — an empty "Second phone —"
+                            // row is a dead line in a panel staff scan in a hurry.
+                            $booking->guest_phone_alt ? ['icon' => 'phone', 'label' => 'Second phone', 'value' => $booking->guest_phone_alt, 'mono' => true] : null,
+                            // Who vouched for this guest. Blank on anything booked
+                            // before the field existed, and on walk-ins.
+                            $booking->referred_by ? ['icon' => 'user', 'label' => 'Endorsed by', 'value' => $booking->referred_by] : null,
                             $booking->user?->email ? ['icon' => 'mail', 'label' => 'Email', 'value' => $booking->user->email, 'mono' => false] : null,
                             ['icon' => 'map-pin', 'label' => 'Address', 'value' => $booking->guest_address ?: '—', 'mono' => false],
                         ]));
@@ -162,10 +168,19 @@
                     // Only when the guest actually told us. A blank slot is
                     // more honest than "—", which reads as data we lost.
                     if ($booking->arrival_time) {
+                        // An arrival before check-in is a request the desk has
+                        // to decide on — the room may not be turned over yet —
+                        // so it is labelled as one rather than sitting in the
+                        // row as though it were already agreed.
+                        $early = \App\Support\StaySchedule::isEarlyArrival(
+                            \Carbon\Carbon::parse($booking->arrival_time)->format('H:i')
+                        );
+
                         $facts[] = [
                             'icon'  => 'clock',
-                            'label' => 'Est. Arrival',
-                            'value' => \Carbon\Carbon::parse($booking->arrival_time)->format('g:i A'),
+                            'label' => $early ? 'Early check-in asked' : 'Est. Arrival',
+                            'value' => \Carbon\Carbon::parse($booking->arrival_time)->format('g:i A')
+                                . ($early ? ' · before ' . \App\Support\StaySchedule::checkinLabel() : ''),
                         ];
                     }
                 @endphp

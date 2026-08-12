@@ -52,6 +52,26 @@ class GuestBookingUpdated implements ShouldBroadcastNow
         );
     }
 
+    /**
+     * The desk has decided on a request to move a paid stay.
+     *
+     * The new dates are in the message on approval because they are the whole
+     * point of the decision, and they are already the guest's own — nothing
+     * here is information they did not supply.
+     */
+    public static function rescheduleDecided(Booking $booking, bool $approved): self
+    {
+        return new self(
+            $booking->user_id,
+            $booking->id,
+            (string) $booking->status,
+            $approved
+                ? "Booking #{$booking->id} has been moved to "
+                    . $booking->check_in->format('M d') . ' – ' . $booking->check_out->format('M d') . '.'
+                : "Your request to move booking #{$booking->id} was not approved. Check your email for the reason.",
+        );
+    }
+
     public static function paymentRejected(Booking $booking, string $reason): self
     {
         return new self(

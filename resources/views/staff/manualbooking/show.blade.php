@@ -63,6 +63,9 @@
                     <div>
                         <p class="text-2xs font-bold text-faint tracking-widest uppercase">Phone</p>
                         <p class="text-sm font-semibold text-stone-800">{{ $booking->guest_phone }}</p>
+                        @if($booking->guest_phone_alt)
+                            <p class="text-xs text-faint mt-0.5">Also {{ $booking->guest_phone_alt }}</p>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-start gap-3">

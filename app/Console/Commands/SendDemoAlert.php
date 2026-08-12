@@ -51,7 +51,10 @@ class SendDemoAlert extends Command
         ],
         'checkout_due' => [
             'title' => 'Checkout due today',
-            'text' => '#0000 · Demo Guest · Room 000 — due by 2:00 PM',
+            // Placeholder — the real check-out time is substituted in handle().
+            // A const cannot call anything, and hard-coding "2:00 PM" here is
+            // what made this demo start lying the day check-out moved to noon.
+            'text' => '#0000 · Demo Guest · Room 000 — due by :checkout',
             'level' => 'warning',
             'route' => 'staff.bookings.index',
         ],
@@ -68,6 +71,12 @@ class SendDemoAlert extends Command
         }
 
         $sample = self::SAMPLES[$type];
+
+        // Resolve the placeholders a const could not hold, so the demo states
+        // the times the system actually enforces.
+        $sample['text'] = strtr($sample['text'], [
+            ':checkout' => \App\Support\StaySchedule::checkoutLabel(),
+        ]);
 
         // A fresh id every run, so repeated demos are not de-duplicated by the
         // client (which drops ids it has already shown, by design).

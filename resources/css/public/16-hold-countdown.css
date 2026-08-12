@@ -1,17 +1,17 @@
 /* Part 16 of the public bundle — the payment hold countdown.
    Imported in order by resources/css/app.css; do not reorder.
 
-   `bookings:expire` cancels a pending_payment booking once
-   config('bookings.expiry_minutes') has passed, and the booking summary page
-   used to say only that the rooms were "on hold" — no indication that the
-   hold had a deadline at all. A guest could sit on that page and watch the
-   reservation die without warning.
+   `bookings:expire` cancels a pending_payment booking once the payment window
+   (App\Support\PaymentWindow) has passed, and the booking summary page used to
+   say only that the rooms were "on hold" — no indication that the hold had a
+   deadline at all. A guest could sit on that page and watch the reservation
+   die without warning.
 
    The bar states the window and counts it down. Three states, because urgency
    should escalate rather than shout from the start:
 
      default   gold      plenty of time, informational
-     is-urgent ember     under ten minutes, worth interrupting for
+     is-urgent ember     the last hour, worth interrupting for
      is-expired muted    the timer ran out; the page is about to reload
 
    Colour is never the only signal — the digits and the copy carry the same

@@ -22,7 +22,20 @@ class MarkNoShowBookings extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Mark paid bookings as no_show when their check-in day has passed (runs just after midnight Manila).';
+    protected $description = 'Forfeit paid bookings whose check-in day passed with nobody arriving (runs just after midnight Manila).';
+
+    /**
+     * The enforcement end of the house policy: a paid booking cannot be
+     * cancelled, only moved, and only if the guest asks before check-in time on
+     * their check-in (App\Models\RescheduleRequest::deadlineFor). This is
+     * what happens when they do neither — the booking is forfeited with no
+     * refund and the rooms go back on sale.
+     *
+     * Runs after midnight rather than at the check-in deadline, deliberately.
+     * Check-in time is when the desk *starts* admitting guests, not when it
+     * stops: someone arriving at 9 PM is late, not absent. The reschedule
+     * deadline and the forfeiture are two different moments on the same day.
+     */
 
     /**
      * Execute the console command.
@@ -34,6 +47,13 @@ class MarkNoShowBookings extends Command
 
         $bookings = Booking::where('status', 'paid')
             ->whereDate('check_in', '<', $now->toDateString())
+            // A guest who asked to move the stay in time has done the one thing
+            // the policy asks of them. Forfeiting them because nobody at the
+            // desk has answered yet would punish them for our own queue, and it
+            // is the exact case the rule was written to protect. The hold stays
+            // until a person decides — approve and the dates move, decline and
+            // this sweep collects it the following night.
+            ->whereDoesntHave('rescheduleRequests', fn ($q) => $q->pending())
             ->get();
 
         if ($bookings->isEmpty()) {
@@ -51,7 +71,12 @@ class MarkNoShowBookings extends Command
                     'booking_id' => $booking->id,
                     'previous_status' => $previousStatus,
                     'new_status' => 'no_show',
-                    'reason' => 'Guest did not check in by 11:00 PM.',
+                    // Was "did not check in by 11:00 PM", a time this command
+                    // never enforced — it runs after midnight and looks at the
+                    // whole day. The reason now states what actually happened
+                    // and what it costs, which is the same sentence the guest
+                    // agreed to at checkout and reads again in the no-show mail.
+                    'reason' => 'Guest did not check in on their arrival day and did not request a reschedule before check-in time. Booking forfeited, no refund.',
                     'marked_at' => $now,
                     'processed_by' => null,
                 ]);

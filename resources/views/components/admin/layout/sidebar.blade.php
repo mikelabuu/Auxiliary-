@@ -3,6 +3,7 @@
   $pendingBookingsCount = \App\Models\Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count();
   $pendingDiscountsCount = \App\Models\Discount::where('status', 'pending')->count();
   $pendingProofsCount = \App\Models\Payment::whereNotNull('proof_path')->awaitingVerification()->count();
+  $pendingReschedulesCount = \App\Models\RescheduleRequest::pending()->count();
   $staffUser = Auth::guard('staff')->user();
 @endphp
 
@@ -68,6 +69,16 @@
           Booking Logs
         </x-admin.layout.sidebar-dropdown-item>
       </x-admin.layout.sidebar-dropdown>
+
+      {{-- Sits with bookings, not with Financials: what this queue decides is
+           which nights a stay covers. The money it moves is settled at the desk
+           by hand, so it is a consequence rather than the subject. --}}
+      <x-admin.layout.sidebar-link :href="route('staff.reschedules.index')" :active="request()->routeIs('staff.reschedules.*')" :badge="$pendingReschedulesCount > 0 ? $pendingReschedulesCount : null">
+        <x-slot name="icon">
+          <x-admin.ui.icon name="calendar" />
+        </x-slot>
+        Reschedules
+      </x-admin.layout.sidebar-link>
 
       <x-admin.layout.sidebar-link :href="route('staff.manualbooking')" :active="request()->routeIs('staff.manualbooking')">
         <x-slot name="icon">

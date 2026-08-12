@@ -129,12 +129,35 @@ class PaymentController extends Controller
         abort_unless($booking->user_id === Auth::id(), 403);
     }
 
-    /** Only a booking actually awaiting payment may start one. */
+    /**
+     * Only a booking actually awaiting payment may start one — and only one
+     * that is allowed to be paid online at all.
+     *
+     * A Senior Citizen / PWD discount is granted against an original ID that
+     * has to be handed over and looked at. Uploading a photograph of one is
+     * how the discount is *requested*; it is not how the law says it is
+     * granted, and a receipt screenshot proves nothing about who is holding
+     * the card. So a discounted booking is settled at the front desk, in
+     * person, and this route refuses it rather than letting a guest pay online
+     * for a rate they have not yet established they are entitled to.
+     *
+     * `wants_discount` is the single condition because it is kept honest at
+     * both ends: BookingController::store only sets it when there are seniors
+     * on the booking, and it is cleared again the moment the request is
+     * withdrawn or rejected (DiscountController::cancel,
+     * DiscountAdminController::reject) — at which point the guest is paying
+     * the ordinary rate and this route opens back up.
+     */
     private function rejectIfNotPayable(Booking $booking)
     {
         if ($booking->status !== 'pending_payment') {
             return redirect()->route('booking.show', $booking->id)
                 ->with('error', 'This booking is not awaiting payment.');
+        }
+
+        if ($booking->wants_discount) {
+            return redirect()->route('booking.show', $booking->id)
+                ->with('error', 'A Senior Citizen / PWD booking is settled at our front desk. Bring the original ID for every discounted guest — we cannot take this payment online.');
         }
 
         return null;

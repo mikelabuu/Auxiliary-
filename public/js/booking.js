@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const check_out = document.getElementById('check_out');
   const check_in_hidden = document.getElementById('check_in_hidden');
   const check_out_hidden = document.getElementById('check_out_hidden');
-  const room_numbers_hidden = document.getElementById('selected_room_number');
   const bookingFormAlert = document.getElementById('bookingFormAlert');
   const expectedGuestsInput = document.getElementById('expected_guests');
   const maxSeniorsLabel = document.getElementById('maxSeniorsLabel');
@@ -123,7 +122,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   let nextBlockIndex = 0;
-  const selectedRoomNumbersSet = new Set();
+  // The set of room numbers claimed across blocks retired with the picker:
+  // a guest never names a room now, so two blocks cannot collide over one.
+  // BookingController::store draws each from a pool it shrinks as it assigns.
 
   window.addReservationBlock = function(prefill = {}) {
     const index = nextBlockIndex++;
@@ -139,9 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const resPrice = block.querySelector('.res-price');
     const resPriceHidden = block.querySelector('.res-price-hidden');
     const numSeniorsInput = block.querySelector('.res-num-seniors');
-    const btnCheck = block.querySelector('.btn-check-availability');
-    const roomTilesWrap = block.querySelector('.room-tiles-wrapper');
-    const roomNumberHidden = block.querySelector('.res-room-number-hidden');
     const btnRemove = block.querySelector('.btn-remove-block');
     const numGuestsInput = block.querySelector('.res-num-guests');
     const capacityHint = block.querySelector('.capacity-hint');
@@ -252,10 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
       refreshCapacityHint();
       applyCapacityLimits();
       syncTypeCards();
-      roomTilesWrap.innerHTML = '';
-      const prevSelected = roomNumberHidden.value;
-      if (prevSelected) selectedRoomNumbersSet.delete(prevSelected);
-      roomNumberHidden.value = '';
       updateAggregateHiddenInputs();
       // Re-scope the date pickers to the style now being shopped for. Without
       // this the calendar keeps answering a property-wide question: a hold on
@@ -263,11 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
       // though it is one of only two doubles.
       if (typeof window.refreshCalendarAvailability === 'function') {
         window.refreshCalendarAvailability();
-      }
-      if (check_in && check_out && check_in.value && check_out.value && roomTypeSelect.value) {
-        setTimeout(() => btnCheck.click(), 120);
-      } else if (roomTypeSelect.value) {
-        roomTilesWrap.innerHTML = '<div class="text-xs font-semibold text-stone-500 py-3 flex items-center gap-1.5"><i class="fa-solid fa-calendar-days text-[15px] text-palay-800"></i>Choose your check-in and check-out dates above to see open rooms.</div>';
       }
       generateBookingSummary();
     });
@@ -281,56 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
       generateBookingSummary();
     });
 
-    btnCheck.addEventListener('click', async () => {
-      const roomType = roomTypeSelect.value;
-      if (!roomType) { showFormError('Choose a room type first'); return; }
-      if (!check_in.value || !check_out.value) { showFormError('Please choose check-in/out dates'); return; }
-      
-      // Beautiful animated SVG spinner
-      roomTilesWrap.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-6 text-stone-500">
-            <svg class="animate-spin h-7 w-7 text-palay-800 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">Retrieving open rooms...</span>
-        </div>
-      `;
-
-      try {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const resp = await fetch('/rooms/available', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token},
-          body: JSON.stringify({ room_type: roomType, check_in: check_in.value, check_out: check_out.value })
-        });
-        if (!resp.ok) throw new Error('Network response not ok');
-        const data = await resp.json();
-        renderRoomTilesForBlock(index, data.rooms || [], block);
-      } catch (err) {
-        roomTilesWrap.innerHTML = '<div class="text-sm font-bold text-ember-500 py-4">Error checking availability</div>';
-        console.error(err);
-      }
-    });
-
-    // One-tap room assignment: picks the first open room that no other
-    // block has claimed. Acts as "fill if empty" — an existing pick stays.
-    const btnAutopick = block.querySelector('.btn-autopick');
-    btnAutopick && btnAutopick.addEventListener('click', () => {
-      if (!roomTypeSelect.value) { showFormError('Pick a room style first, then we can assign an open room.'); return; }
-      if (!check_in.value || !check_out.value) { showFormError('Choose your check-in and check-out dates first.'); return; }
-      if (block.querySelector('.room-tile.selected')) return; // already assigned
-      const tiles = block.querySelectorAll('.room-tile.available');
-      if (!tiles.length) { showFormError('No open rooms are loaded for this block yet. Use Refresh or try other dates.'); return; }
-      for (const t of tiles) {
-        if (!selectedRoomNumbersSet.has(t.dataset.roomNumber)) { t.click(); return; }
-      }
-      showFormError('Every open room of this style is already selected in another block.');
-    });
-
     btnRemove.addEventListener('click', () => {
-      const rn = roomNumberHidden.value;
-      if (rn) selectedRoomNumbersSet.delete(rn);
       // Opacity-only exit (reduced-motion safe). Bookkeeping waits for the
       // node to leave the DOM — the summary/aggregate selectors would still
       // count the fading block's inputs otherwise.
@@ -400,109 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return block;
   };
 
-  // Returns { lostSelection } — the room number the guest had picked that is no
-  // longer bookable after this render (or null). Callers use it to warn the guest.
-  function renderRoomTilesForBlock(index, rooms, blockEl, opts = {}) {
-    const tilesWrap = blockEl.querySelector('.room-tiles-wrapper');
-    const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
-    const priorSelection = hiddenInput.value; // the guest's current pick, if any
-    tilesWrap.innerHTML = '';
-    if (!rooms.length) {
-      tilesWrap.innerHTML = '<div class="text-sm font-semibold text-stone-500 py-4">No rooms available</div>';
-      // Nothing open at all — drop any existing pick for this block.
-      if (priorSelection) {
-        hiddenInput.value = '';
-        selectedRoomNumbersSet.delete(priorSelection);
-        updateAggregateHiddenInputs();
-        generateBookingSummary();
-        return { lostSelection: priorSelection };
-      }
-      return { lostSelection: null };
-    }
-    const container = document.createElement('div');
-    // Silent (live/Reverb) re-renders skip the entrance stagger — see app.css
-    container.className = 'room-tiles' + (opts.silent ? ' no-anim' : '');
-
-    let priorStillAvailable = false;
-
-    rooms.forEach((r, i) => {
-      const tile = document.createElement('div');
-      tile.classList.add('room-tile');
-      tile.style.setProperty('--i', i); // staggered entrance (see app.css)
-      tile.innerText = r.room_number;
-      tile.dataset.roomNumber = r.room_number;
-
-      if (r.status === 'available') {
-        tile.classList.add('available');
-
-        // Re-apply the guest's existing selection so it survives a re-render
-        // (manual "Refresh" or a real-time availability re-check).
-        if (priorSelection && r.room_number === priorSelection) {
-          priorStillAvailable = true;
-          tile.classList.add('selected');
-          const checkSpan = document.createElement('i');
-          checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white fa-solid fa-check';
-          tile.appendChild(checkSpan);
-        }
-
-        tile.addEventListener('click', () => {
-          const hiddenInput = blockEl.querySelector('.res-room-number-hidden');
-          const prev = hiddenInput.value;
-          if (prev === r.room_number) {
-            hiddenInput.value = '';
-            tile.classList.remove('selected');
-            const check = tile.querySelector('.selected-check');
-            if (check) check.remove();
-            selectedRoomNumbersSet.delete(r.room_number);
-          } else {
-            if (selectedRoomNumbersSet.has(r.room_number)) { showFormError('That room is already selected in another block'); return; }
-            const prevSelected = blockEl.querySelector('.room-tile.selected');
-            if (prevSelected) {
-              prevSelected.classList.remove('selected');
-              const check = prevSelected.querySelector('.selected-check');
-              if (check) check.remove();
-              selectedRoomNumbersSet.delete(prevSelected.dataset.roomNumber);
-            }
-            hiddenInput.value = r.room_number;
-            tile.classList.add('selected');
-            
-            // Add a check icon to selected tile
-            const checkSpan = document.createElement('i');
-            checkSpan.className = 'selected-check absolute top-1 right-1 text-[10px] font-black text-white fa-solid fa-check';
-            tile.appendChild(checkSpan);
-            
-            selectedRoomNumbersSet.add(r.room_number);
-          }
-          updateAggregateHiddenInputs();
-          generateBookingSummary();
-        });
-      } else if (r.status === 'booked') { tile.classList.add('booked'); tile.title = 'Already booked';
-      // Held by a booking whose payment has not been verified yet. Just as
-      // unselectable as 'booked' — the honest word matters to the guest,
-      // and the server enforces it either way.
-      } else if (r.status === 'reserved') { tile.classList.add('reserved'); tile.title = 'Reserved — awaiting payment';
-      } else if (r.status === 'cleaning') { tile.classList.add('cleaning'); tile.title = 'Cleaning';
-      } else if (r.status === 'maintenance') { tile.classList.add('maintenance'); tile.title = 'Maintenance';
-      } else { tile.classList.add('unavailable'); tile.title = 'Unavailable'; }
-      container.appendChild(tile);
-    });
-    tilesWrap.appendChild(container);
-
-    // The guest's pick disappeared from the open list (now booked/cleaning/
-    // maintenance, or removed) — drop it and report it so the caller can warn.
-    if (priorSelection && !priorStillAvailable) {
-      hiddenInput.value = '';
-      selectedRoomNumbersSet.delete(priorSelection);
-      updateAggregateHiddenInputs();
-      generateBookingSummary();
-      return { lostSelection: priorSelection };
-    }
-    return { lostSelection: null };
-  }
-
   function updateAggregateHiddenInputs() {
-    const allSelected = Array.from(selectedRoomNumbersSet);
-    if (room_numbers_hidden) room_numbers_hidden.value = allSelected.join(',');
     let totalSeniors = 0;
     document.querySelectorAll('.res-num-seniors').forEach(inp => { totalSeniors += parseInt(inp.value) || 0; });
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
@@ -511,41 +349,21 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Real-time availability (Reverb) ──────────────────────────────────────
   // The admin panel broadcasts `RoomStatusChanged` on the public `rooms`
   // channel whenever any room's status changes (maintenance, cleaning, a new
-  // booking, a check-in). We listen for it and silently re-check every block's
-  // open rooms, so a guest never sits on a room that was just closed.
-
-  // Re-fetch one block's availability WITHOUT the loading spinner. Returns the
-  // room number that got dropped (if the guest's pick is no longer bookable).
-  async function recheckBlockAvailability(block) {
-    const roomType = block.querySelector('.room-type-select')?.value;
-    if (!roomType || !check_in.value || !check_out.value) return null;
-    try {
-      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-      const resp = await fetch('/rooms/available', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
-        body: JSON.stringify({ room_type: roomType, check_in: check_in.value, check_out: check_out.value })
-      });
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      const result = renderRoomTilesForBlock(block.dataset.index, data.rooms || [], block, { silent: true });
-      return result && result.lostSelection ? result.lostSelection : null;
-    } catch (e) { console.error(e); return null; }
-  }
-
-  // Debounced so a burst of admin changes collapses into a single refresh.
+  // booking, a check-in). We listen for it and re-count what is open.
+  //
+  // This used to re-fetch a tile grid per block and warn the guest when the
+  // room they had picked was closed under them. There is no pick to lose any
+  // more — the server assigns rooms at commit — so what is left to keep true
+  // is the per-style count on the type cards and the dates the calendar
+  // offers. Both are counts, and a count going down is not something a guest
+  // needs interrupting for.
   let recheckTimer = null;
   function recheckAllBlocksAvailability() {
     clearTimeout(recheckTimer);
-    recheckTimer = setTimeout(async () => {
-      updateTypeAvailability(); // refresh the per-type "Fully booked" badges too
-      const dropped = [];
-      for (const block of document.querySelectorAll('.reservation-block')) {
-        const lost = await recheckBlockAvailability(block);
-        if (lost) dropped.push(lost);
-      }
-      if (dropped.length) {
-        showFormError('Room ' + dropped.join(', ') + ' was just closed by the front desk and removed from your selection. Please choose another.');
+    recheckTimer = setTimeout(() => {
+      updateTypeAvailability();
+      if (typeof window.refreshCalendarAvailability === 'function') {
+        window.refreshCalendarAvailability();
       }
     }, 400);
   }
@@ -578,18 +396,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const expected = parseInt(expectedGuestsInput?.value, 10) || 0;
 
     let assigned = 0;
-    let unnumbered = null;   // first block with no room number picked
+    let untyped = null;      // first block with no room style chosen
     let overfilled = null;   // first block with more guests than beds
     blocks.forEach(b => {
-      if (!unnumbered && !b.querySelector('.res-room-number-hidden')?.value) unnumbered = b;
+      // Was "no room number picked". The style is what a guest chooses now —
+      // the number is assigned by the server when the booking commits.
+      if (!untyped && !b.querySelector('.room-type-select')?.value) untyped = b;
       const beds = parseInt(b.querySelector('.res-beds')?.value, 10) || 0;
       const inRoom = parseInt(b.querySelector('.res-num-guests')?.value, 10) || 0;
       if (!overfilled && beds > 0 && inRoom > beds) overfilled = b;
       assigned += inRoom;
     });
 
+    const oversold = oversubscribed();
     const balanced = blocks.length > 0 && assigned === expected;
-    const roomsDone = blocks.length > 0 && !unnumbered && !overfilled && balanced;
+    const roomsDone = blocks.length > 0 && !untyped && !overfilled && !oversold && balanced;
 
     // The terms box is `required`, so the browser stops the submit before our
     // own handler ever runs. Tracked here anyway: the blocker line's whole job
@@ -598,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const termsBox = document.getElementById('accept_terms');
     const termsDone = !termsBox || termsBox.checked;
 
-    return { datesDone, detailsDone, blocks, expected, assigned, unnumbered, overfilled, balanced, roomsDone, termsDone, firstName };
+    return { datesDone, detailsDone, blocks, expected, assigned, untyped, overfilled, oversold, balanced, roomsDone, termsDone, firstName };
   }
 
   // ── Progress rail (checkout header) ──────────────────────────────
@@ -665,8 +486,12 @@ document.addEventListener('DOMContentLoaded', function () {
       msg = 'Fill in your name and contact number.';
     } else if (r.overfilled) {
       msg = 'One room has more guests than it sleeps.';
-    } else if (r.unnumbered) {
-      msg = 'Tap a room number in the availability grid to reserve it.';
+    } else if (r.untyped) {
+      msg = 'Choose a room style for each room you are booking.';
+    } else if (r.oversold) {
+      msg = r.oversold.available === 0
+        ? `No ${r.oversold.title} rooms are free for these dates.`
+        : `Only ${r.oversold.available} ${r.oversold.title} left for these dates — you have asked for ${r.oversold.wanted}.`;
     } else if (!r.balanced) {
       const diff = Math.abs(r.expected - r.assigned);
       msg = r.assigned < r.expected
@@ -814,19 +639,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let totalCapacity = 0;
     let totalSeniors = 0;
     let totalGuests = 0;
-    const roomsSelected = [];
 
-    for (const b of blocks) {
+    for (const [i, b] of blocks.entries()) {
       const beds = parseInt(b.querySelector('.res-beds').value) || 0;
       const numSen = parseInt(b.querySelector('.res-num-seniors').value) || 0;
-      const roomNum = b.querySelector('.res-room-number-hidden').value || '';
+      const roomType = b.querySelector('.room-type-select')?.value || '';
       const numGuests = parseInt(b.querySelector('.res-num-guests')?.value) || 0;
       // Second argument: the control the guest has to change to fix it, so
       // showFormError can scroll them to it instead of only naming it.
       const guestsInput = b.querySelector('.res-num-guests');
       const seniorsInput = b.querySelector('.res-num-seniors');
 
-      if (!roomNum) { e.preventDefault(); showFormError('Pick a room number from the availability grid for this room.', b); return; }
+      // Was "pick a room number". The style is the choice now — the number is
+      // assigned server-side when the booking commits.
+      if (!roomType) { e.preventDefault(); showFormError('Choose a room style for this room.', b); return; }
       if (numSen > beds) { e.preventDefault(); showFormError('Seniors in a room cannot exceed that room\'s capacity.', seniorsInput); return; }
       if (numGuests > beds) { e.preventDefault(); showFormError('Guests in a room cannot exceed that room’s capacity.', guestsInput); return; }
       if (numGuests < 1) { e.preventDefault(); showFormError('Each room must have at least 1 guest.', guestsInput); return; }
@@ -837,12 +663,11 @@ document.addEventListener('DOMContentLoaded', function () {
       // breakfasts than there are guests) and again server-side.
       let totalMeals = 0;
       b.querySelectorAll('.meal-qty').forEach(inp => totalMeals += parseInt(inp.value) || 0);
-      if (totalMeals > numGuests) { e.preventDefault(); showFormError(`Room ${roomNum} has more breakfasts selected than guests staying in it.`, b); return; }
+      if (totalMeals > numGuests) { e.preventDefault(); showFormError(`Room ${i + 1} has more breakfasts selected than guests staying in it.`, b); return; }
 
       totalGuests += numGuests;
       totalCapacity += beds;
       totalSeniors += numSen;
-      roomsSelected.push(roomNum);
     }
 
     // The allocation rule, stated the way a person would say it and pointing
@@ -862,9 +687,24 @@ document.addEventListener('DOMContentLoaded', function () {
     if (totalCapacity < expected) { e.preventDefault(); showFormError(`These rooms sleep ${totalCapacity}, but you are booking for ${expected}.`, document.getElementById('allocationMeter')); return; }
     if (totalSeniors > expected) { e.preventDefault(); showFormError('More seniors than total guests.', expectedGuestsInput); return; }
     if (num_seniors_hidden && parseInt(num_seniors_hidden.value) !== totalSeniors) { e.preventDefault(); showFormError(`Mismatch: total seniors in reservations (${totalSeniors}) must equal total seniors for the booking.`); return; }
-    if (roomsSelected.length !== (new Set(roomsSelected)).size) { e.preventDefault(); showFormError('The same room is selected twice.'); return; }
 
-    if (room_numbers_hidden) room_numbers_hidden.value = roomsSelected.join(',');
+    // More rooms of a style than are free. The server refuses this too, under
+    // a lock and with the real count — this only spares the round trip.
+    const oversold = oversubscribed();
+    if (oversold) {
+      e.preventDefault();
+      showFormError(
+        oversold.available === 0
+          ? `No ${oversold.title} rooms are free for these dates. Try other dates or another room style.`
+          : `Only ${oversold.available} ${oversold.title} ${oversold.available === 1 ? 'room is' : 'rooms are'} free for these dates, and you have asked for ${oversold.wanted}.`,
+        document.getElementById('reservationBlocks')
+      );
+      return;
+    }
+
+    // The "same room selected twice" check retired with the picker — two rooms
+    // can no longer collide because the guest never names one. The server draws
+    // each from a pool it removes as it assigns.
     if (num_seniors_hidden) num_seniors_hidden.value = totalSeniors;
 
     // All client checks passed — lock both submit buttons against double-submit
@@ -954,16 +794,47 @@ document.addEventListener('DOMContentLoaded', function () {
     applyPreset(btn.dataset.preset);
   });
 
+  // Dates changed, so what is open changed. Once this also re-loaded a tile
+  // grid per block; with the picker gone the per-style counts on the type
+  // cards are the whole of what the guest sees, and that is one request for
+  // the page rather than one per block.
   function autoCheckAllBlocks() {
     if (!check_in || !check_out || !check_in.value || !check_out.value) return;
     updateTypeAvailability();
-    document.querySelectorAll('.reservation-block').forEach(block => {
-      const select = block.querySelector('.room-type-select');
-      if (select && select.value) {
-        const btn = block.querySelector('.btn-check-availability');
-        if (btn) setTimeout(() => btn.click(), 80);
-      }
+  }
+
+  // How many of each style are free for the chosen dates, and what each style
+  // is called. Filled by updateTypeAvailability below; read by oversubscribed()
+  // when deciding whether the guest has asked for more rooms than exist.
+  const availableByType = {};
+  const typeTitles = {};
+
+  /**
+   * The first style this booking asks for more of than are free, or null.
+   * Returns { type, title, wanted, available } so the caller can say which.
+   *
+   * Advisory, not authoritative: the numbers are a snapshot and rooms move
+   * while a form is open. BookingController::store re-counts under a lock and
+   * is the thing that actually refuses — this just means the guest usually
+   * finds out here, next to the control they need to change, instead of after
+   * pressing Confirm.
+   */
+  function oversubscribed() {
+    const wantedByType = {};
+    document.querySelectorAll('.reservation-block').forEach(b => {
+      const t = b.querySelector('.room-type-select')?.value;
+      if (t) wantedByType[t] = (wantedByType[t] || 0) + 1;
     });
+
+    for (const [type, wanted] of Object.entries(wantedByType)) {
+      const available = availableByType[type];
+      // Undefined means the summary has not landed yet — say nothing rather
+      // than block a booking over a number we do not have.
+      if (typeof available === 'number' && wanted > available) {
+        return { type, title: typeTitles[type] || type, wanted, available };
+      }
+    }
+    return null;
   }
 
   // Per-room-type availability for the chosen dates. Badges each type card so a
@@ -990,6 +861,13 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!resp.ok) return;
       const data = await resp.json();
       (data.summary || []).forEach(row => {
+        // Kept so the form can tell a guest they are asking for four Doubles
+        // when three are free. With the picker gone there is no grid running
+        // out of tiles to make that obvious — the only other way to find out
+        // was to press Confirm and be turned away.
+        availableByType[row.room_type] = row.available;
+        typeTitles[row.room_type] = row.title || row.room_type;
+
         const isFull = row.available <= 0;
         const badgeText = isFull ? 'Fully booked' : (row.available <= 2 ? ('Only ' + row.available + ' left') : '');
         document.querySelectorAll('.type-card[data-type-value="' + row.room_type + '"]').forEach(card => {
@@ -1016,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (!badge) return;
           if (badgeText) {
             badge.textContent = badgeText;
-            badge.className = 'type-card-avail absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm ' +
+            badge.className = 'type-card-avail absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm ' +
               (isFull ? 'bg-ember-600 text-white' : 'bg-gold text-night');
           } else {
             badge.textContent = '';
@@ -1101,7 +979,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const typeSelect = block.querySelector('.room-type-select');
       const typeName   = typeSelect?.selectedOptions[0]?.text?.split('(')[0]?.trim() || 'Unknown Room';
       const price      = parseFloat(block.querySelector('.res-price-hidden')?.value) || 0;
-      const roomNum    = block.querySelector('.res-room-number-hidden')?.value || '--';
       const numGuests  = parseInt(block.querySelector('.res-num-guests')?.value)  || 0;
       const blockTotal = price * nights;
       totalPrice += blockTotal;
@@ -1123,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="sum-row flex items-start justify-between gap-3 py-3.5 border-b border-emerald-deep/10 last:border-0" data-jump-block="${block.dataset.index}" title="Review this room">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-bold text-ink truncate">${typeName}</p>
-            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">Room ${roomNum} &middot; ${numGuests} guest(s)</p>
+            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">${numGuests} guest(s) &middot; room assigned on confirmation</p>
             <p class="text-[11px] font-semibold text-stone-500">${formatPrice(price)} &times; ${nights} night(s)</p>
             ${mealLine}
           </div>
@@ -1144,15 +1021,15 @@ document.addEventListener('DOMContentLoaded', function () {
     container.innerHTML = `
       <div class="grid grid-cols-3 items-center bg-white/60 ring-1 ring-emerald-deep/5 rounded-2xl px-2 py-3 text-center">
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-in</span>
+          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-in</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
         </div>
         <div class="border-x border-emerald-deep/10">
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Nights</span>
+          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Nights</span>
           <span class="block text-[13px] font-extrabold text-palay-800 mt-0.5">${nights}</span>
         </div>
         <div>
-          <span class="block text-[9px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-out</span>
+          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-out</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
         </div>
       </div>
