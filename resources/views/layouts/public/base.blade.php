@@ -317,9 +317,13 @@
         </div>
     </footer>
 
-    <!-- Gradual blur — content softly blurs as it exits the bottom of the viewport -->
+    {{-- Gradual blur — content softly blurs as it exits the bottom of the
+         viewport. Three layers, down from six: each one is a backdrop-filter
+         the compositor re-blurs every scrolled frame across the full width of
+         the window. See .gradual-blur in 08-utilities.css — the mask bands
+         there are spaced to this exact count, so the two must change together. --}}
     <div class="gradual-blur" aria-hidden="true">
-        <div></div><div></div><div></div><div></div><div></div><div></div>
+        <div></div><div></div><div></div>
     </div>
 
     @if ($usesLivewire)
@@ -405,51 +409,31 @@
     <!-- Scroll reveal (local AOS replacement — see public/js/reveal.js) -->
     <script src="{{ asset('js/reveal.js') }}?v={{ filemtime(public_path('js/reveal.js')) }}" defer></script>
 
-    <!-- Lenis inertia scroll — the weighted, cinematic scroll feel. Desktop
-         fine-pointer only; reduced-motion users keep native scrolling. -->
-    <script src="{{ asset('vendor/lenis/lenis.min.js') }}" defer></script>
+    {{-- Lenis inertia scroll used to load here, desktop-only (fine pointer,
+         ≥1024px), for a weighted "cinematic" scroll feel.
+
+         It was removed because it was the reason desktop scrolling felt laggy
+         while mobile — which never loaded it — felt smooth. Lenis takes scroll
+         off the browser's compositor thread and drives the scroll position
+         from JS on the main thread every frame, so any main-thread work lands
+         directly in the scroll's critical path. Native scrolling is immune to
+         that: it keeps moving on the compositor even when the main thread is
+         busy. Public testers reported exactly that split, on exactly the
+         viewports Lenis was gated to.
+
+         Anchor scrolling is now native: <html> keeps its `scroll-smooth`
+         class (Lenis had to strip it), so same-page # links animate on their
+         own with no click handler, and the #rooms / #gallery targets already
+         carry `scroll-mt-28` to clear the fixed nav — which is what Lenis's
+         hardcoded `offset: -96` was doing by hand. --}}
     <script>
-        // Scrolls to an element through Lenis when it's running, otherwise
-        // falls back to native smooth scroll. Used by in-page CTAs.
+        // In-page CTAs (hero + cta partials) call this. Native smooth scroll;
+        // the nav offset comes from the target's own scroll-margin, and
+        // browsers honour prefers-reduced-motion here automatically.
         window.smoothScrollTo = function (el) {
             if (!el) return;
-            if (window.__lenis) window.__lenis.scrollTo(el, { offset: -96 });
-            else el.scrollIntoView({ behavior: 'smooth' });
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
-
-        window.addEventListener('load', function () {
-            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const fine = window.matchMedia('(pointer: fine)').matches;
-            if (reduce || !fine || window.innerWidth < 1024 || typeof Lenis === 'undefined') return;
-
-            // Lenis requires native scroll-behavior to stay auto
-            document.documentElement.classList.remove('scroll-smooth');
-
-            const lenis = new Lenis({
-                duration: 1.15,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            });
-            window.__lenis = lenis;
-
-            function raf(time) {
-                lenis.raf(time);
-                requestAnimationFrame(raf);
-            }
-            requestAnimationFrame(raf);
-
-            // Same-page anchor links ride the inertia scroll
-            document.addEventListener('click', function (e) {
-                const a = e.target.closest('a[href*="#"]');
-                if (!a || !a.hash) return;
-                const url = new URL(a.href, location.href);
-                if (url.origin !== location.origin || url.pathname !== location.pathname) return;
-                const target = document.getElementById(decodeURIComponent(url.hash.slice(1)));
-                if (!target) return;
-                e.preventDefault();
-                lenis.scrollTo(target, { offset: -96 });
-                history.pushState(null, '', url.hash);
-            });
-        });
     </script>
 
 </body>

@@ -144,46 +144,34 @@
     inset: 0;
 }
 
+/* Three layers, not six.
+   Every backdrop-filter layer makes the compositor re-snapshot and re-blur
+   the page behind this strip on each scrolled frame, and the strip is fixed
+   and full-width — so the cost scales with viewport width and was paid on
+   every public page, every frame. Halving the layer count halves that work.
+   The ramp survives because the bands overlap: each mask fades in while the
+   previous fades out, so the eye reads a continuous gradient rather than
+   three steps. The blur endpoints (0.9px → 14px) are unchanged, so the
+   softest and strongest edges look exactly as they did. */
 .gradual-blur>div:nth-child(1) {
-    -webkit-backdrop-filter: blur(0.6px);
-    backdrop-filter: blur(0.6px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+    -webkit-backdrop-filter: blur(0.9px);
+    backdrop-filter: blur(0.9px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 40%, transparent 62%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 40%, transparent 62%);
 }
 
 .gradual-blur>div:nth-child(2) {
-    -webkit-backdrop-filter: blur(1.2px);
-    backdrop-filter: blur(1.2px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
-    mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+    -webkit-backdrop-filter: blur(3.5px);
+    backdrop-filter: blur(3.5px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 28%, black 50%, black 68%, transparent 86%);
+    mask-image: linear-gradient(to bottom, transparent 28%, black 50%, black 68%, transparent 86%);
 }
 
 .gradual-blur>div:nth-child(3) {
-    -webkit-backdrop-filter: blur(2.4px);
-    backdrop-filter: blur(2.4px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
-    mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
-}
-
-.gradual-blur>div:nth-child(4) {
-    -webkit-backdrop-filter: blur(4.8px);
-    backdrop-filter: blur(4.8px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
-    mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
-}
-
-.gradual-blur>div:nth-child(5) {
-    -webkit-backdrop-filter: blur(9px);
-    backdrop-filter: blur(9px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
-    mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
-}
-
-.gradual-blur>div:nth-child(6) {
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
-    mask-image: linear-gradient(to bottom, transparent 62.5%, black 87.5%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 58%, black 82%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 58%, black 82%, black 100%);
 }
 
 /* Soft legibility glow for the hero headline over the photo backdrop */

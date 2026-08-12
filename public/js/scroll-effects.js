@@ -119,6 +119,16 @@
         const start = viewH * 0.94;
         const end = viewH * 0.38 - r.height / 2;
         const P = clamp((start - r.top) / (start - end), 0, 1);
+
+        // Unlike the band and card effects above, this loop had no early-out.
+        // Because P is clamped, a paragraph sitting far off-screen holds P at
+        // exactly 0 or 1 — and the loop still rewrote opacity + transform +
+        // filter on all of its spans, every frame, for the life of the page.
+        // The scrub is position-mapped, so an unchanged P can only produce the
+        // values already on the element.
+        if (item.lastP !== undefined && Math.abs(P - item.lastP) < 0.0005) return;
+        item.lastP = P;
+
         const n = item.words.length;
         const span = 0.35; // each word's reveal window within the sweep
         for (let i = 0; i < n; i++) {
@@ -129,6 +139,13 @@
             w.style.transform = t >= 1 ? '' : 'translateY(' + ((1 - t) * 0.35).toFixed(3) + 'em)';
             if (allowBlur) w.style.filter = t >= 1 ? '' : 'blur(' + ((1 - t) * 5).toFixed(2) + 'px)';
         }
+
+        // Once the sweep has fully played, release the compositor layers that
+        // .fx-words-on pins with `will-change: transform, opacity, filter` —
+        // one per word, held for the whole session otherwise. The class itself
+        // stays: it also carries `display: inline-block`, and dropping that
+        // would re-wrap the paragraph and shift layout.
+        item.el.classList.toggle('fx-words-rest', P >= 1);
     }
 
     function updateCard(item) {

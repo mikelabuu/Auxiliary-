@@ -79,6 +79,11 @@
     let ticking = false;
     let running = true;
     let lastTime = performance.now();
+    // The reading-progress hairline, resolved once at init. It is driven by a
+    // direct inline transform rather than a :root custom property — see the
+    // render loop for why that distinction is worth ~20ms of every frame.
+    let progressBar = null;
+    let lastProgress = -1;
 
     // ── Preset class mappings ───────────────────────────────────────
     // blur / skew / mouse default to 0 (off) everywhere except the hero
@@ -243,13 +248,40 @@
         pointerX += (targetPointerX - pointerX) * expAlpha(POINTER_LAMBDA, dt);
         pointerY += (targetPointerY - pointerY) * expAlpha(POINTER_LAMBDA, dt);
 
-        // Expose scroll state as CSS custom properties — a free hook for
-        // any future CSS-only touches (progress bars, nav blur, etc.).
-        const docH = document.documentElement.scrollHeight - viewH;
-        const scrollProgress = docH > 0 ? clamp(scrollY / docH, 0, 1) : 0;
-        const root = document.documentElement.style;
-        root.setProperty('--scroll-progress', scrollProgress.toFixed(4));
-        root.setProperty('--scroll-velocity', clamp(scrollVelocity / 2000, -1, 1).toFixed(3));
+        // Reading-progress hairline.
+        //
+        // This used to write --scroll-progress and --scroll-velocity onto
+        // <html> every frame, described as "a free hook for any future
+        // CSS-only touches". It was the single most expensive thing on the
+        // public site. A custom property set on :root invalidates the
+        // inherited style of *every* element in the document, so each write
+        // forced a full-document style recalc — measured at ~19-21ms per
+        // frame on the landing page (1430 elements), against a 16.7ms budget
+        // for 60fps. Writing the same variable on one leaf element instead
+        // costs 0.15ms. The cost is inherent to :root and does not depend on
+        // anything reading the variable: an unused custom property benchmarked
+        // just as expensively as the live one.
+        //
+        // Only one rule ever consumed it (.scroll-progress in 08-utilities.css,
+        // transform: scaleX(var(--scroll-progress))), so we skip the variable
+        // and write that element's transform directly — a composited property
+        // on a single fixed 2px bar. --scroll-velocity had no CSS consumer at
+        // all and is gone; `scrollVelocity` above is still the live value for
+        // the skew effect that actually uses it.
+        //
+        // The CSS keeps its scaleX(var(--scroll-progress, 0)) declaration, so
+        // with JS off or reduced motion on, the bar stays at scaleX(0) exactly
+        // as before.
+        if (progressBar) {
+            const docH = document.documentElement.scrollHeight - viewH;
+            const scrollProgress = docH > 0 ? clamp(scrollY / docH, 0, 1) : 0;
+            // Sub-pixel changes aren't visible on a 2px bar; skipping them
+            // keeps a settling frame from writing style for no reason.
+            if (Math.abs(scrollProgress - lastProgress) > 0.0005) {
+                lastProgress = scrollProgress;
+                progressBar.style.transform = 'scaleX(' + scrollProgress.toFixed(4) + ')';
+            }
+        }
 
         let anyMoved = false;
 
@@ -403,6 +435,9 @@
         running = false;
         io.disconnect();
         ro.disconnect();
+        // Hand the hairline back to CSS, which parks it at scaleX(0) —
+        // the documented reduced-motion resting state.
+        if (progressBar) { progressBar.style.transform = ''; lastProgress = -1; }
         for (const item of items) {
             item.el.style.transform = '';
             item.el.style.opacity = '';
@@ -413,6 +448,8 @@
 
     // ── Init ────────────────────────────────────────────────────────
     function init() {
+        progressBar = document.querySelector('.scroll-progress');
+
         // Collect all elements that have data-prlx-* attributes
         const dataSelector = '[data-prlx-y],[data-prlx-x],[data-prlx-opacity],[data-prlx-scale],[data-prlx-rotate]';
         // Collect all elements that have preset classes

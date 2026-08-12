@@ -35,7 +35,8 @@ const ASSETS = [
     ['flatpickr/dist/flatpickr.min.css', 'flatpickr/flatpickr.min.css'],
     ['swiper/swiper-bundle.min.js', 'swiper/swiper-bundle.min.js'],
     ['swiper/swiper-bundle.min.css', 'swiper/swiper-bundle.min.css'],
-    ['lenis/dist/lenis.min.js', 'lenis/lenis.min.js'],
+    // Lenis was dropped: it drove scrolling from the main thread, which is why
+    // desktop scrolled worse than mobile. See layouts/public/base.blade.php.
 
     // Alpine, standalone. Livewire bundles its own copy, so this is loaded
     // only on public pages that use Alpine directives WITHOUT having a

@@ -107,19 +107,9 @@ body.theme-night .room-tile.unavailable {
     color: oklch(100% 0 0 / 0.3);
 }
 
-/* ── Lenis inertia scroll (loaded on public pages, desktop only) ── */
-html.lenis,
-html.lenis body {
-    height: auto;
-}
-
-.lenis.lenis-smooth {
-    scroll-behavior: auto !important;
-}
-
-.lenis.lenis-stopped {
-    overflow: hidden;
-}
+/* The Lenis inertia-scroll rules that sat here are gone with the library —
+   see the note in layouts/public/base.blade.php. They only ever applied to
+   classes Lenis put on <html> itself, so nothing else referenced them. */
 
 /* Signature boutique utilities (ported from the reference design) */
 .film-grain {
