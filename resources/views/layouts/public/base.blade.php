@@ -222,7 +222,10 @@
                                width="60" height="60" decoding="async" class="h-9 w-9 object-contain" />
                         <span class="font-display text-base tracking-tight text-ink">Farmers <span class="italic text-clsu-600">Hostel</span></span>
                     </div>
-                    <button id="mobileDrawerCloseBtn" class="press grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">
+                    {{-- tap-expand: this drawer is touch-only by definition, and
+                         36px is under every platform's target guidance. The ring
+                         stays 36px; the tappable region becomes 48px. --}}
+                    <button id="mobileDrawerCloseBtn" class="press tap-expand grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-canvas-deep hover:text-ink cursor-pointer" aria-label="Close navigation menu">
                         <x-booking.ui.icon name="x" class="h-4 w-4" />
                     </button>
                 </div>

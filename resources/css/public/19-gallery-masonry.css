@@ -72,11 +72,27 @@
            which is exactly what a wrong value looks like.
            At 49% width: landscape = 0.3675w, portrait = 0.6533w. The tall
            column here is 2,4,6,8,10,12 (it holds the portrait):
-           5 x 0.3675w + 0.6533w = 2.49w, plus five 1rem gaps. */
-        aspect-ratio: 100 / 260;
+           5 x 0.3675w + 0.6533w = 2.49w, plus five 1rem gaps.
+
+           SIZE THIS FOR THE NARROW END OF THE RANGE, not the middle. Everything
+           here scales with the container except the five 1rem gaps, which are
+           fixed — so the gaps are a larger *fraction* of the height the narrower
+           the viewport, and the ratio the layout actually needs rises as the
+           screen shrinks. It runs from 2.573 at 1023px up to 2.627 at 640px.
+           The old 2.60 sat in the middle of that band and was ~2px short around
+           768px, which is all it takes: the column wraps to a third, and the
+           gallery hangs 360px off the side of the page on exactly the width a
+           tablet uses. 2.65 clears the 640px worst case with margin; the cost at
+           the wide end is a little slack under the shorter column. */
+        aspect-ratio: 100 / 265;
     }
 
-    .gallery-masonry__item { width: 49%; }
+    /* Not 49%. The column-break pseudo below is a real flex item, so it takes a
+       track of its own between the two columns — and `gap: 1rem` is charged on
+       BOTH sides of that zero-width track. The row is therefore
+       `w + 16 + 0 + 16 + w`, and two 49% columns overran the container by 18px
+       at every width. Solving `2w + 32px = 100%` gives the exact fit. */
+    .gallery-masonry__item { width: calc(50% - 16px); }
 
     .gallery-masonry__item:nth-child(2n+1) { order: 1; }
     .gallery-masonry__item:nth-child(2n)   { order: 2; }
@@ -99,14 +115,20 @@
    plus three gaps. */
 @media (min-width: 1024px) {
     .gallery-masonry {
-        /* Measured, not derived: at a 1232px container the tall column ends at
-           1461px, so this is 1232/1461. Deriving it from the aspect ratios
-           alone overshot by ~40px because the 1rem gaps are a fixed size while
-           everything else scales, which the arithmetic does not capture. */
-        aspect-ratio: 100 / 118.7;
+        /* Measured at a 1232px container (the tall column ends at 1461px, so
+           1232/1461 = 1.187) — but measured at ONE width, which is the trap the
+           two-column ratio above documents. The fixed 1rem gaps mean the needed
+           ratio climbs as the container narrows: 1.186 at 1232px, but 1.196 at
+           976px, the narrowest this breakpoint ever sees. 1.187 was therefore
+           short for roughly the first 100px above the 1024px breakpoint and
+           wrapped a fourth column there. 1.20 covers the whole range. */
+        aspect-ratio: 100 / 120;
     }
 
-    .gallery-masonry__item { width: 32%; }
+    /* Same correction as the two-column case, with both pseudos in play: five
+       tracks (three columns + two zero-width breaks) means four gaps.
+       `3w + 64px = 100%`. 32% left ~15px hanging off the right edge. */
+    .gallery-masonry__item { width: calc(33.333% - 21.34px); }
 
     .gallery-masonry__item:nth-child(3n+1) { order: 1; }
     .gallery-masonry__item:nth-child(3n+2) { order: 2; }

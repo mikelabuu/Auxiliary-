@@ -1,4 +1,14 @@
-<section id="rooms" class="mx-auto max-w-7xl scroll-mt-28 px-6 pt-24 pb-28 md:pt-32">
+{{-- Width: 7xl (1280px) up to large laptops, then widened in two steps. The
+     three room cards are the densest thing on the page — at 1280px they land
+     at 384px each, which crops the photo hard and squeezes the amenity list
+     into three lines. Letting the grid breathe on bigger screens takes them to
+     ~421px and ~458px without touching the laptop layout, so the shared
+     max-w-7xl edge that story/gallery/cta align to still reads as the page's
+     spine at the sizes most visitors are on.
+
+     If you widen this further, raise the `sizes` hint on the card image to
+     match (components/booking/cards/room.blade.php) or the photos go soft. --}}
+<section id="rooms" class="mx-auto max-w-7xl xl:max-w-[86rem] 2xl:max-w-[94rem] scroll-mt-28 px-6 pt-24 pb-28 md:pt-32">
     <x-booking.sections.heading
         eyebrow="Accommodations"
         description="{{ count($roomTypes) }} fully-serviced room types for short stays, transient guests, and university researchers. Filter by capacity or open a room for the full picture. Booking takes one click."

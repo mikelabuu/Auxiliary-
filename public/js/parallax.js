@@ -61,7 +61,14 @@
 
     // ── Capability detection ─────────────────────────────────────────
     const pointerFineMQ = window.matchMedia('(pointer: fine)');
-    let isMobile = window.innerWidth < 768;
+    // matchMedia, not `window.innerWidth < 768`. Reading innerWidth here forces
+    // the browser to flush layout synchronously, and this file runs as a
+    // deferred script while ~30 images and six stylesheets are still resolving —
+    // so that one property access was billed as 71ms of forced reflow in
+    // PageSpeed. A media query is answered from viewport state without laying
+    // the document out. Init-only either way: the resize handler below
+    // deliberately does not recompute it.
+    let isMobile = window.matchMedia('(max-width: 767px)').matches;
     let mobileDampen = isMobile ? 0.5 : 1;
     // Depth flourishes (blur / velocity-skew) are a desktop luxury — keep
     // narrow viewports light and fast, exactly like v2's mobile-aware stance.

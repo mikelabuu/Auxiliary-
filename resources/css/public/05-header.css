@@ -63,9 +63,23 @@
        transform hint costs no extra memory and keeps the retreat off the main
        thread. Deliberately the only will-change in this file. */
     will-change: transform;
+
+    /* Two directions, two curves — the header did not read the same going as
+       coming, and the return was the weaker half.
+
+       This block is what plays on the way *back*: un-condensing at the top of
+       the page, and the bar returning after a read-down. It carries the settle
+       — a strong ease-out that arrives immediately and lands soft, so the nav
+       feels like it was already there rather than like it is catching up.
+       .nav-hidden overrides the transform for the leaving direction.
+
+       0.42s rather than 0.55s on max-width. This is the one layout property
+       left in the condense, so its duration is also how long the bar spends
+       reflowing mid-scroll; the shorter sweep reads as one decisive shape
+       change instead of a slow morph, and costs less while it runs. */
     transition:
-        max-width 0.55s var(--fh-ease),
-        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        max-width 0.42s var(--fh-ease),
+        transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #navWrap.is-condensed,
@@ -76,6 +90,15 @@
 #navWrap.nav-hidden {
     /* -140% clears the pill plus its drop shadow. */
     transform: translateY(-140%);
+
+    /* Leaving accelerates away and is quicker than the return. A header
+       retreating should get out of the reader's way without asking to be
+       watched; a header coming back should feel eager. That is the same
+       asymmetry the JS already encodes in its thresholds (SHOW_AFTER 40px vs
+       HIDE_AFTER 72px) — this expresses it in motion instead of distance. */
+    transition:
+        max-width 0.42s var(--fh-ease),
+        transform 0.34s cubic-bezier(0.4, 0, 1, 1);
 }
 
 /* The content row ────────────────────────────────────────────────── */
@@ -92,7 +115,7 @@
     padding: 10px var(--fh-nav-gutter);
     color: #fff;
     transition:
-        padding 0.55s var(--fh-ease),
+        padding 0.42s var(--fh-ease),
         color 0.45s;
 }
 
@@ -128,15 +151,20 @@
        settled, underneath a fill that has already faded up to 74% opaque —
        where a blur arriving is not something the eye can catch.
 
-       The base rule's `0s linear 0s` is what applies on the way back out, so
-       un-condensing drops the blur immediately rather than leaving it to haunt
-       a transparent bar over the hero. */
+       The base rule below is what applies on the way back out. It used to drop
+       the blur at `0s linear 0s` — instantly, on the first frame of the return,
+       while the fill still had 0.45s of fade left to run. That was the return's
+       "pop": the glass vanished in one frame and you then watched a plain
+       translucent bar dissolve. Holding the blur to 0.26s lets it leave under
+       roughly 40% of remaining fill, which is enough to cover the change, and
+       it is still gone before the bar goes fully transparent over the hero —
+       so it never haunts the photo, which is what the 0s was guarding against. */
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     transition:
-        opacity 0.45s var(--fh-ease),
-        backdrop-filter 0s linear 0s,
-        -webkit-backdrop-filter 0s linear 0s;
+        opacity 0.42s var(--fh-ease),
+        backdrop-filter 0s linear 0.26s,
+        -webkit-backdrop-filter 0s linear 0.26s;
 }
 
 #navWrap.is-condensed #siteNav::before {
@@ -144,9 +172,9 @@
     backdrop-filter: blur(18px) saturate(1.1);
     -webkit-backdrop-filter: blur(18px) saturate(1.1);
     transition:
-        opacity 0.45s var(--fh-ease),
-        backdrop-filter 0s linear 0.5s,
-        -webkit-backdrop-filter 0s linear 0.5s;
+        opacity 0.42s var(--fh-ease),
+        backdrop-filter 0s linear 0.4s,
+        -webkit-backdrop-filter 0s linear 0.4s;
 }
 
 /* Pages with no dark hero (checkout, account, auth) never sit over a
@@ -276,7 +304,17 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
 /* Centre nav — a glass capsule at rest that dissolves into the
    header's own pill once condensed (no pill-inside-a-pill). */
 .fh-nav {
-    display: flex;
+    /* No `display` here on purpose. The markup is `class="fh-nav hidden md:flex"`
+       (layouts/public/base), and this file is imported by app.css *outside* a
+       Tailwind layer — so a bare `display: flex` here outranked the `hidden`
+       utility and the desktop link capsule stayed on screen at every width. On
+       a 375px phone that put four 26px-tall links between the brand and the
+       hamburger, duplicating the drawer's own navigation in half the tap area.
+       Same trap as the `.press` rule documented in 09-craft: unlayered custom
+       CSS silently beats a utility that looks like it should win.
+
+       Leave display to the utilities. The flex properties below are inert until
+       `md:flex` turns the box on, which is exactly when they should apply. */
     align-items: center;
     gap: clamp(12px, 1.6vw, 26px);
     border: 1px solid rgba(255, 255, 255, 0.18);

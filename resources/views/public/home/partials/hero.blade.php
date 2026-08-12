@@ -12,17 +12,31 @@
 <header id="firstsection" class="fh-hero">
     {{-- Atmosphere: an out-of-focus copy of the building tints the whole sky.
          It carries a 66px blur, so it is served at the smallest tier the
-         builder makes — detail here is invisible by construction. --}}
+         builder makes — detail here is invisible by construction.
+
+         `sizes` deliberately under-declares the box. It is a selection hint,
+         not a layout value, so it is the lever for saying "resolve this one
+         cheaply": the sheet paints full-bleed, but at 66px of blur any tier
+         above the smallest is detail nobody can see. 25vw keeps it pinned to
+         the 480w tier (12.6 KB) at every viewport — the old 480px pulled 960w
+         (42 KB) on desktop and scaled unpredictably elsewhere, because a fixed
+         px hint ignores how wide the element actually paints. --}}
     <x-img src="image/farmers-hostel-wide.png" alt="" aria-hidden="true"
-           decoding="async" class="fh-hero-wash" sizes="480px" />
+           decoding="async" class="fh-hero-wash" sizes="25vw" />
 
     {{-- Stacked radial suns + corner falloff. --}}
     <div class="fh-hero-lights" aria-hidden="true"></div>
 
     {{-- Soft horizon band so the cut-out never floats on a bare gradient. --}}
     <div class="fh-hero-horizon" aria-hidden="true">
-        {{-- Also blurred (14px) and only 27% of the hero tall. --}}
-        <x-img src="image/farmers-hostel-wide.png" alt="" decoding="async" sizes="960px" />
+        {{-- Also blurred (14px) and only 27% of the hero tall. The band paints
+             full-bleed (~1513px on a desktop hero), so the honest hint is
+             100vw — which is what pulled the 1500w tier (94 KB). 50vw halves
+             that to 960w (42 KB): a deliberate 2x under-sample, which is the
+             most this one can give up while 14px of blur still hides it. It is
+             a softer stretch than the wash above because this band is only
+             barely defocused. --}}
+        <x-img src="image/farmers-hostel-wide.png" alt="" decoding="async" sizes="50vw" />
     </div>
 
     {{-- Dusk wash — opacity driven by scroll in home.js as the hero leaves. --}}
@@ -94,9 +108,13 @@
                 </h1>
 
                 <p class="hero-sub text-pretty mt-5 mb-7 max-w-[330px] text-[15.5px] leading-[1.64] text-white/90 [text-shadow:0_1px_16px_rgba(3,16,32,0.7)]">
-                    @foreach (preg_split('/\s+/', 'A boutique hostel in the heart of CLSU. Two minutes to the labs, the fields, and a proper Filipino breakfast.') as $i => $word)
-                        <span class="hero-sub-word" style="--w:{{ $i }}">{{ $word }}</span>
-                    @endforeach
+                    {{-- One text node, not 21 staggered spans. The per-word
+                         blur-in read as a nice touch and cost nearly three
+                         seconds of unsettled hero plus 21 per-frame GPU blur
+                         passes; the drift now runs once on this <p> (see
+                         .hero-sub in 06-hero.css). --}}
+                    A boutique hostel in the heart of CLSU. Two minutes to the
+                    labs, the fields, and a proper Filipino breakfast.
                 </p>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -173,11 +191,11 @@
                     <input type="hidden" id="widget_guests" value="1">
                     <div class="flex items-center gap-1">
                         <button type="button" id="btn_minus_guests" aria-label="Decrease guests"
-                                class="focus-ring press grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
+                                class="focus-ring press tap-expand grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
                             <x-booking.ui.icon name="minus" class="h-3 w-3" />
                         </button>
                         <button type="button" id="btn_plus_guests" aria-label="Increase guests"
-                                class="focus-ring press grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
+                                class="focus-ring press tap-expand grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-[#10161c]/15 bg-[#10161c]/5 text-[#10161c] transition hover:border-[#b8654a]/60 hover:bg-[#b8654a]/10">
                             <x-booking.ui.icon name="plus" class="h-3 w-3" />
                         </button>
                     </div>

@@ -52,3 +52,27 @@
 .testimonials-swiper .glass-night {
     background: color-mix(in oklch, var(--color-night-2) 96%, transparent);
 }
+
+/* ── Entrance offsets must not widen the page ──────────────────────
+   The reveal system parks an element at its start pose until it scrolls into
+   view: `data-aos="fade-left"` sits at translateX(40px) with opacity 0. That is
+   invisible, but it is still laid out — a right-column element parked 40px
+   further right reaches past the viewport edge, and the browser grows
+   scrollWidth for it. The result is a horizontal scrollbar on load that
+   disappears the moment the section reveals, which reads as the page twitching
+   sideways on a phone or tablet and is impossible to trace back to a visible
+   element, because the culprit is transparent.
+
+   `clip` rather than `hidden` on purpose. `overflow-x: hidden` forces the other
+   axis to `auto`, which turns <main> into a scroll container and breaks
+   position: sticky inside it; `overflow-x: clip` leaves overflow-y genuinely
+   visible. It also does not become a containing block, so the fixed header
+   (which lives outside <main> anyway) and the parallax layers are untouched —
+   every one of those is already clipped by its own section.
+
+   This is a guard, not a licence: real horizontal overflow should still be
+   fixed at the source. See the gallery masonry ratios in 19-gallery-masonry
+   for one that was doing exactly that and had to be corrected properly. */
+#main-content {
+    overflow-x: clip;
+}

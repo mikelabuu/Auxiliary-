@@ -135,8 +135,15 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
     mask-image: linear-gradient(105deg, #000 45%, transparent 65%);
     -webkit-mask-size: 300% 100%;
     mask-size: 300% 100%;
+    /* Timings here are scaled ~0.55x from the original (1.5s/0.15s). The whole
+       splash choreography was retimed together — see the dwell in
+       partials/intro.blade.php — because shortening the exit alone would cut
+       this reveal off mid-wipe. Lighthouse always sees this splash (a fresh
+       session means `fhIntroSeen` is never set), and Speed Index counts every
+       frame the page is still changing, so the full sequence was costing ~4s
+       of "visually incomplete" on a hero that had already painted at 0.8s. */
     animation:
-        intro-word-reveal 1.5s cubic-bezier(0.19, 1, 0.22, 1) 0.15s both,
+        intro-word-reveal 0.85s cubic-bezier(0.19, 1, 0.22, 1) 0.08s both,
         intro-gradient-pan 3.2s ease-in-out infinite alternate;
     will-change: transform;
 }
@@ -184,7 +191,7 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
     text-transform: uppercase;
     color: color-mix(in oklch, var(--color-emerald-deep) 62%, var(--color-cream));
     opacity: 0;
-    animation: intro-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards;
+    animation: intro-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
 }
 
 .intro-rule {
@@ -193,7 +200,7 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
     flex: none;
     background: color-mix(in oklch, var(--color-gold) 75%, transparent);
     transform: scaleX(0);
-    animation: hairline-draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+    animation: hairline-draw 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
 }
 
 .intro-rule:first-child {
@@ -235,7 +242,7 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
    welcome.blade.php so it can measure the real headline position. */
 #introSplash.is-exiting .intro-curtain {
     clip-path: inset(0 0 100% 0);
-    transition: clip-path 0.95s cubic-bezier(0.76, 0, 0.24, 1) 0.12s;
+    transition: clip-path 0.6s cubic-bezier(0.76, 0, 0.24, 1) 0.08s;
 }
 
 #introSplash.is-exiting .intro-tagline {
@@ -264,7 +271,7 @@ html:not(.intro-hold) #introSplash:not(.is-exiting) {
     mix-blend-mode: overlay;
     opacity: 0.55;
     transform: translateX(-108%);
-    animation: title-gradient-pass 1.35s cubic-bezier(0.25, 1, 0.5, 1) 0.45s forwards;
+    animation: title-gradient-pass 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards;
 }
 
 @keyframes title-gradient-pass {

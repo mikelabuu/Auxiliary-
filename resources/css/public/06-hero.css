@@ -777,40 +777,44 @@
     will-change: auto;
 }
 
-/* ── Hero subtitle: BlurText (reactbits.dev/text-animations/blur-text) ──
-   Per-word two-step blur-sharpen (10px → 5px at the midpoint → 0) drifting
-   down from above (direction 'top'), staggered word-by-word. Runs on the
-   hero's own load clock (not the scroll observer) so it lands inside the
-   choreography. Hidden state sits inside the gate so reduced motion / no-JS
-   read it instantly. */
+/* ── Hero subtitle: one drift-in, whole paragraph ──
+   This was a per-word BlurText stagger (reactbits.dev/text-animations/blur-text):
+   21 inline-block spans, each animating `filter: blur(10px)` on its own clock at
+   `.95s + --w * 60ms`. Two problems, one cosmetic and one measurable.
+
+   The last word did not start until 2.15s and did not settle until 2.85s, so
+   the sentence spent nearly three seconds arriving one word at a time — long
+   after the hero image had painted at 0.8s. And an animated `filter` cannot be
+   handed to the compositor: each of the 21 spans forced a repaint plus a GPU
+   blur pass every frame it moved, which is what put Style & Layout near the top
+   of the main-thread profile and held Speed Index at 8.7s on desktop.
+
+   The replacement keeps the same gesture — drift down from above, same easing,
+   same start beat — on the paragraph as a single element. `opacity` and
+   `transform` are both compositor properties, so the whole thing is one cheap
+   layer instead of 21 expensive ones, and the copy is readable at 1.55s.
+
+   Hidden state stays inside the gate so reduced motion / no-JS read it
+   instantly. The `html.intro-hold #firstsection *` pause in 09-intro-splash
+   still covers this: it matches on descendants, not on the old class name. */
 @media (prefers-reduced-motion: no-preference) {
-    .hero-sub-word {
-        display: inline-block;
+    .fh-hero-pitch .hero-sub {
         opacity: 0;
-        transform: translateY(-12px);
-        filter: blur(10px);
-        animation: hero-sub-blur .7s cubic-bezier(0.22, 1, 0.36, 1) both;
-        animation-delay: calc(.95s + var(--w, 0) * 60ms);
+        transform: translateY(-10px);
+        animation: hero-sub-rise .6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: .95s;
     }
 }
 
-@keyframes hero-sub-blur {
+@keyframes hero-sub-rise {
     0% {
         opacity: 0;
-        transform: translateY(-12px);
-        filter: blur(10px);
-    }
-
-    50% {
-        opacity: .5;
-        transform: translateY(-3px);
-        filter: blur(5px);
+        transform: translateY(-10px);
     }
 
     100% {
         opacity: 1;
         transform: none;
-        filter: none;
     }
 }
 

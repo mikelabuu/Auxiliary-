@@ -381,7 +381,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     let ticking = false;
-    let heroH = hero.offsetHeight || 800;
+    // Placeholder, not a measurement. measure() below sets the real value and
+    // is the only thing that should read layout — taking offsetHeight here as
+    // well forced a synchronous layout during script execution (PageSpeed:
+    // 124ms of forced reflow) to produce a number that was overwritten
+    // milliseconds later anyway.
+    let heroH = 800;
 
     function paint() {
         ticking = false;
@@ -408,7 +413,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (reduceMQ.matches) return;
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', measure);
-    measure();
+    // Deferred a frame so the first measurement happens after the browser has
+    // laid out on its own schedule, rather than forcing it mid-parse. At scroll
+    // 0 the hero transform is identity, so there is nothing to see in the gap;
+    // a page restored mid-scroll simply paints its offset one frame later.
+    requestAnimationFrame(measure);
 })();
 
 // ── Wordmark proximity wave ──────────────────────────────────────

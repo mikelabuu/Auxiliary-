@@ -68,12 +68,12 @@
                         { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
                         { transform: 'translate(' + dx * 0.85 + 'px, ' + dy * 0.85 + 'px) scale(' + ((1 + s) / 2) + ')', opacity: 0.55, offset: 0.7 },
                         { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + s + ')', opacity: 0 }
-                    ], { duration: 950, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                    ], { duration: 600, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
                 } else {
                     wordmark.animate([
                         { transform: 'scale(1)', opacity: 1 },
                         { transform: 'scale(0.92)', opacity: 0 }
-                    ], { duration: 600, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+                    ], { duration: 400, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
                 }
             }
 
@@ -85,11 +85,11 @@
                 document.documentElement.classList.remove('intro-hold');
                 if (title) {
                     title.classList.add('title-gradient-pass');
-                    setTimeout(function () { title.classList.remove('title-gradient-pass'); }, 2400);
+                    setTimeout(function () { title.classList.remove('title-gradient-pass'); }, 1400);
                 }
-            }, 240);
+            }, 160);
 
-            setTimeout(function () { splash.remove(); }, 1450);
+            setTimeout(function () { splash.remove(); }, 850);
         }
 
         // Impatient visitors skip straight to the reveal
@@ -97,7 +97,12 @@
             window.addEventListener(t, finish, { once: true, passive: true });
         });
 
-        function arm() { setTimeout(finish, 2050); }
+        // Dwell. Retimed from 2050ms alongside the CSS in 09-intro-splash, which
+        // now finishes its entrance at ~1.0s instead of ~1.85s — the two have to
+        // move together or the curtain starts lifting mid-wordmark-reveal. The
+        // whole sequence now clears at ~2.0s rather than ~3.5s, with the title
+        // sweep done by ~2.5s instead of ~4.1s.
+        function arm() { setTimeout(finish, 1150); }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', arm);
         } else {

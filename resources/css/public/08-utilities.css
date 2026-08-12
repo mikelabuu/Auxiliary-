@@ -616,3 +616,43 @@ body.theme-boutique .avail-pill--low {
     background: var(--color-stone-300);
     border-radius: 9999px;
 }
+
+/* ── .tap-expand — grow the touch target without growing the control ──
+   WCAG 2.5.8 asks for 24x24 CSS px; iOS and Android both design to 44. Several
+   controls on the landing page are deliberately small because the composition
+   wants them small — the guest stepper in the availability capsule is 28px and
+   sits 4px from its twin, which is comfortable with a mouse and fiddly with a
+   thumb.
+
+   Rather than enlarge the control and lose the proportions, this pushes an
+   invisible hit area out past its edges. The button keeps its 28px ring; the
+   region that responds to a tap becomes ~40px, and the two steppers stop
+   sharing a border a thumb can straddle.
+
+   Requires a positioned host — every consumer so far is `grid place-items-center`
+   plus this class, and `position: relative` is set here so callers cannot forget
+   it. The pseudo is inert to the cursor's appearance (no background, no border)
+   and sits *below* the button's own content via a negative z-index, so it never
+   covers an icon or intercepts a focus ring. */
+.tap-expand {
+    position: relative;
+}
+
+.tap-expand::after {
+    content: '';
+    position: absolute;
+    /* -6px on a 28px control lands a 40px target. Kept in one place so the
+       number is auditable rather than scattered across call sites. */
+    inset: -6px;
+    z-index: -1;
+    border-radius: inherit;
+}
+
+/* A pointer that can hover is a mouse or a trackpad, which does not need the
+   padding — and on a dense toolbar the expanded regions could otherwise overlap
+   a neighbour and steal its click. Only coarse pointers get the bigger target. */
+@media (hover: hover) and (pointer: fine) {
+    .tap-expand::after {
+        content: none;
+    }
+}

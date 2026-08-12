@@ -94,8 +94,14 @@
              opacity is composited. The filter stays as a static value so the
              resting image keeps its slightly muted grade; it just never
              animates. --}}
+        {{-- The last hop tracks the rooms grid, which widens at xl/2xl (see
+             public/home/partials/rooms.blade.php): cards run ~384px up to
+             1279px, ~421px to 1535px, ~458px above. A flat 400px hint was
+             already under-declaring the top end, and the card scales its photo
+             1.05x on hover, so the served tier has to cover the hover state
+             too — hence 480px rather than the resting width. --}}
         <x-img data-card-image :src="$image" :alt="$title" loading="lazy" decoding="async"
-               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1279px) 400px, 480px"
                class="absolute inset-0 h-full w-full object-cover brightness-[0.94] saturate-[0.92] [transition:transform_800ms_cubic-bezier(0.22,1,0.36,1),opacity_400ms_ease] group-hover:scale-[1.05]" />
 
         {{-- Tint layer: fades out on hover, which reads as the photograph
