@@ -14,7 +14,24 @@
 
 @section('content')
 
-    @include('public.home.partials.intro')
+    {{-- Cinematic intro splash — disabled 2026-08-13.
+
+         To bring it back, uncomment the line below. The partial, its styles
+         (public/09-intro-splash.css) and the exit choreography are all intact
+         and untouched; this is the only line that switches it on or off.
+
+         Why it is off: it held the page for ~1.15s of dwell plus a ~0.85s
+         curtain lift, with `overflow: hidden` on <html> and <body> for the
+         whole of it, so nothing could be scrolled or tapped for roughly two
+         seconds. On the hosted site the landing is now interactive at ~800ms
+         (332ms of that is TTFB), which made the splash comfortably the single
+         largest delay on a first visit — it was holding a page that had
+         already finished loading. It had also been reported as "heavy" twice.
+
+         It was already skipped below 768px, for reduced-motion, on save-data
+         and on repeat visits in the same tab, so it only ever played for
+         first-time desktop visitors. --}}
+    {{-- @include('public.home.partials.intro') --}}
 
     <!-- Site-wide film grain: fixed, non-interactive, breaks digital flatness.
          Sits above content but below the nav (z-50) and overlays. -->

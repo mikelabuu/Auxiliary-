@@ -95,7 +95,7 @@
             // `will-change: clip-path` in 12-scroll-effects.css, and once the
             // reveal has played there is no clip left to animate, so holding
             // the hint just pins a full-bleed layer for the rest of the
-            // session. Same reasoning as .fx-words-rest below.
+            // session. Same reasoning as .fx-words-live below.
             if (!item.done) {
                 item.el.style.clipPath = '';
                 item.el.style.willChange = 'auto';
@@ -130,6 +130,19 @@
         const end = viewH * 0.38 - r.height / 2;
         const P = clamp((start - r.top) / (start - end), 0, 1);
 
+        // Hold the per-word compositor layers only while the sweep is live.
+        //
+        // This has to sit ABOVE the early-out below: while the paragraph is
+        // still approaching, P is pinned at 0 and the early-out returns, so a
+        // toggle placed after it would never see the frames where the words
+        // are coming into range and would never arm.
+        //
+        // One viewport of lead time, because `will-change` needs a frame to
+        // take effect — arming exactly as the sweep starts promotes a frame
+        // too late to help the first one.
+        const near = r.top < viewH * 2 && r.bottom > 0;
+        item.el.classList.toggle('fx-words-live', near && P < 1);
+
         // Unlike the band and card effects above, this loop had no early-out.
         // Because P is clamped, a paragraph sitting far off-screen holds P at
         // exactly 0 or 1 — and the loop still rewrote opacity + transform +
@@ -150,12 +163,10 @@
             if (allowBlur) w.style.filter = t >= 1 ? '' : 'blur(' + ((1 - t) * 5).toFixed(2) + 'px)';
         }
 
-        // Once the sweep has fully played, release the compositor layers that
-        // .fx-words-on pins with `will-change: transform, opacity, filter` —
-        // one per word, held for the whole session otherwise. The class itself
-        // stays: it also carries `display: inline-block`, and dropping that
-        // would re-wrap the paragraph and shift layout.
-        item.el.classList.toggle('fx-words-rest', P >= 1);
+        // The layer release used to happen here, via .fx-words-rest once
+        // P >= 1. That only covered the far end: it never stopped the layers
+        // being taken at init and held through the whole approach. The
+        // .fx-words-live toggle above now covers both ends, so this is gone.
     }
 
     function updateCard(item) {

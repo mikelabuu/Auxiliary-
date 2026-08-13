@@ -15,19 +15,32 @@
 }
 
 /* Manifesto words become transform targets only once the script arms
-   the paragraph — a no-JS page keeps plain inline text. */
+   the paragraph — a no-JS page keeps plain inline text.
+
+   `display` only. It is applied at init and never removed, because it is
+   what keeps the paragraph's line breaks stable — toggling it would
+   re-wrap the text and shift the layout under the reader. */
 .fx-words-on .fw {
     display: inline-block;
-    will-change: transform, opacity, filter;
 }
 
-/* Sweep finished — scroll-effects.js adds this so the per-word compositor
-   layers are handed back. `will-change` is a hint for animation about to
-   happen, not a permanent decoration; left on, every word keeps its own
-   layer for the rest of the session. `display` stays put, since changing
-   it here would re-wrap the paragraph. */
-.fx-words-on.fx-words-rest .fw {
-    will-change: auto;
+/* The compositor hint is separate, and is only on while the sweep is
+   actually in flight (see updateWords in scroll-effects.js).
+
+   It used to live on .fx-words-on above, which is added to every
+   [data-fx-words] paragraph during init. That meant 23 words each took a
+   permanent layer — and with `filter` in the hint, the expensive kind —
+   from the moment the page loaded, for a paragraph sitting well below the
+   fold that would not animate until the reader scrolled to it, if ever.
+   The release only came after the sweep had fully played, so on a first
+   visit the layers were held for the whole session. That is a real cost on
+   a phone or a low-end tablet, where GPU memory is the scarce resource and
+   the landing page was asking for ~56 layers before a finger had moved.
+
+   `will-change` is a promise that something is about to animate. Holding
+   it open indefinitely is the documented way to make it backfire. */
+.fx-words-on.fx-words-live .fw {
+    will-change: transform, opacity, filter;
 }
 
 /* ── Testimonial card deck (Swiper `cards` effect) ─────────────────

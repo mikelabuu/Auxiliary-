@@ -111,7 +111,7 @@
 /* home.js adds this once the wordmark leaves the viewport. `will-change` is a
    promise that something is about to animate; off screen nothing is, and the
    hint was pinning the wordmark plus all thirteen of its characters on the
-   compositor for the life of the page. Same stance as .fx-words-rest in
+   compositor for the life of the page. Same stance as .fx-words-live in
    12-scroll-effects.css and .fha-word-in.is-done in 14-auth.css. */
 .fh-wordmark.is-offscreen,
 .fh-wordmark.is-offscreen .fh-wm-char {
