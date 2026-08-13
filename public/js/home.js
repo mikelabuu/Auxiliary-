@@ -412,44 +412,49 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!hero || (!word && !deepen)) return;
 
     const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let ticking = false;
-    // Placeholder, not a measurement. measure() below sets the real value and
-    // is the only thing that should read layout — taking offsetHeight here as
-    // well forced a synchronous layout during script execution (PageSpeed:
-    // 124ms of forced reflow) to produce a number that was overwritten
-    // milliseconds later anyway.
+    if (reduceMQ.matches) return;
+
+    // Placeholder, not a measurement. The measure pass below sets the real
+    // value and is the only thing that should read layout — taking offsetHeight
+    // here as well forced a synchronous layout during script execution
+    // (PageSpeed: 124ms of forced reflow) to produce a number that was
+    // overwritten milliseconds later anyway.
     let heroH = 800;
 
-    function paint() {
-        ticking = false;
-        const y = window.pageYOffset || document.documentElement.scrollTop || 0;
-        const p = Math.min(1, y / Math.max(heroH, 1));
+    function paint(s) {
+        const p = Math.min(1, s.scrollY / Math.max(heroH, 1));
         if (word) {
             word.style.transform = 'translate3d(0, ' + (-p * 96).toFixed(1) + 'px, 0)';
             word.style.opacity = String(Math.max(0, 1 - p * 1.15));
         }
         if (deepen) deepen.style.opacity = Math.min(1, p * 1.15).toFixed(3);
+        return false; // position-mapped, nothing to settle
     }
 
-    function onScroll() {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(paint);
+    // Shares the page's single scroll loop instead of running a third one of
+    // its own — see public/js/frame-bus.js. Falls back to a private rAF if the
+    // bus is absent, which keeps this working on any page that loads home.js
+    // without frame-bus.js.
+    if (window.FHFrame) {
+        window.FHFrame.onMeasure(function () { heroH = hero.offsetHeight || 800; });
+        window.FHFrame.onTick(paint);
+    } else {
+        let ticking = false;
+        const onScroll = function () {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(function () {
+                ticking = false;
+                paint({ scrollY: window.pageYOffset || document.documentElement.scrollTop || 0 });
+            });
+        };
+        const measure = function () { heroH = hero.offsetHeight || 800; onScroll(); };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', measure);
+        // Deferred a frame so the first measurement happens after the browser
+        // has laid out on its own schedule, rather than forcing it mid-parse.
+        requestAnimationFrame(measure);
     }
-
-    function measure() {
-        heroH = hero.offsetHeight || 800;
-        onScroll();
-    }
-
-    if (reduceMQ.matches) return;
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', measure);
-    // Deferred a frame so the first measurement happens after the browser has
-    // laid out on its own schedule, rather than forcing it mid-parse. At scroll
-    // 0 the hero transform is identity, so there is nothing to see in the gap;
-    // a page restored mid-scroll simply paints its offset one frame later.
-    requestAnimationFrame(measure);
 })();
 
 // ── Wordmark proximity wave ──────────────────────────────────────

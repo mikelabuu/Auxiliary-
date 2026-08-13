@@ -110,6 +110,17 @@
         <script src="{{ asset('vendor/alpine/alpine.min.js') }}" defer></script>
     @endif
 
+    {{-- Shared scroll/frame scheduler. Must execute before any consumer
+         (home.js, parallax.js, scroll-effects.js), so it lives here in <head>
+         rather than beside them: `defer` scripts run in document order, and
+         @yield('content') — where the page-level scripts sit — comes later.
+
+         One rAF loop and one scroll listener for the whole page. The three
+         files above each used to run their own; measured at 6x CPU throttle,
+         scrolling the landing page cost 27.7ms/frame with all three loops and
+         7.1ms with none, while removing any single one only reached ~21ms. --}}
+    <script src="{{ asset('js/frame-bus.js') }}?v={{ filemtime(public_path('js/frame-bus.js')) }}" defer></script>
+
     @stack('styles')
 </head>
 @php

@@ -22,13 +22,39 @@
  *                     each word eases from lowered/blurred/dim to rest,
  *                     staggered by index, as the paragraph crosses the
  *                     viewport's reading band.
+ *  [data-fx-card]   → cinematic card handoff (easemize cinematic-landing-hero,
+ *                     GSAP "main-card takeover" ported to the scrub idiom): the
+ *                     section after the hero arrives lifted, slightly scaled and
+ *                     rounded — a card — and settles to full bleed as it climbs.
+ *                     Its surface/shadow live on a CSS ::before driven by
+ *                     --fx-card, so nothing lingers at rest.
  *
- * Direct scrub, no lerp: on desktop Lenis already supplies the inertia, and
- * a second smoothing layer would detach the effects from the scrollbar.
- * All styles written here are paint/composite-only (clip-path, dashoffset,
- * transform, opacity, filter), so the fresh rect reads each frame never
- * trigger layout thrash. No-JS / reduced-motion pages render fully static —
- * nothing is hidden by default.
+ * Direct scrub, no lerp: the effects stay welded to the scrollbar rather than
+ * trailing it. No-JS / reduced-motion pages render fully static — nothing is
+ * hidden by default.
+ *
+ * ── Layout reads ──────────────────────────────────────────────────────
+ * This file used to call getBoundingClientRect() on every tracked element on
+ * every frame, and the header here claimed that was free because "all styles
+ * written here are paint/composite-only, so the fresh rect reads each frame
+ * never trigger layout thrash".
+ *
+ * That was wrong, and it was the single most expensive thing on the landing
+ * page. The written properties being paint-only (clip-path, dashoffset,
+ * opacity, transform) does not matter: writing any of them marks style dirty,
+ * and the *next* getBoundingClientRect() has to flush that pending style —
+ * recalculating style and running layout — before it can answer. The loop read
+ * a rect, wrote a style, read the next rect, wrote the next style, four times
+ * per frame. Classic read-after-write thrash, and it sat between the other two
+ * scroll loops' writes so it flushed their pending styles too.
+ *
+ * Rects are now cached in document space (top + scrollY) exactly the way
+ * parallax.js has always done it, and re-measured only when geometry can
+ * actually have changed — resize, load, element resize. The scrub maths reads
+ * `docTop - scrollY` instead, which is arithmetic, not layout.
+ *
+ * See public/js/frame-bus.js for the shared loop this subscribes to and the
+ * measurements that motivated it.
  */
 (function () {
     'use strict';
@@ -36,19 +62,58 @@
     const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (reduceMQ.matches) return;
 
+    // Shared scheduler. If frame-bus.js failed to load, install an equivalent
+    // local one rather than going static — same API, same one-loop guarantee.
+    const bus = (function () {
+        if (window.FHFrame) return window.FHFrame;
+        let ticks = [], measures = [], queued = false, last = performance.now();
+        const s = { scrollY: window.pageYOffset || 0, viewH: window.innerHeight, viewW: window.innerWidth, docH: 0, dt: 1 / 60, now: last };
+        function req() {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(function (n) {
+                queued = false;
+                s.dt = Math.min(Math.max((n - last) / 1000, 0), 0.1) || 1 / 60;
+                last = n; s.now = n; s.scrollY = window.pageYOffset || 0;
+                let again = false;
+                for (let i = 0; i < ticks.length; i++) { try { if (ticks[i](s) === true) again = true; } catch (e) { } }
+                if (again) req();
+            });
+        }
+        function mea() {
+            s.viewH = window.innerHeight; s.viewW = window.innerWidth;
+            s.scrollY = window.pageYOffset || 0; s.docH = document.documentElement.scrollHeight;
+            for (let i = 0; i < measures.length; i++) { try { measures[i](s); } catch (e) { } }
+            req();
+        }
+        window.addEventListener('scroll', req, { passive: true });
+        window.addEventListener('resize', mea, { passive: true });
+        window.addEventListener('load', mea);
+        if (window.ResizeObserver) new ResizeObserver(mea).observe(document.documentElement);
+        window.FHFrame = {
+            state: s,
+            onTick: function (f) { ticks.push(f); req(); return f; },
+            onMeasure: function (f) { measures.push(f); return f; },
+            offTick: function (f) { const i = ticks.indexOf(f); if (i > -1) ticks.splice(i, 1); },
+            request: req, measure: mea, stop: function () { },
+        };
+        requestAnimationFrame(mea);
+        return window.FHFrame;
+    })();
+
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
     // Smoothstep — softens both ends of a scrub without hiding the mapping
     const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 
-    let viewH = window.innerHeight;
-    let viewW = window.innerWidth;
     // Blur is a desktop luxury — same mobile stance as parallax.js
-    let allowBlur = viewW >= 768;
+    let allowBlur = window.innerWidth >= 768;
 
     // ── Collect ─────────────────────────────────────────────────────
+    // Every tracked item carries { el, docTop, height } — its geometry in
+    // document space, refreshed only by measureAll().
     const bands = [];
     document.querySelectorAll('[data-fx-band]').forEach((el) => {
-        bands.push({ el, done: false });
+        bands.push({ el, done: false, docTop: 0, height: 0 });
     });
 
     const threads = [];
@@ -57,7 +122,7 @@
         if (!path) return;
         path.style.strokeDasharray = '1 1';
         path.style.strokeDashoffset = '1';
-        threads.push({ el: svg, path });
+        threads.push({ el: svg, path, docTop: 0, height: 0 });
     });
 
     const wordSets = [];
@@ -67,27 +132,41 @@
         // Arms the inline-block/will-change CSS — only under JS control,
         // so a no-JS page keeps plain, fully visible text.
         p.classList.add('fx-words-on');
-        wordSets.push({ el: p, words });
+        wordSets.push({ el: p, words, docTop: 0, height: 0 });
     });
 
-    // [data-fx-card] → cinematic card handoff (easemize cinematic-landing-hero,
-    // GSAP "main-card takeover" ported to the scrub idiom): the section after
-    // the hero arrives lifted, slightly scaled and rounded — a card — and
-    // settles to full bleed as it climbs. Its surface/shadow live on a CSS
-    // ::before driven by --fx-card, so nothing lingers at rest.
     const cards = [];
     document.querySelectorAll('[data-fx-card]').forEach((el) => {
-        cards.push({ el, done: false });
+        cards.push({ el, done: false, docTop: 0, height: 0 });
     });
 
-    if (!bands.length && !threads.length && !wordSets.length && !cards.length) return;
+    const all = bands.concat(threads, wordSets, cards);
+    if (!all.length) return;
 
-    // ── Frame updates ───────────────────────────────────────────────
+    // ── Measure (the only place that touches layout) ─────────────────
+    function measureAll(s) {
+        allowBlur = s.viewW >= 768;
+        for (let i = 0; i < all.length; i++) {
+            const item = all[i];
+            const r = item.el.getBoundingClientRect();
+            item.docTop = r.top + s.scrollY;
+            item.height = r.height;
+        }
+    }
 
-    function updateBand(item) {
-        const r = item.el.getBoundingClientRect();
+    // Elements resizing under their own steam (a late webfont reflowing the
+    // paragraph, a lazy image landing inside a band) move everything below them.
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => bus.measure());
+        all.forEach((item) => ro.observe(item.el));
+    }
+
+    // ── Frame updates — arithmetic only, no layout reads ─────────────
+
+    function updateBand(item, s) {
+        const top = item.docTop - s.scrollY;
         // 0 → band top at the fold; 1 → top has climbed 78% of the viewport
-        const p = smooth((viewH - r.top) / (viewH * 0.78));
+        const p = smooth((s.viewH - top) / (s.viewH * 0.78));
         if (p >= 1) {
             // Fully revealed: hand back an unclipped element so nothing is
             // left masking while the band just sits there. The compositor
@@ -106,29 +185,32 @@
         if (item.done) item.el.style.willChange = '';
         item.done = false;
         const inv = 1 - p;
-        const x = (inv * 0.07 * viewW).toFixed(1);
-        const y = (inv * 0.055 * viewH).toFixed(1);
+        const x = (inv * 0.07 * s.viewW).toFixed(1);
+        const y = (inv * 0.055 * s.viewH).toFixed(1);
         const rad = (inv * 40).toFixed(1);
         item.el.style.clipPath = 'inset(' + y + 'px ' + x + 'px round ' + rad + 'px)';
     }
 
-    function updateThread(item) {
-        const r = item.el.getBoundingClientRect();
+    function updateThread(item, s) {
+        const top = item.docTop - s.scrollY;
         // Tip enters at ~82% of the viewport, completes as the section's
         // bottom clears the reading band — the line tracks reading pace.
-        const start = viewH * 0.82;
-        const end = viewH * 0.42 - r.height;
-        const p = smooth((start - r.top) / (start - end));
+        const start = s.viewH * 0.82;
+        const end = s.viewH * 0.42 - item.height;
+        const p = smooth((start - top) / (start - end));
+        // Sub-pixel dash changes aren't visible but still repaint the path.
+        if (item.lastP !== undefined && Math.abs(p - item.lastP) < 0.0005) return;
+        item.lastP = p;
         item.path.style.strokeDashoffset = (1 - p).toFixed(4);
     }
 
-    function updateWords(item) {
-        const r = item.el.getBoundingClientRect();
+    function updateWords(item, s) {
+        const top = item.docTop - s.scrollY;
         // The sweep begins as the paragraph clears the fold and completes
         // when its middle reaches the upper reading band.
-        const start = viewH * 0.94;
-        const end = viewH * 0.38 - r.height / 2;
-        const P = clamp((start - r.top) / (start - end), 0, 1);
+        const start = s.viewH * 0.94;
+        const end = s.viewH * 0.38 - item.height / 2;
+        const P = clamp((start - top) / (start - end), 0, 1);
 
         // Hold the per-word compositor layers only while the sweep is live.
         //
@@ -140,15 +222,14 @@
         // One viewport of lead time, because `will-change` needs a frame to
         // take effect — arming exactly as the sweep starts promotes a frame
         // too late to help the first one.
-        const near = r.top < viewH * 2 && r.bottom > 0;
+        const near = top < s.viewH * 2 && (top + item.height) > 0;
         item.el.classList.toggle('fx-words-live', near && P < 1);
 
-        // Unlike the band and card effects above, this loop had no early-out.
-        // Because P is clamped, a paragraph sitting far off-screen holds P at
-        // exactly 0 or 1 — and the loop still rewrote opacity + transform +
-        // filter on all of its spans, every frame, for the life of the page.
-        // The scrub is position-mapped, so an unchanged P can only produce the
-        // values already on the element.
+        // A paragraph sitting far off-screen holds P at exactly 0 or 1, and
+        // the scrub is position-mapped, so an unchanged P can only produce the
+        // values already on the element. Without this the loop rewrote opacity
+        // + transform + filter on every span, every frame, for the life of the
+        // page.
         if (item.lastP !== undefined && Math.abs(P - item.lastP) < 0.0005) return;
         item.lastP = P;
 
@@ -162,17 +243,12 @@
             w.style.transform = t >= 1 ? '' : 'translateY(' + ((1 - t) * 0.35).toFixed(3) + 'em)';
             if (allowBlur) w.style.filter = t >= 1 ? '' : 'blur(' + ((1 - t) * 5).toFixed(2) + 'px)';
         }
-
-        // The layer release used to happen here, via .fx-words-rest once
-        // P >= 1. That only covered the far end: it never stopped the layers
-        // being taken at init and held through the whole approach. The
-        // .fx-words-live toggle above now covers both ends, so this is gone.
     }
 
-    function updateCard(item) {
-        const r = item.el.getBoundingClientRect();
+    function updateCard(item, s) {
+        const top = item.docTop - s.scrollY;
         // 0 → section top at the fold; 1 → top has climbed 62% of the viewport
-        const p = smooth((viewH - r.top) / (viewH * 0.62));
+        const p = smooth((s.viewH - top) / (s.viewH * 0.62));
         if (p >= 1) {
             // Settled: hand back a plain, unclipped, untransformed section
             if (!item.done) {
@@ -191,40 +267,26 @@
         item.el.style.setProperty('--fx-card', inv.toFixed(3));
     }
 
-    // ── Loop (scroll-armed rAF, idle when still) ────────────────────
-    let ticking = false;
+    // ── Subscribe ───────────────────────────────────────────────────
     let dead = false;
 
-    function render() {
-        ticking = false;
-        if (dead) return;
-        for (const b of bands) updateBand(b);
-        for (const t of threads) updateThread(t);
-        for (const w of wordSets) updateWords(w);
-        for (const c of cards) updateCard(c);
-    }
-
-    function requestTick() {
-        if (!ticking && !dead) {
-            ticking = true;
-            requestAnimationFrame(render);
-        }
-    }
-
-    window.addEventListener('scroll', requestTick, { passive: true });
-    window.addEventListener('resize', () => {
-        viewH = window.innerHeight;
-        viewW = window.innerWidth;
-        allowBlur = viewW >= 768;
-        requestTick();
-    }, { passive: true });
-    // Image loads shift layout after DOMContentLoaded — repaint once settled
-    window.addEventListener('load', requestTick);
+    bus.onMeasure(measureAll);
+    const tick = bus.onTick(function (s) {
+        if (dead) return false;
+        for (let i = 0; i < bands.length; i++) updateBand(bands[i], s);
+        for (let i = 0; i < threads.length; i++) updateThread(threads[i], s);
+        for (let i = 0; i < wordSets.length; i++) updateWords(wordSets[i], s);
+        for (let i = 0; i < cards.length; i++) updateCard(cards[i], s);
+        // Position-mapped, so there is nothing to settle: one pass per scroll
+        // event is complete. Never asks for a follow-up frame.
+        return false;
+    });
 
     // ── Live reduced-motion toggle: return everything to natural rest ──
     reduceMQ.addEventListener('change', (e) => {
         if (!e.matches) return;
         dead = true;
+        bus.offTick(tick);
         for (const c of cards) {
             c.el.style.transform = '';
             c.el.style.borderRadius = '';
@@ -244,6 +306,4 @@
             });
         }
     });
-
-    requestTick();
 })();

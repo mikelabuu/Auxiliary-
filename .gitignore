@@ -13,7 +13,18 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+# /public/build is deliberately NOT ignored.
+#
+# The host cannot run `npm run build` — only the hosting admin can — so the
+# compiled Vite output has to travel with the repo or the site ships source
+# CSS/JS that nothing serves. It is small and self-cleaning: 7 files, ~800 KB,
+# and Vite empties the directory on every build, so old hashed assets do not
+# accumulate.
+#
+# The cost is that `npm run build` is now part of committing, not part of
+# deploying: any change under resources/css or resources/js (and any Blade edit
+# that introduces a new Tailwind utility) must be rebuilt and committed, or the
+# deployed page keeps the previous stylesheet.
 /public/hot
 /public/storage
 /storage/*.key

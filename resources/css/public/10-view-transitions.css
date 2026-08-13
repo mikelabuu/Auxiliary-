@@ -19,6 +19,39 @@
     animation: vt-fade-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── Same-page transitions must NOT fade the whole document ──────
+   The two rules above were written for cross-document navigation, but
+   `::view-transition-old/new(root)` matches EVERY view transition — including
+   the same-page `document.startViewTransition()` that room-filters.js runs
+   whenever the room grid is re-filtered.
+
+   That made the hero guests stepper flash the entire page: one click faded the
+   whole document out over 200ms and back in over 380ms, to animate a few room
+   cards below the fold. Measured with a CDP screencast, a single click on "+"
+   repainted 80.5% of the viewport across four consecutive frames; with the root
+   fade suppressed it repaints 1.5% and nothing outside the room grid moves.
+
+   room-filters.js sets `.vt-scoped` on <html> for the duration of its own
+   transitions, so page-to-page navigation keeps the crossfade untouched.
+
+   Both snapshots need `mix-blend-mode: normal`: the UA stylesheet gives them
+   `plus-lighter` so a crossfade stays energy-preserving, and leaving that on
+   while cancelling the animation would additively blend two full-opacity
+   snapshots and wash the page out. Elements carrying their own
+   `view-transition-name` (the room cards) are lifted out of the root snapshot,
+   so they still morph and stagger exactly as before. */
+html.vt-scoped::view-transition-old(root) {
+    animation: none;
+    opacity: 0;
+    mix-blend-mode: normal;
+}
+
+html.vt-scoped::view-transition-new(root) {
+    animation: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+}
+
 @keyframes vt-fade-out {
     to {
         opacity: 0;

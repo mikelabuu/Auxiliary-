@@ -59,6 +59,56 @@
     const reduceMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (reduceMotionMQ.matches) return;
 
+    // ── Shared frame scheduler ───────────────────────────────────────
+    // This engine used to own a scroll listener and a rAF loop. So did
+    // scroll-effects.js, and so did home.js's hero parallax — three loops
+    // serialised on the main thread every frame. Measured at 6x CPU throttle,
+    // scrolling the landing page cost 27.7ms/frame with all three running and
+    // 7.1ms with none; removing any single one only reached ~21ms, because the
+    // cost was cumulative. They now share one loop. See public/js/frame-bus.js.
+    //
+    // The shim installs an equivalent bus if frame-bus.js failed to load, so a
+    // missing file degrades to the old one-loop-per-page behaviour rather than
+    // freezing every parallax element at its initial transform. It is a no-op
+    // when frame-bus.js did load, and self-installing, so only whichever
+    // consumer runs first ever pays for it.
+    const bus = (function () {
+        if (window.FHFrame) return window.FHFrame;
+        let ticks = [], measures = [], queued = false, last = performance.now();
+        const s = { scrollY: window.pageYOffset || 0, viewH: window.innerHeight, viewW: window.innerWidth, docH: 0, dt: 1 / 60, now: last };
+        function req() {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(function (n) {
+                queued = false;
+                s.dt = Math.min(Math.max((n - last) / 1000, 0), 0.1) || 1 / 60;
+                last = n; s.now = n; s.scrollY = window.pageYOffset || 0;
+                let again = false;
+                for (let i = 0; i < ticks.length; i++) { try { if (ticks[i](s) === true) again = true; } catch (e) { } }
+                if (again) req();
+            });
+        }
+        function mea() {
+            s.viewH = window.innerHeight; s.viewW = window.innerWidth;
+            s.scrollY = window.pageYOffset || 0; s.docH = document.documentElement.scrollHeight;
+            for (let i = 0; i < measures.length; i++) { try { measures[i](s); } catch (e) { } }
+            req();
+        }
+        window.addEventListener('scroll', req, { passive: true });
+        window.addEventListener('resize', mea, { passive: true });
+        window.addEventListener('load', mea);
+        if (window.ResizeObserver) new ResizeObserver(mea).observe(document.documentElement);
+        window.FHFrame = {
+            state: s,
+            onTick: function (f) { ticks.push(f); req(); return f; },
+            onMeasure: function (f) { measures.push(f); return f; },
+            offTick: function (f) { const i = ticks.indexOf(f); if (i > -1) ticks.splice(i, 1); },
+            request: req, measure: mea, stop: function () { },
+        };
+        requestAnimationFrame(mea);
+        return window.FHFrame;
+    })();
+
     // ── Capability detection ─────────────────────────────────────────
     const pointerFineMQ = window.matchMedia('(pointer: fine)');
     // matchMedia, not `window.innerWidth < 768`. Reading innerWidth here forces
@@ -77,15 +127,13 @@
 
     // ── State ───────────────────────────────────────────────────────
     const items = [];          // { el, opts, rect, visible, cur, hasAos, aosDeadline }
-    let viewH = window.innerHeight;
-    let scrollY = window.scrollY;
+    // viewH / scrollY / dt now come from the shared bus state each frame.
+    let scrollY = bus.state.scrollY;
     let lastScrollY = scrollY;
     let scrollVelocity = 0;    // smoothed px/sec
     let pointerX = 0.5, pointerY = 0.5;           // smoothed, normalized 0..1
     let targetPointerX = 0.5, targetPointerY = 0.5;
-    let ticking = false;
     let running = true;
-    let lastTime = performance.now();
     // The reading-progress hairline, resolved once at init. It is driven by a
     // direct inline transform rather than a :root custom property — see the
     // render loop for why that distinction is worth ~20ms of every frame.
@@ -166,12 +214,16 @@
         return opts;
     }
 
-    function measureRect(item) {
+    // Document-space geometry, so the render loop never has to read layout.
+    // Takes the scroll offset explicitly: callers run at different points
+    // (init, bus measure pass, IntersectionObserver) and must not each go and
+    // re-read window.scrollY at a moment when style is dirty.
+    function measureRect(item, sy) {
         const r = item.el.getBoundingClientRect();
         item.rect = {
-            top: r.top + scrollY,
+            top: r.top + sy,
             height: r.height,
-            center: r.top + scrollY + r.height / 2,
+            center: r.top + sy + r.height / 2,
         };
     }
 
@@ -204,7 +256,7 @@
             aosDeadline: null,
             cur: { y: 0, x: 0, opacity: 1, scale: 1, rotate: 0, blur: 0, skew: 0 },
         };
-        measureRect(item);
+        measureRect(item, bus.state.scrollY);
         items.push(item);
         io.observe(el);
         ro.observe(el);
@@ -229,37 +281,27 @@
                     }
                 }
             }
-            if (woke) requestTick();
+            if (woke) bus.request();
         },
         { rootMargin: '25% 0px 25% 0px', threshold: 0 }
     );
 
     // ── ResizeObserver (cached rects — avoids layout thrash in rAF) ─
-    const ro = new ResizeObserver((entries) => {
-        // Re-measure affected items on next idle
-        requestIdleCallback(() => {
-            scrollY = window.scrollY;
-            for (const e of entries) {
-                const item = items.find(i => i.el === e.target);
-                if (item) measureRect(item);
-            }
-            requestTick();
-        });
-    });
-
-    // Polyfill requestIdleCallback
-    window.requestIdleCallback = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
+    // An element changing size moves everything below it, so this re-measures
+    // the whole set through the bus rather than just the entries that fired.
+    const ro = new ResizeObserver(() => bus.measure());
 
     // ── The render loop ─────────────────────────────────────────────
-    function render(now) {
-        if (!running) { ticking = false; return; }
+    function render(s) {
+        if (!running) return false;
 
-        // Clamp dt so a backgrounded tab or a long GC pause can't cause a
-        // giant catch-up jump when the loop wakes back up.
-        const dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.1) || 1 / 60;
-        lastTime = now;
+        // dt is clamped by the bus, so a backgrounded tab or a long GC pause
+        // can't cause a giant catch-up jump when the loop wakes back up.
+        const dt = s.dt;
+        const now = s.now;
+        const viewH = s.viewH;
 
-        scrollY = window.scrollY;
+        scrollY = s.scrollY;
         const rawVelocity = (scrollY - lastScrollY) / dt;
         lastScrollY = scrollY;
         scrollVelocity += (rawVelocity - scrollVelocity) * expAlpha(VELOCITY_LAMBDA, dt);
@@ -292,7 +334,11 @@
         // with JS off or reduced motion on, the bar stays at scaleX(0) exactly
         // as before.
         if (progressBar) {
-            const docH = document.documentElement.scrollHeight - viewH;
+            // s.docH is cached by the bus's measure pass. Reading
+            // documentElement.scrollHeight here instead — as this did — forces
+            // a layout flush on every frame of every scroll, which is exactly
+            // the cost this refactor exists to remove.
+            const docH = s.docH - viewH;
             const scrollProgress = docH > 0 ? clamp(scrollY / docH, 0, 1) : 0;
             // Sub-pixel changes aren't visible on a 2px bar; skipping them
             // keeps a settling frame from writing style for no reason.
@@ -404,34 +450,17 @@
             }
         }
 
-        // Keep the loop alive while settling
-        ticking = false;
-        if (anyMoved) requestTick();
-    }
-
-    function requestTick() {
-        if (!ticking) {
-            ticking = true;
-            requestAnimationFrame(render);
-        }
+        // Ask for another frame while anything is still easing into place.
+        // The bus stops calling us the moment every subscriber returns falsy.
+        return anyMoved;
     }
 
     // ── Events ──────────────────────────────────────────────────────
-    window.addEventListener('scroll', () => {
-        scrollY = window.scrollY;
-        requestTick();
-    }, { passive: true });
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            viewH = window.innerHeight;
-            scrollY = window.scrollY;
-            for (const item of items) measureRect(item);
-            requestTick();
-        }, 100);
-    }, { passive: true });
+    // Scroll and resize are the bus's job now. This is the resize half:
+    // re-measure every cached rect whenever geometry can have changed.
+    bus.onMeasure((s) => {
+        for (const item of items) measureRect(item, s.scrollY);
+    });
 
     // Cursor drift is wired up in init(), and only if something actually uses
     // it — see bindPointerFX. Registering it here (as this file used to) meant
@@ -450,12 +479,12 @@
         window.addEventListener('pointermove', (e) => {
             targetPointerX = e.clientX / window.innerWidth;
             targetPointerY = e.clientY / window.innerHeight;
-            requestTick();
+            bus.request();
         }, { passive: true });
         window.addEventListener('pointerleave', () => {
             targetPointerX = 0.5;
             targetPointerY = 0.5;
-            requestTick();
+            bus.request();
         }, { passive: true });
     }
 
@@ -465,6 +494,7 @@
     reduceMotionMQ.addEventListener('change', (e) => {
         if (!e.matches) return;
         running = false;
+        bus.offTick(render);
         io.disconnect();
         ro.disconnect();
         // Hand the hairline back to CSS, which parks it at scaleX(0) —
@@ -500,22 +530,21 @@
         // Now that opts are resolved we know whether cursor drift is live.
         bindPointerFX();
 
-        // Start the render loop. From here it's fully self-scheduling —
-        // it re-arms itself every frame while anything is still settling
-        // (including this very first ease-into-place on load) and goes
-        // idle the instant everything is at rest. No background timer.
-        requestTick();
+        // Join the shared loop. From here it's fully self-scheduling — render()
+        // returns true while anything is still settling (including this very
+        // first ease-into-place on load) and the bus parks the moment every
+        // subscriber is at rest. No background timer.
+        bus.onTick(render);
 
-        // Pause when tab is hidden, resume cleanly when it's shown again.
+        // Tab visibility is handled by the bus (it stops the loop and re-runs
+        // the measure pass on return). All this needs is to reset the velocity
+        // baseline, so a tab restored at a different scroll offset doesn't read
+        // the jump as one enormous frame of scroll velocity and skew the hero.
         document.addEventListener('visibilitychange', () => {
-            running = !document.hidden;
-            if (running) {
-                lastTime = performance.now();
-                scrollY = window.scrollY;
-                lastScrollY = scrollY;
-                for (const item of items) measureRect(item);
-                requestTick();
-            }
+            if (document.hidden) return;
+            scrollY = window.pageYOffset || 0;
+            lastScrollY = scrollY;
+            scrollVelocity = 0;
         });
     }
 

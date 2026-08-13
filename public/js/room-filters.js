@@ -65,6 +65,17 @@ document.addEventListener('DOMContentLoaded', function () {
       style.innerHTML = css;
       document.head.appendChild(style);
 
+      // Suppress the document-wide crossfade for this transition only.
+      //
+      // 10-view-transitions.css animates ::view-transition-old/new(root) so
+      // public pages soft-fade into each other on navigation. Those selectors
+      // also match same-page transitions like this one, so re-filtering the
+      // room grid was fading the ENTIRE document out and back in — the hero
+      // "flash" reported on every click of the guests stepper. `.vt-scoped`
+      // switches the root snapshots to a static hand-off; the room cards keep
+      // their own named transitions and still morph and stagger.
+      document.documentElement.classList.add('vt-scoped');
+
       const transition = document.startViewTransition(() => {
         items.forEach(item => {
           const beds = parseInt(item.dataset.beds, 10) || 0;
@@ -79,11 +90,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (empty) empty.classList.toggle('hidden', shown > 0);
       });
 
-      // Clear dynamic style tag after the transition finishes or fails
-      transition.finished.then(() => {
+      // Clear dynamic style tag and release the scope flag once the transition
+      // settles. `finished` rejects if the transition is skipped (a second
+      // click landing mid-flight), so this has to run on both paths or the
+      // class would stick and permanently disable the navigation crossfade.
+      const cleanup = () => {
         const styleToClear = document.getElementById('view-transition-stagger');
         if (styleToClear) styleToClear.remove();
-      }).catch(() => {});
+        document.documentElement.classList.remove('vt-scoped');
+      };
+      transition.finished.then(cleanup, cleanup);
     } else {
       // FLIP Layout Fallback with staggered transitions (Older browsers)
       const rects = new Map();
