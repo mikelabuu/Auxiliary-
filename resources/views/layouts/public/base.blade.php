@@ -52,23 +52,30 @@
          across the public site and both staff consoles; replaced the Material
          Icons CDN font the booking flow used to pull.
 
-         Pages opt out of the eager path with @section('defer_icons', '1').
+         Pages opt out of the eager path with @section('defer_icons', '1'), or
+         out of Font Awesome altogether with @section('no_icons', '1').
 
          The preload is a high-priority fetch of a 117 KB font, and the sheet
          is 90 KB of render-blocking CSS. On checkout, account and booking that
-         is correct: those pages render FA glyphs in their first paint. The
-         landing does not render a single one. Its icons are inline SVG from
-         x-booking.ui.icon, and the only Font Awesome on it is the three
-         availability pills that availability-search.js injects after the guest
-         runs a date search. So the landing was spending ~207 KB, some of it
-         competing with the hero image for bandwidth, on glyphs that in most
-         visits never appear.
+         is correct: those pages render FA glyphs in their first paint.
+
+         The landing renders none at all now, so it takes `no_icons` and pays
+         nothing. It used to take `defer_icons` on the argument that its only
+         Font Awesome was the three availability pills, which "in most visits
+         never appear" — but availability-search.js runs its search on
+         DOMContentLoaded rather than waiting for the guest, so the pills, and
+         the 205 KB they dragged in, were on every single load. Deferring the
+         sheet only meant the glyphs popped in late. Those three icons are
+         inline lucide SVG now (see PILL_ICONS in availability-search.js),
+         which is what the rest of the page's icons already were.
 
          Deferred pages still get the exact same stylesheet, just off the
          critical path: media="print" makes it non-blocking and the onload
          hands it back to all. The noscript copy covers JS-off, where the
          swap would never fire. --}}
-    @if (trim($__env->yieldContent('defer_icons')) !== '')
+    @if (trim($__env->yieldContent('no_icons')) !== '')
+        {{-- nothing: this page renders no Font Awesome glyph at all --}}
+    @elseif (trim($__env->yieldContent('defer_icons')) !== '')
         <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"
               media="print" onload="this.media='all'; this.onload=null;">
         <noscript><link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"></noscript>

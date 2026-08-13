@@ -106,20 +106,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // the next quote peeks from behind with a slight fan, and the deck is
     // draggable as well as button-driven. Shadows off — the glass cards
     // carry their own night shadow. Reduced-motion keeps a plain slide.
-    new Swiper('.testimonials-swiper', {
-        effect: reduceMotion ? 'slide' : 'cards',
-        cardsEffect: { perSlideOffset: 9, perSlideRotate: 2.2, slideShadows: false },
-        grabCursor: true,
-        // rewind, not loop: the cards effect positions slides by real index,
-        // and loop's clone/reorder machinery deadlocks it (slideNext no-ops).
-        rewind: true,
-        speed: 650,
-        autoplay: reduceMotion ? false : { delay: 7000, pauseOnMouseEnter: true, disableOnInteraction: false },
-        navigation: {
-            nextEl: '.swiper-button-next-custom',
-            prevEl: '.swiper-button-prev-custom',
-        },
-    });
+    //
+    // Swiper is no longer on the page by the time this runs: partials/vendor/
+    // swiper.blade.php fetches it when the deck comes within 600px of the
+    // viewport, so construction waits for that. `fhVendorReady` covers the
+    // case where the library landed before this handler ran.
+    function initTestimonials() {
+        if (typeof Swiper === 'undefined') return;
+
+        new Swiper('.testimonials-swiper', {
+            effect: reduceMotion ? 'slide' : 'cards',
+            cardsEffect: { perSlideOffset: 9, perSlideRotate: 2.2, slideShadows: false },
+            grabCursor: true,
+            // rewind, not loop: the cards effect positions slides by real index,
+            // and loop's clone/reorder machinery deadlocks it (slideNext no-ops).
+            rewind: true,
+            speed: 650,
+            autoplay: reduceMotion ? false : { delay: 7000, pauseOnMouseEnter: true, disableOnInteraction: false },
+            navigation: {
+                nextEl: '.swiper-button-next-custom',
+                prevEl: '.swiper-button-prev-custom',
+            },
+        });
+    }
+
+    if (window.fhVendorReady && window.fhVendorReady.swiper) initTestimonials();
+    else document.addEventListener('fh:swiper-ready', initTestimonials, { once: true });
 
     // Mobile sticky bar appears after the hero
     const stickyBar = document.getElementById('mobileStickyBar');

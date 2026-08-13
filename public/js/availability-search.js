@@ -6,6 +6,35 @@
  *   room card with a live pill: open / only-N-left / fully booked
  * - Fully-booked types get dimmed with their Book button disabled
  */
+
+// Inline lucide SVG for the three availability pills.
+//
+// These used to be Font Awesome <i> tags, and they were the ONLY Font Awesome
+// on the landing page — every other icon here is inline SVG from
+// x-booking.ui.icon. Three glyphs were therefore pulling the 88 KB icon
+// stylesheet plus the 117 KB fa-solid-900.woff2 onto every single visit.
+//
+// The layout's `defer_icons` note argued this was cheap because the pills
+// "in most visits never appear". That stopped being true: the search below
+// runs unconditionally on DOMContentLoaded so the cards show availability
+// without the guest touching the date picker, which means the pills — and so
+// the font — were guaranteed on every load. Worse, `defer_icons` makes the
+// sheet non-blocking, so the glyphs arrived late and popped in.
+//
+// Drawn to the same 24x24 lucide grid and stroke weight as the rest of the
+// page's icons, sized to the 13px the <i> tags used.
+const PILL_ICONS = {
+  'flame':        '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  'circle-check': '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  'calendar-x':   '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14 14-4 4"/><path d="m10 14 4 4"/>',
+};
+
+function pillIcon(name) {
+  return '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" '
+       + 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" '
+       + 'style="flex:none">' + (PILL_ICONS[name] || '') + '</svg>';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const inEl  = document.getElementById('widget_check_in');
   const outEl = document.getElementById('widget_check_out');
@@ -245,11 +274,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!card) return;
 
         if (row.available <= 0) {
-          setPill(card, '<span class="avail-pill avail-pill--full"><i class="fa-solid fa-calendar-xmark text-[13px]"></i>Fully booked</span>');
+          setPill(card, '<span class="avail-pill avail-pill--full">' + pillIcon('calendar-x') + 'Fully booked</span>');
         } else if (row.available <= 2) {
-          setPill(card, '<span class="avail-pill avail-pill--low"><i class="fa-solid fa-fire text-[13px]"></i>Only ' + row.available + ' left</span>');
+          setPill(card, '<span class="avail-pill avail-pill--low">' + pillIcon('flame') + 'Only ' + row.available + ' left</span>');
         } else {
-          setPill(card, '<span class="avail-pill avail-pill--open"><i class="fa-solid fa-circle-check text-[13px]"></i>' + row.available + ' rooms open</span>');
+          setPill(card, '<span class="avail-pill avail-pill--open">' + pillIcon('circle-check') + row.available + ' rooms open</span>');
         }
         // Fully booked → lock the Book button. If the guest wants different
         // dates, picking them re-runs the search and re-enables the card.

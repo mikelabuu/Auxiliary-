@@ -5,10 +5,12 @@
      panel, so the nav rides transparent/white over it and swaps to the solid
      light skin on scroll. --}}
 @section('nav_dark', '1')
-{{-- defer_icons: this page renders no Font Awesome glyph at first paint (its
-     icons are inline SVG), so the layout skips the eager 117 KB font preload
-     and loads the FA sheet off the critical path. See layouts/public/base. --}}
-@section('defer_icons', '1')
+{{-- no_icons: this page renders no Font Awesome glyph at all — every icon on
+     it is inline SVG (x-booking.ui.icon in the markup, PILL_ICONS in
+     availability-search.js), so the layout emits neither the 88 KB sheet nor
+     the 117 KB font. It used to take defer_icons, which still paid for both,
+     just late. See layouts/public/base. --}}
+@section('no_icons', '1')
 
 @section('content')
 
@@ -29,11 +31,23 @@
 
     {{-- No jQuery needed: these are vanilla, and lightbox2 ships with its own
          bundled copy. home.js must come after booking.js/availability-search.js
-         (it calls into their window hooks). --}}
-    <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
-    <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}"></script>
-    <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}"></script>
-    <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}"></script>
+         (it calls into their window hooks).
+
+         All six are `defer`. The first four used to be plain <script> tags,
+         which are parser-blocking: the browser stopped building the DOM at this
+         point in <main> and downloaded + executed ~105 KB before it would even
+         look at the footer. Every one of them wraps its whole body in a
+         DOMContentLoaded handler, so none of them needed to run during parse —
+         they were blocking the parser to register a callback.
+
+         `defer` keeps them in document order (that is part of the spec, not an
+         accident) and runs them after parsing but before DOMContentLoaded
+         fires, so the handlers are still registered in time and home.js still
+         sees the window hooks the two before it install. --}}
+    <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}" defer></script>
+    <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}" defer></script>
+    <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}" defer></script>
+    <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}" defer></script>
     <script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
     <script src="{{ asset('js/scroll-effects.js') }}?v={{ filemtime(public_path('js/scroll-effects.js')) }}" defer></script>
 @endsection

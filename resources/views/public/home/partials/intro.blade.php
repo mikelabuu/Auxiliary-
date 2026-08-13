@@ -8,6 +8,29 @@
         try {
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             if (sessionStorage.getItem('fhIntroSeen')) return;
+
+            // Phones skip the intro.
+            //
+            // The hold is ~2s of locked scroll (1.15s dwell + the curtain
+            // lift) before the guest can touch anything, and it is the first
+            // thing that happens on the site. On desktop that buys the
+            // signature moment: the wordmark FLIP-flies into the nav brand
+            // label as the curtain wipes.
+            //
+            // On a phone it buys none of it. That brand label is hidden below
+            // md, so the flight has no target and the exit timeline below
+            // already falls back to a plain fade-in-place — the guest pays
+            // the full two seconds for a fade. It is also the viewport where
+            // the wait costs most: slower hardware, slower networks, and a
+            // visitor far more likely to be mid-task.
+            if (window.matchMedia('(max-width: 767px)').matches) return;
+
+            // Same reasoning for anyone who has told us bandwidth or data is
+            // tight — the splash is pure decoration, so it is the first thing
+            // that should go.
+            var conn = navigator.connection;
+            if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return;
+
             document.documentElement.classList.add('intro-hold');
         } catch (e) { /* storage blocked — just skip the intro */ }
     })();

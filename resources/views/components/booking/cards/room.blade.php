@@ -166,7 +166,11 @@
                  ends on the rendered line boundary at every width. Three lines
                  shows all seven descriptions in full except the Family Room's,
                  which runs to 226 characters. --}}
-            <p class="text-pretty mt-3 line-clamp-3 text-[13.5px] leading-relaxed text-ink/70">{{ $description }}</p>
+            {{-- Two lines on a phone, three from sm up: at 375px the card is
+                 already about a full viewport tall, and the third line is the
+                 tail of a sentence whose first two lines have said what the
+                 room is. --}}
+            <p class="text-pretty mt-3 line-clamp-2 text-[13.5px] leading-relaxed text-ink/70 sm:line-clamp-3">{{ $description }}</p>
         @endif
 
         {{-- What's included.
@@ -174,8 +178,19 @@
              The card previously showed nothing from this field at all, which
              is the detail that was missing: rate, beds and a sentence, then
              straight to the button. Two columns keeps four items to two rows. --}}
+        {{-- Hidden below sm. Six single-column rows is ~155px, and stacked
+             one-per-screen on a phone that is the largest block on a card that
+             already runs the height of the viewport — seven of them make the
+             rooms section eight screens of scrolling on its own.
+
+             It is disclosure, not removal: the full list is in the Details
+             modal (a primary control on this same card) and on the room page
+             the title links to, so nothing here is only available on a wide
+             screen. What stays on the phone card is what a guest actually
+             scans a list of rooms for — photo, name, capacity, tags, price,
+             live availability, and the two buttons. --}}
         @if ($shownIncludes->isNotEmpty())
-            <div class="mt-4 border-t border-ink/10 pt-4">
+            <div class="mt-4 hidden border-t border-ink/10 pt-4 sm:block">
                 <p class="text-[9.5px] font-bold uppercase tracking-[0.22em] text-ink/55">Included</p>
                 {{-- One column, at every width. Two columns fit at 1280 but the
                      card is only ~276px wide in the sm/md two-up grid, and
