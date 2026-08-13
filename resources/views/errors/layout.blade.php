@@ -91,11 +91,52 @@
     <meta name="robots" content="noindex">
     <title>@yield('title') · Farmers Hostel</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Manrope:wght@400;500;600&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
-
     <style>
+        /* The same three faces as the rest of the site, self-hosted.
+
+           These were loaded from fonts.googleapis.com, which is a poor
+           dependency for this page in particular: an error page should render
+           when things are broken, and that one made it rely on two external
+           origins being reachable. The .woff2 files below are plain static
+           assets under public/vendor (synced by scripts/sync-vendor.mjs), so
+           they need no build step and keep this file's self-contained promise —
+           there is still no @vite here.
+
+           Variable fonts, so these four faces cover every weight this page
+           asks for: Playfair 400-500 upright and 400 italic, Manrope 400-600,
+           Oswald 400-500. latin only; the error copy is English. */
+        @font-face {
+            font-family: 'Playfair Display';
+            font-style: normal;
+            font-weight: 400 700;
+            font-display: swap;
+            src: url('{{ asset('vendor/fonts/playfair-display-latin-wght-normal.woff2') }}') format('woff2-variations');
+        }
+
+        @font-face {
+            font-family: 'Playfair Display';
+            font-style: italic;
+            font-weight: 400 700;
+            font-display: swap;
+            src: url('{{ asset('vendor/fonts/playfair-display-latin-wght-italic.woff2') }}') format('woff2-variations');
+        }
+
+        @font-face {
+            font-family: 'Manrope';
+            font-style: normal;
+            font-weight: 200 800;
+            font-display: swap;
+            src: url('{{ asset('vendor/fonts/manrope-latin-wght-normal.woff2') }}') format('woff2-variations');
+        }
+
+        @font-face {
+            font-family: 'Oswald';
+            font-style: normal;
+            font-weight: 200 700;
+            font-display: swap;
+            src: url('{{ asset('vendor/fonts/oswald-latin-wght-normal.woff2') }}') format('woff2-variations');
+        }
+
         /* Boutique Farmstead, the six tokens this page actually needs. */
         :root {
             --cream: oklch(96.5% 0.02 90);

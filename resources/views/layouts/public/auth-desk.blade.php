@@ -8,13 +8,14 @@
     <meta name="theme-color" content="#FAF7EF">
     @vite(['resources/css/app.css'])
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{-- Same three faces as layouts.public.base — the auth screen is the same
          property as the rest of the site, so it loads the same type system.
-         No icon font: the icons here are inline SVG in the world's own hairline
-         grammar (see 14-auth.css). --}}
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..600;1,400..500&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+         They are self-hosted and declared as @font-face inside the app.css
+         bundle above (resources/css/public/00-fonts.css), so there is no font
+         stylesheet to link and no third-party origin to preconnect to.
+
+         No icon font either: the icons here are inline SVG in the world's own
+         hairline grammar (see 14-auth.css). --}}
 
     <style>[x-cloak],.hidden-form{display:none}</style>
 

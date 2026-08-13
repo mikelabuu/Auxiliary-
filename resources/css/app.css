@@ -49,6 +49,7 @@
     }
 }
 
+@import './public/00-fonts.css';
 @import './public/01-tokens.css';
 @import './public/02-theme-admin.css';
 @import './public/03-theme-boutique.css';

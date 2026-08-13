@@ -59,6 +59,36 @@ const ASSETS = [
     // makes a bare `<i class="fa-solid fa-bed">` work in any view.
     ['@fortawesome/fontawesome-free/css/all.min.css', 'fontawesome/css/all.min.css'],
     ['@fortawesome/fontawesome-free/webfonts', 'fontawesome/webfonts'],
+
+    // ── Public type system: Playfair Display, Oswald, Manrope ────────
+    //
+    // These used to come from fonts.googleapis.com. Two extra origins on the
+    // critical path is cheap when the tester sits next to the server and
+    // expensive when it does not: this app is served from Kuala Lumpur with no
+    // CDN, and a distant client pays DNS + TCP + TLS to googleapis *and* to
+    // gstatic before the first glyph is even requested. Measured with the
+    // Lighthouse desktop preset against the live site, the performance score
+    // tracks round-trip time almost exactly — 98 at 40ms RTT, 58 at 250ms —
+    // while total blocking time stays pinned at 0ms. The score is bound by
+    // connection setup, so removing whole origins from the path is the lever.
+    //
+    // Variable fonts, so one file per family covers every weight the three
+    // public layouts ask for (Playfair 400-700 + italic, Oswald 300-500,
+    // Manrope 400-700) instead of a file per weight.
+    //
+    // Only latin and latin-ext are synced. public/fonts.css keeps Google's own
+    // `unicode-range` values on each face, so latin-ext is fetched lazily — a
+    // page with no accented characters never downloads it. The other four
+    // subsets Fontsource ships (cyrillic, greek, vietnamese) are not copied:
+    // nothing in this app renders them.
+    ['@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2', 'fonts/playfair-display-latin-wght-normal.woff2'],
+    ['@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2', 'fonts/playfair-display-latin-wght-italic.woff2'],
+    ['@fontsource-variable/playfair-display/files/playfair-display-latin-ext-wght-normal.woff2', 'fonts/playfair-display-latin-ext-wght-normal.woff2'],
+    ['@fontsource-variable/playfair-display/files/playfair-display-latin-ext-wght-italic.woff2', 'fonts/playfair-display-latin-ext-wght-italic.woff2'],
+    ['@fontsource-variable/oswald/files/oswald-latin-wght-normal.woff2', 'fonts/oswald-latin-wght-normal.woff2'],
+    ['@fontsource-variable/oswald/files/oswald-latin-ext-wght-normal.woff2', 'fonts/oswald-latin-ext-wght-normal.woff2'],
+    ['@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2', 'fonts/manrope-latin-wght-normal.woff2'],
+    ['@fontsource-variable/manrope/files/manrope-latin-ext-wght-normal.woff2', 'fonts/manrope-latin-ext-wght-normal.woff2'],
 ];
 
 // Only ever clear the folders this script owns. public/vendor/ is shared —

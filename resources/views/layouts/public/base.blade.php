@@ -32,21 +32,38 @@
     <!-- Tailwind & Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Early connection for the font origins (the only remaining third party —
-         every library below is served from public/vendor on our own origin) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {{-- The type system is self-hosted — no third-party origin remains on this
+         page. Playfair Display (--font-display), Manrope (--font-sans) and
+         Oswald (--font-label) are declared as @font-face in
+         resources/css/public/00-fonts.css, so they ride along inside the
+         app.css bundle above and cost no extra request. The .woff2 files come
+         from the Fontsource npm packages via scripts/sync-vendor.mjs.
 
-    {{-- Google Fonts — the three families body.theme-boutique actually points at:
-         Playfair Display (--font-display), Manrope (--font-sans) and Oswald
-         (--font-label).
+         They used to load from fonts.googleapis.com, which needed a preconnect
+         to two more origins and still paid DNS + TCP + TLS on each before the
+         first glyph was requested. That is cheap next to the server and
+         expensive far from it: this app is served from Kuala Lumpur with no
+         CDN, and the Lighthouse desktop score tracks round-trip time almost
+         exactly (98 at 40ms, 58 at 250ms) while total blocking time stays at
+         0ms. See 00-fonts.css for the measurements.
 
          Lora and Nunito Sans used to be requested here too, described as "the
          fallback stack for views still authored against them". They were not:
          a search of every stylesheet found them only inside comments, with zero
          live rules, so both were paid for on every page load and used by
          nothing. --}}
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..600&family=Oswald:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    {{-- Two faces are needed before first paint (the hero wordmark is Playfair,
+         the eyebrow above it is Oswald) and @font-face inside a stylesheet is
+         only discovered once that stylesheet has parsed. Preloading them lets
+         the fetch start alongside app.css rather than after it. Only the latin
+         upright faces are preloaded — italic and latin-ext are genuinely
+         conditional, and preloading something the page may not use wastes the
+         bandwidth this change is trying to save. --}}
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fonts/playfair-display-latin-wght-normal.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fonts/manrope-latin-wght-normal.woff2') }}">
 
     {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs). One icon set
          across the public site and both staff consoles; replaced the Material
