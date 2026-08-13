@@ -133,6 +133,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if (window.fhVendorReady && window.fhVendorReady.swiper) initTestimonials();
     else document.addEventListener('fh:swiper-ready', initTestimonials, { once: true });
 
+    // Idle the page's two endless loops while they are off-screen.
+    //
+    // `fh-drift` on the hero building and `fh-marquee` on the strip below it
+    // are the only `infinite` animations the landing actually runs. Both are
+    // transform-only and cheap per frame, but neither ever stops, so the
+    // compositor keeps working on a hero the reader left twenty screens ago.
+    // Pausing (not cancelling) means they resume mid-stride, and the 200px
+    // margin has them moving again before they can be seen — matching the
+    // rotator and wordmark observers elsewhere in this file.
+    //
+    // See .fh-marquee-track.is-paused / .fh-hero-build.is-paused in
+    // 06-hero.css. The marquee's existing hover-to-pause rule is untouched.
+    if (window.IntersectionObserver) {
+        document.querySelectorAll('.fh-hero-build, .fh-marquee-track').forEach(function (el) {
+            new IntersectionObserver(function (entries) {
+                el.classList.toggle('is-paused', !entries[0].isIntersecting);
+            }, { rootMargin: '200px 0px' }).observe(el);
+        });
+    }
+
     // Mobile sticky bar appears after the hero
     const stickyBar = document.getElementById('mobileStickyBar');
     const heroSection = document.getElementById('firstsection');

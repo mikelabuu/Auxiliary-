@@ -578,6 +578,26 @@
     animation-play-state: paused;
 }
 
+/* Off-screen idle for the page's two endless loops — the marquee here and
+   the hero building's `fh-drift` — toggled by home.js.
+
+   Both are transform-only, so they run on the compositor and are cheap per
+   frame. The problem is that they never stop: `infinite` means the compositor
+   keeps producing frames for the life of the page, including for a hero that
+   was scrolled past twenty screens ago and a marquee nobody can see. On a
+   phone or a low-end tablet that is the difference between a GPU that idles
+   between interactions and one that never does, which shows up as heat and
+   battery rather than as a dropped frame.
+
+   Same `hover` mechanism the marquee already used, same `is-offscreen`
+   observer idiom as .fh-wordmark and .word-rotate above. Pausing rather than
+   cancelling means both resume exactly where they left off, and the generous
+   rootMargin in home.js has them running again before they come into view. */
+.fh-marquee-track.is-paused,
+.fh-hero-build.is-paused {
+    animation-play-state: paused;
+}
+
 .fh-marquee-run {
     display: flex;
     align-items: center;
