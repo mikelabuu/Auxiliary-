@@ -54,7 +54,7 @@
                             @php $tag = $step['href'] ? 'a' : 'div'; @endphp
                             <{{ $tag }}@if($step['href']) href="{{ $step['href'] }}"@endif class="next-step-card flex items-start gap-3 bg-white/70 ring-1 ring-emerald-deep/8 rounded-2xl px-4 py-3.5{{ $step['href'] ? ' press !no-underline hover:bg-white hover:ring-gold/45 cursor-pointer' : '' }}" style="--ns:{{ $loop->index }}">
                                 <span class="w-7 h-7 rounded-full {{ $loop->last ? 'bg-gold text-night' : 'bg-emerald-deep text-cream' }} font-display italic text-xs flex items-center justify-center shrink-0">{{ $loop->iteration }}</span>
-                                <p class="text-xs font-bold text-stone-700 leading-relaxed">{{ $step['text'] }}@if($step['href']) <i class="fa-solid fa-arrow-right text-[13px] align-middle text-palay-800"></i>@endif</p>
+                                <p class="text-xs font-bold text-stone-700 leading-relaxed">{{ $step['text'] }}@if($step['href']) <x-booking.ui.icon-solid name="arrow-right" class="text-[13px] align-middle text-palay-800" />@endif</p>
                             </{{ $tag }}>
                         @endforeach
                     </div>
@@ -88,7 +88,7 @@
              data-hold-ends="{{ $holdEndsAt->timestamp }}"
              data-hold-window="{{ $holdWindow }}">
             <div class="hold-bar__row">
-                <span class="hold-bar__icon" aria-hidden="true"><i class="fa-solid fa-hourglass-half"></i></span>
+                <span class="hold-bar__icon" aria-hidden="true"><x-booking.ui.icon-solid name="hourglass-half" /></span>
                 <div class="hold-bar__copy">
                     <p class="hold-bar__label">Rooms held for you</p>
                     <p class="hold-bar__note">
@@ -144,7 +144,7 @@
     <div class="co-enter ring-1 rounded-3xl p-5 mb-8 flex items-center justify-between gap-4 {{ $bannerClass }}" style="--co:0">
         <div class="flex items-center gap-3">
             <span class="w-11 h-11 rounded-2xl bg-white/70 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-{{ $bannerIcon }} text-[24px]"></i>
+                <x-booking.ui.icon-solid :name="$bannerIcon" class="text-[24px]" />
             </span>
             <div>
                 <span class="block text-[10px] font-bold uppercase tracking-widest opacity-70 leading-none">Booking #{{ $booking->id }} &middot; Status</span>
@@ -163,7 +163,7 @@
             <div class="co-enter bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] p-6 sm:p-7" style="--co:1">
                 <div class="flex items-center gap-2.5 mb-5 border-b border-emerald-deep/10 pb-4">
                     <span class="w-9 h-9 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-id-badge text-[19px]"></i>
+                        <x-booking.ui.icon-solid name="id-badge" class="text-[19px]" />
                     </span>
                     <h3 class="text-lg font-semibold text-ink tracking-tight font-display">Guest Details</h3>
                 </div>
@@ -184,9 +184,18 @@
                         <span class="text-stone-700 leading-relaxed font-bold">{{ $booking->guest_address }}</span>
                     </div>
                     @if ($booking->referred_by)
-                        <div class="sm:col-span-2">
-                            <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Endorsed by</span>
+                        <div>
+                            <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Reference Person</span>
                             <span class="text-stone-700 font-bold">{{ $booking->referred_by }}</span>
+                            @if ($booking->referred_by_phone)
+                                <span class="block text-stone-700 text-sm font-bold mt-0.5">{{ $booking->referred_by_phone }}</span>
+                            @endif
+                        </div>
+                    @endif
+                    @if ($booking->referred_by_purpose)
+                        <div>
+                            <span class="block text-[10px] text-stone-500 uppercase tracking-widest mb-0.5">Purpose</span>
+                            <span class="text-stone-700 font-bold">{{ $booking->referred_by_purpose }}</span>
                         </div>
                     @endif
                     <div>
@@ -228,7 +237,7 @@
             <!-- Reservation Room Breakdown -->
             <div class="co-enter space-y-4" style="--co:2">
                 <h3 class="text-lg font-semibold text-ink tracking-tight flex items-center gap-2 px-1 font-display">
-                    <i class="fa-solid fa-door-open text-palay-800"></i>
+                    <x-booking.ui.icon-solid name="door-open" class="text-palay-800" />
                     Room Reservation Details
                 </h3>
 
@@ -286,7 +295,7 @@
             <div class="bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] p-6 sm:p-7">
                 <div class="flex items-center gap-2.5 mb-5 border-b border-emerald-deep/10 pb-4">
                     <span class="w-9 h-9 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-receipt text-[19px]"></i>
+                        <x-booking.ui.icon-solid name="receipt" class="text-[19px]" />
                     </span>
                     <h3 class="text-lg font-semibold text-ink tracking-tight font-display">Payment Summary</h3>
                 </div>
@@ -298,7 +307,7 @@
 
                     @if($booking->discount > 0)
                         <div class="flex justify-between items-center text-emerald-deep bg-emerald/10 ring-1 ring-emerald/30 px-3 py-2 rounded-xl text-xs">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-tag text-[14px]"></i> Discount Approved</span>
+                            <span class="flex items-center gap-1"><x-booking.ui.icon-solid name="tag" class="text-[14px]" /> Discount Approved</span>
                             <span class="tabnum">-₱{{ number_format($booking->discount, 2) }}</span>
                         </div>
                         <div class="flex justify-between items-center border-t border-emerald-deep/10 pt-3 text-ink">
@@ -320,14 +329,14 @@
                             @if(!$discountRequested)
                                 <p class="text-xs text-stone-600 leading-relaxed font-semibold">Please upload Senior Citizen or PWD verification documents to apply your 20% discount.</p>
                                 <a href="{{ route('discount.create', $booking->id) }}" class="press !no-underline w-full py-3 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-gold/12 text-palay-800 ring-1 ring-gold/40 hover:bg-gold hover:text-night transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-file-arrow-up text-[16px]"></i>
+                                    <x-booking.ui.icon-solid name="file-arrow-up" class="text-[16px]" />
                                     Request &amp; Upload IDs
                                 </a>
                             @else
                                 @if($discount && $discount->status === 'pending')
                                     <div class="p-3 bg-gold/12 ring-1 ring-gold/30 rounded-xl text-xs space-y-3">
                                         <div class="flex gap-2 text-palay-800">
-                                            <i class="fa-solid fa-hourglass text-[16px] flex-shrink-0 mt-0.5"></i>
+                                            <x-booking.ui.icon-solid name="hourglass" class="text-[16px] flex-shrink-0 mt-0.5" />
                                             <div class="font-bold leading-relaxed">Verification Request Submitted. Please wait for staff review and approval before making payments.</div>
                                         </div>
                                         <form action="{{ route('discount.cancel', $booking->id) }}" method="POST" class="w-full" data-busy-form>
@@ -365,7 +374,7 @@
                                      where to go and what to bring instead. --}}
                                 <div class="flex flex-col gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
                                     <div class="flex gap-2 text-palay-800">
-                                        <i class="fa-solid fa-building-columns text-[16px] flex-shrink-0 mt-0.5"></i>
+                                        <x-booking.ui.icon-solid name="building-columns" class="text-[16px] flex-shrink-0 mt-0.5" />
                                         <div class="font-bold leading-relaxed">
                                             Settle this booking at our front desk. A Senior Citizen / PWD discount cannot be paid online — bring the original ID for every discounted guest and we will take payment in person.
                                         </div>
@@ -381,7 +390,7 @@
                                      desk now, so the pay button would only invite a double payment. --}}
                                 <div class="flex flex-col gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
                                     <div class="flex gap-2 text-palay-800">
-                                        <i class="fa-solid fa-hourglass text-[16px] flex-shrink-0 mt-0.5"></i>
+                                        <x-booking.ui.icon-solid name="hourglass" class="text-[16px] flex-shrink-0 mt-0.5" />
                                         <div class="font-bold leading-relaxed">
                                             Proof of payment received. Our front desk is verifying it against the transfer. Your official receipt is emailed as soon as it clears.
                                         </div>
@@ -395,7 +404,7 @@
                             @else
                                 @if($proofRejected)
                                     <div class="mb-3 flex gap-2 rounded-2xl bg-ember-600/10 ring-1 ring-ember-600/35 px-4 py-3.5 text-xs text-ember-700">
-                                        <i class="fa-solid fa-circle-exclamation text-[16px] flex-shrink-0 mt-0.5"></i>
+                                        <x-booking.ui.icon-solid name="circle-exclamation" class="text-[16px] flex-shrink-0 mt-0.5" />
                                         <div class="font-bold leading-relaxed">
                                             Your proof of payment was not accepted.
                                             @if($latestPayment->rejection_reason)
@@ -407,7 +416,7 @@
                                 @endif
 
                                 <a href="{{ route('bookings.pay', $booking->id) }}" class="press focus-ring !no-underline w-full min-h-12 py-3.5 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] bg-emerald-deep text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
-                                    <i class="fa-solid fa-credit-card text-[18px]"></i>
+                                    <x-booking.ui.icon-solid name="credit-card" class="text-[18px]" />
                                     {{ $proofRejected ? 'Try payment again' : 'Proceed to Payment' }}
                                 </a>
                             @endif
@@ -432,7 +441,7 @@
                 <div class="bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] p-6">
                     <div class="flex items-center gap-2.5 mb-4 border-b border-emerald-deep/10 pb-4">
                         <span class="w-9 h-9 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0">
-                            <i class="fa-solid fa-calendar-days text-[18px]"></i>
+                            <x-booking.ui.icon-solid name="calendar-days" class="text-[18px]" />
                         </span>
                         <h3 class="text-lg font-semibold text-ink tracking-tight font-display">Can't make it?</h3>
                     </div>
@@ -456,7 +465,7 @@
                             After that we can't move it, and a booking nobody checks in to is forfeited — no refund.
                         </p>
                         <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="press !no-underline mt-4 w-full py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-gold/12 text-palay-800 ring-1 ring-gold/40 hover:bg-gold hover:text-night transition-colors cursor-pointer">
-                            <i class="fa-solid fa-calendar-days text-[15px]"></i>
+                            <x-booking.ui.icon-solid name="calendar-days" class="text-[15px]" />
                             Request a reschedule
                         </a>
                     @else
@@ -469,7 +478,7 @@
 
             <!-- Navigation control links -->
             <a href="{{ route('settings.bookings') }}" class="press !no-underline w-full py-3 rounded-full flex items-center justify-center gap-1.5 text-sm font-bold text-stone-700 bg-white/70 ring-1 ring-emerald-deep/10 hover:bg-white hover:text-ink transition-colors cursor-pointer">
-            <i class="fa-solid fa-arrow-left text-[18px]"></i>
+            <x-booking.ui.icon-solid name="arrow-left" class="text-[18px]" />
                 Return to My Bookings
             </a>
         </div>

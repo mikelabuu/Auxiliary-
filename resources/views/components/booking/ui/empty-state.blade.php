@@ -8,7 +8,7 @@
 
 <div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center text-center p-8 md:p-12 border border-dashed border-stone-300 bg-stone-50/40 rounded-3xl']) }}>
     <div class="w-16 h-16 rounded-2xl bg-clsu-50 border border-clsu-100 flex items-center justify-center mb-4 text-clsu-600">
-        <i class="fa-solid fa-{{ $icon }} text-[30px]"></i>
+        <x-booking.ui.icon-solid :name="$icon" class="text-[30px]" />
     </div>
 
     <h3 class="text-base font-bold text-ink tracking-tight">{{ $title }}</h3>

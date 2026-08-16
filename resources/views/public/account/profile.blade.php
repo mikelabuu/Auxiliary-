@@ -43,7 +43,7 @@
 
                 <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.ui.button variant="primary">
-                        <i class="fa-solid fa-floppy-disk text-[18px] mr-1.5"></i>
+                        <x-booking.ui.icon-solid name="floppy-disk" class="text-[18px] mr-1.5" />
                         Save Profile
                     </x-booking.ui.button>
                 </div>
@@ -68,7 +68,7 @@
 
                 <div class="pt-2 border-t border-stone-100 flex justify-end">
                     <x-booking.ui.button variant="primary">
-                        <i class="fa-solid fa-key text-[18px] mr-1.5"></i>
+                        <x-booking.ui.icon-solid name="key" class="text-[18px] mr-1.5" />
                         Update Password
                     </x-booking.ui.button>
                 </div>

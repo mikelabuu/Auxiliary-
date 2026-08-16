@@ -116,7 +116,30 @@
         window.addEventListener('scroll', check, { passive: true });
         window.addEventListener('resize', measure, { passive: true });
         window.addEventListener('load', measure);
-        measure(); // also covers an anchor landing / reload partway down
+
+        // The first measurement — covering an anchor landing or a reload partway
+        // down — used to run synchronously right here, inside the
+        // DOMContentLoaded task. That meant getBoundingClientRect() on every
+        // target while the document was still settling, forcing a full layout;
+        // Lighthouse billed 84 ms of forced reflow across the two callers of
+        // this (swiper and lightbox). Nothing needs triggerY during that task:
+        // the earliest it can matter is the first scroll event.
+        //
+        // rAF is where a layout read belongs, since it lands after the browser
+        // has done its own. But this whole file exists because rAF does NOT
+        // fire in a document that is never painted (see the note above), and
+        // arming the gallery must not depend on that. So both are scheduled and
+        // the first to arrive wins — the timeout is what makes it a guarantee,
+        // the rAF is what makes it free when the page is genuinely rendering.
+        var measured = false;
+        function measureOnce() {
+            if (measured) return;
+            measured = true;
+            measure();
+        }
+
+        requestAnimationFrame(measureOnce);
+        setTimeout(measureOnce, 0);
     }
 })();
 </script>

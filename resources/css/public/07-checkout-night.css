@@ -208,6 +208,26 @@ body.theme-night .room-tile.unavailable {
     transform: scale(0.97);
 }
 
+/* A disabled control has nothing to ease.
+
+   Lighthouse's "avoid non-composited animations" flagged the sold-out room
+   buttons for transitioning `color` and `box-shadow` — neither of which can run
+   on the compositor. On those buttons the transition was never doing any work
+   in the first place: the `disabled:` utilities (bg-ink/25, text-cream/80,
+   shadow-none) come after the `hover:` ones in the cascade and win, so hovering
+   a sold-out button computes no style change at all. Declaring transitions on
+   it just left Chrome tracking animatable properties for a state that cannot
+   move.
+
+   Deliberately NOT extended to enabled buttons: `color` has no composited
+   equivalent, so dropping it there would make every button on the public site
+   snap its text colour instead of easing — a visible regression to satisfy an
+   unscored diagnostic. The remaining cost is hover-only and never touches page
+   load, which is what the score actually measures. */
+.press:disabled {
+    transition: none;
+}
+
 /* ── Room card ───────────────────────────────────────────────────
    The hover shadow is painted once on a pseudo-element and faded in,
    instead of sitting in the card's own transition list.

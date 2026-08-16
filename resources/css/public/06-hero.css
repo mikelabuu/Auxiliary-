@@ -220,14 +220,25 @@
         fh-drift 40s ease-in-out 2s infinite alternate;
 }
 
+/* Transform-only, deliberately.
+
+   This used to fade in from `opacity: 0`, and that single declaration was the
+   most expensive thing on the landing page. The image element here is the LCP
+   element, and Chrome will not count an element as painted while it is fully
+   transparent — so the browser finished downloading the façade at ~2.05s and
+   then sat on it for the length of this animation. DebugBear measured 1,840ms
+   of "element render delay" against the 1,800ms below: the metric was timing
+   the fade, not the image.
+
+   The rise reads the same without it. Dropping opacity also lets this run
+   entirely on the compositor, which it could not do while it was being
+   composed with the drift below. */
 @keyframes fh-build-rise {
     from {
-        opacity: 0;
         transform: translateY(30px) scale(1.015);
     }
 
     to {
-        opacity: 1;
         transform: none;
     }
 }

@@ -127,9 +127,12 @@ class Booking extends Model
         'guest_address',
         'guest_phone',
         'guest_phone_alt',
-        // The office or person who endorsed this guest. See the migration for
-        // why the column is nullable while the public form insists on it.
+        // The reference person: who endorsed this guest, the number to ring
+        // them on, and what the stay was endorsed for. See the migrations for
+        // why the columns are nullable while the public form insists on them.
         'referred_by',
+        'referred_by_phone',
+        'referred_by_purpose',
         'check_in',
         'check_out',
         'arrival_time',

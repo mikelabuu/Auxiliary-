@@ -135,6 +135,10 @@
           "src": "image/derived/hostel-front-1350.avif"
         },
         {
+          "w": 1500,
+          "src": "image/derived/hostel-front-1500.avif"
+        },
+        {
           "w": 1800,
           "src": "image/derived/hostel-front-1800.avif"
         }
@@ -149,6 +153,10 @@
           "src": "image/derived/hostel-front-1350.webp"
         },
         {
+          "w": 1500,
+          "src": "image/derived/hostel-front-1500.webp"
+        },
+        {
           "w": 1800,
           "src": "image/derived/hostel-front-1800.webp"
         }
@@ -161,6 +169,10 @@
         {
           "w": 1350,
           "src": "image/derived/hostel-front-1350.png"
+        },
+        {
+          "w": 1500,
+          "src": "image/derived/hostel-front-1500.png"
         },
         {
           "w": 1800,
@@ -691,6 +703,43 @@
         {
           "w": 900,
           "src": "image/derived/dormitory2-900.jpg"
+        }
+      ]
+    },
+    "fallback": "jpg"
+  },
+  "image/2.jpg": {
+    "width": 1280,
+    "height": 960,
+    "sources": {
+      "avif": [
+        {
+          "w": 400,
+          "src": "image/derived/2-400.avif"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/2-800.avif"
+        }
+      ],
+      "webp": [
+        {
+          "w": 400,
+          "src": "image/derived/2-400.webp"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/2-800.webp"
+        }
+      ],
+      "jpg": [
+        {
+          "w": 400,
+          "src": "image/derived/2-400.jpg"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/2-800.jpg"
         }
       ]
     },

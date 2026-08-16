@@ -9,7 +9,7 @@
 
 @if (array_filter($prefill ?? []))
     <p class="mb-4 flex items-start gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-3.5 py-2.5 text-[11px] font-semibold text-palay-800">
-        <i class="fa-solid fa-wand-magic-sparkles mt-px text-[13px]"></i>
+        <x-booking.ui.icon-solid name="wand-magic-sparkles" class="mt-px text-[13px]" />
         <span>We filled these in from your last stay. Change anything that's out of date.</span>
     </p>
 @endif
@@ -48,7 +48,7 @@
     <div>
         <label for="guest_phone" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Contact Number</label>
         <div class="relative flex items-center">
-            <i class="fa-solid fa-phone text-stone-500 absolute left-3.5 text-[18px]"></i>
+            <x-booking.ui.icon-solid name="phone" class="text-stone-500 absolute left-3.5 text-[18px]" />
             <input type="tel" name="guest_phone" id="guest_phone" value="{{ old('guest_phone', $prefill['guest_phone'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
                    inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13" required>
         </div>
@@ -58,42 +58,88 @@
             Second Contact Number <span class="text-stone-500 font-medium normal-case">(Optional)</span>
         </label>
         <div class="relative flex items-center">
-            <i class="fa-solid fa-phone-volume text-stone-500 absolute left-3.5 text-[18px]"></i>
+            <x-booking.ui.icon-solid name="phone-volume" class="text-stone-500 absolute left-3.5 text-[18px]" />
             <input type="tel" name="guest_phone_alt" id="guest_phone_alt" value="{{ old('guest_phone_alt', $prefill['guest_phone_alt'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
                    inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13">
         </div>
         <p class="text-[11px] font-medium text-stone-500 mt-1.5">Someone else we can reach if we can't get you.</p>
     </div>
 
-    {{-- Who endorsed this guest.
+    {{-- Reference person.
          A lot of stays here are arranged on somebody's word — a department
          booking a visiting lecturer, an office putting up a contractor — and
-         the desk needs to know whose. Full width because the answer is a name
-         or an office, not a number, and it reads badly squeezed into a column.
-         "Booking for myself" is offered because it is the honest answer for a
-         guest nobody sent, and without it that guest will invent something. --}}
-    <div class="sm:col-span-2">
-        <label for="referred_by" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
-            Endorsed by
-        </label>
-        <div class="relative flex items-center">
-            <i class="fa-solid fa-user-tie text-stone-500 absolute left-3.5 text-[18px]"></i>
-            <input type="text" name="referred_by" id="referred_by" value="{{ old('referred_by') }}" maxlength="255" required
-                   list="referredBySuggestions"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
-                   placeholder="Office or person endorsing you — or “Booking for myself”">
-            <datalist id="referredBySuggestions">
-                <option value="Booking for myself"></option>
-            </datalist>
+         the desk needs to know whose. A name alone turned out to be half an
+         answer, though: at 9pm, faced with a guest describing an arrangement
+         nobody at the counter has heard of, what the desk actually needs is a
+         number to ring and what the stay was endorsed for. So it is three
+         fields, not one.
+
+         All three are required, with no self-booking escape hatch. The obvious
+         alternative — let the number and purpose go blank when the name says
+         "Booking for myself" — needs the server to decide what counts as
+         saying so, and that is string matching on free text: "booking for my
+         self" would be blocked and "Booking for myself" would pass, for no
+         reason the guest could see. A guest nobody sent still has a number and
+         still has a reason for coming, so asking for them costs a guest with
+         nothing to hide nothing, and the desk gets a field it can rely on. --}}
+    <div class="sm:col-span-2 pt-5 mt-1 border-t border-emerald-deep/10">
+        <div class="flex items-center gap-2.5 mb-4">
+            <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><x-booking.ui.icon-solid name="user-tie" class="text-[17px]" /></span>
+            <div>
+                <h4 class="text-sm font-bold text-ink tracking-tight">Reference Person</h4>
+                <p class="text-[11px] font-medium text-stone-500">Who is endorsing this stay, and what for.</p>
+            </div>
         </div>
-        <p class="text-[11px] font-medium text-stone-500 mt-1.5">Which CLSU office or staff member is endorsing this stay. If nobody sent you, say so — it is a perfectly good answer.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="referred_by" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
+                    Name
+                </label>
+                <div class="relative flex items-center">
+                    <x-booking.ui.icon-solid name="user" class="text-stone-500 absolute left-3.5 text-[18px]" />
+                    <input type="text" name="referred_by" id="referred_by" value="{{ old('referred_by') }}" maxlength="255" required
+                           list="referredBySuggestions"
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                           placeholder="Office or person endorsing you — or “Booking for myself”">
+                    <datalist id="referredBySuggestions">
+                        <option value="Booking for myself"></option>
+                    </datalist>
+                </div>
+                <p class="text-[11px] font-medium text-stone-500 mt-1.5">The CLSU office or staff member endorsing this stay. Nobody sent you? Say “Booking for myself” and use your own details below.</p>
+            </div>
+            <div>
+                <label for="referred_by_phone" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
+                    Contact Number
+                </label>
+                <div class="relative flex items-center">
+                    <x-booking.ui.icon-solid name="phone" class="text-stone-500 absolute left-3.5 text-[18px]" />
+                    <input type="tel" name="referred_by_phone" id="referred_by_phone" value="{{ old('referred_by_phone') }}" maxlength="30" required
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                           placeholder="09xxxxxxxxx or office landline">
+                </div>
+                <p class="text-[11px] font-medium text-stone-500 mt-1.5">A number the front desk can ring to confirm the endorsement. An office landline is fine.</p>
+            </div>
+            <div class="sm:col-span-2">
+                <label for="referred_by_purpose" class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">
+                    Purpose
+                </label>
+                <div class="relative flex items-center">
+                    <x-booking.ui.icon-solid name="clipboard-list" class="text-stone-500 absolute left-3.5 text-[18px]" />
+                    <input type="text" name="referred_by_purpose" id="referred_by_purpose" value="{{ old('referred_by_purpose') }}" maxlength="255" required
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+                           placeholder="Seminar resource speaker, OJT deployment, official travel…">
+                </div>
+                <p class="text-[11px] font-medium text-stone-500 mt-1.5">What the stay is for. This is what the desk reads when your arrangement needs checking.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Address Info using Livewire Component in Tailwind Theme -->
 <div class="pt-5 mt-5 border-t border-emerald-deep/10">
     <div class="flex items-center gap-2.5 mb-5">
-        <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><i class="fa-solid fa-house text-[18px]"></i></span>
+        <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><x-booking.ui.icon-solid name="house" class="text-[18px]" /></span>
         <h4 class="text-sm font-bold text-ink tracking-tight">Home Address</h4>
     </div>
     <div class="night-fields">
@@ -110,11 +156,11 @@
     <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5" for="expected_guests">Total Number of Guests</label>
     <div class="stepper flex items-center gap-2 max-w-xs">
         <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests">
-            <i class="fa-solid fa-minus text-[18px]"></i>
+            <x-booking.ui.icon-solid name="minus" class="text-[18px]" />
         </button>
         <input type="number" id="expected_guests" name="expected_guests" value="{{ old('expected_guests', 1) }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm text-center focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" max="40" required>
         <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests">
-            <i class="fa-solid fa-plus text-[18px]"></i>
+            <x-booking.ui.icon-solid name="plus" class="text-[18px]" />
         </button>
     </div>
     <p class="text-[11px] font-medium text-stone-500 mt-1.5">Assign every guest to a room below. The totals have to match.</p>
@@ -129,7 +175,7 @@
             Estimated Arrival <span class="text-stone-500 font-medium normal-case">(Optional)</span>
         </label>
         <div class="relative flex items-center">
-            <i class="fa-solid fa-clock text-stone-500 absolute left-3.5 text-[18px] pointer-events-none"></i>
+            <x-booking.ui.icon-solid name="clock" class="text-stone-500 absolute left-3.5 text-[18px] pointer-events-none" />
             <select name="arrival_time" id="arrival_time" class="w-full appearance-none pl-10 pr-9 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold cursor-pointer">
                 <option value="">Not sure yet</option>
                 @foreach (\App\Support\StaySchedule::arrivalSlots() as $slot => $slotLabel)
@@ -141,11 +187,11 @@
                     </option>
                 @endforeach
             </select>
-            <i class="fa-solid fa-chevron-down text-stone-500 absolute right-3.5 text-[13px] pointer-events-none"></i>
+            <x-booking.ui.icon-solid name="chevron-down" class="text-stone-500 absolute right-3.5 text-[13px] pointer-events-none" />
         </div>
         <p class="text-[11px] font-medium text-stone-500 mt-1.5">Check-in opens at {{ $checkinTime }}. The front desk is staffed 24/7, so a late arrival is fine. It just helps to know.</p>
         <p id="earlyCheckinNote" class="hidden text-[11px] font-semibold text-palay-800 mt-1.5 leading-relaxed">
-            <i class="fa-solid fa-circle-info text-[12px]"></i>
+            <x-booking.ui.icon-solid name="circle-info" class="text-[12px]" />
             Early check-in is a request, not a guarantee — the room has to be vacated and cleaned first ({{ $checkoutTime }} check-out). We'll hold your things at the desk if it isn't ready.
         </p>
     </div>

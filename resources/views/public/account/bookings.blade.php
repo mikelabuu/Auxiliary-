@@ -15,7 +15,7 @@
             <div class="sm:col-span-2 xl:col-span-4">
                 <label for="bookingSearch" class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Search</label>
                 <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[13px]"></i>
+                    <x-booking.ui.icon-solid name="magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[13px]" />
                     <input id="bookingSearch" type="text" name="search" placeholder="Booking ID, name, or room…" value="{{ request('search') }}"
                            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
                 </div>
@@ -61,7 +61,7 @@
                 <x-booking.ui.button variant="primary" class="flex-1 py-2.5 px-4">Apply</x-booking.ui.button>
                 @if(request()->filled('search') || request()->filled('status'))
                     <x-booking.ui.button variant="neutral" href="{{ route('settings.bookings') }}" class="py-2.5 px-4 shrink-0" title="Clear filters">
-                        <i class="fa-solid fa-arrows-rotate text-[13px]"></i>
+                        <x-booking.ui.icon-solid name="arrows-rotate" class="text-[13px]" />
                         <span class="sr-only">Reset filters</span>
                     </x-booking.ui.button>
                 @endif
@@ -86,14 +86,19 @@
          that arrived just before a reload is replayed from sessionStorage). --}}
     <div id="liveBookingNotice" class="hidden mb-6" role="status" aria-live="polite">
         <div class="flex items-start gap-3 rounded-2xl border px-5 py-4 shadow-sm" data-notice-shell>
-            <i class="fa-solid fa-bell text-[20px] shrink-0 mt-0.5" data-notice-icon></i>
+            {{-- Both tone glyphs ship, and show() reveals the matching one.
+                 The icon used to be an <i> whose class carried the glyph, so a
+                 className rewrite could swap it; an inlined SVG carries its
+                 path instead, and the path is generated server-side. --}}
+            <x-booking.ui.icon-solid name="circle-check" class="text-[20px] shrink-0 mt-0.5 hidden" data-notice-icon="good" />
+            <x-booking.ui.icon-solid name="circle-exclamation" class="text-[20px] shrink-0 mt-0.5 hidden" data-notice-icon="bad" />
             <div class="min-w-0 flex-1">
                 <p class="text-sm font-bold leading-relaxed" data-notice-text></p>
                 <p class="text-[11px] font-semibold opacity-70 mt-1" data-notice-sub>Updating your bookings…</p>
             </div>
             <button type="button" data-notice-dismiss aria-label="Dismiss"
                     class="shrink-0 rounded-full p-1 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
-                <i class="fa-solid fa-xmark text-[18px]"></i>
+                <x-booking.ui.icon-solid name="xmark" class="text-[18px]" />
             </button>
         </div>
     </div>
@@ -171,7 +176,7 @@
 
                     <div class="stay-card__foot">
                         <span class="stay-card__meta">
-                            <i class="fa-solid fa-tag text-[11px] text-stone-400"></i>
+                            <x-booking.ui.icon-solid name="tag" class="text-[11px] text-stone-400" />
                             Discount:
                             @if($booking->wants_discount)
                                 <x-booking.ui.badge :status="$booking->discount_status ?? 'not_submitted'" />
@@ -191,14 +196,14 @@
                                      Cancelling is still theirs — nothing is paid yet. --}}
                                 <button type="button" onclick="openCancelModal({{ $booking->id }})" class="stay-card__quiet">Cancel</button>
                                 <span class="stay-card__meta text-palay-800">
-                                    <i class="fa-solid fa-building-columns text-[11px]"></i> Pay at front desk
+                                    <x-booking.ui.icon-solid name="building-columns" class="text-[11px]" /> Pay at front desk
                                 </span>
                                 <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-4 text-xs">View</x-booking.ui.button>
                             @elseif($booking->status === 'pending_payment')
                                 <button type="button" onclick="openCancelModal({{ $booking->id }})" class="stay-card__quiet">Cancel</button>
                                 <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-3.5 text-xs">View</x-booking.ui.button>
                                 <x-booking.ui.button variant="primary" href="{{ route('bookings.pay', $booking->id) }}" class="py-1.5 px-4 text-xs">
-                                    <i class="fa-solid fa-credit-card text-[12px]"></i> Pay now
+                                    <x-booking.ui.icon-solid name="credit-card" class="text-[12px]" /> Pay now
                                 </x-booking.ui.button>
                             @else
                                 {{-- A paid booking has no Cancel, by policy: the money
@@ -211,17 +216,17 @@
                                 @php $openReschedule = \App\Models\RescheduleRequest::openFor($booking); @endphp
                                 @if($openReschedule)
                                     <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="stay-card__meta text-palay-800 !no-underline hover:text-palay-900">
-                                        <i class="fa-solid fa-hourglass text-[11px]"></i>
+                                        <x-booking.ui.icon-solid name="hourglass" class="text-[11px]" />
                                         Reschedule pending &middot; {{ $openReschedule->requested_check_in->format('M d') }}
                                     </a>
                                 @elseif(\App\Models\RescheduleRequest::isOpenFor($booking))
                                     <x-booking.ui.button variant="outline" href="{{ route('booking.reschedule.create', $booking->id) }}" class="py-1.5 px-3.5 text-xs">
-                                        <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule
+                                        <x-booking.ui.icon-solid name="calendar-days" class="text-[11px]" /> Reschedule
                                     </x-booking.ui.button>
                                 @endif
                                 <x-booking.ui.button variant="outline" href="{{ route('booking.show', $booking->id) }}" class="py-1.5 px-4 text-xs">
                                     View details
-                                    <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                                    <x-booking.ui.icon-solid name="arrow-right" class="text-[11px]" />
                                 </x-booking.ui.button>
                             @endif
                         </div>
@@ -298,22 +303,20 @@
         if (!notice) return;
 
         const shell = notice.querySelector('[data-notice-shell]');
-        const icon  = notice.querySelector('[data-notice-icon]');
+        const icons = notice.querySelectorAll('[data-notice-icon]');
         const text  = notice.querySelector('[data-notice-text]');
         const sub   = notice.querySelector('[data-notice-sub]');
 
-        // Font Awesome classes, not Material ligature text: the icon is an <i>
-        // whose glyph comes from its class, so writing a name into textContent
-        // printed the literal word ("task_alt") next to the message.
         const TONE = {
-            good: { shell: 'border-clsu-200 bg-clsu-50 text-clsu-800', icon: 'fa-circle-check' },
-            bad:  { shell: 'border-ember-200 bg-ember-50 text-ember-700', icon: 'fa-circle-exclamation' },
+            good: 'border-clsu-200 bg-clsu-50 text-clsu-800',
+            bad:  'border-ember-200 bg-ember-50 text-ember-700',
         };
 
         function show(message, tone, subText) {
-            const t = TONE[tone] || TONE.good;
-            shell.className = 'flex items-start gap-3 rounded-2xl border px-5 py-4 shadow-sm ' + t.shell;
-            icon.className = 'fa-solid ' + t.icon + ' text-[20px] shrink-0 mt-0.5';
+            const key = TONE[tone] ? tone : 'good';
+            shell.className = 'flex items-start gap-3 rounded-2xl border px-5 py-4 shadow-sm ' + TONE[key];
+            // Both glyphs are in the DOM; reveal the one this tone calls for.
+            icons.forEach(el => el.classList.toggle('hidden', el.dataset.noticeIcon !== key));
             text.textContent = message;
             sub.textContent = subText || '';
             sub.classList.toggle('hidden', !subText);

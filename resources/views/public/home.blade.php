@@ -5,12 +5,6 @@
      panel, so the nav rides transparent/white over it and swaps to the solid
      light skin on scroll. --}}
 @section('nav_dark', '1')
-{{-- no_icons: this page renders no Font Awesome glyph at all — every icon on
-     it is inline SVG (x-booking.ui.icon in the markup, PILL_ICONS in
-     availability-search.js), so the layout emits neither the 88 KB sheet nor
-     the 117 KB font. It used to take defer_icons, which still paid for both,
-     just late. See layouts/public/base. --}}
-@section('no_icons', '1')
 
 @section('content')
 
@@ -61,10 +55,10 @@
          accident) and runs them after parsing but before DOMContentLoaded
          fires, so the handlers are still registered in time and home.js still
          sees the window hooks the two before it install. --}}
-    <script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}" defer></script>
-    <script src="{{ asset('js/availability-search.js') }}?v={{ filemtime(public_path('js/availability-search.js')) }}" defer></script>
-    <script src="{{ asset('js/room-filters.js') }}?v={{ filemtime(public_path('js/room-filters.js')) }}" defer></script>
-    <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}" defer></script>
-    <script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
-    <script src="{{ asset('js/scroll-effects.js') }}?v={{ filemtime(public_path('js/scroll-effects.js')) }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/booking.js') }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/availability-search.js') }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/room-filters.js') }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/home.js') }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/parallax.js') }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/scroll-effects.js') }}" defer></script>
 @endsection

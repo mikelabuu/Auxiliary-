@@ -160,11 +160,21 @@ class BookingController extends Controller
             // number nobody can dial is worse than an empty field, because the
             // desk stops looking once it sees one.
             'guest_phone_alt' => ['nullable', 'string', 'regex:/^(09\d{9}|\+639\d{9})$/', 'different:guest_phone'],
-            // Who endorsed this guest. Required on this form because the desk
-            // asked for it, but the column is nullable — walk-ins are typed at
-            // a counter and every booking made before this field existed has no
-            // answer. See the migration.
+            // The reference person: who endorsed this guest, the number to
+            // reach them on, and what the stay was endorsed for. All three are
+            // required on this form because the desk asked for them, but the
+            // columns are nullable — walk-ins are typed at a counter and every
+            // booking made before these fields existed has no answer. See the
+            // migrations.
             'referred_by'     => ['required', 'string', 'max:255'],
+            // Deliberately looser than guest_phone: a referrer is as likely to
+            // be an office landline or an extension as a mobile, and rejecting
+            // "(044) 456-0688" would push the guest into typing a mobile number
+            // that is not the one the desk should ring. Digits and the
+            // punctuation phone numbers are actually written with, nothing else,
+            // so the column cannot become a second free-text note.
+            'referred_by_phone'   => ['required', 'string', 'max:30', 'regex:/^[0-9()+\-.\s]{7,30}$/'],
+            'referred_by_purpose' => ['required', 'string', 'max:255'],
             'check_in'        => ['required', 'date', 'after_or_equal:today', 'before_or_equal:' . $horizon->toDateString()],
             'check_out'       => ['required', 'date', 'after:check_in', 'before_or_equal:' . $maxStay->toDateString()],
             'expected_guests' => 'required|integer|min:1|max:40',
@@ -210,6 +220,9 @@ class BookingController extends Controller
             'guest_phone_alt.regex'    => 'Enter the second number as 09xxxxxxxxx or +639xxxxxxxxx, or leave it blank.',
             'guest_phone_alt.different' => 'The second contact number has to be a different number from the first.',
             'referred_by.required'     => 'Tell us which office or person is endorsing this stay — or say you are booking for yourself.',
+            'referred_by_phone.required' => 'Give us a number for the person or office endorsing this stay. If that is you, your own number is the right answer.',
+            'referred_by_phone.regex'    => 'Enter the reference number as digits — a mobile (09xxxxxxxxx) or a landline like (044) 456-0688.',
+            'referred_by_purpose.required' => 'Say what this stay is for — a seminar, an OJT deployment, official travel, a personal visit.',
             'check_in.before_or_equal' => 'We only take bookings up to ' . self::BOOKING_HORIZON_DAYS . ' days ahead.',
             'check_out.before_or_equal' => 'A single stay can run at most ' . self::MAX_STAY_NIGHTS . ' nights. Please contact us for longer stays.',
             'reservations.*.num_guests.required' => 'Say how many guests are staying in each room you picked.',
@@ -438,6 +451,8 @@ class BookingController extends Controller
                     'guest_phone'     => $request->guest_phone,
                     'guest_phone_alt' => $request->guest_phone_alt ?: null,
                     'referred_by'     => trim((string) $request->referred_by) ?: null,
+                    'referred_by_phone'   => trim((string) $request->referred_by_phone) ?: null,
+                    'referred_by_purpose' => trim((string) $request->referred_by_purpose) ?: null,
                     'check_in'        => $request->check_in,
                     'check_out'       => $request->check_out,
                     // Blank means "not sure yet", which is a real answer and

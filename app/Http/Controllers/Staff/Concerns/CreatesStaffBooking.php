@@ -90,8 +90,13 @@ trait CreatesStaffBooking
             // Optional here, unlike the public form. The desk is typing this
             // with a guest in front of them and already knows who walked in;
             // holding up a counter over an endorsement field would be the
-            // wrong trade. See the migration.
-            'referred_by'     => 'nullable|string|max:255',
+            // wrong trade. See the migrations. The number and purpose follow
+            // the name: a desk that has bothered to type a referrer will type
+            // the rest, and a desk that has not should not be nagged for the
+            // contact details of a person it never recorded.
+            'referred_by'         => 'nullable|string|max:255',
+            'referred_by_phone'   => 'nullable|string|max:30',
+            'referred_by_purpose' => 'nullable|string|max:255',
             'check_in'        => 'required|date|after_or_equal:today',
             'check_out'       => 'required|date|after:check_in',
             'expected_guests' => 'required|integer|min:1',
@@ -275,7 +280,9 @@ trait CreatesStaffBooking
                 'guest_address'   => $guest_address,
                 'guest_phone'     => $request->guest_phone,
                 'guest_phone_alt' => $request->guest_phone_alt ?: null,
-                'referred_by'     => trim((string) $request->referred_by) ?: null,
+                'referred_by'         => trim((string) $request->referred_by) ?: null,
+                'referred_by_phone'   => trim((string) $request->referred_by_phone) ?: null,
+                'referred_by_purpose' => trim((string) $request->referred_by_purpose) ?: null,
                 'check_in'        => $request->check_in,
                 'check_out'       => $request->check_out,
                 'discount'        => $discount,

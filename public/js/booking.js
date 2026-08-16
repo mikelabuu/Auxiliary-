@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function formatPrice(num) { return '₱' + Number(num).toLocaleString(); }
 
+  // Icon markup for the fragments below that are built as HTML strings. The
+  // public layout no longer loads the Font Awesome webfont, so an `<i
+  // class="fa-solid …">` written here would draw nothing; checkout renders the
+  // inline SVGs into #bookingIcons and this reads them back, which keeps
+  // App\Support\AdminIcons the single place a glyph is defined.
+  const iconBank = document.getElementById('bookingIcons');
+  const icon = (name) => iconBank?.content?.querySelector(`[data-icon="${name}"]`)?.innerHTML || '';
+
   // Animated currency count-up for summary totals
   function animateCurrency(el, from, to, ms = 380) {
     if (!el) return;
@@ -390,7 +398,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const firstName = bookingForm?.querySelector('[name="first_name"]');
     const lastName  = bookingForm?.querySelector('[name="last_name"]');
     const phone     = bookingForm?.querySelector('[name="guest_phone"]');
-    const detailsDone = !!(firstName?.value.trim() && lastName?.value.trim() && phone?.value.trim());
+    // The reference person is three required fields, and the rail has to count
+    // them: marking Details done with the endorsement half-filled would tick a
+    // step the browser is about to refuse to submit.
+    const refName    = bookingForm?.querySelector('[name="referred_by"]');
+    const refPhone   = bookingForm?.querySelector('[name="referred_by_phone"]');
+    const refPurpose = bookingForm?.querySelector('[name="referred_by_purpose"]');
+    const detailsDone = !!(
+      firstName?.value.trim() && lastName?.value.trim() && phone?.value.trim()
+      && refName?.value.trim() && refPhone?.value.trim() && refPurpose?.value.trim()
+    );
 
     const blocks = Array.from(document.querySelectorAll('.reservation-block'));
     const expected = parseInt(expectedGuestsInput?.value, 10) || 0;
@@ -526,7 +543,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   bookingForm?.addEventListener('input', function (e) {
-    if (['first_name', 'last_name', 'guest_phone', 'accept_terms'].includes(e.target?.name)) updateProgressRail();
+    if (['first_name', 'last_name', 'guest_phone', 'accept_terms',
+         'referred_by', 'referred_by_phone', 'referred_by_purpose'].includes(e.target?.name)) updateProgressRail();
     // Clearing the mark as soon as the guest edits the field keeps the red
     // from outliving the problem.
     e.target?.classList?.remove('field-invalid');
@@ -943,7 +961,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!checkInVal || !checkOutVal) {
       container.innerHTML = `
         <div class="text-center py-10 text-stone-500">
-            <i class="fa-solid fa-calendar-days text-5xl mb-3 block text-emerald-deep/10"></i>
+            ${icon('calendar-days')}
             <p class="font-semibold">Please select your stay dates.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
@@ -962,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (blocks.length === 0) {
       container.innerHTML = `
         <div class="text-center py-10 text-stone-500">
-            <i class="fa-solid fa-bed text-5xl mb-3 block text-emerald-deep/10"></i>
+            ${icon('bed')}
             <p class="font-semibold">Please add a room to your allocation.</p>
         </div>`;
       if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
@@ -1011,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const discountNote = document.getElementById('request_discount')?.checked
       ? `
       <div class="mt-4 text-xs font-bold text-stone-700 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
-          <i class="fa-solid fa-circle-info text-[16px] text-palay-800"></i>
+          ${icon('circle-info')}
           <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
       </div>`
       : '';

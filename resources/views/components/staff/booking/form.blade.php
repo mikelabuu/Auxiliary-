@@ -80,8 +80,21 @@
                 <div>
                     {{-- Optional at the desk, required on the public form: a
                          walk-in is standing here, an online booking is not. --}}
-                    <x-staff.booking.label for="referred_by">Endorsed by <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
+                    <x-staff.booking.label for="referred_by">Reference Person <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
                     <x-staff.booking.input type="text" name="referred_by" id="referred_by" :value="old('referred_by')" placeholder="Office or person endorsing this guest" />
+                </div>
+                {{-- The other two thirds of the reference person. Same three
+                     answers the public form now insists on, so a walk-in typed
+                     at the counter and a booking made online produce the same
+                     record — the desk should not have to remember which surface
+                     a booking came through to know what it can rely on. --}}
+                <div>
+                    <x-staff.booking.label for="referred_by_phone">Reference Contact <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
+                    <x-staff.booking.input type="text" name="referred_by_phone" id="referred_by_phone" :value="old('referred_by_phone')" placeholder="Number to ring to confirm" />
+                </div>
+                <div>
+                    <x-staff.booking.label for="referred_by_purpose">Purpose <span class="font-medium normal-case text-faint">(optional)</span></x-staff.booking.label>
+                    <x-staff.booking.input type="text" name="referred_by_purpose" id="referred_by_purpose" :value="old('referred_by_purpose')" placeholder="What the stay is for" />
                 </div>
                 <div>
                     <x-staff.booking.label>Guest Address</x-staff.booking.label>

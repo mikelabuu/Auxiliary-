@@ -8,9 +8,20 @@
  * those sizes working, keeps `currentColor` inheritance, and costs no webfont
  * request — while the MAP below stays the one place a glyph choice is made.
  *
- * The webfont is still loaded (public/vendor/fontawesome, see sync-vendor.mjs)
- * so `<i class="fa-solid fa-…">` works anywhere in a view; this registry is the
- * typed, size-safe path for components.
+ * The public site now reads the same registry through
+ * components/booking/ui/icon-solid.blade.php, and it is no longer a
+ * convenience there but the only way to draw a Font Awesome glyph: the public
+ * layout stopped loading the webfont entirely (see layouts/public/base). Every
+ * glyph a guest-facing view needs must therefore resolve here — a name that
+ * does not is a blank box, where it used to silently fall back to `<i>`.
+ *
+ * The staff consoles still load the webfont, so bare `<i class="fa-…">` keeps
+ * working in admin and front-desk views.
+ *
+ * ALIASES: each icon is registered twice, under its intent name and under its
+ * Font Awesome name. Views that pass a vendor name straight through — the
+ * account nav's `$item['icon']`, `<x-booking.ui.card icon="user-gear">` — then
+ * resolve without every call site having to be renamed to an intent.
  *
  * Re-run after changing MAP or bumping the package:
  *
@@ -128,6 +139,28 @@ const MAP = {
     'list': ['list-ul', 'solid'],
     'list-check': ['list-check', 'solid'],
     'table': ['table-list', 'solid'],
+
+    // ── guest-facing booking journey ─────────────────────────────────
+    // Added when the public site dropped the Font Awesome webfont; these are
+    // the glyphs checkout, booking detail, payment proof, discount,
+    // reschedule and the account pages were drawing with `<i class="fa-…">`.
+    'hourglass': ['hourglass', 'solid'],
+    'hourglass-half': ['hourglass-half', 'solid'],
+    'id-badge': ['id-badge', 'solid'],
+    'file-upload': ['file-arrow-up', 'solid'],
+    'bank': ['building-columns', 'solid'],
+    'lightbulb': ['lightbulb', 'solid'],
+    'utensils': ['utensils', 'solid'],
+    'user-tie': ['user-tie', 'solid'],
+    'user-gear': ['user-gear', 'solid'],
+    'spinner': ['spinner', 'solid'],
+    'phone-volume': ['phone-volume', 'solid'],
+    'send': ['paper-plane', 'solid'],
+    'money': ['money-bill-wave', 'solid'],
+    'save': ['floppy-disk', 'solid'],
+    'house': ['house', 'solid'],
+    'book': ['book', 'solid'],
+    'mobile-screen-button': ['mobile-screen-button', 'solid'],
 };
 
 const entries = [];
@@ -169,6 +202,22 @@ const body = entries
     )
     .join('\n');
 
+/*
+ * Vendor-name aliases. An intent key always wins — `search` stays the
+ * magnifying glass even though `magnifying-glass` also resolves — and the
+ * first intent to claim a glyph owns its alias, so the several intents that
+ * share one glyph (arrival/log-in, maximize/expand) collapse harmlessly onto
+ * the same path data.
+ */
+const claimed = new Set(entries.map((e) => e.key));
+const aliases = [];
+
+for (const e of entries) {
+    if (claimed.has(e.faName)) continue;
+    claimed.add(e.faName);
+    aliases.push(`        '${e.faName}' => '${e.key}',`);
+}
+
 const php = `<?php
 
 namespace App\\Support;
@@ -181,14 +230,20 @@ namespace App\\Support;
  *
  *     npm run icons:build
  *
- * Consumed by resources/views/components/admin/ui/icon.blade.php, which is the
- * only thing in the app that should call these methods.
+ * Consumed by resources/views/components/admin/ui/icon.blade.php and
+ * resources/views/components/booking/ui/icon-solid.blade.php, which are the
+ * only things in the app that should call these methods.
  */
 final class AdminIcons
 {
     /** name => [viewBox, path data] */
     private const ICONS = [
 ${body}
+    ];
+
+    /** Font Awesome name => intent name in ICONS above. */
+    private const ALIASES = [
+${aliases.join('\n')}
     ];
 
     /** Fallback keeps a typo rendering *something* rather than a blank box. */
@@ -199,12 +254,14 @@ ${body}
      */
     public static function get(string $name): array
     {
-        return self::ICONS[$name] ?? self::ICONS[self::FALLBACK];
+        return self::ICONS[$name]
+            ?? self::ICONS[self::ALIASES[$name] ?? '']
+            ?? self::ICONS[self::FALLBACK];
     }
 
     public static function has(string $name): bool
     {
-        return isset(self::ICONS[$name]);
+        return isset(self::ICONS[$name]) || isset(self::ALIASES[$name]);
     }
 
     /** @return list<string> */

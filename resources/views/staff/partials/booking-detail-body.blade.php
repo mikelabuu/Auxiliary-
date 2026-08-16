@@ -100,9 +100,14 @@
                             // Only when there is one — an empty "Second phone —"
                             // row is a dead line in a panel staff scan in a hurry.
                             $booking->guest_phone_alt ? ['icon' => 'phone', 'label' => 'Second phone', 'value' => $booking->guest_phone_alt, 'mono' => true] : null,
-                            // Who vouched for this guest. Blank on anything booked
-                            // before the field existed, and on walk-ins.
-                            $booking->referred_by ? ['icon' => 'user', 'label' => 'Endorsed by', 'value' => $booking->referred_by] : null,
+                            // Who vouched for this guest, how to reach them, and
+                            // what for. Blank on anything booked before the
+                            // fields existed, and on walk-ins the desk typed in
+                            // a hurry — each row stands or falls on its own so a
+                            // half-filled reference still shows what it has.
+                            $booking->referred_by ? ['icon' => 'user', 'label' => 'Reference person', 'value' => $booking->referred_by, 'mono' => false] : null,
+                            $booking->referred_by_phone ? ['icon' => 'phone', 'label' => 'Reference contact', 'value' => $booking->referred_by_phone, 'mono' => true] : null,
+                            $booking->referred_by_purpose ? ['icon' => 'clipboard', 'label' => 'Purpose', 'value' => $booking->referred_by_purpose, 'mono' => false] : null,
                             $booking->user?->email ? ['icon' => 'mail', 'label' => 'Email', 'value' => $booking->user->email, 'mono' => false] : null,
                             ['icon' => 'map-pin', 'label' => 'Address', 'value' => $booking->guest_address ?: '—', 'mono' => false],
                         ]));

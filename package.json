@@ -3,11 +3,12 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "npm run images:build && npm run views:cache && vite build",
+        "build": "npm run images:build && npm run js:minify && npm run views:cache && vite build",
         "build:only": "vite build",
         "views:cache": "php artisan view:cache",
         "dev": "vite",
         "icons:build": "node scripts/build-icon-registry.mjs",
+        "js:minify": "node scripts/minify-public-js.mjs",
         "vendor:sync": "node scripts/sync-vendor.mjs",
         "postinstall": "node scripts/sync-vendor.mjs",
         "images:build": "node scripts/build-images.mjs"

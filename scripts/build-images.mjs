@@ -52,11 +52,18 @@ const SOURCES = {
     // Landing hero atmosphere: an out-of-focus wash plus a horizon band. Both
     // carry a heavy CSS blur, so detail here is invisible by construction and
     // this is the one source that genuinely wants a low quality setting.
-    'farmers-hostel-wide.png': { widths: [480, 960, 1500], quality: 45 },
+    'farmers-hostel-wide.png': { widths: [480, 960, 1500], quality: 38 },
 
     // Landing hero cut-out building — the LCP element. Real transparency, so
     // the fallback stays PNG.
-    'hostel-front.png': [900, 1350, 1800],
+    //
+    // 1500 is not a design rung, it is a metric one. `sizes` on this image is
+    // `104vw`, and Lighthouse's desktop viewport is 1350px — which resolves to
+    // ~1404px, i.e. just past the 1350 rung. The browser then takes the next
+    // candidate up and pulls 1800w (107 KB) to paint a box 1302px wide. A rung
+    // at 1500 catches that overshoot (~78 KB) without changing what any other
+    // viewport picks, and without touching the 104% width the design wants.
+    'hostel-front.png': [900, 1350, 1500, 1800],
 
     // Institutional seal: 42px in the hero, ~40px in the admin sidebar, and
     // the favicon for both staff consoles.
@@ -85,6 +92,15 @@ const SOURCES = {
     'deluxe.jpg': [200, 600, 900, 1400],
     'dormitory1.jpg': [200, 600, 900, 1400],
     'dormitory2.jpg': [200, 600, 900, 1400],
+
+    // Landing "three chapters" editorial block (public/home/partials/story).
+    // <x-img> silently falls back to the raw source for anything missing from
+    // this map, which is how this one stayed a 102 KB JPEG on the landing page
+    // long after everything around it had been converted — the call site was
+    // already correct, the manifest entry was just never added. The source is
+    // 800px wide, so the ladder stops there; the win here is AVIF/WebP, not a
+    // smaller box.
+    '2.jpg': [400, 800],
 };
 
 // Bento gallery tiles + the per-room-type galleries, all drawn from the same

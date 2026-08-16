@@ -26,7 +26,7 @@
                        {{ $active
                           ? 'bg-clsu-50 text-clsu-800 border-clsu-600'
                           : 'text-stone-600 hover:text-clsu-800 hover:bg-stone-50 border-transparent' }}">
-                        <i class="fa-solid fa-{{ $item['icon'] }} text-[20px] {{ $active ? 'text-clsu-700' : 'text-stone-400' }}"></i>
+                        <x-booking.ui.icon-solid :name="$item['icon']" class="text-[20px] {{ $active ? 'text-clsu-700' : 'text-stone-400' }}" />
                         {{ $item['label'] }}
                     </a>
                 @endforeach

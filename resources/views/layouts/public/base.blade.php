@@ -65,42 +65,34 @@
     <link rel="preload" as="font" type="font/woff2" crossorigin
           href="{{ asset('vendor/fonts/manrope-latin-wght-normal.woff2') }}">
 
-    {{-- Font Awesome Free, self-hosted (scripts/sync-vendor.mjs). One icon set
-         across the public site and both staff consoles; replaced the Material
-         Icons CDN font the booking flow used to pull.
+    {{-- No Font Awesome here any more, on any public page.
 
-         Pages opt out of the eager path with @section('defer_icons', '1'), or
-         out of Font Awesome altogether with @section('no_icons', '1').
+         The webfont was the heaviest thing the guest-facing site loaded: a
+         90 KB render-blocking stylesheet plus fa-solid-900.woff2, which at
+         119 KB does not compress (it is already a compressed format) and which
+         this layout also PRELOADED — so it went out at high priority and
+         competed for bandwidth with app.css and the three text faces during
+         first paint. On checkout that was 210 KB, about half the page's total
+         transfer, to draw 24 glyphs. Far from the server, which is where the
+         complaints came from, that is seconds.
 
-         The preload is a high-priority fetch of a 117 KB font, and the sheet
-         is 90 KB of render-blocking CSS. On checkout, account and booking that
-         is correct: those pages render FA glyphs in their first paint.
+         The landing page had already been moved off it (see PILL_ICONS in
+         availability-search.js). The whole booking journey now follows:
+         checkout, booking detail, payment proof, discount, reschedule and the
+         account pages draw the same Font Awesome glyphs inlined as SVG through
+         <x-booking.ui.icon-solid>, which costs no request and about a few
+         hundred bytes compressed per page. Several public pages — login,
+         register, room detail, transactions, receipt verification — were
+         paying the 210 KB while rendering no glyph at all.
 
-         The landing renders none at all now, so it takes `no_icons` and pays
-         nothing. It used to take `defer_icons` on the argument that its only
-         Font Awesome was the three availability pills, which "in most visits
-         never appear" — but availability-search.js runs its search on
-         DOMContentLoaded rather than waiting for the guest, so the pills, and
-         the 205 KB they dragged in, were on every single load. Deferring the
-         sheet only meant the glyphs popped in late. Those three icons are
-         inline lucide SVG now (see PILL_ICONS in availability-search.js),
-         which is what the rest of the page's icons already were.
+         The `no_icons` / `defer_icons` sections that used to gate this are
+         gone with it; nothing yields them any more.
 
-         Deferred pages still get the exact same stylesheet, just off the
-         critical path: media="print" makes it non-blocking and the onload
-         hands it back to all. The noscript copy covers JS-off, where the
-         swap would never fire. --}}
-    @if (trim($__env->yieldContent('no_icons')) !== '')
-        {{-- nothing: this page renders no Font Awesome glyph at all --}}
-    @elseif (trim($__env->yieldContent('defer_icons')) !== '')
-        <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"
-              media="print" onload="this.media='all'; this.onload=null;">
-        <noscript><link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet"></noscript>
-    @else
-        <link rel="preload" as="font" type="font/woff2" crossorigin
-              href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}">
-        <link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
-    @endif
+         Consequence: bare `<i class="fa-solid fa-…">` draws NOTHING in a
+         public view. Use <x-booking.ui.icon-solid name="…"> instead, and if
+         the glyph is not in the registry yet, add it to MAP in
+         scripts/build-icon-registry.mjs and run `npm run icons:build`. The
+         staff consoles still load the sheet, so `<i>` keeps working there. --}}
 
     {{-- Vendor libraries are self-hosted from public/vendor (see
          scripts/sync-vendor.mjs) and are now OPT-IN. Each one is a partial in
@@ -136,7 +128,7 @@
          files above each used to run their own; measured at 6x CPU throttle,
          scrolling the landing page cost 27.7ms/frame with all three loops and
          7.1ms with none, while removing any single one only reached ~21ms. --}}
-    <script src="{{ asset('js/frame-bus.js') }}?v={{ filemtime(public_path('js/frame-bus.js')) }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/frame-bus.js') }}" defer></script>
 
     @stack('styles')
 </head>
@@ -571,7 +563,7 @@
     </script>
 
     <!-- Scroll reveal (local AOS replacement — see public/js/reveal.js) -->
-    <script src="{{ asset('js/reveal.js') }}?v={{ filemtime(public_path('js/reveal.js')) }}" defer></script>
+    <script src="{{ \App\Support\PublicScript::url('js/reveal.js') }}" defer></script>
 
     {{-- Lenis inertia scroll used to load here, desktop-only (fine pointer,
          ≥1024px), for a weighted "cinematic" scroll feel.

@@ -55,7 +55,7 @@
                     data-modal-close="{{ $id }}"
                     aria-label="Close"
             >
-                <i class="fa-solid fa-xmark text-[20px]"></i>
+                <x-booking.ui.icon-solid name="xmark" class="text-[20px]" />
             </button>
         </div>
 

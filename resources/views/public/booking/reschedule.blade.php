@@ -60,7 +60,7 @@
             <div class="bg-cream-warm rounded-3xl ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] p-6 sm:p-8">
                 <div class="flex items-start gap-3 mb-6 pb-5 border-b border-emerald-deep/10">
                     <span class="w-11 h-11 rounded-2xl bg-gold/12 text-palay-800 ring-1 ring-gold/30 flex items-center justify-center shrink-0">
-                        <i class="fa-solid fa-hourglass text-[20px]"></i>
+                        <x-booking.ui.icon-solid name="hourglass" class="text-[20px]" />
                     </span>
                     <div>
                         <h2 class="text-lg font-semibold text-ink tracking-tight font-display">With our front desk</h2>
@@ -109,7 +109,7 @@
                      RescheduleController and by bookings:mark-no-show, which is
                      what makes it worth saying this loudly. --}}
                 <div class="flex items-start gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5">
-                    <i class="fa-solid fa-triangle-exclamation text-[18px] text-palay-800 shrink-0 mt-0.5"></i>
+                    <x-booking.ui.icon-solid name="triangle-exclamation" class="text-[18px] text-palay-800 shrink-0 mt-0.5" />
                     <p class="text-xs font-bold text-palay-800 leading-relaxed">
                         Ask by {{ $deadline->format('g:i A') }} on {{ $deadline->format('F d') }} — a full 24 hours before your {{ $booking->check_in->format('F d') }} check-in.
                         <span class="block font-semibold text-stone-600 mt-1">After that we cannot move the stay, and a booking nobody checks in to is forfeited with no refund.</span>
@@ -143,11 +143,11 @@
 
                 <div class="rounded-2xl border border-emerald-deep/10 bg-white/50 p-4 space-y-2">
                     <p class="text-[11px] font-semibold text-stone-600 leading-relaxed flex items-start gap-2">
-                        <i class="fa-solid fa-door-open mt-px text-[13px] text-palay-800"></i>
+                        <x-booking.ui.icon-solid name="door-open" class="mt-px text-[13px] text-palay-800" />
                         <span>You keep the same {{ \Illuminate\Support\Str::plural('room', $booking->reservations->count()) }} ({{ $rooms ?: '—' }}). If any of them is already taken on your new dates, we will have to say no — so a second choice of dates in your note helps.</span>
                     </p>
                     <p class="text-[11px] font-semibold text-stone-600 leading-relaxed flex items-start gap-2">
-                        <i class="fa-solid fa-receipt mt-px text-[13px] text-palay-800"></i>
+                        <x-booking.ui.icon-solid name="receipt" class="mt-px text-[13px] text-palay-800" />
                         <span>A longer stay costs more, and the difference is settled at our front desk when you arrive. A shorter one is not cheaper — we don't issue refunds, so what you have already paid stands.</span>
                     </p>
                 </div>
@@ -157,7 +157,7 @@
                         Cancel
                     </x-booking.ui.button>
                     <button type="submit" data-busy-btn class="press focus-ring min-h-11 py-2.5 px-6 rounded-full flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] bg-emerald-deep text-cream cursor-pointer hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)]">
-                        <i class="fa-solid fa-paper-plane text-[15px]"></i>
+                        <x-booking.ui.icon-solid name="paper-plane" class="text-[15px]" />
                         Send request
                     </button>
                 </div>

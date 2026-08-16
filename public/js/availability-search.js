@@ -47,10 +47,29 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!inEl || !outEl || !searchBtn) return; // welcome page only
 
   /* ---------- Date pickers ---------- */
+  //
+  // Constructed on first interaction, not on DOMContentLoaded.
+  //
+  // flatpickr renders its entire calendar into the document the moment it is
+  // constructed — two instances, a full month of day cells each. Every visitor
+  // paid for that before going anywhere near a date field, and Lighthouse
+  // counted it twice: once in "Optimize DOM size" (1,450 elements, with
+  // .dayContainer named as the single largest parent) and once in "Avoid long
+  // main-thread tasks".
+  //
+  // Only the construction moved. The library itself still loads with `defer`
+  // exactly as before, so there is nothing to fetch when the guest first
+  // clicks — the calendar opens on the same frame it always did. This capsule
+  // is the page's primary conversion path and is not somewhere to trade real
+  // responsiveness for a lab metric.
   let fpOut = null;
   let fpIn = null;
+  let pickersBuilt = false;
 
-  if (typeof flatpickr !== 'undefined') {
+  function ensurePickers() {
+    if (pickersBuilt || typeof flatpickr === 'undefined') return;
+    pickersBuilt = true;
+
     fpOut = flatpickr(outEl, {
       dateFormat: 'Y-m-d',
       minDate: new Date(Date.now() + 86400000),
@@ -84,6 +103,31 @@ document.addEventListener('DOMContentLoaded', function () {
       },
     });
   }
+
+  // `pointerdown` fires before `focus` on a click; `focus` alone covers keyboard
+  // tabbing. Whichever arrives first builds the pair — ensurePickers() is
+  // idempotent, so the second one is free.
+  function armField(el, instance) {
+    function boot() {
+      const fresh = !pickersBuilt;
+      ensurePickers();
+
+      // flatpickr binds its own focus/click openers as part of construction, so
+      // when we build during the very interaction that should have opened it,
+      // those handlers were not yet attached to see the event. Open once by
+      // hand; from the next interaction on, flatpickr owns this entirely.
+      if (fresh) {
+        const fp = instance();
+        if (fp) fp.open();
+      }
+    }
+
+    el.addEventListener('pointerdown', boot);
+    el.addEventListener('focus', boot);
+  }
+
+  armField(inEl, () => fpIn);
+  armField(outEl, () => fpOut);
 
   // Capsule nights summary — "3 nights · Jul 20 → Jul 23" under the fields
   // once both dates are set; hides again when either side is cleared.
@@ -207,6 +251,9 @@ document.addEventListener('DOMContentLoaded', function () {
     widget.classList.remove('animate-shake');
     void widget.offsetWidth; // restart animation
     widget.classList.add('animate-shake');
+    // Reachable without either field ever having been focused — hitting Search
+    // on an empty capsule lands here, and the pickers are built lazily now.
+    ensurePickers();
     if (fpIn && !inEl.value) fpIn.open();
     else if (fpOut && !outEl.value) fpOut.open();
   }

@@ -304,6 +304,6 @@
 </div>
 
 @push('scripts')
-<script src="{{ asset('js/parallax.js') }}?v={{ filemtime(public_path('js/parallax.js')) }}" defer></script>
+<script src="{{ \App\Support\PublicScript::url('js/parallax.js') }}" defer></script>
 @endpush
 @endsection

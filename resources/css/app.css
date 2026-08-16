@@ -17,6 +17,38 @@
     display: none !important;
 }
 
+/* Inlined Font Awesome glyphs (<x-booking.ui.icon-solid>), which replaced the
+   webfont on every public page. These four declarations are Font Awesome's own
+   inline-SVG metrics, so a glyph lands where the old `<i>` did:
+
+     height: 1em      the call site's text-[18px] still sizes the icon, which is
+                      why the swap needed no class changes anywhere
+     width: auto      FA draws 512 units tall but 256–640 wide; a square box
+                      letterboxes a bed and stretches a chevron
+     vertical-align   sits the glyph on the text baseline rather than riding high
+     flex: none       Tailwind's preflight makes svg display:block, so inside the
+                      flex rows these mostly live in it would otherwise squash
+
+   The staff consoles keep the webfont and their own .fa-* rules; see
+   resources/css/admin/17-icon-system.css.
+
+   In `base`, NOT unlayered like the primitives around it. Tailwind v4 puts its
+   utilities in a real cascade layer, and an unlayered rule outranks every
+   layered one no matter the specificity — so a bare `.icon-solid { display }`
+   would quietly beat `.hidden` and leave the icons that toggle (the live
+   booking notice, the payment spinner) permanently visible. Inside `base` the
+   utilities win, while this still overrides preflight's `svg { display: block }`
+   by coming later in the same layer. */
+@layer base {
+    .icon-solid {
+        display: inline-block;
+        height: 1em;
+        width: auto;
+        vertical-align: -0.125em;
+        flex: none;
+    }
+}
+
 /* Skip-to-content — the first thing keyboard users reach, letting them jump the
    nav instead of tabbing every link on every page. Off-screen until focused
    rather than display:none, which would take it out of the tab order entirely. */

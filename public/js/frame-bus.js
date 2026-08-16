@@ -60,8 +60,20 @@
     var running = true;
     var lastTime = performance.now();
 
+    // Nothing here reads layout.
+    //
+    // `docH` was already left at 0 for the deferred measure() at the bottom to
+    // fill in; `scrollY` needed the same treatment and did not get it. Unlike
+    // innerHeight/innerWidth — which are viewport metrics and genuinely cheap —
+    // reading pageYOffset forces the engine to flush layout, and at script-eval
+    // time on a deferred script there is a whole freshly-parsed document
+    // pending. Lighthouse billed 68 ms of forced reflow to this line.
+    //
+    // Zero is safe as a seed: frame() rewrites scrollY on every tick and
+    // measure() rewrites it on the rAF scheduled at the end of this IIFE, both
+    // of which run before anything a subscriber could paint.
     var state = {
-        scrollY: window.pageYOffset || 0,
+        scrollY: 0,
         viewH: window.innerHeight,
         viewW: window.innerWidth,
         docH: 0,

@@ -16,7 +16,11 @@
 - Second contact: {{ $booking->guest_phone_alt }}
 @endif
 @if ($booking->referred_by)
-- Endorsed by: {{ $booking->referred_by }}
+- Reference person: {{ $booking->referred_by }}@if ($booking->referred_by_phone) ({{ $booking->referred_by_phone }})@endif
+
+@endif
+@if ($booking->referred_by_purpose)
+- Purpose: {{ $booking->referred_by_purpose }}
 @endif
 @if ($booking->arrival_time && \App\Support\StaySchedule::isEarlyArrival(\Carbon\Carbon::parse($booking->arrival_time)->format('H:i')))
 - **Early check-in requested: {{ \Carbon\Carbon::parse($booking->arrival_time)->format('g:i A') }}** (before the usual {{ \App\Support\StaySchedule::checkinLabel() }} — needs the room turned over)

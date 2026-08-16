@@ -129,7 +129,7 @@
                     <x-booking.checkout.step-card icon="door-open" step="Step 3 of 3" title="Room Allocation" id="stepCardRooms" class="co-enter scroll-mt-28" style="--co:4">
                         <x-slot:aside>
                             <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/15 bg-white/60 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
-                                <i class="fa-solid fa-plus text-[15px]"></i> Add Room Type
+                                <x-booking.ui.icon-solid name="plus" class="text-[15px]" /> Add Room Type
                             </button>
                         </x-slot:aside>
                         <p class="text-sm text-stone-600 font-medium mb-4">Configure the rooms you want to book. You must select specific room numbers for each type.</p>
@@ -161,7 +161,7 @@
                 <div class="lg:col-span-4">
                     <div class="co-enter bg-cream-warm rounded-3xl p-6 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sticky top-28" style="--co:3">
                         <h3 class="text-xl text-ink border-b border-emerald-deep/10 pb-4 mb-4 font-display flex items-center gap-2.5">
-                            <i class="fa-solid fa-receipt text-palay-800 text-[20px]"></i>
+                            <x-booking.ui.icon-solid name="receipt" class="text-palay-800 text-[20px]" />
                             Booking <span class="italic text-palay-800 -ml-1">Summary</span>
                         </h3>
 
@@ -170,7 +170,7 @@
                              so the JS takeover on load is invisible --}}
                         <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-stone-600">
                             <div class="text-center py-10 text-stone-500">
-                                <i class="fa-solid fa-calendar-days text-5xl mb-3 block text-emerald-deep/25"></i>
+                                <x-booking.ui.icon-solid name="calendar-days" class="text-5xl mb-3 block text-emerald-deep/25" />
                                 <p class="font-semibold">Please select your stay dates.</p>
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                              tells you where to go (and booking.js now scrolls to
                              and focuses the offending field either way). --}}
                         <p id="bookingBlocker" class="blocker-line">
-                            <i class="fa-solid fa-circle-info"></i>
+                            <x-booking.ui.icon-solid name="circle-info" />
                             <span id="bookingBlockerText">Start by choosing your stay dates.</span>
                         </p>
 
@@ -194,7 +194,7 @@
                              confirmation email. --}}
                         <div class="mb-4 rounded-2xl border border-emerald-deep/10 bg-white/50 p-3.5">
                             <p class="flex items-start gap-2 text-[11px] font-semibold text-stone-600 leading-relaxed">
-                                <i class="fa-solid fa-hourglass-half mt-px text-[13px] text-palay-800"></i>
+                                <x-booking.ui.icon-solid name="hourglass-half" class="mt-px text-[13px] text-palay-800" />
                                 <span>Your rooms are held for <strong class="text-ink">{{ $holdLabel }}</strong> after you confirm — or until check-in on your arrival day, if that comes first. Pay within that window or they're released back to other guests.</span>
                             </p>
                         </div>
@@ -205,7 +205,7 @@
                              button, rather than discovered on the payment page. --}}
                         <div id="deskPaymentNotice" class="mb-4 hidden rounded-2xl border border-gold/40 bg-gold/10 p-3.5">
                             <p class="flex items-start gap-2 text-[11px] font-semibold text-palay-800 leading-relaxed">
-                                <i class="fa-solid fa-building-columns mt-px text-[13px]"></i>
+                                <x-booking.ui.icon-solid name="building-columns" class="mt-px text-[13px]" />
                                 <span>You asked for the Senior&nbsp;/&nbsp;PWD discount, so this booking is <strong>settled at our front desk</strong> — not online. Bring the original ID for every discounted guest.</span>
                             </p>
                         </div>
@@ -232,18 +232,18 @@
                         </div>
 
                         <button type="submit" id="btnSubmitBooking" class="press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-semibold uppercase tracking-[0.2em] bg-emerald-deep text-cream cursor-pointer flex items-center justify-center gap-2 hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
-                            <i class="fa-solid fa-circle-check text-[18px]"></i>
+                            <x-booking.ui.icon-solid name="circle-check" class="text-[18px]" />
                             Confirm Booking
                         </button>
                         <div class="mt-4 grid grid-cols-3 gap-1 text-center">
                             <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
-                                <i class="fa-solid fa-lock text-[16px] text-palay-800"></i> Secure
+                                <x-booking.ui.icon-solid name="lock" class="text-[16px] text-palay-800" /> Secure
                             </div>
                             <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
-                                <i class="fa-solid fa-ban text-[16px] text-palay-800"></i> No prepayment
+                                <x-booking.ui.icon-solid name="ban" class="text-[16px] text-palay-800" /> No prepayment
                             </div>
                             <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
-                                <i class="fa-solid fa-circle-check text-[16px] text-palay-800"></i> Instant hold
+                                <x-booking.ui.icon-solid name="circle-check" class="text-[16px] text-palay-800" /> Instant hold
                             </div>
                         </div>
                     </div>
@@ -261,7 +261,7 @@
             <p id="mobileMetaLine" class="text-[10px] font-semibold text-stone-500 mt-0.5"></p>
         </div>
         <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">
-            <i class="fa-solid fa-circle-check text-[16px]"></i>
+            <x-booking.ui.icon-solid name="circle-check" class="text-[16px]" />
             Confirm
         </button>
     </div>
@@ -269,6 +269,18 @@
     <!-- Template for Room Blocks -->
     <template id="reservationBlockTemplate">
         @include('public.booking.partials.reservation-block')
+    </template>
+
+    {{-- Glyphs for the three fragments booking.js builds as HTML strings: the
+         summary's two empty states and the Senior/PWD note. Those used to be
+         `<i class="fa-solid …">` written into the JS, which drew nothing once
+         the public layout dropped the Font Awesome webfont. Rendered here
+         instead of hardcoding the path data in the script, so
+         App\Support\AdminIcons stays the one place a glyph is defined. --}}
+    <template id="bookingIcons">
+        <span data-icon="calendar-days"><x-booking.ui.icon-solid name="calendar-days" class="text-5xl mb-3 block text-emerald-deep/10" /></span>
+        <span data-icon="bed"><x-booking.ui.icon-solid name="bed" class="text-5xl mb-3 block text-emerald-deep/10" /></span>
+        <span data-icon="circle-info"><x-booking.ui.icon-solid name="circle-info" class="text-[16px] text-palay-800" /></span>
     </template>
 
 @endsection
@@ -281,7 +293,7 @@
     window.INITIAL_GUESTS = "{{ $guests ?? 1 }}";
     window.ROOM_TYPES_CONFIG = @json($roomTypes);
 </script>
-<script src="{{ asset('js/booking.js') }}?v={{ filemtime(public_path('js/booking.js')) }}"></script>
+<script src="{{ \App\Support\PublicScript::url('js/booking.js') }}"></script>
 
 <script>
     // Senior/PWD bookings are settled in person (PaymentController refuses the
