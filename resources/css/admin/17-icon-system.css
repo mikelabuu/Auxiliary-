@@ -61,7 +61,7 @@
    1.25) reproduces how the webfont sets them: every glyph the same visual
    height, centred in a fixed-width column, so labels still align.
 
-   These rules are unlayered and therefore beat Tailwind's w-*/h-* utilities
+   These rules are unlayered and therefore beat Tailwind's `w-` / `h-` utilities
    on the same element — the same cascade quirk documented for .press in
    09-craft. That is deliberate here: the utility at the call site states the
    intended size, and this states how a filled glyph should occupy it.
