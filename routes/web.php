@@ -199,7 +199,10 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
 
     Route::get('/staff/rooms/{room}/edit', [RoomController::class, 'edit'])->name('staff.rooms.edit');
     Route::put('/staff/rooms/{room}', [RoomController::class, 'update'])->name('staff.rooms.update');
-    Route::patch('/staff/rooms/{room}/status', [RoomController::class, 'updateStatus'])->name('staff.rooms.updateStatus');
+
+    // The housekeeping status flip is deliberately NOT here. Front desk needs
+    // it, so it has its own group further down with `frontdesk` named. Adding
+    // a room, editing one, repricing and deleting stay admin-only.
 
     // Delete room
     Route::delete('/staff/rooms/{room}', [RoomController::class, 'destroy'])->name('staff.rooms.destroy');
@@ -347,6 +350,28 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,admin,mas
     Route::get('/staff/bookings/{booking}/guest-history', [BookingHubController::class, 'guestHistory'])->name('staff.bookings.guestHistory');
     Route::get('/staff/rooms/{room}/occupancy', [RoomController::class, 'occupancyForRoom'])->name('staff.rooms.occupancy');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Room housekeeping status — admin AND front desk
+|--------------------------------------------------------------------------
+| Whoever is at the desk is who learns a room needs cleaning or has gone out
+| of order — a guest tells them at checkout, or housekeeping walks past and
+| says so. Routing that through an admin meant the board stayed wrong until
+| one was around, and a board the desk cannot correct is a board they stop
+| trusting.
+|
+| Only the status flip. Adding, editing, repricing and deleting rooms remain
+| admin-only in the Staff Routes group above; this grant is one PATCH.
+|
+| It needs no extra guard of its own because updateStatus() validates against
+| Room::SETTABLE_STATUSES, so 'occupied' is no more hand-settable from the
+| desk than it is from the admin board — check-in owns it either way.
+*/
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,frontdesk'])
+    ->group(function () {
+        Route::patch('/staff/rooms/{room}/status', [RoomController::class, 'updateStatus'])->name('staff.rooms.updateStatus');
+    });
 
 /*
 |--------------------------------------------------------------------------

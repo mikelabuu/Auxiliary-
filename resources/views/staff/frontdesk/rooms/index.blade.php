@@ -8,18 +8,20 @@
     <x-admin.ui.stat-card icon="bed" label="Total Rooms" delay="0">
         {{ $totalRooms }}
     </x-admin.ui.stat-card>
-    <x-admin.ui.stat-card icon="users" color="palay" label="Occupied" delay="40">
+    {{-- value-id: the kebab recomputes these in place after a status flip, so
+         the counters cannot disagree with the board underneath them. --}}
+    <x-admin.ui.stat-card icon="users" color="palay" label="Occupied" delay="40" value-id="fdStatOccupied">
         {{ $occupiedRooms }}
     </x-admin.ui.stat-card>
     {{-- Booked for tonight, guest not checked in yet. These are not rooms the
          desk can give a walk-in, so they are counted apart from Available. --}}
-    <x-admin.ui.stat-card icon="arrival" color="palay" label="Reserved" delay="80">
+    <x-admin.ui.stat-card icon="arrival" color="palay" label="Reserved" delay="80" value-id="fdStatReserved">
         {{ $reservedRooms }}
     </x-admin.ui.stat-card>
-    <x-admin.ui.stat-card icon="wrench" color="ember" label="Under Maintenance" delay="120">
+    <x-admin.ui.stat-card icon="wrench" color="ember" label="Under Maintenance" delay="120" value-id="fdStatMaintenance">
         {{ $maintenanceRooms }}
     </x-admin.ui.stat-card>
-    <x-admin.ui.stat-card icon="droplet" color="sky" label="Cleaning" delay="160">
+    <x-admin.ui.stat-card icon="droplet" color="sky" label="Cleaning" delay="160" value-id="fdStatCleaning">
         {{ $cleaningRooms }}
     </x-admin.ui.stat-card>
 </div>
@@ -62,7 +64,7 @@
             <x-admin.ui.icon name="bed" />
             Rooms
         </h3>
-        <span class="section-label">{{ $totalRooms }} rooms · {{ $availableRooms }} available</span>
+        <span class="section-label">{{ $totalRooms }} rooms · <span id="fdStatAvailable">{{ $availableRooms }}</span> available</span>
     </div>
     <div class="card-body">
         <div class="filter-toolbar mb-5">
@@ -90,13 +92,19 @@
             // not the raw housekeeping column — 'reserved' and 'pending' come
             // from a booking holding the room tonight.
             $statusMeta = [
-                'available'   => ['bar' => 'bg-g-500',     'label' => 'Available'],
-                'occupied'    => ['bar' => 'bg-au-500',    'label' => 'Occupied'],
-                'reserved'    => ['bar' => 'bg-palay-500', 'label' => 'Reserved'],
-                'pending'     => ['bar' => 'bg-palay-300', 'label' => 'Reserved · unpaid'],
-                'maintenance' => ['bar' => 'bg-ember-500', 'label' => 'Maintenance'],
-                'cleaning'    => ['bar' => 'bg-sky-500',   'label' => 'Cleaning'],
+                'available'   => ['bar' => 'bg-g-500',     'dot' => 'bg-g-500',     'label' => 'Available'],
+                'occupied'    => ['bar' => 'bg-au-500',    'dot' => 'bg-au-500',    'label' => 'Occupied'],
+                'reserved'    => ['bar' => 'bg-palay-500', 'dot' => 'bg-palay-500', 'label' => 'Reserved'],
+                'pending'     => ['bar' => 'bg-palay-300', 'dot' => 'bg-palay-300', 'label' => 'Reserved · unpaid'],
+                'maintenance' => ['bar' => 'bg-ember-500', 'dot' => 'bg-ember-500', 'label' => 'Maintenance'],
+                'cleaning'    => ['bar' => 'bg-sky-500',   'dot' => 'bg-sky-500',   'label' => 'Cleaning'],
             ];
+
+            // What the desk's kebab may set — the same three the admin board
+            // offers, from the same constant. 'occupied', 'reserved' and
+            // 'pending' are derived from the booking lifecycle and are nobody's
+            // to hand-pick, here or there.
+            $settableStatuses = collect($statusMeta)->only(\App\Models\Room::SETTABLE_STATUSES)->all();
         @endphp
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
             @foreach($rooms as $room)
@@ -104,13 +112,22 @@
                     $display = $displayStatuses[$room->id] ?? $room->status;
                     $meta = $statusMeta[$display] ?? $statusMeta['available'];
                 @endphp
-                <div class="room-card group/card relative cursor-pointer overflow-hidden rounded-xl border border-stone-200 bg-white shadow-subtle hover:border-clsu-200 hover:shadow-card-lg"
+                {{-- overflow-hidden is gone: it clipped the kebab panel, which
+                     hangs below the card. The status bar keeps its rounded top
+                     from an explicit rounded-t-xl instead. --}}
+                <div class="room-card group/card relative cursor-pointer rounded-xl border border-stone-200 bg-white shadow-subtle hover:border-clsu-200 hover:shadow-card-lg"
                      data-room-id="{{ $room->id }}"
                      data-room-number="{{ strtolower($room->room_number) }}"
                      data-status="{{ $display }}"
+                     data-housekeeping="{{ $room->status }}"
                      data-type="{{ $room->room_type }}"
                      data-wing="{{ $room->wing }}">
-                    <div class="status-bar h-1 {{ $meta['bar'] }}"></div>
+                    <div class="status-bar h-1 rounded-t-xl {{ $meta['bar'] }}"></div>
+
+                    <div class="absolute right-2 top-2.5 z-10">
+                        <x-admin.rooms.status-kebab :room="$room" :settable-statuses="$settableStatuses" />
+                    </div>
+
                     <div class="flex flex-col items-center gap-2 p-4 pb-3 text-center">
                         <div>
                             <p class="font-data text-base font-extrabold text-stone-900 tabnum">Room {{ $room->room_number }}</p>
@@ -119,7 +136,9 @@
                         <span class="room-status status status-{{ $display }}">{{ $meta['label'] }}</span>
                         <p class="text-2xs italic text-faint">Updated {{ $room->updated_at->diffForHumans() }}</p>
                     </div>
-                    <div class="flex items-center justify-center gap-1.5 border-t border-stone-100 px-4 py-2 text-2xs font-semibold text-faint transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
+                    {{-- rounded-b-xl replaces the clipping the card's dropped
+                         overflow-hidden used to give this hover fill. --}}
+                    <div class="flex items-center justify-center gap-1.5 rounded-b-xl border-t border-stone-100 px-4 py-2 text-2xs font-semibold text-faint transition-colors group-hover/card:bg-clsu-50/60 group-hover/card:text-clsu-600">
                         <x-admin.ui.icon name="eye" class="h-3 w-3" />
                         View occupancy
                     </div>
@@ -146,9 +165,17 @@
 <script>
 $(function() {
     const base = "{{ url('staff/rooms') }}";
+    const STATUS_META = {!! json_encode($statusMeta) !!};
+
+    // The status flip is a PATCH, so unlike the GETs below it needs the token.
+    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
     // ------------------- ROOM CARD CLICK (Show Booking Info) -------------------
     $(document).on('click', '.room-card', function(e) {
+        // The kebab lives inside the card, and the card opens the occupancy
+        // modal. Without this, setting a status also popped the modal over it.
+        if ($(e.target).closest('.room-kebab-btn, [data-kebab-panel]').length) return;
+
         const roomId = $(this).data('room-id');
 
         $.get(`${base}/${roomId}/occupancy`)
@@ -205,6 +232,89 @@ $(function() {
         $('#roomStatusFilter').val('all');
         applyRoomFilters();
     });
+
+    // ------------------- HOUSEKEEPING STATUS (kebab) -------------------
+    // The desk sets available/cleaning/maintenance here. Everything else about
+    // a room — adding, editing, repricing, deleting — stays on the admin board.
+    $(document).on('click', '.room-kebab-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = $(this).siblings('[data-kebab-panel]');
+        const isOpen = !panel.hasClass('hidden');
+        $('[data-kebab-panel]').addClass('hidden');
+        if (!isOpen) panel.removeClass('hidden');
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.room-kebab-btn, [data-kebab-panel]').length) {
+            $('[data-kebab-panel]').addClass('hidden');
+        }
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') $('[data-kebab-panel]').addClass('hidden');
+    });
+
+    $(document).on('click', '.quick-status-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = $(this).closest('.room-card');
+        const roomId = card.data('room-id');
+        const newStatus = $(this).data('status-value').toString();
+        const panel = $(this).closest('[data-kebab-panel]');
+
+        $.ajax({ url: `${base}/${roomId}/status`, method: 'PATCH', data: { status: newStatus } })
+            .done(function(res) {
+                if (!res.success) { window.toast('Could not update status.', 'error'); return; }
+                // Marking a room available does not always make the badge read
+                // Available — a booking may still hold it tonight — so the card
+                // follows the status the server derived, not the one clicked.
+                applyStatusToCard(card, res.display_status || newStatus, newStatus);
+                panel.addClass('hidden');
+                recomputeCounts();
+                applyRoomFilters();
+                window.toast('Room ' + res.room.room_number + ' marked ' + STATUS_META[newStatus].label.toLowerCase() + '.');
+            })
+            .fail(function(xhr) {
+                window.toast(xhr.responseJSON?.message || 'Could not update status.', 'error');
+            });
+    });
+
+    /**
+     * `display` is what the board shows and what every count and filter reads;
+     * `housekeeping` is the rooms.status column the kebab writes and ticks. The
+     * two differ whenever a booking holds a room housekeeping calls available.
+     */
+    function applyStatusToCard(card, display, housekeeping) {
+        const meta = STATUS_META[display] || STATUS_META.available;
+        card.attr('data-status', display);
+        if (housekeeping) card.attr('data-housekeeping', housekeeping);
+        card.find('.status-bar').attr('class', 'status-bar h-1 rounded-t-xl ' + meta.bar);
+        card.find('.room-status').attr('class', 'room-status status status-' + display).text(meta.label);
+
+        const owned = housekeeping || card.attr('data-housekeeping');
+        card.find('.quick-status-btn').each(function() {
+            $(this).find('.quick-status-check').toggleClass('invisible', $(this).data('status-value').toString() !== owned);
+        });
+    }
+
+    /** Recount from the cards themselves, so the tiles cannot drift from the board. */
+    function recomputeCounts() {
+        const by = {};
+        $('.room-card').each(function() {
+            const s = $(this).attr('data-status');
+            by[s] = (by[s] || 0) + 1;
+        });
+        const n = (k) => by[k] || 0;
+
+        $('#fdStatOccupied').text(n('occupied'));
+        // Reserved and unpaid-hold are one figure here: neither is a room the
+        // desk can hand a walk-in. Matches FrontDeskRoomController::index.
+        $('#fdStatReserved').text(n('reserved') + n('pending'));
+        $('#fdStatMaintenance').text(n('maintenance'));
+        $('#fdStatCleaning').text(n('cleaning'));
+        $('#fdStatAvailable').text(n('available'));
+    }
 });
 
 // Real-time push: the board reflects check-ins, check-outs and housekeeping
