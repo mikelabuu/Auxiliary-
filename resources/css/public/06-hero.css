@@ -243,13 +243,32 @@
     }
 }
 
+/* Animates `scale`, not `transform`, and that is the whole point.
+
+   Chrome refuses to composite an animation when a second animation on the
+   same element touches the same property — and `fh-build-rise` above fills
+   `both`, so it holds `transform` for the life of the page. While this drift
+   was also written as `transform: scale(...)` the two collided, neither got a
+   compositor layer, and the endless one fell back to the main thread. Every
+   frame it re-ran this element's filter chain (saturate/contrast/brightness
+   plus two drop-shadows, through a mask, on a ~916x336 box) for as long as
+   the tab was open. Lighthouse desktop measured 26.1s of main-thread "Other"
+   work and 11,640ms of Total Blocking Time against it: a performance score of
+   60 while FCP (0.4s), LCP (0.7s) and CLS (0.012) were all green.
+
+   `scale` is an independent animatable property that composes on top of
+   `transform` (translate → rotate → scale → transform), so the rendered
+   result is identical to `transform: scale()` here, but the two animations no
+   longer contend for one property and both run on the compositor. Keep these
+   on different properties — putting the drift back on `transform` silently
+   costs ~30 points of desktop performance with no visual tell. */
 @keyframes fh-drift {
     from {
-        transform: scale(1);
+        scale: 1;
     }
 
     to {
-        transform: scale(1.03);
+        scale: 1.03;
     }
 }
 
@@ -771,6 +790,19 @@
        the line as they flip, so they must not be clipped. */
     overflow: visible;
     vertical-align: bottom;
+    /* An animated `width` cannot be composited, and Lighthouse flags it as
+       such. It stays anyway, because the gesture *is* the reflow: the word
+       boxes are absolutely positioned, so this width is the only thing that
+       carries the rest of the sentence along as a longer or shorter
+       superlative drops in. `scaleX` would stretch the glyphs, and animating
+       the following text instead means hand-driving the headline's layout.
+
+       It is affordable at this size — half a second of relayout on one inline
+       box, every 2.6s, and only while the hero is on screen (home.js stops the
+       timer otherwise). After the `fh-drift` fix above it is the page's last
+       non-composited animation, and desktop TBT still measures 0ms. Revisit
+       only if the rotator ever moves somewhere with heavy content after it on
+       the same line. */
     transition: width .5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -868,8 +900,17 @@
         transform: rotateX(88deg) translateY(16px);
         transform-origin: 50% 100%;
         backface-visibility: hidden;
-        animation: flip-fade-in .5s cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
-        animation-delay: calc(.3s + var(--i, 0) * 30ms);
+        /* Timing is a first-paint budget here, not just taste.
+           The headline is 23 characters, so the stagger multiplies: at the
+           original .3s + 30ms the last character did not settle until 1.46s,
+           and because the resting state is opacity 0 the H1 counts as hidden
+           for that whole window. DebugBear surfaced it as "page H1 content was
+           hidden using CSS until at least 2.43s", and it is Speed Index —
+           visual completeness over time — that pays for it.
+           .1s + 16ms lands the last character at ~0.90s. Same flip, same
+           easing, same stagger *shape*; it just stops dawdling. */
+        animation: flip-fade-in .45s cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
+        animation-delay: calc(.1s + var(--i, 0) * 16ms);
     }
 }
 
