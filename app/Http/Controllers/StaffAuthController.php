@@ -30,6 +30,17 @@ class StaffAuthController extends Controller
 
         $staff = Staff::find($request->session()->get('staff_pending_id'));
 
+        // An exempt role can only reach this screen with a pending session
+        // opened before the roles changed under it — a deploy landing between
+        // someone's password and their code. No code is coming, so drop the
+        // half-authenticated state and let them sign in again; the second
+        // attempt goes straight through.
+        if ($staff && ! $this->otpRequiredFor($staff)) {
+            $request->session()->forget('staff_pending_id');
+
+            return redirect()->route('login');
+        }
+
         // Both values are for display only. Showing them is safe: whoever is on
         // this screen already proved the password in step one, so neither the
         // masked address nor the expiry tells them anything they didn't supply.
@@ -145,6 +156,14 @@ class StaffAuthController extends Controller
             return redirect()->route('login')->withErrors([
                 'otp_code' => 'Staff account not found.',
             ]);
+        }
+
+        // Same stale-session case as showOtpForm: never mail a code to a role
+        // that is no longer asked for one.
+        if (! $this->otpRequiredFor($staff)) {
+            $request->session()->forget('staff_pending_id');
+
+            return redirect()->route('login');
         }
 
         // Create a unique rate limiter key

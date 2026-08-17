@@ -112,12 +112,20 @@ class LoginController extends Controller
             ])->onlyInput('email');
         }
 
-        if (! config('staff.otp_enabled')) {
+        if (! $this->otpRequiredFor($staff)) {
             Auth::guard('staff')->login($staff);
             $staff->update(['last_login_at' => now()]);
             $request->session()->regenerate();
 
-            AuditLogger::log('staff_login', $staff, null, null, 'Staff logged in (OTP disabled)', $staff);
+            // Which of the two reasons applied is worth recording: "the feature
+            // is off" and "this role is exempt" look identical in the log
+            // otherwise, and they are very different answers to "why did this
+            // account sign in without a code?".
+            $reason = config('staff.otp_enabled')
+                ? "role {$staff->role} is exempt"
+                : 'OTP disabled';
+
+            AuditLogger::log('staff_login', $staff, null, null, "Staff logged in ({$reason})", $staff);
 
             return $this->redirectForRole($staff);
         }

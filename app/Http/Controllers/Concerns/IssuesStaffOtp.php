@@ -18,6 +18,25 @@ use Illuminate\Support\Facades\Log;
 trait IssuesStaffOtp
 {
     /**
+     * Must this account clear an emailed code after its password?
+     *
+     * Two conditions, deliberately separate: `otp_enabled` is the whole-feature
+     * switch, `otp_roles` narrows it to the accounts worth the extra step. The
+     * step used to be all-or-nothing, which meant protecting the master admin
+     * also put a mailed code in front of every front-desk sign-in — on a shared
+     * counter machine that is signed in and out of all day.
+     *
+     * Lives here rather than in LoginController because the resend path needs
+     * the same answer, and the two drifting apart is how a role that should
+     * never see the OTP screen ends up able to request a code on it.
+     */
+    protected function otpRequiredFor(Staff $staff): bool
+    {
+        return (bool) config('staff.otp_enabled')
+            && in_array($staff->role, (array) config('staff.otp_roles', []), true);
+    }
+
+    /**
      * Generate, store, audit and email a fresh login OTP.
      *
      * Returns false when delivery failed. The code is persisted either way —
