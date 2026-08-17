@@ -53,15 +53,34 @@
          live rules, so both were paid for on every page load and used by
          nothing. --}}
 
-    {{-- Two faces are needed before first paint (the hero wordmark is Playfair,
-         the eyebrow above it is Oswald) and @font-face inside a stylesheet is
-         only discovered once that stylesheet has parsed. Preloading them lets
-         the fetch start alongside app.css rather than after it. Only the latin
-         upright faces are preloaded — italic and latin-ext are genuinely
-         conditional, and preloading something the page may not use wastes the
-         bandwidth this change is trying to save. --}}
+    {{-- @font-face inside a stylesheet is only discovered once that stylesheet
+         has parsed, so an un-preloaded face costs a second serial round trip:
+         HTML → app.css → font. Preloading lets the fetch start alongside
+         app.css instead. This adds no bytes — every face listed here is one the
+         page downloads anyway — it only moves the request earlier.
+
+         All four latin upright/italic faces are listed because a Chrome trace
+         of the landing page showed the two that were NOT preloaded (Oswald and
+         Playfair italic) arriving last, and a full-document relayout —
+         dirty=1562 of 1562 layout objects, 40ms at 4x CPU throttle — firing
+         10ms after they landed. That is `font-display: swap` doing exactly what
+         it promises: lay out in the fallback, then relayout everything when the
+         real face arrives. Preloading collapses it into the first layout.
+
+         An earlier revision of this comment called italic "genuinely
+         conditional". It is not: the hero's rotating superlative is
+         `.word-rotate italic` (home/partials/hero.blade.php), and italic
+         Playfair appears across the booking, checkout and home views — 24
+         usages in resources/views/public. Oswald is the label face
+         (var(--font-label)) used by the hero eyebrow and site-wide chrome.
+
+         latin-ext IS still genuinely conditional and stays unlisted. --}}
     <link rel="preload" as="font" type="font/woff2" crossorigin
           href="{{ asset('vendor/fonts/playfair-display-latin-wght-normal.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fonts/playfair-display-latin-wght-italic.woff2') }}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{{ asset('vendor/fonts/oswald-latin-wght-normal.woff2') }}">
     <link rel="preload" as="font" type="font/woff2" crossorigin
           href="{{ asset('vendor/fonts/manrope-latin-wght-normal.woff2') }}">
 
