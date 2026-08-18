@@ -546,8 +546,7 @@
    ============================================================ */
 .modal-backdrop-tint {
     position: absolute; inset: 0;
-    background: rgba(10,22,15,.40); backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(10,22,15,.40);
     opacity: 1;
     transition: opacity 220ms var(--ease-out);
     @starting-style { opacity: 0; }
