@@ -23,6 +23,7 @@ use App\Http\Controllers\Staff\CompletedBookingsController;
 use App\Http\Controllers\Staff\BookingLogsController;
 use App\Http\Controllers\Staff\PaymentLogsController;
 use App\Http\Controllers\Staff\PaymentVerificationController;
+use App\Http\Controllers\Staff\NotificationFeedController;
 use App\Http\Controllers\Staff\RescheduleAdminController;
 use App\Http\Controllers\Staff\UserRecordsController;
 use App\Http\Controllers\Staff\StaffRecordsController;
@@ -330,6 +331,15 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
         $request->session()->regenerateToken();
         return redirect()->route('login');
     })->name('staff.logout');
+
+    // The topbar bell, refreshed in place. Polled by admin-notifications.js on
+    // every staff console, which is why it sits in the group that asks only for
+    // a staff session: the bell renders on both the admin and front-desk
+    // layouts, so every role that can see it must be able to refresh it. It
+    // reads exactly what the topbar already rendered for this user and exposes
+    // nothing further.
+    Route::get('/staff/notifications/feed', NotificationFeedController::class)
+        ->name('staff.notifications.feed');
 
 });
 

@@ -199,3 +199,90 @@ window.staffAlert = function staffAlert(a) {
         connect();
     }
 })();
+
+// ── Polling fallback ─────────────────────────────────────────────────────────
+// The bell used to update only when someone reloaded the page. Reverb was meant
+// to be what kept it live, but it needs a daemon and a WebSocket proxy this
+// host cannot currently keep running, so in practice the desk had to refresh to
+// find out anything had happened.
+//
+// This asks the server for the same list the topbar rendered at page load and
+// feeds anything new through the exact two side effects the Reverb path uses —
+// a toast and a `staff-alert` window event. The topbar de-dupes on the stable
+// id, so this and Reverb can both be live without showing anything twice, and
+// whichever gets there first wins.
+(function () {
+    const INTERVAL = 20000;
+    const ENDPOINT = '/staff/notifications/feed';
+
+    function start() {
+        // Same gate the Reverb half uses: no staff session, no polling.
+        if (!document.body || !document.body.hasAttribute('data-staff-alerts')) return;
+
+        const seen = new Set();
+        let primed = false;      // the first response is the page's own state
+        let inFlight = false;
+        let timer = null;
+
+        async function poll() {
+            // A background tab does not need alerts badly enough to keep six
+            // queries running; visibilitychange below catches it up on return.
+            if (inFlight || document.hidden) return;
+            inFlight = true;
+
+            try {
+                const res = await fetch(ENDPOINT, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+
+                // Session gone: stop rather than hammer a login redirect every
+                // 20 seconds for the rest of the tab's life.
+                if (res.status === 401 || res.status === 419 || res.status === 403) {
+                    if (timer) clearInterval(timer);
+                    return;
+                }
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const items = Array.isArray(data.items) ? data.items : [];
+
+                // Oldest first: the topbar prepends, so dispatching in reverse
+                // leaves the newest alert at the top of the list.
+                items.slice().reverse().forEach(function (item) {
+                    if (!item || !item.id) return;
+
+                    const isNew = !seen.has(item.id);
+                    seen.add(item.id);
+
+                    // Don't pop eight toasts for the things already on screen
+                    // when the page loaded — only for what arrives after.
+                    if (isNew && primed && typeof window.staffAlert === 'function') {
+                        window.staffAlert(item);
+                    }
+
+                    window.dispatchEvent(new CustomEvent('staff-alert', { detail: item }));
+                });
+
+                primed = true;
+            } catch (e) {
+                // A dropped poll is not worth surfacing to the desk; the next
+                // tick retries and the bell is still showing the last good list.
+            } finally {
+                inFlight = false;
+            }
+        }
+
+        poll();
+        timer = setInterval(poll, INTERVAL);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) poll();
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
