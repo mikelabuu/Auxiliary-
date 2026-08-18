@@ -156,7 +156,13 @@ class RescheduleAdminController extends Controller
                     'status'        => RescheduleRequest::STATUS_APPROVED,
                     'reviewed_by'   => $staff->id,
                     'reviewed_at'   => now(),
-                    'decision_note' => $validated['decision_note'] ?: null,
+                    // The approve form posts no note — only decline collects
+                    // one — and a `nullable` field absent from the request is
+                    // absent from validated() too, not null. Reading the key
+                    // directly raised "Undefined array key", which the kernel
+                    // turns into an ErrorException; RoomUnavailable was the
+                    // only thing caught below, so every approval 500'd.
+                    'decision_note' => ($validated['decision_note'] ?? null) ?: null,
                 ]);
 
                 $difference = round($newPayable - $paidBefore, 2);

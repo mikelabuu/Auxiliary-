@@ -1,6 +1,13 @@
 @extends('layouts.public.base')
 @section('title', 'Move your stay | Farmers Hostel')
 
+{{-- The same flatpickr calendar the checkout check-in/check-out fields use,
+     rather than the browser's native date control: one picker across the whole
+     booking journey, and it looks and behaves the same on every browser. --}}
+@push('vendor')
+    @include('partials.vendor.flatpickr')
+@endpush
+
 @section('content')
 @php
     $nights = max(1, $booking->check_in->diffInDays($booking->check_out));
@@ -119,18 +126,23 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                         <label for="requested_check_in" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">New check-in</label>
-                        <input type="date" id="requested_check_in" name="requested_check_in" required
+                        {{-- Bounds ride on data-* rather than min/max: this is a
+                             text input now, so the native attributes would be
+                             inert, and flatpickr is what enforces them. --}}
+                        <input type="text" id="requested_check_in" name="requested_check_in" required
                                value="{{ old('requested_check_in') }}"
-                               min="{{ \Carbon\Carbon::today()->toDateString() }}"
-                               max="{{ $horizon->toDateString() }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-white/70 text-stone-800 text-sm font-semibold focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition-[color,background-color,border-color,box-shadow]">
+                               data-min="{{ \Carbon\Carbon::today()->toDateString() }}"
+                               data-max="{{ $horizon->toDateString() }}"
+                               placeholder="Select date" autocomplete="off"
+                               class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-white/70 text-stone-800 text-sm font-semibold placeholder:text-stone-400 cursor-pointer focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
                     <div>
                         <label for="requested_check_out" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">New check-out</label>
-                        <input type="date" id="requested_check_out" name="requested_check_out" required
+                        <input type="text" id="requested_check_out" name="requested_check_out" required
                                value="{{ old('requested_check_out') }}"
-                               min="{{ \Carbon\Carbon::tomorrow()->toDateString() }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-white/70 text-stone-800 text-sm font-semibold focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition-[color,background-color,border-color,box-shadow]">
+                               data-min="{{ \Carbon\Carbon::tomorrow()->toDateString() }}"
+                               placeholder="Select date" autocomplete="off"
+                               class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-white/70 text-stone-800 text-sm font-semibold placeholder:text-stone-400 cursor-pointer focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition-[color,background-color,border-color,box-shadow]">
                     </div>
                 </div>
 
@@ -173,19 +185,40 @@
     // to be told something the date picker could have prevented.
     document.addEventListener('DOMContentLoaded', function () {
         const from = document.getElementById('requested_check_in');
-        const to = document.getElementById('requested_check_out');
-        if (!from || !to) return;
+        const to   = document.getElementById('requested_check_out');
+        if (!from || !to || typeof window.flatpickr === 'undefined') return;
 
-        function syncOut() {
-            if (!from.value) return;
-            const min = new Date(from.value + 'T00:00:00');
-            min.setDate(min.getDate() + 1);
-            to.min = min.toISOString().slice(0, 10);
-            if (to.value && to.value <= from.value) to.value = to.min;
-        }
+        const asDate  = (v) => new Date(v + 'T00:00:00');
+        const nextDay = (d) => new Date(d.getTime() + 86400000);
 
-        from.addEventListener('change', syncOut);
-        syncOut();
+        // Y-m-d is what these fields post and what the controller validates,
+        // so the wire format is identical to the native control they replaced.
+        const fpOut = window.flatpickr(to, {
+            dateFormat: 'Y-m-d',
+            minDate: to.dataset.min,
+            disableMobile: true,
+        });
+
+        window.flatpickr(from, {
+            dateFormat: 'Y-m-d',
+            minDate: from.dataset.min,
+            maxDate: from.dataset.max,
+            disableMobile: true,
+            onChange: function (dates) {
+                if (!dates[0]) return;
+                fpOut.set('minDate', nextDay(dates[0]));
+                // A check-out that no longer follows check-in is cleared, not
+                // quietly nudged forward: the guest picked that date, so they
+                // should watch it go rather than find another one submitted
+                // on their behalf.
+                if (to.value && asDate(to.value) <= dates[0]) fpOut.clear();
+                if (!to.value) setTimeout(() => fpOut.open(), 120);
+            },
+        });
+
+        // A failed validation bounces back with old() values; keep the
+        // check-out floor in step with the check-in that returned with it.
+        if (from.value) fpOut.set('minDate', nextDay(asDate(from.value)));
     });
 </script>
 @endpush
