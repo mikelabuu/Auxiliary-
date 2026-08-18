@@ -138,11 +138,20 @@
                     </div>
                     <div>
                         <label for="requested_check_out" class="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1.5">New check-out</label>
-                        <input type="text" id="requested_check_out" name="requested_check_out" required
+                        {{-- Derived, not chosen. A reschedule moves the stay, it
+                             does not resize it, so this follows check-in by the
+                             nights already paid for. Readonly rather than
+                             disabled: a disabled field posts nothing, and
+                             RescheduleController still has to receive the value
+                             it is going to re-check. --}}
+                        <input type="text" id="requested_check_out" name="requested_check_out" required readonly
                                value="{{ old('requested_check_out') }}"
-                               data-min="{{ \Carbon\Carbon::tomorrow()->toDateString() }}"
-                               placeholder="Select date" autocomplete="off"
-                               class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-white/70 text-stone-800 text-sm font-semibold placeholder:text-stone-400 cursor-pointer focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition-[color,background-color,border-color,box-shadow]">
+                               data-nights="{{ $nights }}"
+                               placeholder="Follows your check-in" autocomplete="off" tabindex="-1"
+                               class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/15 bg-stone-100 text-stone-800 text-sm font-semibold placeholder:text-stone-400 cursor-not-allowed select-none outline-none">
+                        <p class="mt-1.5 text-[11px] font-semibold text-stone-500">
+                            Same {{ $nights }} {{ \Illuminate\Support\Str::plural('night', $nights) }} as your current stay.
+                        </p>
                     </div>
                 </div>
 
@@ -160,7 +169,7 @@
                     </p>
                     <p class="text-[11px] font-semibold text-stone-600 leading-relaxed flex items-start gap-2">
                         <x-booking.ui.icon-solid name="receipt" class="mt-px text-[13px] text-palay-800" />
-                        <span>A longer stay costs more, and the difference is settled at our front desk when you arrive. A shorter one is not cheaper — we don't issue refunds, so what you have already paid stands.</span>
+                        <span>The price does not change: you keep the same {{ $nights }} {{ \Illuminate\Support\Str::plural('night', $nights) }} at the same rate, so there is nothing extra to pay and nothing to refund. To make the stay longer or shorter, contact the front desk instead.</span>
                     </p>
                 </div>
 
@@ -180,45 +189,51 @@
 
 @push('scripts')
 <script>
-    // check-out must follow check-in. Enforced server-side too (`after:
-    // requested_check_in`) — this only stops the guest filling in a whole form
-    // to be told something the date picker could have prevented.
+    // One picker, because there is only one decision to make: when the stay
+    // starts. Check-out is check-in plus the nights already paid for, filled in
+    // here so the guest sees the whole range before submitting rather than
+    // discovering the rule from a validation error.
+    //
+    // RescheduleController re-checks the length regardless — this field is
+    // readonly, not trustworthy.
     document.addEventListener('DOMContentLoaded', function () {
         const from = document.getElementById('requested_check_in');
         const to   = document.getElementById('requested_check_out');
         if (!from || !to || typeof window.flatpickr === 'undefined') return;
 
-        const asDate  = (v) => new Date(v + 'T00:00:00');
-        const nextDay = (d) => new Date(d.getTime() + 86400000);
+        const NIGHTS = Math.max(1, parseInt(to.dataset.nights, 10) || 1);
 
-        // Y-m-d is what these fields post and what the controller validates,
-        // so the wire format is identical to the native control they replaced.
-        const fpOut = window.flatpickr(to, {
-            dateFormat: 'Y-m-d',
-            minDate: to.dataset.min,
-            disableMobile: true,
-        });
+        const asDate = (v) => new Date(v + 'T00:00:00');
+        const iso    = (d) => d.getFullYear() + '-'
+            + String(d.getMonth() + 1).padStart(2, '0') + '-'
+            + String(d.getDate()).padStart(2, '0');
 
+        // Built from the calendar date rather than by adding milliseconds: a
+        // stay that crosses a DST boundary would otherwise land an hour short
+        // and render as the day before.
+        function departureFor(date) {
+            const out = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            out.setDate(out.getDate() + NIGHTS);
+            return out;
+        }
+
+        function sync(date) {
+            to.value = date ? iso(departureFor(date)) : '';
+        }
+
+        // Y-m-d is what these fields post and what the controller validates, so
+        // the wire format is unchanged from the native control they replaced.
         window.flatpickr(from, {
             dateFormat: 'Y-m-d',
             minDate: from.dataset.min,
             maxDate: from.dataset.max,
             disableMobile: true,
-            onChange: function (dates) {
-                if (!dates[0]) return;
-                fpOut.set('minDate', nextDay(dates[0]));
-                // A check-out that no longer follows check-in is cleared, not
-                // quietly nudged forward: the guest picked that date, so they
-                // should watch it go rather than find another one submitted
-                // on their behalf.
-                if (to.value && asDate(to.value) <= dates[0]) fpOut.clear();
-                if (!to.value) setTimeout(() => fpOut.open(), 120);
-            },
+            onChange: function (dates) { sync(dates[0]); },
         });
 
-        // A failed validation bounces back with old() values; keep the
-        // check-out floor in step with the check-in that returned with it.
-        if (from.value) fpOut.set('minDate', nextDay(asDate(from.value)));
+        // A failed validation bounces back with old() values; recompute from
+        // the check-in that returned with it so the pair can never disagree.
+        sync(from.value ? asDate(from.value) : null);
     });
 </script>
 @endpush

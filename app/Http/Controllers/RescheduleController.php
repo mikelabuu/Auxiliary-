@@ -85,6 +85,31 @@ class RescheduleController extends Controller
             'reason.required'                    => 'Tell us why you need to move the stay — the front desk decides on it.',
         ]);
 
+        // A reschedule moves a stay; it does not resize one. The guest paid for
+        // a set number of nights and this form is about *when* they are taken,
+        // so the new range has to be the same length as the one it replaces.
+        //
+        // The form derives check-out from check-in and posts it read-only, so
+        // reaching this branch means the value was edited in flight or the
+        // request was made without the page. It is checked here rather than
+        // trusted there for exactly that reason.
+        // max(1, …) on both sides, matching the $nights the form renders from:
+        // the two must agree or the page would show a length the controller
+        // then refuses.
+        $originalNights = max(1, (int) $booking->check_in->diffInDays($booking->check_out));
+        $requestedNights = max(1, (int) Carbon::parse($validated['requested_check_in'])
+            ->diffInDays(Carbon::parse($validated['requested_check_out'])));
+
+        if ($requestedNights !== $originalNights) {
+            return back()
+                ->withErrors([
+                    'requested_check_out' => 'A reschedule keeps the same length of stay — '
+                        . $originalNights . ' ' . ($originalNights === 1 ? 'night' : 'nights')
+                        . '. Pick a new arrival date and the whole stay moves with it.',
+                ])
+                ->withInput();
+        }
+
         // Asking for the dates you already have is not a request, it is a
         // no-op that would sit in the queue until somebody read it closely
         // enough to notice.
