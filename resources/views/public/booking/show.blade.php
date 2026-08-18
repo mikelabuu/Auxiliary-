@@ -22,7 +22,25 @@
                         <path class="success-check-tick" d="M23 37.5L32 46.5L49 28" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <p class="mt-5 text-[10px] font-bold uppercase tracking-[0.4em] text-palay-800">Booking #{{ $booking->id }}</p>
-                    <h2 class="text-balance font-display text-3xl sm:text-4xl text-ink tracking-tight mt-3">Your rooms are <span class="italic text-gold">on hold</span></h2>
+                    @php
+                        // This hero shows on any success flash, not only the one
+                        // that follows creating the booking — submitting a
+                        // reschedule or a proof of payment lands here too. The
+                        // headline was hardcoded to "on hold", so a booking that
+                        // was already paid announced itself as unpaid directly
+                        // above a status band reading "Paid".
+                        [$heroLead, $heroWord] = match ($booking->status) {
+                            'pending_payment', 'pending_discount' => ['Your rooms are ', 'on hold'],
+                            'paid'      => ['Your booking is ', 'confirmed'],
+                            'active'    => ['You are ', 'checked in'],
+                            'completed' => ['Your stay is ', 'complete'],
+                            'cancelled' => ['This booking was ', 'cancelled'],
+                            'expired'   => ['This booking has ', 'expired'],
+                            'no_show'   => ['This booking was ', 'not claimed'],
+                            default     => ['Your booking has been ', 'updated'],
+                        };
+                    @endphp
+                    <h2 class="text-balance font-display text-3xl sm:text-4xl text-ink tracking-tight mt-3">{{ $heroLead }}<span class="italic text-gold">{{ $heroWord }}</span></h2>
                     <p class="text-sm font-medium text-stone-600 mt-3 max-w-md mx-auto">Here's what happens next:</p>
 
                     @php
