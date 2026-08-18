@@ -181,6 +181,14 @@
                     <x-booking.ui.icon-solid name="circle-check" class="text-[18px]" />
                     Submit for verification
                 </button>
+                {{-- The spinner markup lives in this template, not in a JS
+                     string. Blade compiles x-component tags anywhere in the
+                     file, this one renders multi-line SVG, and a raw newline
+                     inside a quoted JS string is an unterminated literal — a
+                     parse error that killed the whole script block, so the
+                     dropzone never got its click handler and the file input
+                     (sr-only, tabindex -1) was unreachable. --}}
+                <template id="proofSpinner"><x-booking.ui.icon-solid name="spinner" class="text-[18px] animate-spin" /></template>
             </div>
             <p id="proofHint" class="text-right text-[11px] font-semibold text-stone-400 -mt-2">Attach your receipt and enter its reference number to submit.</p>
         </form>
@@ -271,7 +279,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('submit', function () {
         submit.disabled = true;
-        submit.innerHTML = '<x-booking.ui.icon-solid name="spinner" class="text-[18px] animate-spin" /> Submitting…';
+        submit.replaceChildren(
+            document.getElementById('proofSpinner').content.cloneNode(true),
+            ' Submitting…'
+        );
     });
 
     syncSubmit();
