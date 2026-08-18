@@ -9,6 +9,7 @@ use App\Http\Controllers\StaffAuthController;
 use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingStatusFeedController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\RescheduleController;
 use App\Http\Controllers\PsgcController;
@@ -147,6 +148,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('discount/{booking}/create', [DiscountController::class, 'create'])->name('discount.create');
     Route::post('discount/{booking}', [DiscountController::class, 'store'])->name('discount.store');
     Route::post('/discount/{booking}/cancel', [DiscountController::class, 'cancel'])->name('discount.cancel');
+
+    // Polled by the booking page and the bookings list, so a guest waiting on a
+    // receipt or a discount decision sees the outcome without refreshing. The
+    // Reverb listeners those pages already carry have never run — window.Echo
+    // is not part of the public bundle — so this is what actually ends the wait.
+    Route::get('/my-bookings/status', BookingStatusFeedController::class)
+        ->name('bookings.status.feed');
 
     //user settings page
     Route::get('/settings', [SettingsController::class, 'profile'])->name('settings.profile');

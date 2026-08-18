@@ -512,6 +512,52 @@
                 window.location.reload();
             });
     });
+
+    // ...and the same outcome without a WebSocket, which is what actually runs.
+    //
+    // The listener above has never fired on this page: window.Echo is built in
+    // resources/js/echo.js, which only resources/js/admin.js imports, so it does
+    // not exist in the public bundle a guest loads. Polling a status-only
+    // endpoint needs no Reverb daemon and no WebSocket proxy. If Reverb is ever
+    // running, the listener simply gets there first and this never fires.
+    document.addEventListener('DOMContentLoaded', function () {
+        const ENDPOINT = @json(route('bookings.status.feed'));
+        const ID       = @json((string) $booking->id);
+        const RENDERED = @json($booking->status);
+        const INTERVAL = 20000;
+
+        let inFlight = false;
+
+        async function check() {
+            // Nothing to watch for on a tab nobody is looking at; the
+            // visibility handler below catches up the moment they return.
+            if (inFlight || document.hidden) return;
+            inFlight = true;
+
+            try {
+                const res = await fetch(ENDPOINT, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const now = (data.bookings || {})[ID];
+
+                if (now && now.status && now.status !== RENDERED) window.location.reload();
+            } catch (e) {
+                // Offline, or a blip — the next tick tries again. A guest
+                // waiting on a decision must never be shown a network error.
+            } finally {
+                inFlight = false;
+            }
+        }
+
+        setInterval(check, INTERVAL);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) check();
+        });
+    });
 </script>
 @endauth
 <script>

@@ -121,6 +121,37 @@ class Booking extends Model
         'no_show',
     ];
 
+    /**
+     * A short, guest-facing line saying where a booking now stands.
+     *
+     * Written for the status feed the guest pages poll. A poll carries no event
+     * payload, so there is no App\Events\GuestBookingUpdated message to show,
+     * and composing one in JavaScript would both duplicate this copy and risk
+     * promising something that did not happen — the old banner said an official
+     * receipt was on its way, which is only true when a payment was verified,
+     * not merely because a booking reached `paid`.
+     *
+     * So this is deliberately narrower than that event's messages: it describes
+     * the record, not the event. The event can say more ("your proof was not
+     * accepted: <reason>") because it is built where the reason is known.
+     *
+     * Lives beside STATUSES so a status added above is noticed here too.
+     */
+    public static function statusLine(int $id, string $status): string
+    {
+        return match ($status) {
+            'pending_discount' => "Booking #{$id} is waiting on a discount decision.",
+            'pending_payment'  => "Booking #{$id} is waiting for payment.",
+            'paid'             => "Payment accepted — booking #{$id} is confirmed.",
+            'active'           => "Booking #{$id} is now checked in.",
+            'completed'        => "Booking #{$id} is complete. Thank you for staying with us.",
+            'cancelled'        => "Booking #{$id} was cancelled.",
+            'expired'          => "Booking #{$id} expired before payment was received.",
+            'no_show'          => "Booking #{$id} was marked as a no-show.",
+            default            => "Booking #{$id} has been updated.",
+        };
+    }
+
     protected $fillable = [
         'user_id',
         'guest_name',

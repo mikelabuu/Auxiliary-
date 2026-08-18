@@ -367,6 +367,77 @@
 
                 setTimeout(function () { window.location.reload(); }, 2200);
             });
+
+        // The same refresh without a WebSocket — which is what actually runs
+        // here. window.Echo is only built into the staff bundle, so the
+        // listener above has never fired on this page. This watches the
+        // statuses of the rows on screen and re-renders when one of them moves,
+        // with no Reverb daemon required.
+        //
+        // Deliberately inside this callback rather than a second
+        // DOMContentLoaded listener: KEY and show() are declared in this scope,
+        // and reaching them from a sibling listener is a ReferenceError the
+        // browser raises only once a status actually changes — long after any
+        // syntax check has passed.
+        const ENDPOINT = @json(route('bookings.status.feed'));
+        const INTERVAL = 20000;
+
+        let snapshot = null;   // taken on the first reply, not from the markup
+        let inFlight = false;
+
+        async function check() {
+            if (inFlight || document.hidden) return;
+            inFlight = true;
+
+            try {
+                const res = await fetch(ENDPOINT, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const now = data.bookings || {};
+
+                // First reply is the baseline — the state these rows were
+                // rendered from. Only a later change is worth reloading for.
+                if (snapshot === null) { snapshot = now; return; }
+
+                const movedId = Object.keys(now).find(function (id) {
+                    return snapshot[id] && snapshot[id].status !== now[id].status;
+                });
+
+                if (!movedId) return;
+
+                // Same banner the Reverb path shows, from a line the server
+                // composed — so the guest is told what happened rather than
+                // finding a silently different row after the reload.
+                const moved = now[movedId];
+                const tone = moved.status === 'paid' ? 'good' : 'bad';
+
+                show(moved.message, tone, 'Refreshing your bookings…');
+
+                try {
+                    sessionStorage.setItem(KEY, JSON.stringify({
+                        message: moved.message,
+                        tone: tone,
+                        bookingId: Number(movedId),
+                    }));
+                } catch (e) { /* private mode — the banner just won't persist */ }
+
+                setTimeout(function () { window.location.reload(); }, 2200);
+            } catch (e) {
+                // A dropped poll is never worth showing the guest; retry next tick.
+            } finally {
+                inFlight = false;
+            }
+        }
+
+        check();
+        setInterval(check, INTERVAL);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) check();
+        });
     });
     </script>
 @endsection
