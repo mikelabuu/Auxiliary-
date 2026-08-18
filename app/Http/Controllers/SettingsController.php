@@ -263,10 +263,13 @@ class SettingsController extends Controller
         // Check cooldown
         if ($user->last_cancelled_at) {
             $lastCancelled = Carbon::parse($user->last_cancelled_at);
+            $cooldownMinutes = 30;
+            $secondsRemaining = ($cooldownMinutes * 60) - $lastCancelled->diffInSeconds(now());
 
-            if ($lastCancelled->diffInMinutes(now()) < 30) {
-                $remaining = 30 - $lastCancelled->diffInMinutes(now());
-                return back()->with('error', "Please wait {$remaining} minutes before cancelling another booking.");
+            if ($secondsRemaining > 0) {
+                $remaining = (int) ceil($secondsRemaining / 60);
+                $unit = $remaining === 1 ? 'minute' : 'minutes';
+                return back()->with('error', "Please wait {$remaining} {$unit} before cancelling another booking.");
             }
         }
 
