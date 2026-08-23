@@ -4,6 +4,7 @@ namespace App\Livewire\Staff;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Support\RefCode;
 use App\Models\Checkin;
 use App\Models\Checkout;
 use App\Models\NoShowLog;
@@ -41,6 +42,34 @@ class BookingLogs extends Component
         $this->resetPage();
     }
 
+    /**
+     * The booking-side search, shared by all five log tabs.
+     *
+     * The reference these tables print is BK-0004, and only the bare id was
+     * compared — so the code staff are given to identify a booking by found
+     * nothing. That is the fix; the rest is that this stood five times over,
+     * once per tab, identical each time.
+     *
+     * The explicit where(fn) around the pair is belt-and-braces rather than a
+     * repair: whereHas() already wraps a callback's constraints in their own
+     * group, so the correlation was never at risk of being ORed away. It is
+     * written out here because the added id clause makes three conditions
+     * where there were two, and a grouping worth relying on is worth seeing.
+     */
+    private function matchesBooking(): \Closure
+    {
+        $refId = RefCode::toId($this->search);
+
+        return fn ($q) => $q->whereHas('booking', fn ($b) => $b->where(function ($w) use ($refId) {
+            $w->where('id', 'like', "%{$this->search}%")
+              ->orWhere('guest_name', 'like', "%{$this->search}%");
+
+            if ($refId !== null) {
+                $w->orWhere('id', $refId);
+            }
+        }));
+    }
+
     public function render()
     {
         $perPage = 10;
@@ -48,10 +77,7 @@ class BookingLogs extends Component
         switch ($this->tab) {
             case 'checkouts':
                 $logs = Checkout::with(['booking', 'staff'])
-                    ->when($this->search, fn($q) => $q->whereHas('booking', fn($b) =>
-                        $b->where('id', 'like', "%{$this->search}%")
-                          ->orWhere('guest_name', 'like', "%{$this->search}%")
-                    ))
+                    ->when($this->search, $this->matchesBooking())
                     ->orderByDesc('checked_out_at')
                     ->paginate($perPage);
 
@@ -63,10 +89,7 @@ class BookingLogs extends Component
 
             case 'noshow':
                 $logs = NoShowLog::with(['booking', 'staff'])
-                    ->when($this->search, fn($q) => $q->whereHas('booking', fn($b) =>
-                        $b->where('id', 'like', "%{$this->search}%")
-                          ->orWhere('guest_name', 'like', "%{$this->search}%")
-                    ))
+                    ->when($this->search, $this->matchesBooking())
                     ->orderByDesc('marked_at')
                     ->paginate($perPage);
 
@@ -78,10 +101,7 @@ class BookingLogs extends Component
 
             case 'cancellations':
                 $logs = CancellationLog::with(['booking'])
-                    ->when($this->search, fn($q) => $q->whereHas('booking', fn($b) =>
-                        $b->where('id', 'like', "%{$this->search}%")
-                          ->orWhere('guest_name', 'like', "%{$this->search}%")
-                    ))
+                    ->when($this->search, $this->matchesBooking())
                     ->orderByDesc('cancelled_at')
                     ->paginate($perPage);
 
@@ -92,10 +112,7 @@ class BookingLogs extends Component
 
             case 'expiry':
                 $logs = ExpiryLog::with(['booking', 'staff'])
-                    ->when($this->search, fn($q) => $q->whereHas('booking', fn($b) =>
-                        $b->where('id', 'like', "%{$this->search}%")
-                          ->orWhere('guest_name', 'like', "%{$this->search}%")
-                    ))
+                    ->when($this->search, $this->matchesBooking())
                     ->orderByDesc('expired_at')
                     ->paginate($perPage);
 
@@ -107,10 +124,7 @@ class BookingLogs extends Component
 
             default: // checkins
                 $logs = Checkin::with(['booking', 'staff'])
-                    ->when($this->search, fn($q) => $q->whereHas('booking', fn($b) =>
-                        $b->where('id', 'like', "%{$this->search}%")
-                          ->orWhere('guest_name', 'like', "%{$this->search}%")
-                    ))
+                    ->when($this->search, $this->matchesBooking())
                     ->orderByDesc('checked_in_at')
                     ->paginate($perPage);
 

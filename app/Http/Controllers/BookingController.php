@@ -27,6 +27,20 @@ class BookingController extends Controller
     /** Longest single stay. Anything beyond this is a conversation, not a form. */
     public const MAX_STAY_NIGHTS = 30;
 
+    /**
+     * Ceilings on a single booking, shared with the checkout view.
+     *
+     * These were literals inside store()'s validation rules, which meant the
+     * form could only ever discover them by being rejected: the guest count
+     * input carried a silent `max="40"` and the page never said so. The
+     * checkout now prints the number beside the field, so it is declared once
+     * here and read from both places rather than typed out twice.
+     */
+    public const MAX_GUESTS_PER_BOOKING = 40;
+
+    /** Rooms in one booking. Beyond this it is a group block, handled at the desk. */
+    public const MAX_ROOMS_PER_BOOKING = 10;
+
     // Show welcome landing page
     public function welcome()
     {
@@ -76,49 +90,97 @@ class BookingController extends Controller
         return view('public.booking.checkout', compact('username', 'roomTypes', 'selectedRoomType', 'checkIn', 'checkOut', 'guests') + [
             'prefill'      => $this->checkoutPrefill($user),
             'holdLabel'    => \App\Support\PaymentWindow::label(),
+            // Printed next to the guest stepper, and enforced by store().
+            'maxGuestsPerBooking' => self::MAX_GUESTS_PER_BOOKING,
+            'maxRoomsPerBooking'  => self::MAX_ROOMS_PER_BOOKING,
         ]);
     }
 
     /**
      * What we can honestly fill in for a returning guest.
      *
-     * `users` stores a username, an email and a phone — no name at all — so
-     * the only place this person's name has ever been written is their last
-     * booking. That is the source, and it degrades quietly to blanks for a
-     * first-timer.
+     * Two sources, in that order of trust. A previous booking is the better
+     * one — it is what this guest last told the front desk, second contact
+     * number included — but a first-timer has none, and used to be handed six
+     * empty fields despite having typed their name into the signup form
+     * minutes earlier. `users.full_name` is written at registration in the
+     * same "Last, First, Middle" shape store() uses, so it is the fallback
+     * rather than a second parser.
      *
-     * @return array{first_name:string, middle_name:string, last_name:string, suffix:string, guest_phone:string}
+     * The address comes off the account, not the booking: `guest_address` is a
+     * flattened label with the PSGC codes already discarded, and the four
+     * dropdowns cannot be restored from it. store() writes the codes back to
+     * the user, so the second booking starts where the first one finished.
+     *
+     * Degrades quietly to blanks at every step — a missing piece is a field
+     * the guest fills in, never an error.
+     *
+     * @return array{first_name:string, middle_name:string, last_name:string, suffix:string, guest_phone:string, guest_phone_alt:string, address:array<string,string>}
      */
     private function checkoutPrefill(?User $user): array
     {
-        $blank = ['first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '', 'guest_phone' => '', 'guest_phone_alt' => ''];
+        $blank = [
+            'first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => '',
+            'guest_phone' => '', 'guest_phone_alt' => '',
+            'address' => ['region' => '', 'province' => '', 'city' => '', 'barangay' => ''],
+        ];
 
         if (! $user) {
             return $blank;
         }
 
-        $prefill = array_merge($blank, ['guest_phone' => (string) ($user->phone ?? '')]);
+        $prefill = array_merge($blank, [
+            'guest_phone' => (string) ($user->phone ?? ''),
+            'address'     => $this->prefillAddress($user),
+        ]);
 
         $last = Booking::where('user_id', $user->id)
             ->whereNotNull('guest_name')
             ->latest('id')
             ->first();
 
-        if (! $last) {
-            return $prefill;
+        if ($last) {
+            // Only the booking carries a second number — `users` has one phone
+            // column — so this one comes back from the last stay or not at all.
+            $prefill['guest_phone_alt'] = (string) ($last->guest_phone_alt ?? '');
+
+            // And the first number falls back to the last stay too. Signup
+            // never asks for a phone, so `users.phone` is null for anyone who
+            // has not since filled in their profile — which left the odd
+            // result that a returning guest was handed their *second* contact
+            // number and made to retype their first.
+            if ($prefill['guest_phone'] === '') {
+                $prefill['guest_phone'] = (string) ($last->guest_phone ?? '');
+            }
         }
 
-        // Only the booking carries a second number — `users` has one phone
-        // column — so this one comes back from the last stay or not at all.
-        $prefill['guest_phone_alt'] = (string) ($last->guest_phone_alt ?? '');
+        $name = $last?->guest_name ?: $user->full_name;
 
-        // store() writes "Last, First, Middle" and glues any suffix onto the
-        // end, so unpick it the same way round.
-        $parts = array_map('trim', explode(',', (string) $last->guest_name));
+        return array_merge($prefill, $this->splitGuestName((string) $name));
+    }
 
-        $prefill['last_name']   = $parts[0] ?? '';
-        $prefill['first_name']  = $parts[1] ?? '';
-        $middle                 = $parts[2] ?? '';
+    /**
+     * "Last, First, Middle [Suffix]" back into the four fields that built it.
+     *
+     * Shared by both prefill sources because both write that shape: store()
+     * glues it together at checkout, and AuthController does the same at
+     * registration with a middle initial in place of a full middle name.
+     *
+     * @return array{first_name:string, middle_name:string, last_name:string, suffix:string}
+     */
+    private function splitGuestName(string $name): array
+    {
+        $split = ['first_name' => '', 'middle_name' => '', 'last_name' => '', 'suffix' => ''];
+
+        if (trim($name) === '') {
+            return $split;
+        }
+
+        $parts = array_map('trim', explode(',', $name));
+
+        $split['last_name']  = $parts[0] ?? '';
+        $split['first_name'] = $parts[1] ?? '';
+        $middle              = $parts[2] ?? '';
 
         // Only peel a trailing token off when it is unmistakably a suffix —
         // guessing would eat the second half of a two-word middle name.
@@ -126,12 +188,94 @@ class BookingController extends Controller
         if (count($tokens) > 1) {
             $tail = rtrim(strtolower(end($tokens)), '.');
             if (in_array($tail, ['jr', 'sr', 'ii', 'iii', 'iv', 'v'], true)) {
-                $prefill['suffix'] = array_pop($tokens);
+                $split['suffix'] = array_pop($tokens);
             }
         }
-        $prefill['middle_name'] = implode(' ', $tokens);
+        $split['middle_name'] = implode(' ', $tokens);
 
-        return $prefill;
+        return $split;
+    }
+
+    /**
+     * The saved address as the four "CODE|NAME" values the selector expects.
+     *
+     * The name half is read from the gazetteer rather than stored alongside
+     * the code, so a place that has been renamed since the last booking still
+     * matches an option in the dropdown. A code that resolves to nothing —
+     * gazetteer not synced, or a code retired outright — is dropped along with
+     * everything below it, because a city with no region selected above it
+     * cannot be shown either.
+     *
+     * @return array{region:string, province:string, city:string, barangay:string}
+     */
+    private function prefillAddress(User $user): array
+    {
+        $blank = ['region' => '', 'province' => '', 'city' => '', 'barangay' => ''];
+
+        if (! $user->region_code || ! $user->city_code) {
+            return $blank;
+        }
+
+        $psgc = app(\App\Services\PsgcDirectory::class);
+
+        // Barangays are indexed per city, so that lookup needs the city code
+        // alongside it — the same argument store() passes when it resolves the
+        // posted address.
+        $compose = function (string $level, ?string $code, ?string $cityCode = null) use ($psgc): string {
+            if (! $code) {
+                return '';
+            }
+
+            $name = $psgc->name($level, $code, $cityCode);
+
+            return $name === '' ? '' : $code . '|' . $name;
+        };
+
+        $address = [
+            'region'   => $compose('regions', $user->region_code),
+            // Genuinely empty for NCR, whose cities hang off the region.
+            'province' => $compose('provinces', $user->province_code),
+            'city'     => $compose('cities', $user->city_code),
+            'barangay' => $compose('barangays', $user->barangay_code, $user->city_code),
+        ];
+
+        if ($address['region'] === '' || $address['city'] === '') {
+            return $blank;
+        }
+
+        return $address;
+    }
+
+    /**
+     * Store the posted address codes on the account.
+     *
+     * Bare codes, stripped of the label the form posted alongside them, for
+     * the reasons in the migration: the code is the stable half.
+     *
+     * A guest is never blocked by this. It runs mid-checkout, and a save that
+     * throws — a column missing because the migration has not been run on this
+     * box, say — would take a confirmed-in-all-but-name booking down with it.
+     * Losing the prefill is a small cost; losing the booking is not.
+     */
+    private function rememberAddress(?User $user, Request $request): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        try {
+            $user->forceFill([
+                'region_code'   => \App\Services\PsgcDirectory::code($request->region_code),
+                // Blank for NCR, and stored blank rather than left at its old
+                // value — a guest who has moved out of a province should not
+                // keep it.
+                'province_code' => \App\Services\PsgcDirectory::code($request->province_code) ?: null,
+                'city_code'     => \App\Services\PsgcDirectory::code($request->city_code),
+                'barangay_code' => \App\Services\PsgcDirectory::code($request->barangay_code),
+            ])->save();
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     // Handle booking submission
@@ -177,7 +321,7 @@ class BookingController extends Controller
             'referred_by_purpose' => ['required', 'string', 'max:255'],
             'check_in'        => ['required', 'date', 'after_or_equal:today', 'before_or_equal:' . $horizon->toDateString()],
             'check_out'       => ['required', 'date', 'after:check_in', 'before_or_equal:' . $maxStay->toDateString()],
-            'expected_guests' => 'required|integer|min:1|max:40',
+            'expected_guests' => 'required|integer|min:1|max:' . self::MAX_GUESTS_PER_BOOKING,
             // Optional, but if given it has to be a real clock time — the
             // front desk plans the evening around this.
             'arrival_time'     => 'nullable|date_format:H:i',
@@ -185,7 +329,7 @@ class BookingController extends Controller
             // `accepted` rather than `boolean`: an unticked box posts nothing
             // at all, and `boolean` would happily pass a missing field.
             'accept_terms'     => 'accepted',
-            'reservations'    => 'required|array|min:1|max:10',
+            'reservations'    => 'required|array|min:1|max:' . self::MAX_ROOMS_PER_BOOKING,
             'reservations.*.room_type'       => 'required|string',
             // No room_number. A guest chooses a room *style* and how many of
             // them; which physical rooms those are is assigned here, from what
@@ -259,6 +403,21 @@ class BookingController extends Controller
         ->filter()
         ->implode(', ');
 
+        // Keep the codes on the account so the next booking can put the four
+        // dropdowns back. $guest_address cannot do this job: it is a flattened
+        // label with the codes already dropped, which is what the front desk
+        // needs to read and useless for restoring a selection.
+        //
+        // Written here rather than after the transaction on purpose. The
+        // address has been validated by this point, and the rest of store()
+        // can still fail on something the guest cannot control — a room taken
+        // between loading the page and confirming — which is exactly the case
+        // where they should not have to pick their barangay a second time.
+        //
+        // Latest-wins rather than first-wins: a guest who has moved is telling
+        // us so, and pinning the address to whatever the first booking said
+        // would make the prefill wrong for good.
+        $this->rememberAddress($user, $request);
 
         $cin  = Carbon::parse($request->check_in);
         $cout = Carbon::parse($request->check_out);

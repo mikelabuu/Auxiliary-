@@ -51,6 +51,11 @@
    after every layer that sets a hover transform. See the file header. */
 @import './shared/touch-hover.css';
 
+/* Also late, and for the same kind of reason: Tailwind's display utilities are
+   layered and everything else here is not, so they need re-declaring in this
+   origin to win. See the file header for what that cost. */
+@import './admin/14-display-utilities.css';
+
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

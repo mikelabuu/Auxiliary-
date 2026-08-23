@@ -13,6 +13,7 @@ use App\Models\Checkout;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Support\Realtime;
+use App\Support\RefCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +53,15 @@ class BookingsController extends Controller{
         $query = Booking::with('reservations');
 
         if ($search) {
-            $query->where('id', $search);
+            // The box says "Search by booking ID" and the column beside it
+            // prints BK-0004, so that is what gets pasted into it. Compared
+            // raw against an integer column, MySQL cast it to 0 and the desk
+            // was told the booking did not exist.
+            //
+            // A term that is not a code at all falls through to an id nothing
+            // can have, which keeps a nonsense search showing nothing rather
+            // than quietly showing the entire book.
+            $query->where('id', RefCode::toId($search) ?? -1);
         }
 
         if ($status !== 'all') {

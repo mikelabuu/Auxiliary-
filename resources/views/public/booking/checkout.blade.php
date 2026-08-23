@@ -38,7 +38,7 @@
                  step doubles as a jump-link to its card (same deep-link
                  contract as the summary rows) -->
             <ol id="checkoutProgress" class="co-enter mb-8 grid grid-cols-3 gap-3" style="--co:1">
-                @foreach (['dates' => 'Dates', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
+                @foreach (['dates' => 'Your stay', 'details' => 'Your details', 'rooms' => 'Rooms'] as $step => $label)
                     {{-- The <li> used to carry role="button" itself, which strips
                          its listitem semantics and left the <ol> announcing as a
                          list with no items (axe `list`). The interactive part is
@@ -85,7 +85,7 @@
                 <div class="lg:col-span-8 space-y-6">
 
                     <!-- DATES -->
-                    <x-booking.checkout.step-card icon="calendar-days" step="Step 1 of 3" title="Stay Dates" id="stepCardDates" class="co-enter scroll-mt-28" style="--co:2">
+                    <x-booking.checkout.step-card icon="calendar-days" step="Step 1 of 3" title="Your Stay" id="stepCardDates" class="co-enter scroll-mt-28" style="--co:2">
                         <x-slot:aside>
                             <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-stone-700 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
                         </x-slot:aside>
@@ -108,14 +108,81 @@
                                 Next week <span class="date-preset-nights">7 nights</span>
                             </button>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Check-in</label>
-                                <input type="text" id="check_in" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-[color,background-color,border-color,box-shadow]" placeholder="Select Date" value="{{ $checkIn ?? '' }}">
+                        {{-- One stay bar: check-in, check-out, guests.
+
+                             These were a two-column date grid, then a rule,
+                             then a guest stepper on its own row underneath —
+                             which read as two separate questions and made the
+                             card look like it was asking for something extra.
+                             Every booking site a guest here has already used
+                             (Agoda, Booking, Hostelworld) puts the three on one
+                             line as equal segments of a single control, with
+                             the guest count collapsed to a summary and its
+                             stepper behind a popover. Same shape here, in this
+                             site's own materials. --}}
+                        <div class="stay-bar">
+                            <div class="stay-field">
+                                <label class="stay-field-label" for="check_in_display">Check-in</label>
+                                <span class="stay-field-control">
+                                    <x-booking.ui.icon-solid name="calendar-days" class="stay-field-icon" />
+                                    <input type="text" id="check_in" class="flatpickr-date stay-field-input" placeholder="Select date" value="{{ $checkIn ?? '' }}">
+                                </span>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5">Check-out</label>
-                                <input type="text" id="check_out" class="flatpickr-date w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm placeholder:text-stone-400 focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none font-semibold cursor-pointer transition-[color,background-color,border-color,box-shadow]" placeholder="Select Date" value="{{ $checkOut ?? '' }}">
+
+                            <div class="stay-field">
+                                <label class="stay-field-label" for="check_out_display">Check-out</label>
+                                <span class="stay-field-control">
+                                    <x-booking.ui.icon-solid name="calendar-days" class="stay-field-icon" />
+                                    <input type="text" id="check_out" class="flatpickr-date stay-field-input" placeholder="Select date" value="{{ $checkOut ?? '' }}">
+                                </span>
+                            </div>
+
+                            {{-- The stepper is one tap away rather than always on
+                                 screen. It is the least-changed of the three —
+                                 most parties are one or two people and never
+                                 touch it — and left inline it was the loudest
+                                 thing in the card. --}}
+                            <div class="stay-field stay-field--guests" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                <span class="stay-field-label" id="guestsFieldLabel">Guests</span>
+                                <button type="button" class="stay-field-control stay-field-trigger"
+                                        {{-- Stacked on a phone this row is the last in the bar, so
+                                             the panel it opens starts near the fold. Bring it up
+                                             rather than leaving the guest to discover it. --}}
+                                        @click="open = !open; open && $nextTick(() => $refs.pop.scrollIntoView({ block: 'center', behavior: 'smooth' }))"
+                                        :aria-expanded="open ? 'true' : 'false'"
+                                        aria-labelledby="guestsFieldLabel guestSummary">
+                                    <x-booking.ui.icon-solid name="users" class="stay-field-icon" />
+                                    <span id="guestSummary" class="stay-field-value">1 guest</span>
+                                    <x-booking.ui.icon-solid name="chevron-down" class="stay-field-caret" ::class="open ? 'is-open' : ''" />
+                                </button>
+
+                                <div class="guest-pop"
+                                     x-ref="pop"
+                                     x-show="open"
+                                     x-transition:enter="transition ease-out duration-150"
+                                     x-transition:enter-start="opacity-0 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-transition:leave="transition ease-out duration-100"
+                                     x-transition:leave-start="opacity-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 -translate-y-1"
+                                     @click.outside="open = false"
+                                     style="display:none;">
+                                    <div class="guest-pop-head">
+                                        <label class="guest-pop-label" for="expected_guests">How many guests?</label>
+                                        <span id="totalGuestsReadout" class="count-readout tabnum" aria-hidden="true">1</span>
+                                    </div>
+                                    <div class="stepper flex items-center gap-2">
+                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests">
+                                            <x-booking.ui.icon-solid name="minus" class="text-[18px]" />
+                                        </button>
+                                        <input type="number" id="expected_guests" name="expected_guests" value="{{ old('expected_guests', 1) }}" aria-describedby="totalGuestsNote" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm text-center focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $maxGuestsPerBooking }}" required>
+                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests">
+                                            <x-booking.ui.icon-solid name="plus" class="text-[18px]" />
+                                        </button>
+                                    </div>
+                                    <p id="totalGuestsNote" class="count-note">Everyone staying, including children. We fit them into rooms in step 3.</p>
+                                    <button type="button" class="guest-pop-done" @click="open = false">Done</button>
+                                </div>
                             </div>
                         </div>
                     </x-booking.checkout.step-card>
@@ -126,40 +193,170 @@
                     </x-booking.checkout.step-card>
 
                     <!-- ROOM SELECTION -->
-                    <x-booking.checkout.step-card icon="door-open" step="Step 3 of 3" title="Room Allocation" id="stepCardRooms" class="co-enter scroll-mt-28" style="--co:4">
-                        <x-slot:aside>
-                            <button type="button" onclick="window.addReservationBlock()" class="press inline-flex items-center gap-1.5 rounded-full border border-emerald-deep/15 bg-white/60 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-emerald-deep hover:text-cream cursor-pointer">
-                                <x-booking.ui.icon-solid name="plus" class="text-[15px]" /> Add Room Type
-                            </button>
-                        </x-slot:aside>
-                        <p class="text-sm text-stone-600 font-medium mb-4">Configure the rooms you want to book. You must select specific room numbers for each type.</p>
+                    <x-booking.checkout.step-card icon="door-open" step="Step 3 of 3" title="Your Rooms" id="stepCardRooms" class="co-enter scroll-mt-28" style="--co:4">
+                        {{-- No preamble. A form that needs one to be understood
+                             has not been made clear, it has been annotated —
+                             and the status line below says the same thing about
+                             the guest's actual numbers rather than in the
+                             abstract.
 
-                        {{-- The two numbers that have to agree — the total from
-                             step 2 and the sum of the per-room counts below —
-                             finally shown together, and updated as they change.
-                             This used to be discoverable only by pressing
-                             Confirm and reading a red toast. --}}
+                             The party size itself is asked in step 1 now, with
+                             the dates. What is left in this card is the one
+                             question it exists to ask: which rooms. --}}
+                        {{-- The single status line. It replaces a meter, a
+                             separate note two cards up, a "Set total to N
+                             guests" button that offered to shrink the party to
+                             whatever the rooms happened to hold, and a hint
+                             that told the guest to go and edit a field in step
+                             2. One sentence, one place, and one action beneath
+                             it — the Add-room button in the card header. --}}
                         <div id="allocationMeter" class="alloc-meter mb-4" data-state="empty" role="status" aria-live="polite">
+                            {{-- Pips or figures, never both. They said the same
+                                 thing twice, side by side. The dots are the
+                                 faster read, so they carry it whenever the party
+                                 is small enough to count at a glance, and the
+                                 figures step in only when it is not. --}}
                             <div class="alloc-meter-head">
-                                <span class="alloc-meter-label">Guests assigned to rooms</span>
-                                <span class="alloc-meter-count tabnum"><span id="allocAssigned">0</span> of <span id="allocExpected">1</span></span>
+                                <span id="allocPips" class="alloc-pips" aria-hidden="true"></span>
+                                <span id="allocCount" class="alloc-meter-count tabnum" hidden><span id="allocAssigned">0</span> of <span id="allocExpected">1</span> seated</span>
                             </div>
                             <div class="alloc-meter-track">
                                 <span id="allocMeterFill" class="alloc-meter-fill"></span>
                             </div>
-                            <p id="allocMeterHint" class="alloc-meter-hint">Pick a room below and say how many people are in it.</p>
+                            <p id="allocMeterHint" class="alloc-meter-hint">Pick a room style below and we’ll seat your guests in it.</p>
+                        </div>
+
+                        {{-- A ready-made answer, offered before the guest is
+                             asked to work one out.
+
+                             Seating a party across room styles is a packing
+                             problem, and the form knows the rates, the bed
+                             counts and what is free tonight — everything
+                             needed to solve it. Making the guest solve it
+                             anyway, by adding rooms one at a time and watching
+                             a counter, was the hardest part of this page. This
+                             states an allocation that seats everyone and what
+                             it costs, and one press takes it. Hidden whenever
+                             it has nothing to offer: no dates yet, one guest,
+                             or a party already seated. --}}
+                        <div id="roomSuggestion" class="room-suggestion mb-4" hidden>
+                            <div class="room-suggestion-body">
+                                <p class="room-suggestion-label">Suggested</p>
+                                <p id="roomSuggestionText" class="room-suggestion-text"></p>
+                            </div>
+                            <button type="button" id="roomSuggestionApply" class="press room-suggestion-btn">Use this</button>
+                        </div>
+
+                        {{-- One picker for the whole booking.
+
+                             Quantities, not a grid per room: "two Doubles and a
+                             Triple" is how a guest describes what they want, and
+                             it is now how they say it. Each row still writes the
+                             same reservations[] the server has always read — the
+                             blocks below are generated from these numbers. --}}
+                        {{-- One picker for the whole booking.
+
+                             Quantities, not a grid per room: "two Doubles and a
+                             Triple" is how a guest describes what they want, and
+                             it is now how they say it. Each row still writes the
+                             same reservations[] the server has always read — the
+                             blocks below are generated from these numbers.
+
+                             Every row answers the question actually being asked.
+                             It used to say "₱1,800 / night · sleeps 2", which is
+                             a fact about the room; against a party of five what
+                             the guest needs to know is whether it holds them,
+                             and it did not say. Now each row states its capacity
+                             against the party — and a style that cannot hold
+                             everyone on its own is not selectable until the
+                             guest says they are willing to split up. --}}
+                        <div class="room-picker mb-5">
+                            <p class="room-picker-label">Choose your rooms</p>
+                            {{-- A grid of cards, not a list of rows.
+
+                                 Seven styles stacked one per line ran to ~660px
+                                 — most of a screen of scrolling to compare four
+                                 numbers that would fit side by side. Four to a
+                                 row puts the whole property in two rows, which
+                                 is what a guest is actually doing here: looking
+                                 at all of them at once and picking. --}}
+                            <ul id="roomPicker" class="room-picker-list">
+                                @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
+                                    <li class="room-card" data-room-type="{{ $type['id'] }}" data-beds="{{ $type['beds'] }}" data-price="{{ $type['price'] }}">
+                                        <span class="room-card-media">
+                                            <x-img :src="$type['image']" :alt="$type['title']" loading="lazy" sizes="(max-width: 640px) 45vw, 200px" class="h-full w-full object-cover" />
+                                        </span>
+                                        <span class="room-card-body">
+                                            <span class="room-card-title">{{ $type['title'] }}</span>
+                                            <span class="room-card-line">
+                                                <span class="room-cap-pill">Sleeps {{ $type['beds'] }}</span>
+                                                <span class="room-card-price"><span class="tabnum">₱{{ number_format($type['price']) }}</span><span class="room-card-per">/night</span></span>
+                                            </span>
+                                            {{-- Filled by booking.js against the party size: fits
+                                                 everyone, takes some of them, or too small. --}}
+                                            <span class="room-card-fit" data-room-fit></span>
+                                            <span class="room-card-note" data-room-note></span>
+                                        </span>
+                                        <span class="room-card-qty stepper">
+                                            <button type="button" class="btn-step room-qty-btn" data-room-step="-1" aria-label="One fewer {{ $type['title'] }}">
+                                                <x-booking.ui.icon-solid name="minus" class="text-[14px]" />
+                                            </button>
+                                            <output class="room-qty tabnum" data-room-qty aria-live="polite" aria-label="{{ $type['title'] }} booked">0</output>
+                                            <button type="button" class="btn-step room-qty-btn" data-room-step="1" aria-label="One more {{ $type['title'] }}">
+                                                <x-booking.ui.icon-solid name="plus" class="text-[14px]" />
+                                            </button>
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            {{-- The way out of the strict view.
+
+                                 Three Doubles for six people is a real booking,
+                                 and often the cheaper one, so the styles that
+                                 cannot hold the party alone are not removed —
+                                 they are held back behind one press, and the
+                                 press explains what it does. If nothing at all
+                                 fits the party on its own, booking.js turns this
+                                 on by itself rather than presenting a list where
+                                 everything is disabled. --}}
+                            <div class="room-split" id="roomSplit" hidden>
+                                <p class="room-split-text" id="roomSplitText"></p>
+                                <button type="button" id="roomSplitToggle" class="room-split-btn"></button>
+                            </div>
                         </div>
 
                         <div id="reservationBlocks" class="space-y-4">
                             <!-- JS will inject blocks here -->
                         </div>
+
+                        {{-- The "Add another room" button is gone: rooms are
+                             added by raising a quantity in the picker above,
+                             which is the same gesture as changing one’s mind
+                             about how many. --}}
                     </x-booking.checkout.step-card>
 
                 </div>
 
                 <!-- Right Column: Sticky Summary -->
                 <div class="lg:col-span-4">
-                    <div class="co-enter bg-cream-warm rounded-3xl p-6 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] sticky top-28" style="--co:3">
+                    {{-- Sticky only where there is a sidebar to be sticky in, and never taller
+                         than the space it is pinned into.
+
+                         This card runs to ~774px once rooms are picked. Pinned at
+                         top-28 (112px) that puts its bottom at 886px, so it needed a
+                         886px-tall viewport to be seen whole — more than a 1366x768
+                         laptop has at 100%, and far more than the 614px it has at
+                         125% display scaling, which is what a lot of people run.
+                         Everything past the fold, the total and the confirm button
+                         included, simply could not be scrolled to: a stuck element
+                         does not move, and the page scroll moves the form beside it.
+
+                         Capping to the viewport and letting the card scroll itself
+                         fixes it at every height. Below lg it is not sticky at all —
+                         the column is stacked there and the mobile total bar further
+                         down already keeps the figure in view. --}}
+                    <div class="co-enter bg-cream-warm rounded-3xl p-6 ring-1 ring-emerald-deep/5 shadow-[0_14px_34px_-26px_rgba(6,40,30,0.3)] lg:sticky lg:top-28 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto" style="--co:3">
                         <h3 class="text-xl text-ink border-b border-emerald-deep/10 pb-4 mb-4 font-display flex items-center gap-2.5">
                             <x-booking.ui.icon-solid name="receipt" class="text-palay-800 text-[20px]" />
                             Booking <span class="italic text-palay-800 -ml-1">Summary</span>

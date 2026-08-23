@@ -1,0 +1,74 @@
+/* ============================================================
+   DISPLAY UTILITIES, RE-DECLARED
+   ============================================================
+
+   `@import 'tailwindcss'` at the top of admin.css puts every utility inside
+   `@layer utilities`. Nothing else in this bundle is layered — the numbered
+   partials are all plain, unlayered CSS.
+
+   Unlayered CSS beats layered CSS outright. Not by specificity and not by
+   source order: any unlayered declaration wins against any layered one, which
+   is the whole point of `@layer`. So in this console a component class that
+   sets `display` silently defeats Tailwind's display utilities:
+
+       <button class="btn btn-ghost hidden md:inline-flex">
+
+   `.btn { display: inline-flex }` won, `hidden` lost, and the table-density
+   toggle stayed visible at 375px — where it pushed the topbar 47px past the
+   viewport and gave the console a horizontal scrollbar on every phone.
+
+   Nothing is wrong with the markup; it is the idiomatic way to write that.
+   Rather than move ten partials into `@layer components` — which would flip
+   the cascade for colour, spacing and borders too, far past the problem being
+   solved — this file re-declares the display utilities in the same unlayered
+   origin as the component rules. Ordinary source order then applies, and this
+   file is imported after them, so the utilities win again.
+
+   Only `display` is re-declared here, and only the variants this console
+   actually uses. Keep the base rule first and the breakpoints in ascending
+   order: within one origin these are all single-class selectors, so the last
+   matching rule is the one that applies.
+   ============================================================ */
+
+.block { display: block; }
+.inline-block { display: inline-block; }
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.grid { display: grid; }
+.hidden { display: none; }
+
+@media (min-width: 640px) {
+    .sm\:block { display: block; }
+    .sm\:inline-block { display: inline-block; }
+    .sm\:flex { display: flex; }
+    .sm\:inline-flex { display: inline-flex; }
+    .sm\:grid { display: grid; }
+    .sm\:hidden { display: none; }
+}
+
+@media (min-width: 768px) {
+    .md\:block { display: block; }
+    .md\:inline-block { display: inline-block; }
+    .md\:flex { display: flex; }
+    .md\:inline-flex { display: inline-flex; }
+    .md\:grid { display: grid; }
+    .md\:hidden { display: none; }
+}
+
+@media (min-width: 1024px) {
+    .lg\:block { display: block; }
+    .lg\:inline-block { display: inline-block; }
+    .lg\:flex { display: flex; }
+    .lg\:inline-flex { display: inline-flex; }
+    .lg\:grid { display: grid; }
+    .lg\:hidden { display: none; }
+}
+
+@media (min-width: 1280px) {
+    .xl\:block { display: block; }
+    .xl\:inline-block { display: inline-block; }
+    .xl\:flex { display: flex; }
+    .xl\:inline-flex { display: inline-flex; }
+    .xl\:grid { display: grid; }
+    .xl\:hidden { display: none; }
+}

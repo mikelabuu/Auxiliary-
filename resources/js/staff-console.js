@@ -131,11 +131,16 @@ document.addEventListener(
 
         if (admin) {
             const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            // Short weekday, no year. "Wednesday, Aug 19, 2026" rendered at
+            // 309px in a nowrap chip, which was over a third of the topbar's
+            // usable width and pushed the notification bell and the whole user
+            // menu off the right edge on any viewport below ~1400px — a 1366px
+            // laptop at 125% scaling has 1093px, so this was the normal case.
+            // The desk clock has always used this shorter form.
             const date = now.toLocaleDateString('en-US', {
-                weekday: 'long',
+                weekday: 'short',
                 month: 'short',
                 day: 'numeric',
-                year: 'numeric',
             });
             admin.textContent = `${time} · ${date}`;
         }

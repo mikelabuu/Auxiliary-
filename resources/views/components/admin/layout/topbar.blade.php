@@ -229,7 +229,10 @@
 
   {{-- Clock & dropdowns --}}
   <div class="topbar-actions">
-    <div id="liveClock" class="topbar-date font-mono tabnum hidden md:block" aria-live="off"></div>
+    {{-- xl, not md: the topbar also carries a search field and the user menu,
+         and at md there is not room for all three. The clock is the one of the
+         three nobody needs, so it is the one that waits for space. --}}
+    <div id="liveClock" class="topbar-date font-mono tabnum hidden xl:block" aria-live="off"></div>
 
     {{-- Table density cycle — compact → comfortable → large (persisted on <body> via layouts/admin) --}}
     <button @click="cycleDensity()" class="btn btn-ghost btn-sm btn-icon hidden md:inline-flex"

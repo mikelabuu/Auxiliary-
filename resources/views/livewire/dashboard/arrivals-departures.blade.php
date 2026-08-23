@@ -70,38 +70,57 @@
                     <p class="text-2xs font-bold text-ember-800 uppercase tracking-wide">Needs attention</p>
                     <span class="ml-auto text-2xs font-bold text-ember-800 bg-ember-100 rounded-full px-2 py-0.5">{{ $overdueCheckouts->count() + $missedArrivals->count() }}</span>
                 </div>
-                <div class="divide-y divide-ember-100">
+                {{-- Same row shape as the list below, so the two sets of rows
+                     in this panel reflow the same way and read as one thing.
+                     These used to be a bare flex row with `min-w-0` on the text
+                     and `shrink-0` on everything else, which at the panel's
+                     narrow widths squeezed "Room 108 · Was due Aug 13" down to
+                     one word per line. --}}
+                <ul class="arrival-list divide-y divide-ember-100">
                     @foreach($overdueCheckouts as $b)
-                        <div class="flex items-center gap-3 px-4 py-2.5">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-stone-800 truncate guest-history-link cursor-pointer hover:underline" data-booking-id="{{ $b->id }}" title="View guest history">{{ $b->guest_name }}</p>
-                                <p class="text-2xs text-muted">Room {{ $b->room_numbers_str }} · Check-out was {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
+                        <li class="arrival-row arrival-row--attention">
+                            <div class="arrival-row-main">
+                                <p class="arrival-row-name">
+                                    <span class="guest-history-link" data-booking-id="{{ $b->id }}" title="{{ $b->guest_name }} — view guest history">{{ $b->guest_name }}</span>
+                                </p>
+                                <p class="arrival-row-meta">
+                                    <span class="font-semibold text-stone-600">Room {{ $b->room_numbers_str }}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span>Check-out was {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</span>
+                                </p>
                             </div>
-                            <span class="text-2xs font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">Overdue</span>
-                            <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer shrink-0" data-action="checkout" data-id="{{ $b->id }}">Check Out</button>
-                        </div>
+                            <span class="cell-tag shrink-0" style="color:var(--color-ember-800,#912018);background:var(--color-ember-100,#fee4e2);border-color:var(--color-ember-300,#fda29b);">Overdue</span>
+                            <div class="arrival-row-actions">
+                                <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $b->id }}" data-guest="{{ $b->guest_name }}" data-room="{{ $b->room_numbers_str }}" data-checkout="{{ \Carbon\Carbon::parse($b->date)->format('M d, Y') }}">Check Out</button>
+                            </div>
+                        </li>
                     @endforeach
                     @foreach($missedArrivals as $b)
-                        <div class="flex items-center gap-3 px-4 py-2.5">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-stone-800 truncate guest-history-link cursor-pointer hover:underline" data-booking-id="{{ $b->id }}" title="View guest history">{{ $b->guest_name }}</p>
-                                <p class="text-2xs text-muted">Room {{ $b->room_numbers_str }} · Was due {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</p>
+                        <li class="arrival-row arrival-row--attention">
+                            <div class="arrival-row-main">
+                                <p class="arrival-row-name">
+                                    <span class="guest-history-link" data-booking-id="{{ $b->id }}" title="{{ $b->guest_name }} — view guest history">{{ $b->guest_name }}</span>
+                                </p>
+                                <p class="arrival-row-meta">
+                                    <span class="font-semibold text-stone-600">Room {{ $b->room_numbers_str }}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span>Was due {{ \Carbon\Carbon::parse($b->date)->format('M d') }}</span>
+                                </p>
                             </div>
-                            <span class="text-2xs font-bold uppercase tracking-wide text-ember-800 bg-ember-100 border border-ember-300 rounded-full px-2 py-0.5 shrink-0">No-show risk</span>
-                            <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer shrink-0" data-action="noshow" data-id="{{ $b->id }}">No Show</button>
-                        </div>
+                            <span class="cell-tag shrink-0" style="color:var(--color-ember-800,#912018);background:var(--color-ember-100,#fee4e2);border-color:var(--color-ember-300,#fda29b);">No-show risk</span>
+                            <div class="arrival-row-actions">
+                                <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer" data-action="noshow" data-id="{{ $b->id }}" data-guest="{{ $b->guest_name }}" data-room="{{ $b->room_numbers_str }}" data-checkin="{{ \Carbon\Carbon::parse($b->date)->format('M d, Y') }}">No Show</button>
+                            </div>
+                        </li>
                     @endforeach
-                </div>
+                </ul>
             </div>
         </div>
     @endif
 
     <div class="overflow-x-auto flex-1 p-5 wire-panel" wire:loading.delay.class="is-refreshing" wire:target="filterType, sortBy, gotoPage, previousPage, nextPage, previousDay, nextDay, goToday">
-        <div class="scroll-x rounded-xl border border-stone-200">
+        <div class="rounded-xl border border-stone-200 overflow-hidden">
             @if($arrivalsDepartures->isEmpty())
-                <div class="grid grid-cols-7 bg-stone-50 text-2xs font-bold text-clsu-700 tracking-wide px-4 py-2.5 uppercase border-b border-stone-200">
-                    <span>Guest</span><span>Room</span><span>Check-in</span><span>Check-out</span><span>Nights</span><span>Type</span><span>Status</span>
-                </div>
                 <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <div class="w-12 h-12 rounded-full bg-gradient-to-br from-clsu-50 to-clsu-100 flex items-center justify-center text-clsu-500 mb-3 ring-1 ring-clsu-100">
                     <svg class="icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><path d="m9 14 2 2 4-4"/></svg>
@@ -111,93 +130,155 @@
                   <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-sm font-bold text-white bg-clsu-700 rounded-lg px-5 py-3 hover:bg-clsu-800 active:scale-[0.98] transition-[color,background-color,transform] duration-200 !no-underline shadow-sm">Create manual booking</a>
                 </div>
             @else
-                <table class="data-table" data-server-sort style="min-width:760px;">
-                    <thead>
-                        <tr>
-                            <th wire:click="sortBy('guest_name')" @class(['sortable', 'sort-asc' => $sortField === 'guest_name' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'guest_name' && $sortDirection === 'desc'])>Guest</th>
-                            <th>Room</th>
-                            <th wire:click="sortBy('check_in')" @class(['sortable', 'sort-asc' => $sortField === 'check_in' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'check_in' && $sortDirection === 'desc'])>Check-in</th>
-                            <th wire:click="sortBy('check_out')" @class(['sortable', 'sort-asc' => $sortField === 'check_out' && $sortDirection === 'asc', 'sort-desc' => $sortField === 'check_out' && $sortDirection === 'desc'])>Check-out</th>
-                            <th class="text-center">Nights</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th class="text-right">Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach ($arrivalsDepartures as $item)
-                            @php
-                                $initials = collect(explode(' ', trim($item->guest_name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
-                                $initials = strtoupper($initials ?: 'G');
-                                $sClass = $item->status === 'paid' ? 'status-paid' : ($item->status === 'active' ? 'status-active' : 'status-pending');
-                            @endphp
-                            <tr>
-                                <td>
-                                    <div class="cell-name">
-                                        <span class="avatar-initials">{{ $initials }}</span>
-                                        <div class="cell-name-text">
-                                            <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $item->id }}" title="{{ $item->guest_name }} — view guest history">{{ $item->guest_name }}</p>
-                                            <p class="cell-name-secondary">#{{ $item->id }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="font-data tabnum text-stone-600">{{ $item->room_numbers_str }}</td>
-                                <td class="font-data tabnum" title="{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}">{{ \Carbon\Carbon::parse($item->check_in)->format('M d') }}</td>
-                                <td class="font-data tabnum" title="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}">{{ \Carbon\Carbon::parse($item->check_out)->format('M d') }}</td>
-                                <td class="text-center font-data tabnum">{{ $item->nights }}</td>
-                                <td>
-                                    @php
-                                        // 'staying' is the neutral one: nothing is due to happen
-                                        // to this guest today, so it gets neither the arrival
-                                        // green nor the departure amber.
-                                        $typeTag = match ($item->type) {
-                                            'arrival' => ['Arrival', 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);'],
-                                            'staying' => ['In-house', 'color:var(--color-stone-600);background:var(--color-stone-100);border-color:var(--color-stone-200);'],
-                                            'both' => ['Same-day', 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;'],
-                                            default => ['Departure', 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;'],
-                                        };
-                                    @endphp
-                                    <span class="cell-tag" style="{{ $typeTag[1] }}">{{ $typeTag[0] }}</span>
-                                </td>
-                                <td><span class="status {{ $sClass }}">{{ ucfirst($item->status) }}</span></td>
-                                <td class="text-right">
-                                    @if($isToday)
-                                        @if($item->status === 'paid')
-                                            <div class="table-actions justify-end">
-                                                <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkin" data-id="{{ $item->id }}">Check In</button>
-                                                <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer" data-action="noshow" data-id="{{ $item->id }}">No Show</button>
-                                            </div>
-                                        @elseif($item->status === 'active')
-                                            <div class="table-actions justify-end">
-                                                @if($item->due_out)
-                                                    <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $item->id }}">Check Out</button>
-                                                @else
-                                                    {{-- Not due out yet. Deliberately the quiet outline
-                                                         button and not the primary one: this is the
-                                                         exception, sitting in a column where the green
-                                                         button all day means "the expected thing". --}}
-                                                    <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer !text-ember-700 !border-ember-300 hover:!bg-ember-50"
-                                                            data-action="emergency"
-                                                            data-id="{{ $item->id }}"
-                                                            data-guest="{{ $item->guest_name }}"
-                                                            data-checkout="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}"
-                                                            title="End this stay before {{ \Carbon\Carbon::parse($item->check_out)->format('M d') }} — emergencies only">
-                                                        Emergency Check-Out
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        @else
-                                            <span class="text-faint text-xs italic">None</span>
-                                        @endif
-                                    @else
-                                        <span class="text-faint text-xs italic">—</span>
-                                    @endif
-                                </td>
-                            </tr>
+                {{-- Sorting used to be the two clickable column headers. A list
+                     has no headers, so it is stated here instead — and named
+                     for what the desk sorts by rather than for the column:
+                     "Arrival" rather than "check_in". --}}
+                <div class="flex items-center justify-between gap-3 px-4 py-2.5 bg-stone-50 border-b border-stone-200">
+                    <p class="text-2xs font-bold text-clsu-700 uppercase tracking-wide">{{ $total }} {{ \Illuminate\Support\Str::plural('guest', $total) }} {{ $isToday ? 'today' : 'on ' . $viewLabel }}</p>
+                    <div class="flex items-center gap-1">
+                        <span class="text-2xs font-semibold text-faint mr-0.5">Sort</span>
+                        @foreach (['guest_name' => 'Name', 'check_in' => 'Arrival'] as $field => $label)
+                            <button wire:click="sortBy('{{ $field }}')"
+                                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-2xs font-bold transition-[color,background-color] cursor-pointer {{ $sortField === $field ? 'bg-white text-clsu-800 border border-clsu-200 shadow-sm' : 'text-faint hover:text-clsu-700 border border-transparent' }}"
+                                    aria-pressed="{{ $sortField === $field ? 'true' : 'false' }}">
+                                {{ $label }}
+                                @if($sortField === $field)
+                                    <svg class="w-2.5 h-2.5 {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                @endif
+                            </button>
                         @endforeach
-                    </tbody>
-                </table>
+                    </div>
+                </div>
+
+                {{-- A list, not a table.
+
+                     This panel is 741px wide inside the dashboard grid, and the
+                     table that used to be here needed 1135px. Everything past
+                     the guest name and room number — the stay, the state, and
+                     the reason a row could not be checked in — sat outside the
+                     scrollport, behind an Actions column pinned over the top of
+                     it. The desk could not read the row it was about to act on
+                     without scrolling sideways first.
+
+                     The Needs-attention block directly above has always been a
+                     list and has always fitted, so this is the same shape: one
+                     guest per row, every fact on screen at once, and the button
+                     where the eye already ends up. --}}
+                <ul class="arrival-list divide-y divide-stone-100">
+                    @foreach ($arrivalsDepartures as $item)
+                        @php
+                            $initials = collect(explode(' ', trim($item->guest_name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
+                            $initials = strtoupper($initials ?: 'G');
+
+                            // The row's state in the words someone at the counter
+                            // would use. This used to be two columns — a "Type"
+                            // tag reading Arrival / Departure and beside it the
+                            // raw database word, Paid or Active — describing the
+                            // same row twice, one of them in the accounts'
+                            // vocabulary rather than the desk's.
+                            $state = match (true) {
+                                $item->status === 'paid' => ['Due to arrive', 'color:var(--color-g-700);background:var(--color-g-50);border-color:var(--color-g-200);'],
+                                $item->status === 'active' && $item->due_out => ['Due to check out', 'color:var(--color-au-800);background:var(--color-au-100);border-color:#fedf89;'],
+                                $item->status === 'active' => ['In room', 'color:var(--color-stone-600);background:var(--color-stone-100);border-color:var(--color-stone-200);'],
+                                default => [ucfirst(str_replace('_', ' ', $item->status)), 'color:var(--color-stone-600);background:var(--color-stone-100);border-color:var(--color-stone-200);'],
+                            };
+
+                            // Everything the confirm dialog needs to name what it
+                            // is about to do, carried on the button itself.
+                            $rowData = [
+                                'data-guest'    => $item->guest_name,
+                                'data-room'     => $item->room_numbers_str,
+                                'data-checkin'  => \Carbon\Carbon::parse($item->check_in)->format('M d, Y'),
+                                'data-checkout' => \Carbon\Carbon::parse($item->check_out)->format('M d, Y'),
+                                'data-nights'   => $item->nights,
+                            ];
+                        @endphp
+                        <li class="arrival-row">
+                            <span class="avatar-initials shrink-0">{{ $initials }}</span>
+
+                            <div class="arrival-row-main">
+                                <p class="arrival-row-name">
+                                    <span class="guest-history-link" data-booking-id="{{ $item->id }}" title="{{ $item->guest_name }} — view guest history">{{ $item->guest_name }}</span>
+                                    {{-- The booking number rides with the name.
+                                         On the meta line below it was the fourth
+                                         item and the first to wrap, pushing a
+                                         one-line row to two for the least useful
+                                         thing on it. --}}
+                                    <span class="arrival-row-id tabnum">#{{ $item->id }}</span>
+                                </p>
+                                {{-- Room, stay and length on one line, in that
+                                     order: the room is what the desk says out
+                                     loud, the dates are what the guest checks. --}}
+                                <p class="arrival-row-meta">
+                                    <span class="font-semibold text-stone-600">Room {{ $item->room_numbers_str }}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span class="tabnum">{{ \Carbon\Carbon::parse($item->check_in)->format('M d') }} &rarr; {{ \Carbon\Carbon::parse($item->check_out)->format('M d') }}</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span class="tabnum">{{ $item->nights }} {{ \Illuminate\Support\Str::plural('night', $item->nights) }}</span>
+                                </p>
+                                @if($isToday && $item->status === 'paid' && $item->checkin_block)
+                                    {{-- Why the desk cannot act on this row, said
+                                         next to the row rather than as a toast
+                                         after the button has already been pressed
+                                         in front of a waiting guest. --}}
+                                    <p class="arrival-row-block">
+                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        {{ $item->checkin_block }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            <span class="cell-tag shrink-0" style="{{ $state[1] }}">{{ $state[0] }}</span>
+
+                            <div class="arrival-row-actions">
+                                @if($isToday)
+                                    @if($item->status === 'paid')
+                                        @if($item->checkin_block)
+                                            {{-- No green button that would only
+                                                 refuse. What is offered instead is
+                                                 the way out of the block — and for
+                                                 the case that actually happens, a
+                                                 receipt nobody has approved yet,
+                                                 that is a screen to go to. --}}
+                                            @if($item->checkin_block === 'Payment not verified')
+                                                <a href="{{ route('staff.paymentverification.index') }}" class="btn btn-outline btn-sm cursor-pointer !no-underline shrink-0">Verify payment</a>
+                                            @endif
+                                        @else
+                                            <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkin" data-id="{{ $item->id }}" @foreach($rowData as $k => $v) {{ $k }}="{{ $v }}" @endforeach>Check In</button>
+                                            <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer" data-action="noshow" data-id="{{ $item->id }}" @foreach($rowData as $k => $v) {{ $k }}="{{ $v }}" @endforeach>No Show</button>
+                                        @endif
+                                    @elseif($item->status === 'active')
+                                        @if($item->due_out)
+                                            <button class="password-verify-arrivals btn btn-primary btn-sm cursor-pointer" data-action="checkout" data-id="{{ $item->id }}" @foreach($rowData as $k => $v) {{ $k }}="{{ $v }}" @endforeach>Check Out</button>
+                                        @else
+                                            {{-- Not due out yet. Deliberately the quiet outline
+                                                 button and not the primary one: this is the
+                                                 exception, sitting where the green button all
+                                                 day means "the expected thing". --}}
+                                            <button class="password-verify-arrivals btn btn-outline btn-sm cursor-pointer !text-ember-700 !border-ember-300 hover:!bg-ember-50"
+                                                    data-action="emergency"
+                                                    data-id="{{ $item->id }}"
+                                                    data-room="{{ $item->room_numbers_str }}"
+                                                    data-nights="{{ $item->nights }}"
+                                                    data-guest="{{ $item->guest_name }}"
+                                                    data-checkin="{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}"
+                                                    data-checkout="{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}"
+                                                    title="End this stay before {{ \Carbon\Carbon::parse($item->check_out)->format('M d') }} — emergencies only">
+                                                End stay early
+                                            </button>
+                                        @endif
+                                    @endif
+                                @else
+                                    {{-- Browsing another day. A dash here read as
+                                         "this row has no actions", when the truth
+                                         is the panel only ever acts on today. --}}
+                                    <button wire:click="goToday" class="text-2xs font-semibold text-clsu-700 hover:underline cursor-pointer" title="Check-in and check-out can only be done on the day itself">Go to today</button>
+                                @endif
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
             @endif
         </div>
 
@@ -238,46 +319,91 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    const LABELS = {
-        checkin:  { title: 'Check in this guest?',  confirmButtonText: 'Yes, check in',  icon: 'question' },
-        checkout: { title: 'Check out this guest?', confirmButtonText: 'Yes, check out', icon: 'question' },
-        noshow:   { title: 'Mark as no-show?',      confirmButtonText: 'Yes, no-show',   icon: 'warning'  },
-        emergency:{ title: 'End this stay early?',  confirmButtonText: 'Check out now',  icon: 'warning'  },
-    };
-
     // The guest supplies their own name, so it is escaped before it goes
     // anywhere near innerHTML — same rule the room board follows with .text().
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
 
+    // A row of the little summary every dialog now opens with.
+    const line = (label, value) => !value ? '' :
+        '<div style="display:flex;gap:.75rem;justify-content:space-between;align-items:baseline;padding:.3rem 0">'
+        + '<span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#78716c">' + esc(label) + '</span>'
+        + '<span style="font-size:13px;font-weight:700;color:#1c1917;text-align:right">' + esc(value) + '</span>'
+        + '</div>';
+
+    // Who this is about, and what the desk is committing to.
+    //
+    // Every dialog here used to be one line — "Check in this guest?" — with no
+    // name, no room and no dates on it. Working down a list of similar rows,
+    // the only thing that told you which guest you had clicked was the row you
+    // had already looked away from, and the only way to find out you had picked
+    // the wrong one was the success toast afterwards. The confirm step exists to
+    // be read; it should show the thing being confirmed.
+    const summary = (d) => {
+        const stay = d.checkin && d.checkout ? d.checkin + ' \u2192 ' + d.checkout : '';
+        const nights = d.nights ? d.nights + (Number(d.nights) === 1 ? ' night' : ' nights') : '';
+        return '<div style="text-align:left;border:1px solid #e7e5e4;border-radius:12px;padding:.6rem .9rem;background:#fafaf9;margin:.25rem 0 .9rem">'
+             + line('Room', d.room && d.room !== '\u2014' ? d.room : 'Not assigned')
+             + line('Stay', stay)
+             + line('Nights', nights)
+             + '</div>';
+    };
+
+    const note = (text, tone) => {
+        const c = tone === 'warn'
+            ? { bg: '#fef3f2', bd: '#fecdca', fg: '#912018' }
+            : { bg: '#ecfdf3', bd: '#abefc6', fg: '#085d3a' };
+        return '<p style="margin:0;text-align:left;font-size:12.5px;line-height:1.5;font-weight:600;color:' + c.fg
+             + ';background:' + c.bg + ';border:1px solid ' + c.bd + ';border-radius:10px;padding:.55rem .75rem">' + text + '</p>';
+    };
+
+    // Each action states its own consequence, because each one moves a room.
+    const DIALOG = {
+        checkin: (d) => ({
+            title: 'Check in ' + (d.guest || 'this guest') + '?',
+            confirmButtonText: 'Check in',
+            html: summary(d) + note('The room is marked <b>occupied</b> and the stay starts now.'),
+        }),
+        checkout: (d) => ({
+            title: 'Check out ' + (d.guest || 'this guest') + '?',
+            confirmButtonText: 'Check out',
+            html: summary(d) + note('The stay is closed and the room goes back on the board as <b>available</b>.'),
+        }),
+        noshow: (d) => ({
+            title: 'Mark ' + (d.guest || 'this guest') + ' as a no-show?',
+            icon: 'warning',
+            confirmButtonText: 'Mark no-show',
+            html: summary(d) + note('They were due in today. The booking is closed, the room goes back on sale, and this cannot be undone from here.', 'warn'),
+        }),
+        emergency: (d) => ({
+            title: 'End ' + (d.guest || 'this guest') + '\u2019s stay early?',
+            icon: 'warning',
+            confirmButtonText: 'Check out now',
+            html: summary(d)
+                + note('They are not due out until <b>' + esc(d.checkout || 'later') + '</b>. The room goes back on sale straight away, and <b>no refund is made</b>.', 'warn'),
+            input: 'text',
+            inputLabel: 'Reason for the early check-out',
+            inputPlaceholder: 'e.g. medical emergency',
+            inputAttributes: { maxlength: 255, autocapitalize: 'sentences' },
+            inputValidator: (value) => (value || '').trim() ? undefined : 'Please give a reason.',
+        }),
+    };
+
     const handleClick = (btn) => {
         const bookingId = btn.dataset.id;
         const action = btn.dataset.action;
-        const l = LABELS[action] || { title: 'Confirm this action?', confirmButtonText: 'Confirm', icon: 'question' };
+        const build = DIALOG[action];
 
         // Password re-auth dropped — a plain confirm still guards the state change.
-        const opts = {
-            title: l.title,
-            icon: l.icon,
-            showCancelButton: true,
-            confirmButtonText: l.confirmButtonText,
-        };
+        const opts = build
+            ? build(btn.dataset)
+            : { title: 'Confirm this action?', icon: 'question', confirmButtonText: 'Confirm' };
 
-        // An early check-out is the one action here that undoes something the
-        // guest paid for, so it asks for more than a yes: it names who is being
-        // sent home and when they were actually due out, and it will not go
-        // through without a reason to put in the booking's history.
-        if (action === 'emergency') {
-            opts.html = '<p style="margin:0 0 .35rem"><strong>' + esc(btn.dataset.guest || 'This guest') + '</strong> is not due out until '
-                      + esc(btn.dataset.checkout || 'later') + '.</p>'
-                      + '<p style="margin:0">The room goes back on sale straight away. There is no refund.</p>';
-            opts.input = 'text';
-            opts.inputLabel = 'Reason for the early check-out';
-            opts.inputPlaceholder = 'e.g. medical emergency';
-            opts.inputAttributes = { maxlength: 255, autocapitalize: 'sentences' };
-            opts.inputValidator = (value) => (value || '').trim() ? undefined : 'Please give a reason.';
-        }
+        opts.showCancelButton = true;
+        opts.cancelButtonText = 'Cancel';
+        opts.reverseButtons = true;
+        opts.focusCancel = action === 'noshow' || action === 'emergency';
 
         Swal.fire(opts).then(result => {
             if (result.isConfirmed) {

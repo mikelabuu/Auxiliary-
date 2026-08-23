@@ -298,6 +298,76 @@
     color: var(--color-muted);
 }
 
+/* ── Short viewports ──────────────────────────────────────────────
+   Display scaling is a height problem before it is a width one. A 1366x768
+   laptop reports 614px of viewport at 125% and 512px at 150%, and this
+   sidebar spent a fixed 184px on its head and 192px on its footer regardless.
+   At 512px that left 136px — about two rows — to scroll fourteen nav items
+   through, with the seal and the user card taking three quarters of the rail.
+
+   Neither is worth that much room when room is what is short, so both get
+   compact above the fold: a smaller seal, tighter padding, and a user card
+   that keeps the name and drops the decoration. The nav keeps whatever is
+   left, which is the part somebody is actually trying to use. Nothing is
+   removed outright — this is the same sidebar, just less padded. */
+@media (max-height: 760px) {
+    .sidebar-head {
+        padding: 14px 18px 12px;
+        gap: 7px;
+    }
+
+    .sidebar-seal {
+        width: 44px;
+        height: 44px;
+    }
+
+    .sidebar-brand-title {
+        font-size: 16px;
+    }
+
+    .sidebar-brand-sub {
+        margin-top: 3px;
+    }
+
+    .sidebar-footer {
+        padding: 10px;
+    }
+
+    .sidebar-user-card {
+        padding: 9px 12px;
+    }
+
+    .sidebar-user-name {
+        margin-top: 2px;
+    }
+
+    /* The joining date is the one line here that is never acted on. */
+    .sidebar-user-date {
+        display: none;
+    }
+}
+
+/* Shorter still — a 1366x768 screen at 175%, or a landscape phone. The brand
+   wordmark goes too; the seal alone still identifies the console. */
+@media (max-height: 600px) {
+    .sidebar-head {
+        padding: 10px 18px 10px;
+    }
+
+    .sidebar-seal {
+        width: 34px;
+        height: 34px;
+    }
+
+    .sidebar-brand-sub {
+        display: none;
+    }
+
+    .sidebar-user-role {
+        display: none;
+    }
+}
+
 .sidebar-action-btn {
     display: flex;
     align-items: center;
@@ -544,6 +614,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    /* Never let this group be the thing that overflows. Its contents are the
+       notification bell and the account menu — the two controls a staff member
+       cannot do without, and previously the two that got pushed off the right
+       edge and clipped away by the topbar. min-width:0 lets the flexible child
+       inside (the clock) give up width instead. */
+    min-width: 0;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .topbar-leading {
@@ -591,6 +669,13 @@
     padding: 8px 15px;
     border-radius: var(--radius-sm);
     white-space: nowrap;
+    /* The one thing in the actions group that may give up width, and it
+       truncates rather than wrapping — a two-line date chip would change the
+       topbar's height as the clock ticks past a longer weekday. */
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ── Topbar global search ── */

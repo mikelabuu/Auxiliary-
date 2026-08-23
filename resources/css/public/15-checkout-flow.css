@@ -96,6 +96,412 @@
 
 .alloc-meter-hint b { font-weight: 800; }
 
+/* One-press fix for the mismatch the meter is reporting. Sits under the
+   hint rather than beside it so a long hint never squeezes it. */
+
+/* Party pips — one per guest, filled as each is seated.
+
+   These replace the "Set total to N guests" button that used to sit here. That
+   button existed to reconcile two counts a screen apart, and it reconciled them
+   the wrong way round: with five guests and one double picked, it offered to
+   make the party two. There is one count now, so there is nothing to reconcile
+   and nothing for a button to do — the dots just show how far along the seating
+   is. Same idea as the per-bed pips inside each room, at the scale of the
+   party. Hidden above twelve guests, where a row of dots stops being countable
+   at a glance and the figures beside it carry the meaning alone. */
+
+.alloc-pips {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.alloc-pips[hidden] { display: none; }
+
+.alloc-pip {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 16%, transparent);
+    transition: background-color 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.alloc-pip.is-on {
+    background: var(--color-emerald, #16b364);
+    transform: scale(1.15);
+}
+
+/* The party stepper, sitting above the room styles it fills. */
+/* ── The stay bar ────────────────────────────────────────────────────────
+   Check-in, check-out and guests as three segments of one control.
+
+   They were a two-column date grid, a rule, and then a guest stepper on its
+   own row below it: two blocks that looked like two separate questions, and
+   the stepper — the least-touched control on the page, since most parties are
+   one or two people — was the loudest thing in the card. Every booking site a
+   guest here has already used puts these three on one line as equal segments,
+   with the guest count collapsed to a summary and its stepper behind a
+   popover. This is that shape in this site's own materials.
+
+   Not clipped: the guest popover is absolutely positioned inside the last
+   segment and has to escape the bar. The segments carry their own dividers so
+   no rounding is lost by leaving overflow visible. */
+.stay-bar {
+    display: grid;
+    grid-template-columns: 1fr;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 12%, transparent);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.55);
+    overflow: visible;
+}
+
+@media (min-width: 640px) {
+    .stay-bar { grid-template-columns: repeat(3, 1fr); }
+}
+
+.stay-field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.7rem 0.95rem 0.75rem;
+    min-width: 0;
+    border-top: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
+}
+
+.stay-field:first-child { border-top: 0; }
+
+@media (min-width: 640px) {
+    .stay-field { border-top: 0; border-left: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent); }
+    .stay-field:first-child { border-left: 0; }
+}
+
+/* The label stays visible above the value rather than living in the
+   placeholder, so a filled field still says what it is. */
+.stay-field-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-stone-500, #6b7280);
+}
+
+.stay-field-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.stay-field-icon {
+    font-size: 15px;
+    color: var(--color-palay-800, #93370d);
+    flex-shrink: 0;
+}
+
+.stay-field-input,
+.stay-field-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: none;
+    padding: 0;
+    outline: none;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-ink, #12211c);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stay-field-input::placeholder {
+    font-weight: 600;
+    color: var(--color-stone-400, #9ca3af);
+}
+
+.stay-field-caret {
+    font-size: 12px;
+    color: var(--color-stone-500, #6b7280);
+    flex-shrink: 0;
+    transition: transform 200ms ease;
+}
+
+.stay-field-caret.is-open { transform: rotate(180deg); }
+
+/* Keyboard focus has to be visible on a field with no border of its own. */
+.stay-field:focus-within {
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--color-gold, #d9b45b) 55%, transparent);
+}
+
+/* ── Guest popover ── */
+.guest-pop {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    width: min(17rem, calc(100vw - 2.5rem));
+    padding: 0.9rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 12%, transparent);
+    background: var(--color-cream-warm, #fdfbf7);
+    box-shadow: 0 24px 60px -20px rgba(6, 40, 30, 0.35), 0 8px 24px -12px rgba(6, 40, 30, 0.2);
+}
+
+@media (min-width: 640px) {
+    .guest-pop { left: 0; right: auto; }
+}
+
+/* On a phone the bar is stacked and the guests row is its last one, which puts
+   a floating panel straight underneath the sticky total bar. It expands the
+   row instead — the page scrolls, nothing is covered, and there is no
+   positioning to get wrong. */
+@media (max-width: 639px) {
+    .guest-pop {
+        position: static;
+        width: 100%;
+        margin-top: 0.6rem;
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.55);
+    }
+}
+
+.guest-pop-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.guest-pop-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-stone-500, #6b7280);
+}
+
+.guest-pop-done {
+    display: block;
+    width: 100%;
+    margin-top: 0.7rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    background: var(--color-emerald-deep, #0b3d2c);
+    color: var(--color-cream, #f7f3ea);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 180ms ease;
+}
+
+.guest-pop-done:hover { background: var(--color-emerald, #16b364); }
+
+@media (prefers-reduced-motion: reduce) {
+    .stay-field-caret { transition: none; }
+}
+
+/* ── Counted fields (guests per room, seniors, booking total) ── */
+
+/* Each of these is a number with a ceiling — a room's beds, the guests in
+   that room, the 40 a booking may hold. The ceilings were real (the ±
+   buttons clamped to them, the server rejected past them) and invisible:
+   the guest met one by pressing a button that did nothing. The three parts
+   below make a limit something you can read before you reach it — the
+   "2 / 3" readout, a pip per bed, and a line saying what to do next. */
+
+.count-field-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+}
+
+.count-field-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-stone-500, #6b7280);
+}
+
+/* Label plus its "filled for you" tag, kept together on the left so the
+   readout stays pinned to the right edge of the head. */
+.count-field-labelwrap {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+/* Says the number below was worked out, not asked for. booking.js hides it the
+   moment the guest edits the field by hand, because from then on it is theirs
+   and the tag would be a lie. */
+.count-auto-tag {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    color: var(--color-emerald-deep, #0b3d2c);
+    background: color-mix(in oklch, var(--color-emerald, #16b364) 12%, transparent);
+}
+
+.count-auto-tag[hidden] { display: none; }
+
+.count-readout {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    color: var(--color-stone-500, #6b7280);
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 6%, transparent);
+    transition: color 200ms ease, background-color 200ms ease;
+}
+
+/* Room and total both counted and both under their limit. */
+.count-readout[data-state='ok'] {
+    color: var(--color-emerald-deep, #0b3d2c);
+    background: color-mix(in oklch, var(--color-emerald, #16b364) 12%, transparent);
+}
+
+/* At the ceiling. Not an error — a room booked to capacity is the normal
+   end of this task — so it reads as "done", not as "wrong". */
+.count-readout[data-state='full'] {
+    color: var(--color-palay-800, #93370d);
+    background: color-mix(in oklch, var(--color-gold, #d9b45b) 22%, transparent);
+}
+
+/* Past it. Only reachable by typing into the field; the ± buttons stop. */
+.count-readout[data-state='over'] {
+    color: var(--color-ember-700, #b91c1c);
+    background: color-mix(in oklch, var(--color-ember-600, #dc2626) 12%, transparent);
+}
+
+/* One pip per bed, filled as the room fills — the capacity as a shape
+   rather than a fraction, which is faster to read than either number. */
+
+.count-pips {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.cap-pip {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 16%, transparent);
+    transition: background-color 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cap-pip.is-filled {
+    background: var(--color-emerald, #16b364);
+    transform: scale(1.15);
+}
+
+.count-note {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-stone-500, #6b7280);
+}
+
+.count-note[data-state='ok'] { color: var(--color-emerald-deep, #0b3d2c); font-weight: 600; }
+.count-note[data-state='warn'] { color: var(--color-palay-800, #93370d); font-weight: 600; }
+.count-note[data-state='over'] { color: var(--color-ember-700, #b91c1c); font-weight: 600; }
+
+/* A spent ± button. Unlayered, so it beats the Tailwind hover: utilities on
+   the same element — a disabled control that still lights up on hover is
+   worse than one with no state at all. */
+
+.btn-step:disabled,
+.btn-step:disabled:hover {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: color-mix(in oklch, #fff 60%, transparent);
+    border-color: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 15%, transparent);
+    color: var(--color-stone-600, #4a5b50);
+    transform: none;
+}
+
+/* ── Room cards, answered against the party ──────────────────── */
+
+/* The card already carries "sleeps 3", which is a fact about the room. This
+   line is the answer to the question the guest is actually holding — does
+   this style take the people I still have to seat — so it is the one that
+   gets the colour. */
+
+.type-card-fit {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--color-stone-500, #6b7280);
+}
+
+/* Nothing to say (everyone is seated already) — take up no room saying it. */
+.type-card-fit:empty { display: none; }
+
+/* Takes the whole party. The card that ends the task in one press. */
+.type-card-fit[data-state='all'] { color: var(--color-emerald, #16b364); }
+
+/* Gets part of the way. Not a warning: two of these is a normal booking. */
+.type-card-fit[data-state='part'] { color: var(--color-palay-800, #93370d); }
+
+/* Opt-in narrowing of the grid. Unlayered `display`, so `.hidden` — a
+   Tailwind utility, and layered — cannot switch it off on its own; the
+   pairing below is what actually hides it. Same trap as .icon-solid in
+   app.css, and the reason that one lives inside @layer base. */
+
+.fit-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.625rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 12%, transparent);
+    background: color-mix(in oklch, #fff 55%, transparent);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--color-stone-600, #4a5b50);
+    cursor: pointer;
+    user-select: none;
+}
+
+.fit-filter.hidden { display: none; }
+
+.fit-filter:hover { border-color: color-mix(in oklch, var(--color-gold, #d9b45b) 55%, transparent); }
+
+.fit-filter-box {
+    width: 0.875rem;
+    height: 0.875rem;
+    accent-color: var(--color-emerald-deep, #0b3d2c);
+    cursor: pointer;
+}
+
 /* ── Date presets ────────────────────────────────────────────── */
 
 .date-presets {
@@ -161,6 +567,28 @@
 
 /* The glyph is a Font Awesome <i> since the icon-set migration; booking.js
    re-renders this line and emits the same markup. */
+/* It is a jump-link when there is somewhere to jump to. The line already
+   names a step; without this the guest is told where to go and left to
+   scroll past the whole details form to get there. */
+.blocker-line[data-target] {
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.blocker-line[data-target]:hover {
+    background: color-mix(in oklch, var(--color-gold, #d9b45b) 22%, transparent);
+    border-color: color-mix(in oklch, var(--color-gold, #d9b45b) 55%, transparent);
+}
+
+.blocker-line[data-target]:focus-visible {
+    outline: 2px solid var(--color-gold, #d9b45b);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .blocker-line[data-target] { transition: none; }
+}
+
 .blocker-line > i {
     font-size: 15px;
     flex-shrink: 0;
@@ -208,7 +636,338 @@ input.field-invalid {
 @media (prefers-reduced-motion: reduce) {
     .alloc-meter,
     .alloc-meter-fill,
+    .count-readout,
+    .count-note,
+    .cap-pip,
     .date-preset { transition-duration: 1ms; }
+    .cap-pip.is-filled { transform: none; }
     .date-preset:hover { transform: none; }
     .block-invalid { animation: none; }
+}
+
+
+/* ── The room picker ──────────────────────────────────────────────
+   One list for the whole booking. It replaces a seven-card grid that used to
+   be repeated inside every room block — three rooms meant 21 cards and 5.2
+   screens of scrolling, with the guest packing the party by hand in between.
+   A row per style with a quantity against it is how the choice is actually
+   made: "two Doubles and a Triple". */
+
+.room-picker-label,
+.room-suggestion-label {
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-stone-500, #6b7280);
+    margin-bottom: 0.625rem;
+}
+
+/* Four to a row, not seven stacked.
+
+   As a list this ran to about 660px — most of a screen of scrolling to
+   compare four numbers that would sit side by side. auto-fill does the
+   responsive work: four across the checkout column, two on a phone, seven in
+   one row if the summary sidebar is not beside it. */
+.room-picker-list {
+    /* Queried on the list's own width, not the viewport's: this column is
+       narrower than the page whenever the summary sidebar sits beside it. */
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.room-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
+    background: color-mix(in oklch, #fff 60%, transparent);
+    transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
+}
+
+.room-card:hover {
+    border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 55%, transparent);
+    background: #fff;
+}
+
+/* A room the guest has taken reads as taken, without a badge saying so. */
+.room-card.is-chosen {
+    border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 70%, transparent);
+    background: color-mix(in oklch, var(--color-gold, #c8a34a) 8%, #fff);
+    box-shadow: 0 10px 26px -22px rgba(6, 40, 30, 0.5);
+}
+
+/* Two ways a card can be out of play, and they are not the same thing: sold
+   out is about the property, too-small is about this party. Both recede, and
+   both keep their reason legible — a greyed card with no explanation is what
+   sends a guest back up the page to work out why. */
+.room-card.is-sold-out,
+.room-card.is-too-small {
+    opacity: 0.5;
+}
+
+.room-card.is-sold-out:hover,
+.room-card.is-too-small:hover,
+.room-card.is-full:hover {
+    border-color: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
+    background: color-mix(in oklch, #fff 60%, transparent);
+}
+
+/* Everyone already has a bed. Not an error, so it only quiets down. */
+.room-card.is-full:not(.is-chosen) { opacity: 0.68; }
+
+.room-card-media {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 8%, transparent);
+}
+
+.room-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.6rem 0.7rem 0.4rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.room-card-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-ink, #1c1917);
+}
+
+/* Capacity and rate share a line: the two numbers a guest compares across
+   cards, kept on the same baseline so the eye can run along the row. */
+.room-card-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.room-cap-pill {
+    flex: 0 0 auto;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-stone-600, #4b5563);
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 7%, transparent);
+}
+
+.room-card-price {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-palay-800, #714a11);
+    white-space: nowrap;
+}
+
+.room-card-per {
+    font-weight: 600;
+    color: var(--color-stone-500, #6b7280);
+}
+
+/* What this room does about THIS party. The pill above is the room; this is
+   the answer to the question the guest is actually asking. */
+.room-card-fit:not(:empty) {
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-stone-500, #6b7280);
+}
+
+.room-card-fit[data-state='ok'] { color: var(--color-emerald-deep, #0b3d2c); }
+.room-card-fit[data-state='part'] { color: var(--color-palay-800, #714a11); }
+.room-card-fit[data-state='no'] { color: var(--color-ember-700, #b91c1c); }
+
+.room-card-note:not(:empty) {
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1.35;
+    text-transform: uppercase;
+    color: var(--color-palay-800, #714a11);
+}
+
+/* Two to a row on a phone, where the same card at desktop proportions ran the
+   list to 1030px — longer than the stacked list it replaced. The photo keeps
+   its place because it is half the reason to look at a room at all; it just
+   stops being the tallest thing on the card. */
+@container (max-width: 380px) {
+    .room-card-media { aspect-ratio: 16 / 9; }
+
+    .room-card-body {
+        gap: 0.1rem;
+        padding: 0.45rem 0.5rem 0.25rem;
+    }
+
+    .room-card-title { font-size: 0.75rem; }
+    .room-card-price { font-size: 0.6875rem; }
+    .room-card-qty { padding: 0 0.5rem 0.45rem; }
+
+    .room-card-qty .room-qty-btn { width: 1.75rem; height: 1.75rem; }
+}
+
+/* ── Splitting the party across smaller rooms ── */
+.room-split {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.875rem;
+    border: 1px dashed color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 18%, transparent);
+    background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 3%, transparent);
+}
+
+.room-split[hidden] { display: none; }
+
+.room-split-text {
+    flex: 1 1 12rem;
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--color-stone-600, #4b5563);
+}
+
+.room-split-btn {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 25%, transparent);
+    background: #fff;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    color: var(--color-emerald-deep, #0b3d2c);
+    cursor: pointer;
+    transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.room-split-btn:hover {
+    background: color-mix(in oklch, var(--color-gold, #c8a34a) 12%, #fff);
+    border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 60%, transparent);
+}
+
+.room-split-btn[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .room-card,
+    .room-split-btn { transition: none; }
+}
+
+.room-card-qty {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.7rem 0.6rem;
+}
+
+.room-qty {
+    min-width: 1.5rem;
+    text-align: center;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: var(--color-ink, #1c1917);
+}
+
+.room-qty-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.625rem;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 15%, transparent);
+    background: color-mix(in oklch, #fff 60%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-stone-600, #57534e);
+    cursor: pointer;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.room-qty-btn:hover:not(:disabled) {
+    background: #fff;
+    border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 55%, transparent);
+    color: var(--color-emerald-deep, #0b3d2c);
+}
+
+.room-qty-btn:active:not(:disabled) { transform: scale(0.94); }
+
+.room-qty-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ── The suggestion ───────────────────────────────────────────────
+   The form knows the rates, the bed counts and what is free, so it can solve
+   the packing the guest was being asked to solve. Stated once, taken in one
+   press, and gone as soon as it has nothing left to offer. */
+
+.room-suggestion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.875rem 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in oklch, var(--color-gold, #c8a34a) 45%, transparent);
+    background: linear-gradient(180deg,
+        color-mix(in oklch, var(--color-gold, #c8a34a) 12%, #fff) 0%,
+        color-mix(in oklch, var(--color-gold, #c8a34a) 6%, #fff) 100%);
+}
+
+.room-suggestion[hidden] { display: none; }
+
+.room-suggestion-body {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.room-suggestion-text {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink, #1c1917);
+    line-height: 1.4;
+}
+
+.room-suggestion-btn {
+    flex: 0 0 auto;
+    padding: 0.5rem 1.125rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: var(--color-emerald-deep, #0b3d2c);
+    color: var(--color-cream, #fdfaf3);
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.room-suggestion-btn:hover { background: var(--color-emerald, #16b364); }
+.room-suggestion-btn:active { transform: scale(0.97); }
+
+/* The block header now names the room it holds rather than repeating the
+   step title on every one. */
+.block-room-rate:not(:empty)::before {
+    content: '·';
+    margin: 0 0.375rem;
+    color: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 30%, transparent);
 }

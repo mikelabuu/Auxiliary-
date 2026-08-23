@@ -14,6 +14,7 @@ use App\Events\RoomStatusChanged;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Support\Realtime;
+use App\Support\RefCode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -186,12 +187,22 @@ class BookingsTable extends Component
         $query = Booking::where('status', '!=', 'completed');
 
         if (!empty($this->search)) {
-            $query->where(function ($q) {
+            // The toolbar offers "ref", and the ref this table prints is
+            // BK-0004 — which matched nothing, because only the bare id was
+            // ever compared. Added as an extra clause rather than a
+            // replacement so plain digits keep behaving as they always have.
+            $refId = RefCode::toId($this->search);
+
+            $query->where(function ($q) use ($refId) {
                 $q->where('guest_name', 'like', "%{$this->search}%")
                     ->orWhere('id', $this->search)
                     ->orWhereHas('reservations', function ($qr) {
                         $qr->where('room_number', 'like', "%{$this->search}%");
                     });
+
+                if ($refId !== null) {
+                    $q->orWhere('id', $refId);
+                }
             });
         }
 

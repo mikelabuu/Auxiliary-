@@ -2,15 +2,24 @@
      public/booking/checkout.blade.php (the card supplies the header).
 
      `$prefill` comes from BookingController::checkoutPrefill(): the phone off
-     the account, the name off this guest's last booking (the only place a
-     name is ever stored). old() still wins, so a rejected submission shows
-     what the guest typed rather than reverting under them. --}}
-@php($prefill = $prefill ?? [])
+     the account, the name off the last booking or — for a first-timer who has
+     none — off the name they gave at signup, and the address off the codes
+     the last booking saved back to the account. old() still wins, so a
+     rejected submission shows what the guest typed rather than reverting
+     under them. --}}
+@php
+    $prefill = $prefill ?? [];
 
-@if (array_filter($prefill ?? []))
+    // Only the flat fields decide whether the banner is worth showing.
+    // `address` is a nested array that is present either way, so counting it
+    // would put the banner on every checkout including a first-timer's.
+    $prefilled = array_filter(\Illuminate\Support\Arr::except($prefill, ['address']));
+@endphp
+
+@if ($prefilled)
     <p class="mb-4 flex items-start gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-3.5 py-2.5 text-[11px] font-semibold text-palay-800">
         <x-booking.ui.icon-solid name="wand-magic-sparkles" class="mt-px text-[13px]" />
-        <span>We filled these in from your last stay. Change anything that's out of date.</span>
+        <span>We filled these in from your account. Change anything that's out of date.</span>
     </p>
 @endif
 
@@ -143,28 +152,17 @@
         <h4 class="text-sm font-bold text-ink tracking-tight">Home Address</h4>
     </div>
     <div class="night-fields">
-        <x-address-selector theme="tailwind" />
+        <x-address-selector theme="tailwind" :saved="$prefill['address'] ?? []" />
     </div>
 </div>
 
-{{-- The old "Max Seniors / PWD · verification limit" readout lived here. It
-     restated the guest count back at the guest and explained nothing, so it
-     was removed. Seniors are still capped per room by the room's capacity and
-     by the guests assigned to it — enforced in booking.js and again in
-     BookingController::store(), which is where a cap belongs. --}}
-<div class="pt-5 mt-5 border-t border-emerald-deep/10">
-    <label class="block text-xs font-bold text-stone-500 tracking-wider uppercase mb-1.5" for="expected_guests">Total Number of Guests</label>
-    <div class="stepper flex items-center gap-2 max-w-xs">
-        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests">
-            <x-booking.ui.icon-solid name="minus" class="text-[18px]" />
-        </button>
-        <input type="number" id="expected_guests" name="expected_guests" value="{{ old('expected_guests', 1) }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm text-center focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" max="40" required>
-        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests">
-            <x-booking.ui.icon-solid name="plus" class="text-[18px]" />
-        </button>
-    </div>
-    <p class="text-[11px] font-medium text-stone-500 mt-1.5">Assign every guest to a room below. The totals have to match.</p>
-</div>
+{{-- The party size used to sit here, two cards above the rooms it fills.
+     That split was the whole problem: step 3 had no way to talk about the
+     number except by telling the guest to scroll back up and edit it — and
+     the two counts then had to be reconciled by hand, with a meter, a fix
+     button and five separate messages saying the same thing. It now lives at
+     the top of step 3, directly above the room picker, where the number and
+     what it does to the rooms are one glance apart. --}}
 
 {{-- Two things the front desk had no way of knowing until the guest walked in.
      Both optional on purpose: a forced guess about arrival time is worse than

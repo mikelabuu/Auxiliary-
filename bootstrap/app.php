@@ -45,6 +45,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // report download or an availability endpoint as on a rendered page.
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
+        // Guest-side suspension, enforced on every request rather than only at
+        // login. `staff.active` already did this for the staff guard by being
+        // named on each staff route group; the `web` guard had no equivalent,
+        // so a suspended guest kept the session they were already holding.
+        // Group-wide rather than route-by-route: the point is that there is no
+        // page a suspended account can still reach, and an allowlist of routes
+        // is one forgotten entry away from not being that.
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureUserNotSuspended::class,
+        ]);
+
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'staff.role' => \App\Http\Middleware\StaffRoleMiddleware::class,

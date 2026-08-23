@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Livewire\Concerns\WithSorting;
 use App\Models\Payment;
+use App\Support\RefCode;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,7 +74,15 @@ class PaymentLogs extends Component
         $query = Payment::query()->with('booking:id,guest_name');
 
         if ($this->search) {
-            $query->where(function($q) {
+            // This ledger prints PMT-0012 in its own reference column and the
+            // booking beside it as BK-0004; neither found anything against the
+            // raw id columns. One resolved number, tried against both, because
+            // RefCode deliberately does not insist the prefix be the right one
+            // — a staff member retyping a code off a screen gets the digits
+            // right more reliably than the letters.
+            $refId = RefCode::toId($this->search);
+
+            $query->where(function($q) use ($refId) {
                 $q->where('id', 'like', "%{$this->search}%")
                   ->orWhere('booking_id', 'like', "%{$this->search}%")
                   ->orWhere('reference_no', 'like', "%{$this->search}%")
@@ -81,6 +90,11 @@ class PaymentLogs extends Component
                   ->orWhereHas('booking', function ($b) {
                       $b->where('guest_name', 'like', "%{$this->search}%");
                   });
+
+                if ($refId !== null) {
+                    $q->orWhere('id', $refId)
+                      ->orWhere('booking_id', $refId);
+                }
             });
         }
 

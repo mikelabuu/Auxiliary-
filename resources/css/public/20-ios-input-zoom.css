@@ -38,6 +38,7 @@
        makes them look inflated against their labels. Trimming the vertical
        padding keeps the original control height while the text inside grows. */
     .flatpickr-date,
+    .stay-field-input,
     input[type='text'],
     input[type='email'],
     input[type='tel'],

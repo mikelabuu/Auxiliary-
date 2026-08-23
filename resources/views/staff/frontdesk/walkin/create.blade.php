@@ -15,7 +15,7 @@
     :action="route('frontdesk.walkin.store')"
     :available-url="route('frontdesk.available')"
     empty-board-message="No rooms found. Ask an admin to add rooms first."
-    sticky-top="lg:top-6" />
+    sticky-offset="1.5rem" />
 @endsection
 
 @push('styles')

@@ -383,8 +383,16 @@ body.theme-night #navWrap.is-static .fh-hdr-ghost {
         transform 0.45s var(--fh-ease);
 }
 
-#navWrap.is-condensed .fh-brand-tag,
-#navWrap.is-static .fh-brand-tag {
+/* Only the condensed pill drops the tagline. `is-static` used to be listed
+   here too, which quietly cost every light page its CLSU line: checkout, the
+   booking summary, reschedule and the account pages all start static and — see
+   `condenses` in layouts/public/base — never condense, so the fade had nothing
+   to fade back from. The line sat in the layout reserving 198x14px at opacity
+   0, invisible at every width including desktop. The rule below it, which
+   recolours the tagline in ink for a light header, is the tell: it was written
+   for a state that could never show it. Phones still drop the line outright in
+   the max-width:640px block, where it genuinely does not fit. */
+#navWrap.is-condensed .fh-brand-tag {
     opacity: 0;
     transform: translateY(-4px);
 }

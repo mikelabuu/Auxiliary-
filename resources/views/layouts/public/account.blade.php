@@ -34,7 +34,13 @@
         </aside>
 
         <!-- Main Account Content Panel -->
-        <main class="flex-grow w-full bg-white rounded-3xl border border-stone-200/70 p-6 sm:p-8 shadow-[0_10px_30px_-18px_rgba(17,78,40,0.14)]">
+        {{-- min-w-0 is what lets this column actually shrink. A flex item defaults
+         to min-width:auto, so `main` could never go narrower than its widest
+         child's min-content width — the filter row below — and the shell burst
+         its container by 43px between 1024 and 1280. That band is exactly where
+         a 1366px laptop lands at 125% display scaling, so it was the common
+         case rather than an edge one. --}}
+    <main class="min-w-0 flex-grow w-full bg-white rounded-3xl border border-stone-200/70 p-6 sm:p-8 shadow-[0_10px_30px_-18px_rgba(17,78,40,0.14)]">
             @if(session('status'))
                 <div class="mb-6"><x-booking.ui.alert type="success">{{ session('status') }}</x-booking.ui.alert></div>
             @endif

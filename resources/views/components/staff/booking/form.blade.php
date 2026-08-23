@@ -2,7 +2,9 @@
     'action',
     'availableUrl',
     'emptyBoardMessage' => 'No rooms found.',
-    'stickyTop' => 'lg:top-24',
+    // Passed straight to the summary panel; see its props for why it is a
+    // length rather than a utility class.
+    'stickyOffset' => '6rem',
 ])
 
 {{--
@@ -165,7 +167,7 @@
     </div>
 
     {{-- ══════════ Right column — live booking summary ══════════ --}}
-    <x-staff.booking.summary-panel :sticky-top="$stickyTop" />
+    <x-staff.booking.summary-panel :sticky-offset="$stickyOffset" />
 </form>
 
 <x-staff.booking.assignment-template />

@@ -7,8 +7,13 @@
 
     {{-- Search + Filters Form Card --}}
     <form method="GET" action="{{ route('settings.transactions') }}" class="bg-stone-50/60 border border-stone-200/70 p-5 rounded-2xl mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-            <div class="lg:col-span-2">
+        {{-- Five across only from xl. At lg the content column is ~627px wide, so
+             five tracks are ~119px each — and the last one holds a select *and*
+             a button, which needs about 200px. It overflowed the page by 96px
+             and pushed Apply off the right edge. Two columns from sm through lg
+             gives every control room. --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+            <div class="xl:col-span-2">
                 <label class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Search</label>
                 <input type="text" name="search" placeholder="Search by ID, booking, reference, gateway..." value="{{ request('search') }}"
                        class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
@@ -32,8 +37,11 @@
                 </select>
             </div>
 
-            <div class="flex gap-2">
-                <select name="sort_dir" class="flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
+            {{-- Wraps rather than overflowing, and the select is allowed to
+                 shrink: flex-grow alone still floors an item at its content
+                 width, which is what pushed the buttons out of the row. --}}
+            <div class="flex flex-wrap gap-2">
+                <select name="sort_dir" class="min-w-0 flex-grow px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
                     <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>Descending</option>
                     <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>Ascending</option>
                 </select>

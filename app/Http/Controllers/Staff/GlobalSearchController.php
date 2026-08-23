@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Support\RefCode;
 use Illuminate\Http\Request;
 
 class GlobalSearchController extends Controller
@@ -24,11 +25,17 @@ class GlobalSearchController extends Controller
 
         $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
 
+        // ctype_digit() alone meant the one identifier the console actually
+        // shows staff — BK-0004, sitting in the reference column of every
+        // bookings table — was the one thing this box could not find. RefCode
+        // reads that spelling, and "#4" and "0004" with it.
+        $refId = RefCode::toId($q);
+
         $bookings = Booking::query()
-            ->where(function ($w) use ($q, $like) {
+            ->where(function ($w) use ($refId, $like) {
                 $w->where('guest_name', 'like', $like);
-                if (ctype_digit($q)) {
-                    $w->orWhere('id', (int) $q);
+                if ($refId !== null) {
+                    $w->orWhere('id', $refId);
                 }
             })
             ->latest()

@@ -120,6 +120,46 @@ class ArrivalsDepartures extends Component
             ->startOfDay()
             ->lte($asOf);
     }
+
+    /**
+     * Why this booking cannot be checked in — or null when it can.
+     *
+     * The same rules confirmCheckIn() enforces, said in the desk's own words.
+     * They used to live only inside the handler, so the panel showed a green
+     * Check In button on a booking whose payment had not been verified yet and
+     * answered the press with "Booking not eligible for check-in." That is
+     * true, and it tells the person at the counter — with a guest standing in
+     * front of them — nothing about what to do next. One method now decides
+     * both what the row offers and what the handler refuses, so the button on
+     * screen and the rule behind it cannot drift apart.
+     */
+    protected function checkInBlocker(Booking $booking): ?string
+    {
+        if ($booking->status === 'active') {
+            return 'Already checked in';
+        }
+
+        if ($booking->status !== 'paid') {
+            return match ($booking->status) {
+                'pending', 'pending_payment' => 'Payment not settled',
+                'cancelled' => 'Booking cancelled',
+                'no_show'   => 'Marked no-show',
+                'completed' => 'Stay already closed',
+                'expired'   => 'Booking expired',
+                default     => 'Not ready for check-in',
+            };
+        }
+
+        if (($booking->payments->status ?? null) !== 'success') {
+            return 'Payment not verified';
+        }
+
+        if (! Carbon::parse($booking->check_in)->timezone(config('hostel.timezone'))->isToday()) {
+            return 'Arrives ' . Carbon::parse($booking->check_in)->format('M d');
+        }
+
+        return null;
+    }
     public function render()
     {
         $today = $this->date;
@@ -130,8 +170,10 @@ class ArrivalsDepartures extends Component
         $actualToday = Carbon::today(config('hostel.timezone'))->toDateString();
         $isToday = $this->date === $actualToday;
 
-        // get arrivals & departures
-        $bookings = Booking::with('reservations')
+        // get arrivals & departures. `payments` is eager-loaded because
+        // checkInBlocker() reads it for every arrival row; without it the panel
+        // fires one extra query per guest on screen.
+        $bookings = Booking::with(['reservations', 'payments'])
             ->where(function ($q) use ($today) {
                 $q->where(function ($q2) use ($today) {
                     $q2->whereDate('check_in', $today)
@@ -180,6 +222,9 @@ class ArrivalsDepartures extends Component
                 // is an ordinary check-out, anything still ahead of its date is
                 // the emergency one.
                 'due_out' => $this->isDueOut($b, $actualToday),
+                // Null when the desk may check this guest in. Anything else is
+                // the sentence the row shows instead of the button.
+                'checkin_block' => $this->checkInBlocker($b),
                 'detail_url' => route('staff.bookings.index'),
             ];
         });
@@ -327,13 +372,10 @@ class ArrivalsDepartures extends Component
             return;
         }
 
-        // Eligibility checks
-        $checkInToday = Carbon::parse($booking->check_in)->timezone(config('hostel.timezone'))->isToday();
-        $paymentExists = $booking->payments !== null;
-        $paymentStatus = $booking->payments->status ?? null;
-
-        if ($booking->status !== 'paid' || !$checkInToday || !$paymentExists || $paymentStatus !== 'success') {
-            $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-in.');
+        // Eligibility. The reason is the message: a refusal the desk cannot act
+        // on is the same as no answer at all.
+        if ($blocker = $this->checkInBlocker($booking)) {
+            $this->dispatch('toast', type: 'error', message: "Can't check in {$booking->guest_name} — " . lcfirst($blocker) . '.');
             return;
         }
 
@@ -364,7 +406,14 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} checked in by {$staff->name}"
         );
 
-        $this->dispatch('toast', type: 'success', message: 'Check-in successful!');
+        $roomList = $booking->reservations->pluck('room_number')->unique()->implode(', ');
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: $roomList
+                ? "{$booking->guest_name} checked in — room {$roomList} is now occupied."
+                : "{$booking->guest_name} checked in."
+        );
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
@@ -414,7 +463,14 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} checked out by {$staff->name}"
         );
 
-        $this->dispatch('toast', type: 'success', message: 'Check-out successful!');
+        $roomList = $booking->reservations->pluck('room_number')->unique()->implode(', ');
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: $roomList
+                ? "{$booking->guest_name} checked out — room {$roomList} is free."
+                : "{$booking->guest_name} checked out."
+        );
         $this->dispatch('refreshActiveBookings')->to(\App\Livewire\ActiveBookings::class);
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
@@ -531,8 +587,19 @@ class ArrivalsDepartures extends Component
         $paymentExists = $booking->payments !== null;
         $paymentStatus = $booking->payments->status ?? null;
 
-        if ($booking->status !== 'paid' || $checkInInFuture || !$paymentExists || $paymentStatus !== 'success') {
-            $this->dispatch('toast', type: 'error', message: 'Booking not eligible for No Show.');
+        if ($booking->status === 'active') {
+            $this->dispatch('toast', type: 'error', message: 'This guest has already checked in.');
+            return;
+        }
+
+        if ($booking->status !== 'paid' || !$paymentExists || $paymentStatus !== 'success') {
+            $this->dispatch('toast', type: 'error', message: 'Only a paid, verified booking can be marked a no-show.');
+            return;
+        }
+
+        if ($checkInInFuture) {
+            $arrival = Carbon::parse($booking->check_in)->format('M d');
+            $this->dispatch('toast', type: 'error', message: "Not due until {$arrival} — a guest cannot miss an arrival that has not happened yet.");
             return;
         }
 
@@ -567,7 +634,11 @@ class ArrivalsDepartures extends Component
             "Booking #{$booking->id} marked as no-show by {$staff->name}"
         );
 
-        $this->dispatch('toast', type: 'success', message: 'No Show successful!');
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: "{$booking->guest_name} marked as a no-show — the room is back on the board."
+        );
         $this->dispatch('refreshBookingsTable')->to(\App\Livewire\BookingsTable::class);
         Realtime::emit(new RoomStatusChanged());
         Realtime::emit(new BookingChanged());

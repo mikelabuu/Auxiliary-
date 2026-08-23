@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Support\RefCode;
 use App\Models\Booking;
 use App\Models\Payment;
 use Carbon\Carbon;
@@ -31,10 +32,19 @@ class UserRecordsController extends Controller
 
         $users = User::query()
             ->when($search, function($q) use ($search) {
-                $q->where(function($q) use ($search) {
+                // GS-0004 is what the booking detail modal calls a guest, so
+                // it is what gets pasted in here — and it matched none of the
+                // three text columns below.
+                $refId = RefCode::toId($search);
+
+                $q->where(function($q) use ($search, $refId) {
                     $q->where('username', 'like', "%$search%")
                       ->orWhere('email', 'like', "%$search%")
                       ->orWhere('phone', 'like', "%$search%");
+
+                    if ($refId !== null) {
+                        $q->orWhere('id', $refId);
+                    }
                 });
             })
             ->when($status === 'active', fn($q) => $q->where('is_suspended', false))

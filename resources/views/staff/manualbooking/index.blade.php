@@ -50,7 +50,7 @@
         :action="route('staff.manualbooking.store')"
         :available-url="route('staff.manualbooking.available')"
         empty-board-message="No rooms found. Add rooms in Room Management first."
-        sticky-top="lg:top-24" />
+        sticky-offset="6rem" />
 </div>
 @endsection
 

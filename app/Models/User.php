@@ -26,6 +26,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'phone',
+        // Reused as the checkout prefill, so a returning guest is not made to
+        // rebuild the same four-level address chain on every booking.
+        'region_code',
+        'province_code',
+        'city_code',
+        'barangay_code',
         'last_login_at',
         'is_suspended',
         'last_cancelled_at',
@@ -50,6 +56,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        // MySQL hands tinyint(1) back as an int, so `$user->is_suspended` was
+        // 0/1 rather than false/true. Truthy checks were fine; anything that
+        // compared strictly, or serialised it to JSON for the console, was not.
+        'is_suspended' => 'boolean',
     ];
     
     public function bookings()

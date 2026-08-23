@@ -1,4 +1,9 @@
-@props(['theme' => 'tailwind'])
+@props([
+    'theme' => 'tailwind',
+    // The guest's saved address as "CODE|NAME" values, keyed
+    // region/province/city/barangay. Beaten by old() — see below.
+    'saved' => [],
+])
 
 @php
     // Ids are namespaced per instance so a page may mount this twice without
@@ -20,11 +25,17 @@
 
     // Carried across a validation redirect. The chain rebuilds itself from
     // these on init, so a failed submit does not wipe the address.
+    //
+    // old() beats the saved address, and note it wins even when it is blank:
+    // an NCR guest who has no province posts province_code="", and falling
+    // back to the saved value there would re-select a province they had just
+    // cleared. `$saved` is only the starting point for a form nobody has
+    // submitted yet.
     $initial = [
-        'region'   => old('region_code', ''),
-        'province' => old('province_code', ''),
-        'city'     => old('city_code', ''),
-        'barangay' => old('barangay_code', ''),
+        'region'   => old('region_code', $saved['region'] ?? ''),
+        'province' => old('province_code', $saved['province'] ?? ''),
+        'city'     => old('city_code', $saved['city'] ?? ''),
+        'barangay' => old('barangay_code', $saved['barangay'] ?? ''),
     ];
 @endphp
 

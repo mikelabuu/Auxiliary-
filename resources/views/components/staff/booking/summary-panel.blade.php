@@ -1,10 +1,28 @@
-@props(['stickyTop' => 'lg:top-24'])
+@props([
+    /*
+     * How far down the panel pins, as a CSS length. One number, because the
+     * height cap below is derived from it — passing the offset as a Tailwind
+     * class and the cap as a second literal is how the two drift apart.
+     */
+    'stickyOffset' => '6rem',
+])
 
 {{--
     The sticky live summary column. Every figure in here is written by the page
     script as rooms are picked; the server renders only the empty shell.
 --}}
-<div class="animate-in {{ $stickyTop }} lg:sticky lg:col-span-4" style="animation-delay:200ms">
+{{-- Never taller than the space it is pinned into.
+
+    Once rooms are picked this panel runs past 720px. Pinned at the top of a
+    614px viewport — what a 1366x768 screen reports at 125% display scaling —
+    its lower half sat below the fold with no way to reach it: a stuck element
+    does not move, and scrolling the page moves the form beside it instead. The
+    total and the confirm button are in that lower half.
+
+    Capping to the viewport and letting the panel scroll itself works at every
+    height. Below lg the column is stacked and none of this applies. --}}
+<div class="animate-in lg:sticky lg:col-span-4 lg:top-[var(--sticky-offset)] lg:max-h-[calc(100dvh-var(--sticky-offset)-1.5rem)] lg:overflow-y-auto"
+     style="--sticky-offset: {{ $stickyOffset }}; animation-delay:200ms">
     <div class="card card-accent card-overflow-hidden">
         <div class="card-header">
             <h3 class="card-title">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\RefCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -40,10 +41,20 @@ class SettingsController extends Controller
 
         // Search: match ID, room number, or guest name
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            // The stay cards label themselves "#4", and the emailed receipt
+            // calls the same booking R-000004. Neither spelling matched the
+            // bare id, so a guest searching for the booking by the number they
+            // were given found nothing.
+            $refId = RefCode::toId($search);
+
+            $query->where(function ($q) use ($search, $refId) {
                 $q->where('id', 'like', "%{$search}%")
                 ->orWhereHas('reservations', fn ($r) => $r->where('room_number', 'like', "%{$search}%"))
                 ->orWhere('guest_name', 'like', "%{$search}%");
+
+                if ($refId !== null) {
+                    $q->orWhere('id', $refId);
+                }
             });
         }
 
@@ -94,11 +105,23 @@ class SettingsController extends Controller
 
         // Search: match ID, booking_id, reference_no, gateway
         if ($search) {
-            $query->where(function($q) use ($search) {
+            // Covers both halves of a row's identity: PMT-0012 for the payment
+            // and BK-0004 for the stay it settles. RefCode does not care which
+            // prefix was typed, so one resolved number is tried against both
+            // columns — a payment id and a booking id are different numbers,
+            // and matching the wrong one only ever costs an extra row.
+            $refId = RefCode::toId($search);
+
+            $query->where(function($q) use ($search, $refId) {
                 $q->where('payments.id', 'like', "%{$search}%")
                 ->orWhere('payments.booking_id', 'like', "%{$search}%")
                 ->orWhere('payments.reference_no', 'like', "%{$search}%")
                 ->orWhere('payments.gateway', 'like', "%{$search}%");
+
+                if ($refId !== null) {
+                    $q->orWhere('payments.id', $refId)
+                      ->orWhere('payments.booking_id', $refId);
+                }
             });
         }
 

@@ -159,6 +159,97 @@
 /* Compact table action buttons */
 .table-actions { display: inline-flex; align-items: center; gap: 6px; }
 
+/* ── Arrivals & Departures rows ──────────────────────────────────────────
+   One guest per row, not a table.
+
+   The panel is ~740px wide inside the dashboard grid and the table this
+   replaced needed ~1135px, so the stay dates, the state and the reason a row
+   could not be checked in all sat outside the scrollport, behind an Actions
+   column pinned over the top of them. Everything fits on one line here, and
+   the row reflows to two below the panel's own narrow point rather than
+   scrolling sideways. */
+/* The queries below are on the panel's own width, not the viewport's: this
+   list is a column inside a dashboard grid and can be narrow on a wide
+   screen. */
+.arrival-list { container-type: inline-size; }
+
+.arrival-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--color-card);
+    transition: background-color 160ms ease;
+}
+
+.arrival-row:hover { background: #f6fbf8; }
+
+/* The attention rows sit on the ember panel, so they take its ground rather
+   than the card's and keep their own hover. */
+.arrival-row--attention { background: transparent; }
+.arrival-row--attention:hover { background: rgba(254, 228, 226, .35); }
+
+.arrival-row-main { flex: 1 1 auto; min-width: 0; }
+
+.arrival-row-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.arrival-row-name .guest-history-link { cursor: pointer; }
+.arrival-row-name .guest-history-link:hover { color: var(--color-brand-700, #15803d); text-decoration: underline; }
+
+.arrival-row-id {
+    margin-left: 4px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--color-faint, #9ca3af);
+}
+
+/* Room, stay and length read as one line of small print under the name. */
+.arrival-row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 5px;
+    margin-top: 2px;
+    font-size: var(--fs-xs);
+    color: var(--color-muted);
+}
+
+/* Why the desk cannot act on this row yet. Muted on purpose — an
+   explanation, not an alarm; the row is not in trouble, it is just not ready. */
+.arrival-row-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--color-muted);
+}
+
+.arrival-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* The panel is narrow to begin with, so the break is on the panel, not the
+   viewport: below this the name keeps the full width and the tag and buttons
+   drop underneath it rather than squeezing the stay line out of the row. */
+@container (max-width: 560px) {
+    .arrival-row { flex-wrap: wrap; }
+    .arrival-row-main { flex-basis: calc(100% - 44px); }
+    .arrival-row-actions { margin-left: auto; }
+}
+
 /* These tables are wider than their scroll container, which parked the Actions
    column past the right edge — pin it so its buttons are always on screen.
    :has() keeps tables whose last column is plain data in normal flow.

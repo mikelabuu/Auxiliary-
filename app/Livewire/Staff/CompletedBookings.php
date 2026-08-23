@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Livewire\Concerns\WithSorting;
 use App\Models\Booking;
+use App\Support\RefCode;
 
 class CompletedBookings extends Component
 {
@@ -46,11 +47,24 @@ class CompletedBookings extends Component
     // ⑥ The render method — this is your old controller's index() logic
     public function render()
     {
+        // The reference this table prints — and offers a copy button for — is
+        // BK-0004, which matched nothing against the bare id column.
+        $refId = RefCode::toId($this->search);
+
         $query = Booking::where('status', 'completed')
-            ->when($this->search, fn($q) => $q
-                ->where('id', 'like', "%{$this->search}%")
-                ->orWhere('guest_name', 'like', "%{$this->search}%")
-            );
+            // Grouped, which it was not. `->where(status)->when(fn => where(id)
+            // ->orWhere(guest_name))` binds as
+            // `(status = completed AND id LIKE ...) OR guest_name LIKE ...`,
+            // so searching a guest name on the *completed* page returned that
+            // guest's live bookings too.
+            ->when($this->search, fn($q) => $q->where(function ($w) use ($refId) {
+                $w->where('id', 'like', "%{$this->search}%")
+                  ->orWhere('guest_name', 'like', "%{$this->search}%");
+
+                if ($refId !== null) {
+                    $w->orWhere('id', $refId);
+                }
+            }));
 
         $query = $this->applySort(
             $query,
