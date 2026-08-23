@@ -96,6 +96,31 @@
     --color-cream: oklch(96.5% 0.02 90);
     --color-cream-warm: oklch(98% 0.012 85);
 
+    /* Secondary text on the cream ground.
+
+       DESIGN.md lists these three as system tokens and has all along, but the
+       only place they existed in CSS was 14-auth.css, privately, as --fha-ink-soft
+       and friends. Every other surface reached for Tailwind's stone ramp instead
+       — which is a yellow-brown neutral (hue ~58-73) at almost no chroma, and
+       goes visibly cold the moment it sits on warm cream. The Ink-Not-Gray Rule
+       exists precisely because that substitution is so easy to make.
+
+       These are the same values the auth surface proved on this exact ground:
+       ink-soft lands ~5.4:1 and ink-faint ~4.7:1 on cream, so both clear AA for
+       body copy rather than merely looking quiet. Hue 160 is the evergreen the
+       rest of the palette is built from, so secondary text reads as the same ink
+       thinned, not as a second grey family.
+
+       Promoted here rather than copied a third time: in @theme they also become
+       text-ink-soft / text-ink-faint / text-brass-ink, which is what the Blade
+       surfaces actually need to stop reaching for stone. */
+    --color-ink-soft: oklch(42% 0.025 160);
+    --color-ink-faint: oklch(46% 0.022 160);
+    /* Brass that can carry small text. --color-gold is a 75%-lightness accent and
+       manages ~2:1 on cream — it is a rule-and-ornament colour, never a text one.
+       This is the same hue family darkened until it reads (~4.9:1). */
+    --color-brass-ink: oklch(45% 0.09 70);
+
     --shadow-capsule: 0 24px 60px -20px oklch(15% 0.05 160 / 0.35), 0 8px 24px -12px oklch(15% 0.05 160 / 0.2);
     --shadow-boutique-card: 0 18px 40px -22px oklch(15% 0.05 160 / 0.25);
     --shadow-boutique-modal: 0 40px 80px -30px oklch(10% 0.05 160 / 0.5);

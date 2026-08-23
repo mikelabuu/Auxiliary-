@@ -52,7 +52,7 @@ class AutoCheckOutBookings extends Command
         // bookings stranded in 'active' forever.
         $bookings = Booking::with('reservations.room')
             ->where('status', 'active')
-            ->whereDate('check_out', '<=', $now->toDateString())
+            ->where('check_out', '<=', $now->toDateString())
             ->get();
 
         if ($bookings->isEmpty()) {

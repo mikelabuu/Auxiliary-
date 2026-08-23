@@ -23,13 +23,18 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="co-enter mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4" style="--co:0">
                 <div>
-                    <span class="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.4em] text-palay-800 mb-3">
+                    <span class="font-label inline-flex items-center gap-3 text-[11px] font-normal uppercase tracking-[0.4em] text-palay-800 mb-3">
                         <span class="h-px w-8 bg-gold/50"></span> Almost there
                     </span>
-                    <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Complete your <span class="italic text-gold">booking</span></h1>
-                    <p class="text-sm font-medium text-stone-600 mt-3">Fill in your details to secure your reservation. No payment needed yet.</p>
+                    <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Complete your {{-- brass-ink, not gold. --color-gold is a 75%-lightness accent and lands
+                         at 2.02:1 on cream — DESIGN.md is explicit that gold never carries
+                         text on this ground, and at 48px display the floor is still 3:1.
+                         brass-ink is the same brass darkened until it reads (~4.9:1), so the
+                         accent survives and the word does too. --}}
+                        <span class="italic text-brass-ink">booking</span></h1>
+                    <p class="text-sm font-medium text-ink-soft mt-3">Fill in your details to secure your reservation. No payment needed yet.</p>
                 </div>
-                <a href="{{ route('home') }}#rooms" class="gold-underline self-start sm:self-end text-[11px] font-bold uppercase tracking-[0.3em] text-stone-600 hover:text-emerald-deep transition-colors">
+                <a href="{{ route('home') }}#rooms" class="font-label gold-underline self-start sm:self-end text-[11px] font-normal uppercase tracking-[0.3em] text-ink-soft hover:text-emerald-deep transition-colors">
                     &larr; Back to Rooms
                 </a>
             </div>
@@ -52,11 +57,11 @@
                         <button type="button" class="focus-ring w-full cursor-pointer rounded-lg text-left"
                                 aria-label="Jump to {{ strtolower($label) }}">
                         <div class="flex items-center gap-2.5">
-                            <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-emerald-deep/20 bg-white/60 text-[11px] font-bold text-stone-500 transition-[color,background-color,border-color,box-shadow] duration-200">
+                            <span class="step-dot grid h-7 w-7 shrink-0 place-items-center rounded-full border border-emerald-deep/20 bg-cream-warm/60 text-[11px] font-bold text-ink-faint transition-[color,background-color,border-color,box-shadow] duration-200">
                                 <span class="step-num">{{ $loop->iteration }}</span>
                                 <svg class="step-check hidden h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             </span>
-                            <span class="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-stone-600 sm:block">{{ $label }}</span>
+                            <span class="font-label hidden text-[11px] font-normal uppercase tracking-[0.2em] text-ink-soft sm:block">{{ $label }}</span>
                         </div>
                         {{-- The un-done track needs to be DARKER than the page,
                              not lighter — white-on-cream is invisible. --}}
@@ -87,7 +92,7 @@
                     <!-- DATES -->
                     <x-booking.checkout.step-card icon="calendar-days" step="Step 1 of 3" title="Your Stay" id="stepCardDates" class="co-enter scroll-mt-28" style="--co:2">
                         <x-slot:aside>
-                            <span id="nights_duration_badge" class="hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-stone-700 text-[11px] font-bold uppercase tracking-[0.14em] animate-pop whitespace-nowrap"></span>
+                            <span id="nights_duration_badge" class="font-label hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-ink-soft text-[11px] font-normal uppercase tracking-[0.2em] animate-pop whitespace-nowrap"></span>
                         </x-slot:aside>
                         {{-- Most stays here are short and near. Typing two dates
                              into two pickers to say "tonight" is three taps too
@@ -172,11 +177,11 @@
                                         <span id="totalGuestsReadout" class="count-readout tabnum" aria-hidden="true">1</span>
                                     </div>
                                     <div class="stepper flex items-center gap-2">
-                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests">
+                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-cream-warm/60 flex items-center justify-center text-ink-soft hover:bg-cream-warm hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="-1" aria-label="Fewer guests">
                                             <x-booking.ui.icon-solid name="minus" class="text-[18px]" />
                                         </button>
-                                        <input type="number" id="expected_guests" name="expected_guests" value="{{ old('expected_guests', 1) }}" aria-describedby="totalGuestsNote" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-white/60 text-ink text-sm text-center focus:bg-white focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $maxGuestsPerBooking }}" required>
-                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-white/60 flex items-center justify-center text-stone-600 hover:bg-white hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests">
+                                        <input type="number" id="expected_guests" name="expected_guests" value="{{ old('expected_guests', 1) }}" aria-describedby="totalGuestsNote" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm text-center focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-bold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $maxGuestsPerBooking }}" required>
+                                        <button type="button" class="btn-step w-10 h-10 rounded-xl border border-emerald-deep/15 bg-cream-warm/60 flex items-center justify-center text-ink-soft hover:bg-cream-warm hover:border-gold/50 hover:text-emerald-deep active:scale-95 transition-[transform,color,background-color,border-color,box-shadow] cursor-pointer shrink-0" data-step="1" aria-label="More guests">
                                             <x-booking.ui.icon-solid name="plus" class="text-[18px]" />
                                         </button>
                                     </div>
@@ -280,7 +285,10 @@
                                  row puts the whole property in two rows, which
                                  is what a guest is actually doing here: looking
                                  at all of them at once and picking. --}}
-                            <ul id="roomPicker" class="room-picker-list">
+                            {{-- data-max-rooms is store()'s MAX_ROOMS_PER_BOOKING, so the steppers
+                                     stop where the server does rather than letting the
+                                     guest build a room it will reject. --}}
+                            <ul id="roomPicker" class="room-picker-list" data-max-rooms="{{ $maxRoomsPerBooking }}">
                                 @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
                                     <li class="room-card" data-room-type="{{ $type['id'] }}" data-beds="{{ $type['beds'] }}" data-price="{{ $type['price'] }}">
                                         <span class="room-card-media">
@@ -365,8 +373,8 @@
                         <!-- Summary Invoice will be rendered here by JS -->
                         {{-- Initial markup mirrors booking.js's empty state exactly,
                              so the JS takeover on load is invisible --}}
-                        <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-stone-600">
-                            <div class="text-center py-10 text-stone-500">
+                        <div id="summaryInvoice" class="space-y-4 mb-6 text-sm font-medium text-ink-soft">
+                            <div class="text-center py-10 text-ink-faint">
                                 <x-booking.ui.icon-solid name="calendar-days" class="text-5xl mb-3 block text-emerald-deep/25" />
                                 <p class="font-semibold">Please select your stay dates.</p>
                             </div>
@@ -389,8 +397,8 @@
                              really does drop the booking, so the number belongs on
                              the page the guest is agreeing on — not only in the
                              confirmation email. --}}
-                        <div class="mb-4 rounded-2xl border border-emerald-deep/10 bg-white/50 p-3.5">
-                            <p class="flex items-start gap-2 text-[11px] font-semibold text-stone-600 leading-relaxed">
+                        <div class="mb-4 rounded-2xl border border-emerald-deep/10 bg-cream-warm/50 p-3.5">
+                            <p class="flex items-start gap-2 text-[11px] font-semibold text-ink-soft leading-relaxed">
                                 <x-booking.ui.icon-solid name="hourglass-half" class="mt-px text-[13px] text-palay-800" />
                                 <span>Your rooms are held for <strong class="text-ink">{{ $holdLabel }}</strong> after you confirm — or until check-in on your arrival day, if that comes first. Pay within that window or they're released back to other guests.</span>
                             </p>
@@ -417,29 +425,29 @@
                         <div class="mb-4">
                             <label for="accept_terms" class="flex items-start gap-2.5 cursor-pointer select-none">
                                 <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required
-                                       class="w-4.5 h-4.5 mt-0.5 shrink-0 rounded-md border-emerald-deep/25 bg-white/60 text-palay-800 focus:ring-gold focus:ring-2 cursor-pointer transition-[color,background-color,border-color,box-shadow]"
+                                       class="w-4.5 h-4.5 mt-0.5 shrink-0 rounded-md border-emerald-deep/25 bg-cream-warm/60 text-palay-800 focus:ring-gold focus:ring-2 cursor-pointer transition-[color,background-color,border-color,box-shadow]"
                                        @checked(old('accept_terms'))>
-                                <span class="text-[11px] font-semibold text-stone-600 leading-relaxed">
+                                <span class="text-[11px] font-semibold text-ink-soft leading-relaxed">
                                     I agree to the booking terms
-                                    <span class="block font-medium text-stone-500 mt-1">
-                                        Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong class="text-stone-600">A paid booking cannot be cancelled</strong> — if your plans change, request a reschedule before {{ $checkinTime }} on your check-in day. Miss that and the booking is forfeited with no refund.
+                                    <span class="block font-medium text-ink-faint mt-1">
+                                        Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong class="text-ink-soft">A paid booking cannot be cancelled</strong> — if your plans change, request a reschedule before {{ $checkinTime }} on your check-in day. Miss that and the booking is forfeited with no refund.
                                     </span>
                                 </span>
                             </label>
                         </div>
 
-                        <button type="submit" id="btnSubmitBooking" class="press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-semibold uppercase tracking-[0.2em] bg-emerald-deep text-cream cursor-pointer flex items-center justify-center gap-2 hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
+                        <button type="submit" id="btnSubmitBooking" class="font-label press focus-ring w-full min-h-12 py-4 rounded-full text-[12px] font-normal uppercase tracking-[0.2em] bg-emerald-deep text-cream cursor-pointer flex items-center justify-center gap-2 hover:bg-emerald hover:shadow-[0_0_0_4px_color-mix(in_oklch,var(--color-gold)_30%,transparent)] disabled:opacity-70 disabled:pointer-events-none">
                             <x-booking.ui.icon-solid name="circle-check" class="text-[18px]" />
                             Confirm Booking
                         </button>
                         <div class="mt-4 grid grid-cols-3 gap-1 text-center">
-                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="font-label text-[10px] font-normal text-ink-faint uppercase tracking-[0.2em] flex flex-col items-center gap-1">
                                 <x-booking.ui.icon-solid name="lock" class="text-[16px] text-palay-800" /> Secure
                             </div>
-                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="font-label text-[10px] font-normal text-ink-faint uppercase tracking-[0.2em] flex flex-col items-center gap-1">
                                 <x-booking.ui.icon-solid name="ban" class="text-[16px] text-palay-800" /> No prepayment
                             </div>
-                            <div class="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex flex-col items-center gap-1">
+                            <div class="font-label text-[10px] font-normal text-ink-faint uppercase tracking-[0.2em] flex flex-col items-center gap-1">
                                 <x-booking.ui.icon-solid name="circle-check" class="text-[16px] text-palay-800" /> Instant hold
                             </div>
                         </div>
@@ -452,12 +460,12 @@
     <!-- Mobile sticky total bar (summary column is off-screen on phones) -->
     <div class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-cream-warm/95 backdrop-blur-xl border-t border-emerald-deep/15 px-4 py-3 shadow-[0_-16px_40px_-20px_rgba(6,40,30,0.35)] flex items-center justify-between gap-3">
         <div>
-            <p class="text-[10px] font-bold text-stone-500 uppercase tracking-[0.28em] leading-none">Total due</p>
+            <p class="font-label text-[10px] font-normal text-ink-faint uppercase tracking-[0.28em] leading-none">Total due</p>
             {{-- "—" until a real total exists; ₱0 due would be a false statement --}}
             <p id="mobileTotalAmount" class="font-display text-xl text-ink tabnum mt-1">-</p>
-            <p id="mobileMetaLine" class="text-[10px] font-semibold text-stone-500 mt-0.5"></p>
+            <p id="mobileMetaLine" class="text-[10px] font-semibold text-ink-faint mt-0.5"></p>
         </div>
-        <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-semibold uppercase tracking-[0.18em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">
+        <button type="submit" form="bookingForm" id="btnSubmitBookingMobile" class="font-label press min-h-11 px-6 py-2.5 rounded-full text-cream text-[12px] font-normal uppercase tracking-[0.2em] cursor-pointer bg-emerald-deep hover:bg-emerald flex items-center gap-1.5 disabled:opacity-70 disabled:pointer-events-none">
             <x-booking.ui.icon-solid name="circle-check" class="text-[16px]" />
             Confirm
         </button>

@@ -48,7 +48,7 @@ class RemindCheckoutsDue extends Command
 
         $due = Booking::with('reservations')
             ->where('status', 'active')
-            ->whereDate('check_out', $today)
+            ->where('check_out', $today)
             ->orderBy('id')
             ->get();
 

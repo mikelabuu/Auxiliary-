@@ -176,11 +176,11 @@ class ArrivalsDepartures extends Component
         $bookings = Booking::with(['reservations', 'payments'])
             ->where(function ($q) use ($today) {
                 $q->where(function ($q2) use ($today) {
-                    $q2->whereDate('check_in', $today)
+                    $q2->where('check_in', $today)
                         ->where('status', 'paid');
                 })
                 ->orWhere(function ($q3) use ($today) {
-                    $q3->whereDate('check_out', $today)
+                    $q3->where('check_out', $today)
                         ->where('status', 'active');
                 })
                 // In-house: checked in on or before this date, not due out
@@ -191,8 +191,8 @@ class ArrivalsDepartures extends Component
                 // day, so there was nothing on screen to act on if they had to
                 // leave early. They are the rows the emergency check-out is for.
                 ->orWhere(function ($q4) use ($today) {
-                    $q4->whereDate('check_in', '<=', $today)
-                        ->whereDate('check_out', '>', $today)
+                    $q4->where('check_in', '<=', $today)
+                        ->where('check_out', '>', $today)
                         ->where('status', 'active');
                 });
             })
@@ -303,8 +303,8 @@ class ArrivalsDepartures extends Component
 
         // In-house on the viewed date: active stays spanning it.
         $inHouseCount = Booking::where('status', 'active')
-            ->whereDate('check_in', '<=', $this->date)
-            ->whereDate('check_out', '>=', $this->date)
+            ->where('check_in', '<=', $this->date)
+            ->where('check_out', '>=', $this->date)
             ->count();
 
         // Upcoming-this-week count (next 7 days after the viewed date).
@@ -330,7 +330,7 @@ class ArrivalsDepartures extends Component
         // Overdue check-outs: still active past their check-out date.
         $overdueCheckouts = Booking::with('reservations')
             ->where('status', 'active')
-            ->whereDate('check_out', '<', $actualToday)
+            ->where('check_out', '<', $actualToday)
             ->orderBy('check_out')
             ->limit(10)
             ->get()
@@ -339,7 +339,7 @@ class ArrivalsDepartures extends Component
         // Missed arrivals: paid, check-in date passed, never checked in.
         $missedArrivals = Booking::with('reservations')
             ->where('status', 'paid')
-            ->whereDate('check_in', '<', $actualToday)
+            ->where('check_in', '<', $actualToday)
             ->orderBy('check_in')
             ->limit(10)
             ->get()

@@ -25,7 +25,7 @@ class RoomStays
         $stays = Reservation::query()
             ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
             ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->whereDate('bookings.check_out', '>=', $today)
+            ->where('bookings.check_out', '>=', $today->toDateString())
             ->orderBy('bookings.check_in')
             ->get([
                 'reservations.room_number',

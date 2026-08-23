@@ -54,6 +54,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Pint needs the merge base to work out what this PR actually
+          # touched; the default shallow clone does not have it.
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -62,3 +66,35 @@ jobs:
 
       - name: Lint PHP sources
         run: find app config database routes tests -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+
+      # Style, on files this PR ADDS. Not on files it modifies — see below.
+      #
+      # Pint was a dev dependency that had never been run, so the tree carries
+      # a backlog: 177 issues under the bare `laravel` preset, and 122 once
+      # pint.json turns off the rules that fight this codebase's deliberate
+      # `=>` and `=` column alignment (see that file). Gating modified files
+      # would therefore fail a PR for whatever backlog its files happened to
+      # be carrying, which trains people to ignore the check.
+      #
+      # Added files have no backlog by definition, so this can never fail
+      # spuriously, and it stops the pile growing. Widening to --diff-filter=ACMR
+      # is the follow-up, and it needs one `./vendor/bin/pint` reformat commit
+      # first; with pint.json in place that reformat is now safe to make.
+      #
+      # Deliberately separate from the `php -l` step above: that one must keep
+      # running over everything, since a parse error anywhere breaks the app.
+      - name: Install Pint
+        if: github.event_name == 'pull_request'
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check style of added files
+        if: github.event_name == 'pull_request'
+        run: |
+          FILES=$(git diff --name-only --diff-filter=A \
+            "origin/${{ github.base_ref }}...HEAD" -- '*.php')
+          if [ -z "$FILES" ]; then
+            echo "No PHP files added."
+            exit 0
+          fi
+          echo "$FILES"
+          echo "$FILES" | xargs ./vendor/bin/pint --test

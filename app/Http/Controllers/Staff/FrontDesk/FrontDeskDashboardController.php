@@ -102,11 +102,11 @@ class FrontDeskDashboardController extends Controller
         // may be UTC, so "today" is pinned to Asia/Manila.
         $manilaToday = now(config('hostel.timezone'))->toDateString();
 
-        $arrivalsToday = Booking::whereDate('check_in', $manilaToday)
+        $arrivalsToday = Booking::where('check_in', $manilaToday)
             ->whereIn('status', Booking::BLOCKING_STATUSES)
             ->count();
 
-        $departuresToday = Booking::whereDate('check_out', $manilaToday)
+        $departuresToday = Booking::where('check_out', $manilaToday)
             ->where('status', 'active')
             ->count();
 

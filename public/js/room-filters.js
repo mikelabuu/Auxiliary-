@@ -100,6 +100,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.classList.remove('vt-scoped');
       };
       transition.finished.then(cleanup, cleanup);
+
+      // `ready` is a second, separate promise on the same transition, and a
+      // skipped transition rejects it too — with InvalidStateError. Nothing
+      // reads it here, but an unattached rejection is still an unhandled one:
+      // three fast clicks on the filter pills logged three uncaught
+      // InvalidStateErrors, and page load logged two more. Swallowed rather
+      // than handled, because the cleanup `finished` already runs is the only
+      // work this transition owes anyone.
+      transition.ready.catch(() => {});
     } else {
       // FLIP Layout Fallback with staggered transitions (Older browsers)
       const rects = new Map();

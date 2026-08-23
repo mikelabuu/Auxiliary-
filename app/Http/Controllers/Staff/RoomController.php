@@ -148,7 +148,7 @@ public function occupancyForRoom(Room $room)
         ->join('reservations', 'reservations.booking_id', '=', 'bookings.id')
         ->where('reservations.room_number', $room->room_number)
         ->whereIn('bookings.status', \App\Models\Booking::BLOCKING_STATUSES)
-        ->whereDate('bookings.check_out', '>=', $today)
+        ->where('bookings.check_out', '>=', $today)
         ->orderBy('bookings.check_in')
         ->distinct()
         ->get();

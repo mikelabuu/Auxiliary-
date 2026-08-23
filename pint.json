@@ -1,0 +1,10 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "binary_operator_spaces": false,
+        "concat_space": false,
+        "no_multiline_whitespace_around_double_arrow": false,
+        "class_attributes_separation": false,
+        "method_chaining_indentation": false
+    }
+}

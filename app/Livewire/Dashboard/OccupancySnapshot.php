@@ -67,7 +67,7 @@ class OccupancySnapshot extends Component
 
             $occupiedRoomNumbers = Reservation::whereHas('booking', function ($q) use ($today) {
                 $q->whereIn('status', $this->occupyingStatuses)
-                  ->whereDate('check_in', '<=', $today);
+                  ->where('check_in', '<=', $today);
             })->pluck('room_number')->toArray();
 
             $occupiedRoomsCount = count(array_unique($occupiedRoomNumbers));

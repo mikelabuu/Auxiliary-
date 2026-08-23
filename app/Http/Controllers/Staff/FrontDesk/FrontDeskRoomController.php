@@ -59,8 +59,8 @@ class FrontDeskRoomController extends Controller
             )
             ->join('reservations', 'reservations.booking_id', '=', 'bookings.id')
             ->where('reservations.room_number', $room->room_number)
-            ->whereDate('bookings.check_in', '<=', $today)
-            ->whereDate('bookings.check_out', '>=', $today)
+            ->where('bookings.check_in', '<=', $today)
+            ->where('bookings.check_out', '>=', $today)
             ->where('bookings.status', 'active')
             ->distinct()
             ->get();

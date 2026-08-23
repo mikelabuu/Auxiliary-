@@ -212,19 +212,19 @@ class BookingsTable extends Component
 
             switch ($this->dateFilter) {
                 case 'today_checkin':
-                    $query->whereDate('check_in', $today);
+                    $query->where('check_in', $today->toDateString());
                     break;
 
                 case 'tomorrow_checkin':
-                    $query->whereDate('check_in', $tomorrow);
+                    $query->where('check_in', $tomorrow->toDateString());
                     break;
 
                 case 'today_checkout':
-                    $query->whereDate('check_out', $today);
+                    $query->where('check_out', $today->toDateString());
                     break;
 
                 case 'tomorrow_checkout':
-                    $query->whereDate('check_out', $tomorrow);
+                    $query->where('check_out', $tomorrow->toDateString());
                     break;
             }
         }

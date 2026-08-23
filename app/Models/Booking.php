@@ -93,12 +93,16 @@ class Booking extends Model
                             $q->whereNull($since)
                                 ->orWhere($since, '>', $lapsedBefore);
                         })
-                        // whereDate, not a plain comparison, for the reason
-                        // spelled out in BookingController::store: check_in is
-                        // a DATE column and a driver that stores it with a
-                        // midnight time component turns this into the wrong
-                        // question.
-                        ->whereDate($checkIn, '>=', $liveFrom);
+                        // Both sides are bare `Y-m-d`: the column via
+                        // setCheckInAttribute, the bound because
+                        // earliestLiveCheckInDate() returns a date string.
+                        // This was whereDate() while the stored value could
+                        // still carry a midnight time component; it no longer
+                        // can, and the plain comparison is the one that can
+                        // use idx_bookings_availability. This scope sits under
+                        // every availability query in the app, so it is the
+                        // single place where that matters most.
+                        ->where($checkIn, '>=', $liveFrom);
                 });
         });
     }
@@ -198,6 +202,50 @@ class Booking extends Model
         'payable_amount' => 'decimal:2',
     ];
 
+    /**
+     * Store the stay dates as bare `Y-m-d`, on every driver.
+     *
+     * Eloquent's `date` cast does not do this. It hands the connection a
+     * Carbon, which the grammar formats with `Y-m-d H:i:s` — so the value
+     * written is always `2026-08-12 00:00:00`. MySQL's DATE column truncates
+     * that back to `2026-08-12` and nobody notices; SQLite's does not, and the
+     * midnight time component survives into the stored text.
+     *
+     * That difference is why every date comparison in this app went through
+     * `whereDate()`: on SQLite `'2026-08-12 00:00:00' > '2026-08-12'` is true,
+     * which reads a same-day turnover as an overlap and rejects a legitimate
+     * back-to-back stay — a night's revenue on every changeover. The cost was
+     * that `date(check_in)` is not sargable, so `idx_bookings_availability`
+     * could not be used by the very queries it was added for (MySQL declines
+     * it even under FORCE INDEX).
+     *
+     * Normalising on write fixes the cause instead of the symptom: the stored
+     * value is a date on both drivers, so a plain indexed comparison is exact.
+     * Do not switch these back to the plain `date` cast without putting every
+     * `whereDate()` back with it.
+     */
+    public function setCheckInAttribute($value): void
+    {
+        $this->attributes['check_in'] = $this->asDateOnly($value);
+    }
+
+    public function setCheckOutAttribute($value): void
+    {
+        $this->attributes['check_out'] = $this->asDateOnly($value);
+    }
+
+    /**
+     * `Y-m-d`, or null. Anything Carbon can parse is accepted, because these
+     * are fed from request input, console commands and factories alike.
+     */
+    protected function asDateOnly($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return $this->asDateTime($value)->toDateString();
+    }
 
     public function setStatusAttribute($value)
     {

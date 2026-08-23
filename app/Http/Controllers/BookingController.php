@@ -550,19 +550,30 @@ class BookingController extends Controller
                 // — availabilitySummary, calendarAvailability, manual booking
                 // and walk-in all read them. This is the last guard that
                 // disagreed.
-                // whereDate, not a plain comparison: bookings.check_in is a
-                // DATE column, but a driver that stores it with a midnight
-                // time component makes `'…12 00:00:00' > '…12'` true and
-                // rejects a legitimate back-to-back stay. A stay is
-                // [check_in, check_out), so the turnover day belongs to the
-                // arriving guest — getting this wrong costs a night's revenue
-                // on every changeover.
+                // A stay is [check_in, check_out), so the turnover day belongs
+                // to the arriving guest — getting this wrong costs a night's
+                // revenue on every changeover.
+                //
+                // This used to be whereDate(), because a driver that stored
+                // the DATE column with a midnight time component made
+                // `'…12 00:00:00' > '…12'` true and rejected a legitimate
+                // back-to-back stay. Booking's setCheckInAttribute /
+                // setCheckOutAttribute now normalise the stored value to bare
+                // `Y-m-d` on every driver, so the comparison is exact without
+                // wrapping the column — and `date(check_in)` was not sargable,
+                // which meant idx_bookings_availability could not be used by
+                // this query at all (MySQL declined it even under FORCE
+                // INDEX). Both sides must stay bare dates: the columns via
+                // those mutators, the bounds via toDateString() below.
+                $checkInBound  = Carbon::parse($request->check_in)->toDateString();
+                $checkOutBound = Carbon::parse($request->check_out)->toDateString();
+
                 $takenRoomNumbers = Reservation::query()
                     ->join('bookings', 'bookings.id', '=', 'reservations.booking_id')
                     ->whereIn('reservations.room_number', $lockedRooms->pluck('room_number')->all())
                     ->tap(fn ($q) => Booking::applyActiveHold($q))
-                    ->whereDate('bookings.check_in', '<', $request->check_out)
-                    ->whereDate('bookings.check_out', '>', $request->check_in)
+                    ->where('bookings.check_in', '<', $checkOutBound)
+                    ->where('bookings.check_out', '>', $checkInBound)
                     ->pluck('reservations.room_number')
                     ->map(fn ($number) => trim($number))
                     ->unique()

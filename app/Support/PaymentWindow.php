@@ -130,8 +130,11 @@ class PaymentWindow
      *
      * A date rather than an expression, because the alternative is a
      * LEAST(...)-style comparison of a DATE column against a datetime, and
-     * MySQL and SQLite disagree about what that means — the same disagreement
-     * that made `whereDate` necessary in the double-booking guard.
+     * MySQL and SQLite disagree about what that means. Returning a bare
+     * `Y-m-d` keeps both sides of the comparison a date — the column side is
+     * held there by Booking's setCheckInAttribute — which is what lets the
+     * caller use a plain indexed `where` instead of wrapping the column in
+     * `date()`.
      */
     public static function earliestLiveCheckInDate(): string
     {

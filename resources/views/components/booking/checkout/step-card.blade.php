@@ -21,7 +21,7 @@
             {{-- min-w-0 so a long title shrinks within the row rather than
                  forcing the flex item past its parent. --}}
             <div class="min-w-0">
-                <span class="block text-[10px] font-black text-stone-500 uppercase tracking-[0.18em] leading-none">{{ $step }}</span>
+                <span class="font-label block text-[10px] font-normal text-ink-faint uppercase tracking-[0.2em] leading-none">{{ $step }}</span>
                 <h4 class="text-sm font-bold text-ink tracking-tight mt-1">{{ $title }}</h4>
             </div>
         </div>

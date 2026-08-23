@@ -5,69 +5,140 @@
 @section('settings-content')
     <x-booking.ui.page-header title="My Bookings" subtitle="View and manage your room reservation history."></x-booking.ui.page-header>
 
-    {{-- Search + Filters.
-         Was a 5-column grid whose last cell held three controls, so Apply and
-         Reset were squeezed past the card edge at every width below xl. The
-         controls now get their own row on small screens and their own column
-         on large ones, so nothing overflows. --}}
-    <form method="GET" action="{{ route('settings.bookings') }}" class="bg-stone-50/60 border border-stone-200/70 p-5 rounded-2xl mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-4 items-end">
-            <div class="sm:col-span-2 xl:col-span-4">
-                <label for="bookingSearch" class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Search</label>
+    {{-- Search, status and sort.
+
+         There is no Apply button. Every control here maps to one query
+         parameter on a GET form, so the old flow — change a control, then
+         travel to a second button and press it — charged two interactions for
+         what is really a link. Chips and selects commit on change; the search
+         box commits on a short debounce so typing does not fire a request per
+         keystroke. The form still works with scripting off, which is why the
+         button survives inside <noscript> rather than being deleted outright.
+
+         The status chips replaced a <select>. A dropdown hides its options
+         until opened and costs three interactions to use, and five of the
+         seven statuses are empty for most guests. Chips show what is actually
+         there, with counts, and cost one tap. Empty statuses are not rendered
+         at all unless one is the active filter — a guest cannot usefully
+         filter to a status they have never held. --}}
+    @php
+        $activeStatus = $status ?: 'all';
+        $statusOptions = [
+            'all'              => 'All',
+            'pending_payment'  => 'Pending payment',
+            'pending_discount' => 'Pending discount',
+            'paid'             => 'Paid',
+            'active'           => 'Active',
+            'completed'        => 'Completed',
+            'cancelled'        => 'Cancelled',
+        ];
+        $filtersOn = filled($search) || $activeStatus !== 'all';
+
+        // "desc" means something different for money than it does for a date,
+        // and "Descending" means nothing to a guest. The pair is named after
+        // whatever is actually being sorted.
+        $dirLabels = match ($sortBy) {
+            'total_price' => ['desc' => 'Highest first', 'asc' => 'Lowest first'],
+            'status'      => ['desc' => 'Z to A',        'asc' => 'A to Z'],
+            default       => ['desc' => 'Newest first',  'asc' => 'Oldest first'],
+        };
+
+        $fieldClasses = 'w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm font-semibold outline-none transition-[color,background-color,border-color,box-shadow] focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200';
+        $labelClasses = 'block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5';
+    @endphp
+
+    <form method="GET" action="{{ route('settings.bookings') }}" data-autofilter class="mb-5">
+        <div class="flex flex-col lg:flex-row lg:items-end gap-3">
+            <div class="min-w-0 flex-1">
+                <label for="bookingSearch" class="{{ $labelClasses }}">Search</label>
                 <div class="relative">
-                    <x-booking.ui.icon-solid name="magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[13px]" />
-                    <input id="bookingSearch" type="text" name="search" placeholder="Booking ID, name, or room…" value="{{ request('search') }}"
-                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
+                    <x-booking.ui.icon-solid name="magnifying-glass" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-[13px]" />
+                    <input id="bookingSearch" type="search" name="search" autocomplete="off"
+                           placeholder="Booking ID, name, or room…" value="{{ $search }}"
+                           class="{{ $fieldClasses }} pl-10">
                 </div>
             </div>
 
-            <div class="xl:col-span-2">
-                <label for="bookingStatus" class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Status</label>
-                <select id="bookingStatus" name="status" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
-                    <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Statuses</option>
-                    <option value="pending_payment" {{ request('status') == 'pending_payment' ? 'selected' : '' }}>Pending Payment</option>
-                    <option value="pending_discount" {{ request('status') == 'pending_discount' ? 'selected' : '' }}>Pending Discount</option>
-                    {{-- Paid was missing, which mattered little while it was a
-                         waypoint on the way to Active. It is now the status a
-                         guest comes looking for: the only one they can ask to
-                         move, and the only one they cannot cancel. --}}
-                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                </select>
-            </div>
-
-            <div class="xl:col-span-4">
-                <label for="bookingSort" class="block text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Sort by</label>
-                <div class="flex gap-2">
-                    <select id="bookingSort" name="sort_by" class="min-w-0 flex-1 px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
-                        <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Booking Date</option>
-                        <option value="check_in" {{ request('sort_by') == 'check_in' ? 'selected' : '' }}>Check-in Date</option>
-                        <option value="check_out" {{ request('sort_by') == 'check_out' ? 'selected' : '' }}>Check-out Date</option>
-                        <option value="total_price" {{ request('sort_by') == 'total_price' ? 'selected' : '' }}>Total Price</option>
-                        <option value="status" {{ request('sort_by') == 'status' ? 'selected' : '' }}>Booking Status</option>
-                    </select>
-                    {{-- Direction is an attribute of the sort, so it sits with
-                         it rather than reading as a fourth, unrelated filter. --}}
-                    <select name="sort_dir" aria-label="Sort direction" class="w-[4.75rem] shrink-0 px-2 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:border-clsu-400 focus:ring-2 focus:ring-clsu-200 outline-none transition-[color,background-color,border-color,box-shadow] cursor-pointer font-semibold">
-                        <option value="desc" {{ request('sort_dir') == 'desc' ? 'selected' : '' }}>↓</option>
-                        <option value="asc" {{ request('sort_dir') == 'asc' ? 'selected' : '' }}>↑</option>
+            <div class="flex items-end gap-2 lg:shrink-0">
+                <div class="min-w-0 flex-1 lg:w-44 lg:flex-none">
+                    <label for="bookingSort" class="{{ $labelClasses }}">Sort by</label>
+                    <select id="bookingSort" name="sort_by" class="{{ $fieldClasses }} cursor-pointer">
+                        <option value="created_at" @selected($sortBy === 'created_at')>Booking date</option>
+                        <option value="check_in" @selected($sortBy === 'check_in')>Check-in date</option>
+                        <option value="check_out" @selected($sortBy === 'check_out')>Check-out date</option>
+                        <option value="total_price" @selected($sortBy === 'total_price')>Total price</option>
+                        <option value="status" @selected($sortBy === 'status')>Booking status</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="sm:col-span-2 xl:col-span-2 flex gap-2">
-                <x-booking.ui.button variant="primary" class="flex-1 py-2.5 px-4">Apply</x-booking.ui.button>
-                @if(request()->filled('search') || request()->filled('status'))
-                    <x-booking.ui.button variant="neutral" href="{{ route('settings.bookings') }}" class="py-2.5 px-4 shrink-0" title="Clear filters">
-                        <x-booking.ui.icon-solid name="arrows-rotate" class="text-[13px]" />
-                        <span class="sr-only">Reset filters</span>
-                    </x-booking.ui.button>
-                @endif
+                <div class="min-w-0 flex-1 lg:w-40 lg:flex-none">
+                    <label for="bookingDir" class="{{ $labelClasses }}">Order</label>
+                    <select id="bookingDir" name="sort_dir" class="{{ $fieldClasses }} cursor-pointer">
+                        <option value="desc" @selected($sortDir === 'desc')>{{ $dirLabels['desc'] }}</option>
+                        <option value="asc" @selected($sortDir === 'asc')>{{ $dirLabels['asc'] }}</option>
+                    </select>
+                </div>
             </div>
         </div>
+
+        <fieldset class="mt-3.5">
+            <legend class="sr-only">Filter by booking status</legend>
+            {{-- Scrolls rather than wraps: the account panel is narrow between
+                 lg and xl, and a wrapping chip row changed height as the counts
+                 changed, which shifted the whole list under the cursor. --}}
+            <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                @foreach($statusOptions as $value => $label)
+                    @php
+                        $count = $value === 'all' ? $statusCounts->sum() : $statusCounts->get($value, 0);
+                        $on = $activeStatus === $value;
+                    @endphp
+                    @continue($value !== 'all' && $count === 0 && ! $on)
+                    {{-- Selected state is driven by :checked, not by a Blade
+                         ternary. The ternary was correct on arrival and wrong
+                         for the half-second after a tap: the chip could not
+                         restyle until the server sent a new page, so the press
+                         landed on a control that appeared to ignore it. CSS
+                         paints it on the click and the reload merely confirms
+                         it — which also means the styling cannot drift from
+                         what is actually checked. --}}
+                    {{-- The radio is the peer and the visible chip is its
+                         following sibling, so selection is styled through `~`
+                         rather than `:has()`. Both express the same thing, but
+                         `:has()` did not repaint the chip when the radio was
+                         clicked, leaving the press looking ignored until the
+                         server replied — and it is still only partial in
+                         Safari 16.0-16.3. A sibling combinator has neither
+                         problem. --}}
+                    <label class="shrink-0 inline-flex cursor-pointer select-none">
+                        <input type="radio" name="status" value="{{ $value }}" @checked($on) class="peer sr-only">
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-xs font-bold text-stone-600 whitespace-nowrap transition-[color,background-color,border-color,box-shadow] hover:border-clsu-300 hover:text-clsu-800 peer-focus-visible:ring-2 peer-focus-visible:ring-clsu-300 peer-checked:border-clsu-600 peer-checked:bg-clsu-50 peer-checked:text-clsu-800 peer-checked:[&>span]:bg-clsu-600 peer-checked:[&>span]:text-white">
+                            {{ $label }}
+                            <span class="rounded-full bg-stone-100 px-1.5 py-px text-[10px] tabular-nums text-stone-500 transition-[color,background-color]">{{ $count }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        </fieldset>
+
+        <noscript>
+            <div class="mt-3">
+                <x-booking.ui.button variant="primary" class="py-2.5 px-5">Apply filters</x-booking.ui.button>
+            </div>
+        </noscript>
     </form>
+
+    @if($filtersOn)
+        <div class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold text-stone-500">
+            <span>
+                {{ $bookings->total() }} {{ Str::plural('booking', $bookings->total()) }}
+                @if(filled($search)) matching &ldquo;{{ $search }}&rdquo; @endif
+            </span>
+            <a href="{{ route('settings.bookings') }}"
+               class="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1 text-stone-600 !no-underline transition-[color,background-color,border-color,box-shadow] hover:border-clsu-300 hover:text-clsu-800">
+                <x-booking.ui.icon-solid name="xmark" class="text-[11px]" />
+                Clear filters
+            </a>
+        </div>
+    @endif
 
     {{-- Error messages --}}
     @if ($errors->any())
@@ -242,6 +313,20 @@
                 Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} results
             </div>
         </div>
+    @elseif($hasAnyBooking)
+        {{-- A filter that matched nothing is not the same as having no
+             bookings. This branch used to fall through to "No Bookings Yet —
+             make your first booking today", which told a guest with a dozen
+             stays that they had never booked, and offered them the one action
+             that does not fix it. The way out of an over-narrow filter is to
+             widen it, so that is the button. --}}
+        <x-booking.ui.empty-state
+            title="No bookings match these filters"
+            description="Nothing here fits the search and status you picked. Try a different status, or clear the filters to see every stay."
+            icon="magnifying-glass"
+            actionText="Clear filters"
+            :actionUrl="route('settings.bookings')"
+        />
     @else
         <x-booking.ui.empty-state
             title="No Bookings Yet"
@@ -439,5 +524,49 @@
             if (!document.hidden) check();
         });
     });
+    </script>
+
+    <script>
+    // Auto-applying filters — the reason there is no Apply button.
+    //
+    // requestSubmit() rather than submit(): submit() bypasses both validation
+    // and the submit event, which would quietly cut out the shared
+    // [data-busy-form] handler if this form ever grows one.
+    (function () {
+        var form = document.querySelector('form[data-autofilter]');
+        if (!form) return;
+
+        // Chips and selects are discrete choices — commit them at once.
+        form.addEventListener('change', function (e) {
+            if (e.target.matches('select, input[type="radio"]')) form.requestSubmit();
+        });
+
+        var search = form.querySelector('#bookingSearch');
+        if (!search) return;
+
+        // Typing is not a choice until it stops. Without the debounce this
+        // fires a full page load per keystroke.
+        var timer;
+        var REFOCUS = 'mybookings:refocus';
+        search.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                // A reload throws away focus and the caret, so a guest mid-word
+                // would be typing into nothing. Flag the reload as ours and put
+                // them back afterwards — but only for a search-driven reload,
+                // never when the page is opened or navigated back to.
+                try { sessionStorage.setItem(REFOCUS, '1'); } catch (err) {}
+                form.requestSubmit();
+            }, 450);
+        });
+
+        try {
+            if (sessionStorage.getItem(REFOCUS)) {
+                sessionStorage.removeItem(REFOCUS);
+                search.focus({ preventScroll: true });
+                search.setSelectionRange(search.value.length, search.value.length);
+            }
+        } catch (err) {}
+    })();
     </script>
 @endsection

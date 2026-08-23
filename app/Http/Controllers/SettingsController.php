@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\RefCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Events\BookingChanged;
@@ -58,6 +59,17 @@ class SettingsController extends Controller
             });
         }
 
+        // How many bookings sit behind each status chip, counted AFTER the
+        // search but BEFORE the status filter — otherwise every chip but the
+        // active one would read zero. Cloned rather than re-derived so the
+        // chips can never disagree with the list they filter.
+        $statusCounts = (clone $query)
+            ->reorder()
+            ->getQuery()
+            ->select('status', DB::raw('COUNT(*) as aggregate'))
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
         // Filter by status
         if ($status && $status !== 'all') {
             $query->where('status', $status);
@@ -84,6 +96,13 @@ class SettingsController extends Controller
             'status'     => $status,
             'sortBy'     => $sortBy,
             'sortDir'    => $sortDir,
+            'statusCounts' => $statusCounts,
+            // Whether this guest has ANY booking, regardless of the filters.
+            // The empty state used to read "No Bookings Yet — make your first
+            // booking today!" whenever a filter simply matched nothing, which
+            // told a guest with a dozen stays that they had none. The two
+            // cases need different copy, so the view needs to tell them apart.
+            'hasAnyBooking' => $user->bookings()->exists(),
         ]);
     }
 

@@ -46,7 +46,7 @@ class MarkNoShowBookings extends Command
         $this->info("🔍 Checking for no-show bookings at {$now->format('Y-m-d H:i:s')}...");
 
         $bookings = Booking::where('status', 'paid')
-            ->whereDate('check_in', '<', $now->toDateString())
+            ->where('check_in', '<', $now->toDateString())
             // A guest who asked to move the stay in time has done the one thing
             // the policy asks of them. Forfeiting them because nobody at the
             // desk has answered yet would punish them for our own queue, and it

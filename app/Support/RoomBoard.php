@@ -40,7 +40,7 @@ class RoomBoard
         $stays = DB::table('booking_room')
             ->join('bookings', 'booking_room.booking_id', '=', 'bookings.id')
             ->whereIn('bookings.status', Booking::BLOCKING_STATUSES)
-            ->whereDate('bookings.check_out', '>=', $today)
+            ->where('bookings.check_out', '>=', $todayKey)
             ->orderBy('bookings.check_in')
             ->get([
                 'booking_room.room_id',

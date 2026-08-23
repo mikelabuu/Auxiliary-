@@ -936,9 +936,20 @@ document.addEventListener('DOMContentLoaded', function () {
               (spare ? ' — raise a room with a spare bed, or add another.' : '.');
       } else {
         state = 'balanced';
-        msg = r.expected === 1
+        // Everyone is seated, and the picker may well have gone quiet: a room
+        // needs a guest in it, so the party size is also the room ceiling.
+        // That was being enforced in silence — every + greyed out with nothing
+        // saying why, and this line congratulating the guest while it happened.
+        // If the cap is what stopped them, the cap is what to say.
+        const capped = r.blocks.length >= r.expected;
+        msg = (r.expected === 1
           ? 'Your guest has a bed.'
-          : 'All ' + r.expected + ' guests have a bed.';
+          : 'All ' + r.expected + ' guests have a bed.');
+        if (capped) {
+          msg += r.expected === 1
+            ? ' A room needs someone in it, so one guest is one room — <b>add a guest</b> in step 1 if you want a second.'
+            : ' A room needs someone in it, so ' + r.expected + ' guests can hold at most <b>' + r.expected + ' rooms</b>.';
+        }
       }
     }
 
@@ -948,7 +959,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Capped at 100% so an over-assignment still reads as "full and then
       // some" rather than overflowing the track.
       const pct = r.expected > 0 ? Math.min(100, (r.assigned / r.expected) * 100) : 0;
-      fill.style.width = pct + '%';
+      fill.style.transform = 'scaleX(' + (pct / 100) + ')';
     }
   }
 
@@ -1196,6 +1207,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  /**
+   * The server's MAX_ROOMS_PER_BOOKING, so the picker stops where store() does
+   * rather than letting the guest build an eleventh room and find out on
+   * submit. Rendered onto the list; the fallback matches the PHP constant.
+   */
+  const maxRooms = parseInt(document.getElementById('roomPicker')?.dataset.maxRooms, 10) || 10;
+
   /** How many rooms of each style the booking currently holds. */
   function roomQuantities() {
     const q = {};
@@ -1292,11 +1310,11 @@ document.addEventListener('DOMContentLoaded', function () {
    */
   let roomSplitMode = false;
 
-  /** Styles that could seat the whole party on their own and are still free. */
-  function stylesThatFitAlone(expected) {
+  /** Styles that could seat everyone still waiting on their own, and are free. */
+  function stylesThatFitAlone(need) {
     return roomCatalogue().filter(function (i) {
       const free = availableByType[i.type];
-      return i.beds >= expected && !(free !== undefined && free <= 0);
+      return i.beds >= need && !(free !== undefined && free <= 0);
     });
   }
 
@@ -1304,12 +1322,33 @@ document.addEventListener('DOMContentLoaded', function () {
     r = r || readiness();
     const q = roomQuantities();
     const expected = r.expected || 0;
-    // Beds still to fill. Once this reaches zero another room adds cost and
-    // no beds, so nothing is selectable any more — that, and not the room's
-    // size, is the honest reason a + should stop.
+    const rooms = r.blocks.length;
+    // Beds still to fill.
     const unseated = Math.max(0, expected - r.assigned);
 
-    const fitting = stylesThatFitAlone(expected);
+    // How many more rooms this booking may hold.
+    //
+    // This was `unseated <= 0`, which stopped the picker dead the moment every
+    // guest had a bed — and reseatRooms() hands the beds out greedily, so that
+    // moment is the first room. A lone guest could pick one room and never a
+    // second; a couple who wanted a room each could not have one, because the
+    // first room had already absorbed them both. Neither is a rule the server
+    // holds: store() asks only that the per-room counts sum to the party and
+    // that no room is left empty.
+    //
+    // So the ceiling is rooms against party, which is what "no empty room"
+    // means at the limit — one guest apiece. reseatRooms() already reserves a
+    // seat for every room it still has to fill, so the redistribution to 1 + 1
+    // happens on its own.
+    const roomsLeft = Math.max(0, Math.min(expected, maxRooms) - rooms);
+
+    // Sized against who is still waiting rather than against the whole party.
+    // Once one room is picked the guest is already splitting, and the style
+    // that exactly seats the remainder is the obvious next choice — it was
+    // being held back as "too small" for a party it was never asked to hold.
+    const need = Math.max(1, unseated);
+
+    const fitting = stylesThatFitAlone(need);
     // Nothing on the property holds this party in one room, so there is no
     // strict view to offer — split is the only way to book and saying so is
     // better than a list where every row is disabled.
@@ -1325,14 +1364,14 @@ document.addEventListener('DOMContentLoaded', function () {
       // Held back only while the guest has not opted into splitting, and never
       // for a style they have already taken — pulling a chosen room out from
       // under them would be worse than the problem this solves.
-      const tooSmall = strict && item.beds < expected && have === 0;
+      const tooSmall = strict && item.beds < need && have === 0;
 
       const out = item.row.querySelector('[data-room-qty]');
       if (out) out.textContent = have;
       item.row.classList.toggle('is-chosen', have > 0);
       item.row.classList.toggle('is-sold-out', soldOut);
       item.row.classList.toggle('is-too-small', tooSmall);
-      item.row.classList.toggle('is-full', !soldOut && !tooSmall && unseated <= 0 && have === 0);
+      item.row.classList.toggle('is-full', !soldOut && !tooSmall && roomsLeft <= 0 && have === 0);
 
       // What this room does about THIS party, which is the question being
       // asked. "Sleeps 2" is on the pill beside it and is a fact about the
@@ -1345,12 +1384,19 @@ document.addEventListener('DOMContentLoaded', function () {
           text = '';
         } else if (expected <= 0) {
           text = '';
-        } else if (item.beds >= expected) {
-          text = expected === 1 ? 'Room for one' : 'Fits all ' + expected;
+        } else if (unseated <= 0) {
+          // Everyone has a bed. Another room is still allowed while there are
+          // guests to spread across it, but no room "fits" anything from here
+          // and saying so would be noise.
+          text = '';
+        } else if (item.beds >= need) {
+          text = need === expected
+            ? (expected === 1 ? 'Room for one' : 'Fits all ' + expected)
+            : 'Fits the last ' + need;
           state = 'ok';
         } else if (tooSmall) {
-          const need = Math.ceil(expected / item.beds);
-          text = 'Too small \u2014 need ' + need;
+          const roomsNeeded = Math.ceil(need / item.beds);
+          text = 'Too small \u2014 need ' + roomsNeeded;
           state = 'no';
         } else {
           const takes = Math.min(item.beds, unseated || item.beds);
@@ -1378,8 +1424,9 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         // Everything that makes another room of this style pointless or
-        // impossible, in one place.
-        b.disabled = soldOut || outOfStock || tooSmall || (expected > 0 && unseated <= 0);
+        // impossible, in one place. The last clause is the room ceiling, not
+        // the bed budget — see roomsLeft.
+        b.disabled = soldOut || outOfStock || tooSmall || (expected > 0 && roomsLeft <= 0);
       });
     });
 
@@ -2094,15 +2141,15 @@ document.addEventListener('DOMContentLoaded', function () {
     container.innerHTML = `
       <div class="grid grid-cols-3 items-center bg-white/60 ring-1 ring-emerald-deep/5 rounded-2xl px-2 py-3 text-center">
         <div>
-          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-in</span>
+          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Check-in</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
         </div>
         <div class="border-x border-emerald-deep/10">
-          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Nights</span>
+          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Nights</span>
           <span class="block text-[13px] font-extrabold text-palay-800 mt-0.5">${nights}</span>
         </div>
         <div>
-          <span class="block text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">Check-out</span>
+          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Check-out</span>
           <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
         </div>
       </div>
@@ -2112,7 +2159,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
       <div class="mt-5 bg-emerald-deep p-5 rounded-2xl flex justify-between items-center">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-[0.24em] text-cream/60">Total Due</span>
+          <span class="font-label text-[10px] uppercase tracking-[0.24em] text-cream/60">Total Due</span>
           <span class="block text-[11px] font-semibold text-cream/70 mt-0.5">${blocks.length} ${blocks.length === 1 ? 'room' : 'rooms'} for ${nights} ${nights === 1 ? 'night' : 'nights'}</span>
         </div>
         <div class="font-display text-2xl text-gold-soft tabnum" id="summaryTotalAmount">${formatPrice(totalPrice)}</div>

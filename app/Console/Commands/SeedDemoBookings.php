@@ -256,8 +256,8 @@ class SeedDemoBookings extends Command
         return Room::where('status', 'available')
             ->whereDoesntHave('bookings', function ($q) use ($windowStart, $windowEnd) {
                 $q->whereIn('status', Booking::BLOCKING_STATUSES)
-                    ->whereDate('check_in', '<', $windowEnd)
-                    ->whereDate('check_out', '>', $windowStart);
+                    ->where('check_in', '<', $windowEnd->toDateString())
+                    ->where('check_out', '>', $windowStart->toDateString());
             })
             ->orderBy('room_number')
             ->take($count)

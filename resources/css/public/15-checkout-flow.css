@@ -15,6 +15,70 @@
    points at the field rather than describing it.
    ============================================================ */
 
+/* ── Signage ─────────────────────────────────────────────────
+   Every small uppercase string in this world is Oswald at 0.2em or
+   wider. That is DESIGN.md's Signage Rule, and it is where the system's
+   institutional character actually lives — the condensed capitals are
+   the property's signage and paperwork, the way a printed register
+   labels its columns.
+
+   Checkout was the one public surface that never adopted it. Ten rules
+   in this file set uppercase *Manrope* at 700-800 weight and 0.04em to
+   0.18em tracking, which is the generic dashboard label: heavy, tight,
+   and belonging to no particular place. The auth surface has done this
+   correctly since it was rebuilt, so the two halves of the same journey
+   were speaking in different voices.
+
+   Stated once here rather than repaired ten times below, so a label
+   added to this file later inherits it by joining the list instead of
+   by remembering four declarations. The per-class rules keep only what
+   genuinely differs between them: size and colour.
+
+   Weight drops to 400 because Oswald ships at 400 in this system and is
+   condensed — the heavy weights those Manrope labels needed for presence
+   go muddy on a condensed face at 10-12px, filling their own counters.
+   Tracking is what gives a condensed capital its air, not weight. */
+.stay-field-label,
+.guest-pop-label,
+.guest-pop-done,
+.count-field-label,
+.count-auto-tag,
+.room-picker-label,
+.room-cap-pill,
+.room-suggestion-label,
+.room-card-note:not(:empty) {
+    font-family: var(--font-label);
+    font-weight: 400;
+    letter-spacing: 0.2em;
+}
+
+/* Tracking is applied after every letter, including the last, so a
+   centred string sits one space left of true centre. Pushing the same
+   amount back in front restores it. Only the centred ones need this. */
+.guest-pop-done,
+.room-cap-pill,
+.count-auto-tag {
+    text-indent: 0.2em;
+}
+
+/* The address selector's four labels.
+
+   Scoped rather than fixed at the component, because <x-address-selector>
+   is shared with the staff booking form and the two run different CSS
+   bundles: admin.css defines neither --font-label nor the ink ramp, so
+   swapping the component's own classes would leave the staff labels with
+   no font and no colour at all. .night-fields is the wrapper checkout
+   already puts around it for exactly this purpose — 07-checkout-night.css
+   re-skins the same labels through it — so the signage lands here and the
+   shared component keeps its neutral defaults. */
+.night-fields label {
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
 /* ── Allocation meter ────────────────────────────────────────── */
 
 .alloc-meter {
@@ -30,14 +94,6 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 0.75rem;
-}
-
-.alloc-meter-label {
-    font-size: 0.625rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--color-stone-500, #6b7280);
 }
 
 .alloc-meter-count {
@@ -58,13 +114,22 @@
     background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 14%, transparent);
 }
 
+/* Scaled, not resized. Animating `width` re-runs layout on every frame of the
+   320ms fill, and this bar moves on every press of a room stepper — the one
+   control a guest uses repeatedly. scaleX rides the compositor instead.
+
+   The track above already clips to a pill and hides its overflow, so the fill
+   sits at full width and is scaled down from its left edge; the rounded caps
+   come from that clip rather than from this element's own radius. */
 .alloc-meter-fill {
     display: block;
     height: 100%;
-    width: 0;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
     border-radius: 999px;
     background: var(--color-emerald, #16b364);
-    transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 260ms ease;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 260ms ease;
 }
 
 .alloc-meter-hint {
@@ -72,7 +137,7 @@
     font-size: 0.6875rem;
     font-weight: 600;
     line-height: 1.45;
-    color: var(--color-stone-600, #4a5b50);
+    color: var(--color-ink-soft);
 }
 
 /* Under-filled: neutral. Nothing is wrong yet — the guest is mid-task. */
@@ -181,10 +246,8 @@
    placeholder, so a filled field still says what it is. */
 .stay-field-label {
     font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 .stay-field-control {
@@ -225,12 +288,12 @@
 
 .stay-field-input::placeholder {
     font-weight: 600;
-    color: var(--color-stone-400, #9ca3af);
+    color: var(--color-ink-faint);
 }
 
 .stay-field-caret {
     font-size: 12px;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
     flex-shrink: 0;
     transition: transform 200ms ease;
 }
@@ -284,11 +347,9 @@
 }
 
 .guest-pop-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-size: 0.6875rem;
     text-transform: uppercase;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 .guest-pop-done {
@@ -300,8 +361,6 @@
     background: var(--color-emerald-deep, #0b3d2c);
     color: var(--color-cream, #f7f3ea);
     font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
     text-transform: uppercase;
     cursor: pointer;
     transition: background-color 180ms ease;
@@ -332,10 +391,8 @@
 
 .count-field-label {
     font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 /* Label plus its "filled for you" tag, kept together on the left so the
@@ -352,9 +409,7 @@
    moment the guest edits the field by hand, because from then on it is theirs
    and the tag would be a lie. */
 .count-auto-tag {
-    font-size: 0.5625rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-size: 0.625rem;
     text-transform: uppercase;
     white-space: nowrap;
     padding: 0.1rem 0.4rem;
@@ -372,7 +427,7 @@
     padding: 0.1rem 0.45rem;
     border-radius: 999px;
     white-space: nowrap;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
     background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 6%, transparent);
     transition: color 200ms ease, background-color 200ms ease;
 }
@@ -424,7 +479,7 @@
     font-size: 0.625rem;
     font-weight: 500;
     line-height: 1.5;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 .count-note[data-state='ok'] { color: var(--color-emerald-deep, #0b3d2c); font-weight: 600; }
@@ -439,9 +494,9 @@
 .btn-step:disabled:hover {
     opacity: 0.35;
     cursor: not-allowed;
-    background: color-mix(in oklch, #fff 60%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 60%, transparent);
     border-color: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 15%, transparent);
-    color: var(--color-stone-600, #4a5b50);
+    color: var(--color-ink-soft);
     transform: none;
 }
 
@@ -458,7 +513,7 @@
     font-size: 0.625rem;
     font-weight: 800;
     letter-spacing: 0.01em;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 /* Nothing to say (everyone is seated already) — take up no room saying it. */
@@ -483,10 +538,10 @@
     padding: 0.3rem 0.7rem 0.3rem 0.5rem;
     border-radius: 999px;
     border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 12%, transparent);
-    background: color-mix(in oklch, #fff 55%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 55%, transparent);
     font-size: 0.625rem;
     font-weight: 700;
-    color: var(--color-stone-600, #4a5b50);
+    color: var(--color-ink-soft);
     cursor: pointer;
     user-select: none;
 }
@@ -518,11 +573,11 @@
     padding: 0.4rem 0.8rem;
     border-radius: 999px;
     border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 14%, transparent);
-    background: color-mix(in oklch, #fff 60%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 60%, transparent);
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: var(--color-stone-600, #4a5b50);
+    color: var(--color-ink-soft);
     cursor: pointer;
     transition: color 180ms ease, background-color 180ms ease,
                 border-color 180ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -562,7 +617,7 @@
     font-size: 0.6875rem;
     font-weight: 700;
     line-height: 1.45;
-    color: var(--color-stone-700, #39463e);
+    color: var(--color-ink-soft);
 }
 
 /* The glyph is a Font Awesome <i> since the icon-set migration; booking.js
@@ -612,7 +667,7 @@
 .field-invalid,
 input.field-invalid {
     border-color: var(--color-ember-600, #dc2626) !important;
-    background: color-mix(in oklch, var(--color-ember-600, #dc2626) 6%, #fff) !important;
+    background: color-mix(in oklch, var(--color-ember-600, #dc2626) 6%, var(--color-cream-warm)) !important;
 }
 
 .field-invalid:focus {
@@ -656,10 +711,8 @@ input.field-invalid {
 .room-picker-label,
 .room-suggestion-label {
     font-size: 0.625rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
     margin-bottom: 0.625rem;
 }
 
@@ -687,19 +740,19 @@ input.field-invalid {
     overflow: hidden;
     border-radius: 1rem;
     border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
-    background: color-mix(in oklch, #fff 60%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 60%, transparent);
     transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
 }
 
 .room-card:hover {
     border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 55%, transparent);
-    background: #fff;
+    background: var(--color-cream-warm);
 }
 
 /* A room the guest has taken reads as taken, without a badge saying so. */
 .room-card.is-chosen {
     border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 70%, transparent);
-    background: color-mix(in oklch, var(--color-gold, #c8a34a) 8%, #fff);
+    background: color-mix(in oklch, var(--color-gold, #c8a34a) 8%, var(--color-cream-warm));
     box-shadow: 0 10px 26px -22px rgba(6, 40, 30, 0.5);
 }
 
@@ -716,7 +769,7 @@ input.field-invalid {
 .room-card.is-too-small:hover,
 .room-card.is-full:hover {
     border-color: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 10%, transparent);
-    background: color-mix(in oklch, #fff 60%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 60%, transparent);
 }
 
 /* Everyone already has a bed. Not an error, so it only quiets down. */
@@ -760,11 +813,9 @@ input.field-invalid {
     flex: 0 0 auto;
     padding: 0.1rem 0.4rem;
     border-radius: 999px;
-    font-size: 0.5625rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    font-size: 0.625rem;
     text-transform: uppercase;
-    color: var(--color-stone-600, #4b5563);
+    color: var(--color-ink-soft);
     background: color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 7%, transparent);
 }
 
@@ -777,7 +828,7 @@ input.field-invalid {
 
 .room-card-per {
     font-weight: 600;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-faint);
 }
 
 /* What this room does about THIS party. The pill above is the room; this is
@@ -786,7 +837,7 @@ input.field-invalid {
     font-size: 0.625rem;
     font-weight: 700;
     line-height: 1.35;
-    color: var(--color-stone-500, #6b7280);
+    color: var(--color-ink-soft);
 }
 
 .room-card-fit[data-state='ok'] { color: var(--color-emerald-deep, #0b3d2c); }
@@ -794,12 +845,10 @@ input.field-invalid {
 .room-card-fit[data-state='no'] { color: var(--color-ember-700, #b91c1c); }
 
 .room-card-note:not(:empty) {
-    font-size: 0.5625rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
+    font-size: 0.625rem;
     line-height: 1.35;
     text-transform: uppercase;
-    color: var(--color-palay-800, #714a11);
+    color: var(--color-brass-ink);
 }
 
 /* Two to a row on a phone, where the same card at desktop proportions ran the
@@ -842,7 +891,7 @@ input.field-invalid {
     font-size: 0.6875rem;
     font-weight: 600;
     line-height: 1.45;
-    color: var(--color-stone-600, #4b5563);
+    color: var(--color-ink-soft);
 }
 
 .room-split-btn {
@@ -850,7 +899,7 @@ input.field-invalid {
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
     border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 25%, transparent);
-    background: #fff;
+    background: var(--color-cream-warm);
     font-size: 0.6875rem;
     font-weight: 800;
     color: var(--color-emerald-deep, #0b3d2c);
@@ -859,7 +908,7 @@ input.field-invalid {
 }
 
 .room-split-btn:hover {
-    background: color-mix(in oklch, var(--color-gold, #c8a34a) 12%, #fff);
+    background: color-mix(in oklch, var(--color-gold, #c8a34a) 12%, var(--color-cream-warm));
     border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 60%, transparent);
 }
 
@@ -891,17 +940,17 @@ input.field-invalid {
     height: 2rem;
     border-radius: 0.625rem;
     border: 1px solid color-mix(in oklch, var(--color-emerald-deep, #0b3d2c) 15%, transparent);
-    background: color-mix(in oklch, #fff 60%, transparent);
+    background: color-mix(in oklch, var(--color-cream-warm) 60%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-stone-600, #57534e);
+    color: var(--color-ink-soft);
     cursor: pointer;
     transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .room-qty-btn:hover:not(:disabled) {
-    background: #fff;
+    background: var(--color-cream-warm);
     border-color: color-mix(in oklch, var(--color-gold, #c8a34a) 55%, transparent);
     color: var(--color-emerald-deep, #0b3d2c);
 }
@@ -928,8 +977,8 @@ input.field-invalid {
     border-radius: 1.25rem;
     border: 1px solid color-mix(in oklch, var(--color-gold, #c8a34a) 45%, transparent);
     background: linear-gradient(180deg,
-        color-mix(in oklch, var(--color-gold, #c8a34a) 12%, #fff) 0%,
-        color-mix(in oklch, var(--color-gold, #c8a34a) 6%, #fff) 100%);
+        color-mix(in oklch, var(--color-gold, #c8a34a) 12%, var(--color-cream-warm)) 0%,
+        color-mix(in oklch, var(--color-gold, #c8a34a) 6%, var(--color-cream-warm)) 100%);
 }
 
 .room-suggestion[hidden] { display: none; }

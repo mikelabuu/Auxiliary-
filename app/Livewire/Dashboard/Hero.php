@@ -39,26 +39,26 @@ class Hero extends Component
         $readyToHost = $board->where('display_status', 'available')->count();
 
         // ── Today's operational counts ───────────────────────────────────
-        $arriving = Booking::whereDate('check_in', $today)
+        $arriving = Booking::where('check_in', $today)
             ->where('status', 'paid')
             ->count();
 
-        $departing = Booking::whereDate('check_out', $today)
+        $departing = Booking::where('check_out', $today)
             ->where('status', 'active')
             ->count();
 
         $inHouse = Booking::where('status', 'active')
-            ->whereDate('check_in', '<=', $today)
-            ->whereDate('check_out', '>=', $today)
+            ->where('check_in', '<=', $today)
+            ->where('check_out', '>=', $today)
             ->count();
 
         // Overdue = still checked in past check-out, plus paid arrivals that
         // never showed. Both are decisions a manager owes today.
         $overdueCheckouts = Booking::where('status', 'active')
-            ->whereDate('check_out', '<', $today)
+            ->where('check_out', '<', $today)
             ->count();
         $missedArrivals = Booking::where('status', 'paid')
-            ->whereDate('check_in', '<', $today)
+            ->where('check_in', '<', $today)
             ->count();
         $overdue = $overdueCheckouts + $missedArrivals;
 
