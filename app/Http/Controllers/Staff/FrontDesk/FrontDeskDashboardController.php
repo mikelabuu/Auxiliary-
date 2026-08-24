@@ -107,10 +107,10 @@ class FrontDeskDashboardController extends Controller
             ->count();
 
         $departuresToday = Booking::where('check_out', $manilaToday)
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->count();
 
-        $inHouse = Booking::where('status', 'active')->count();
+        $inHouse = Booking::where('status', Booking::STATUS_ACTIVE)->count();
 
         $totalRooms = Room::count();
         $availableTonight = Room::where('status', 'available')->count();

@@ -150,7 +150,7 @@ class PaymentController extends Controller
      */
     private function rejectIfNotPayable(Booking $booking)
     {
-        if ($booking->status !== 'pending_payment') {
+        if ($booking->status !== Booking::STATUS_PENDING_PAYMENT) {
             return redirect()->route('booking.show', $booking->id)
                 ->with('error', 'This booking is not awaiting payment.');
         }

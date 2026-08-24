@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\Concerns\BuildsBookingPayloads;
 use Tests\TestCase;
 
 /**
@@ -30,6 +31,7 @@ use Tests\TestCase;
  */
 class DoubleBookingTest extends TestCase
 {
+    use BuildsBookingPayloads;
     use RefreshDatabase;
 
     private function guest(string $email): User
@@ -96,30 +98,21 @@ class DoubleBookingTest extends TestCase
     }
 
     /** The payload the public checkout posts for one room. */
+    /**
+     * The shared payload, aimed at one room's style for the given nights.
+     *
+     * No room_number: the guest form does not accept one — store() assigns
+     * from the pool of that style inside the locked transaction. These tests
+     * seed a single room of the style, so "the pool" is that room.
+     */
     private function payload(Room $room, string $in, string $out): array
     {
-        return [
-            'first_name' => 'Ana',
-            'middle_name' => 'Cruz',
-            'last_name' => 'Reyes',
-            'guest_phone' => '09171234567',
-            'check_in' => $in,
-            'check_out' => $out,
-            'expected_guests' => 2,
-            'accept_terms' => 1,
-            'region_code' => 'R03|Central Luzon',
-            'province_code' => 'P01|Nueva Ecija',
-            'city_code' => 'C01|Science City of Munoz',
-            'barangay_code' => 'B01|Bantug',
-            'reservations' => [[
-                'room_type' => $room->room_type,
-                'room_number' => $room->room_number,
-                'num_guests' => 2,
-                'num_seniors' => 0,
-            ]],
-        ];
+        return $this->bookingPayload([
+            'check_in'     => $in,
+            'check_out'    => $out,
+            'reservations' => [$this->bookingReservation(['room_type' => $room->room_type])],
+        ]);
     }
-
     private function bookingsFor(Room $room): int
     {
         return Reservation::where('room_number', $room->room_number)->count();

@@ -100,7 +100,7 @@
            origins being reachable. The .woff2 files below are plain static
            assets under public/vendor (synced by scripts/sync-vendor.mjs), so
            they need no build step and keep this file's self-contained promise —
-           there is still no @vite here.
+           there is still no Vite tag here.
 
            Variable fonts, so these four faces cover every weight this page
            asks for: Playfair 400-500 upright and 400 italic, Manrope 400-600,

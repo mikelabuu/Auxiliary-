@@ -51,7 +51,7 @@ class AutoCheckOutBookings extends Command
         // <= today (not = today) so a day the scheduler was down doesn't leave
         // bookings stranded in 'active' forever.
         $bookings = Booking::with('reservations.room')
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->where('check_out', '<=', $now->toDateString())
             ->get();
 
@@ -62,7 +62,7 @@ class AutoCheckOutBookings extends Command
 
         DB::transaction(function () use ($bookings) {
             foreach ($bookings as $booking) {
-                $booking->update(['status' => 'completed']);
+                $booking->update(['status' => Booking::STATUS_COMPLETED]);
 
                 // The stay is over, so the rooms go back on the board. Without
                 // this, rooms stayed 'occupied' forever with no booking behind
@@ -71,7 +71,7 @@ class AutoCheckOutBookings extends Command
                 foreach ($booking->reservations as $reservation) {
                     $heldByAnother = \App\Models\Reservation::where('room_number', $reservation->room_number)
                         ->where('booking_id', '!=', $booking->id)
-                        ->whereHas('booking', fn ($q) => $q->where('status', 'active'))
+                        ->whereHas('booking', fn ($q) => $q->where('status', Booking::STATUS_ACTIVE))
                         ->exists();
 
                     if (!$heldByAnother) {

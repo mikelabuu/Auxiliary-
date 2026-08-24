@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BuildsBookingPayloads;
 use Tests\TestCase;
 
 /**
@@ -26,6 +27,7 @@ use Tests\TestCase;
  */
 class LapsedHoldTest extends TestCase
 {
+    use BuildsBookingPayloads;
     use RefreshDatabase;
 
     private function seedRoom(string $number = '101', string $type = 'double'): Room
@@ -156,25 +158,14 @@ class LapsedHoldTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $response = $this->actingAs($guest)->post('/booking', [
-            'first_name'      => 'Second',
-            'middle_name'     => 'In',
-            'last_name'       => 'Line',
-            'guest_phone'     => '09171234567',
-            'check_in'        => $this->checkIn(),
-            'check_out'       => $this->checkOut(),
-            'expected_guests' => 2,
-            'accept_terms'    => 1,
-            'region_code'     => '030000000|Central Luzon',
-            'province_code'   => '030800000|Bataan',
-            'city_code'       => '030801000|Abucay',
-            'barangay_code'   => '030801001|Bangkal',
-            'reservations'    => [[
-                'room_type'   => 'double',
-                'room_number' => '101',
-                'num_guests'  => 2,
-            ]],
-        ]);
+        $response = $this->actingAs($guest)->post('/booking', $this->bookingPayload([
+            'first_name'   => 'Second',
+            'middle_name'  => 'In',
+            'last_name'    => 'Line',
+            'check_in'     => $this->checkIn(),
+            'check_out'    => $this->checkOut(),
+            'reservations' => [$this->bookingReservation()],
+        ]));
 
         $response->assertSessionHasNoErrors();
         $this->assertSame(
@@ -196,25 +187,14 @@ class LapsedHoldTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $this->actingAs($guest)->post('/booking', [
-            'first_name'      => 'Too',
-            'middle_name'     => 'Late',
-            'last_name'       => 'Guest',
-            'guest_phone'     => '09171234567',
-            'check_in'        => $this->checkIn(),
-            'check_out'       => $this->checkOut(),
-            'expected_guests' => 2,
-            'accept_terms'    => 1,
-            'region_code'     => '030000000|Central Luzon',
-            'province_code'   => '030800000|Bataan',
-            'city_code'       => '030801000|Abucay',
-            'barangay_code'   => '030801001|Bangkal',
-            'reservations'    => [[
-                'room_type'   => 'double',
-                'room_number' => '101',
-                'num_guests'  => 2,
-            ]],
-        ]);
+        $this->actingAs($guest)->post('/booking', $this->bookingPayload([
+            'first_name'   => 'Too',
+            'middle_name'  => 'Late',
+            'last_name'    => 'Guest',
+            'check_in'     => $this->checkIn(),
+            'check_out'    => $this->checkOut(),
+            'reservations' => [$this->bookingReservation()],
+        ]));
 
         $this->assertSame(
             1,

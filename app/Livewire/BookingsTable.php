@@ -100,7 +100,7 @@ class BookingsTable extends Component
     {   
         $staff = Auth::guard('staff')->user();
         $booking = Booking::find($bookingId);
-        if ($booking && $booking->status == 'pending_payment') {
+        if ($booking && $booking->status == Booking::STATUS_PENDING_PAYMENT) {
             $booking->status = 'cancelled';
             $booking->save();
 
@@ -119,8 +119,8 @@ class BookingsTable extends Component
             AuditLogger::log(
                 'booking_cancelled',
                 $booking,
-                ['status' => 'pending_payment'],
-                ['status' => 'cancelled'],
+                ['status' => Booking::STATUS_PENDING_PAYMENT],
+                ['status' => Booking::STATUS_CANCELLED],
                 "Booking #{$booking->id} was cancelled by {$staff->name}"
             );
             $this->dispatch('toast', message: "Booking #{$booking->id} cancelled.", type: 'success');
@@ -149,7 +149,7 @@ class BookingsTable extends Component
         
         DB::transaction(function () use ($booking, $staff) {
 
-            $booking->update(['status' => 'completed']);
+            $booking->update(['status' => Booking::STATUS_COMPLETED]);
 
             foreach ($booking->reservations as $reservation) {
                 $reservation->room->update(['status' => 'available']);
@@ -165,8 +165,8 @@ class BookingsTable extends Component
             AuditLogger::log(
                 'booking_checked_out',
                 $booking,
-                ['status' => 'active'],
-                ['status' => 'completed'],
+                ['status' => Booking::STATUS_ACTIVE],
+                ['status' => Booking::STATUS_COMPLETED],
                 "Booking #{$booking->id} checked out by {$staff->name}"
             );
         });

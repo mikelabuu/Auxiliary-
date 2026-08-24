@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Models\Booking;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\GuestBookingUpdated;
@@ -87,7 +88,7 @@ class PaymentVerificationController extends Controller
 
             $booking = $locked->booking;
 
-            if (! $booking || $booking->status !== 'pending_payment') {
+            if (! $booking || $booking->status !== Booking::STATUS_PENDING_PAYMENT) {
                 return null;
             }
 
@@ -100,7 +101,7 @@ class PaymentVerificationController extends Controller
             ]);
 
             $booking->update([
-                'status' => 'paid',
+                'status' => Booking::STATUS_PAID,
                 'payment_mode' => $locked->proof_method ?? 'manual',
             ]);
 

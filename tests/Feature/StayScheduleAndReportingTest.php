@@ -175,20 +175,36 @@ class StayScheduleAndReportingTest extends TestCase
         );
     }
 
-    public function test_arrival_slots_start_at_check_in(): void
+    /**
+     * The list opens at the earliest arrival the desk can actually honour,
+     * which is checkout_time — the moment the previous guest must be out — not
+     * check-in. This test asserted '2:00 PM' from back when the slots simply
+     * started at check-in; early check-in is the whole reason
+     * StaySchedule::earlyCheckinHours() exists, and it moved the opening slot
+     * down to the checkout boundary.
+     */
+    public function test_arrival_slots_start_at_the_earliest_honourable_arrival(): void
     {
-        config(['hostel.checkin_time' => '14:00']);
+        config(['hostel.checkin_time' => '14:00', 'hostel.checkout_time' => '12:00']);
         $slots = StaySchedule::arrivalSlots();
 
-        $this->assertSame('2:00 PM', reset($slots));
+        $this->assertSame('12:00 PM', reset($slots));
         $this->assertSame('After midnight', end($slots));
 
-        // Move check-in later and the form must stop offering earlier arrivals.
+        // A later check-in widens the early-arrival window rather than pushing
+        // the list forward — the room is free from checkout time either way.
         config(['hostel.checkin_time' => '16:00']);
         $later = StaySchedule::arrivalSlots();
 
-        $this->assertSame('4:00 PM', reset($later));
-        $this->assertArrayNotHasKey('14:00', $later);
+        $this->assertSame('12:00 PM', reset($later));
+        $this->assertArrayHasKey('14:00', $later);
+
+        // Checkout is the bound that does move the start.
+        config(['hostel.checkout_time' => '15:00']);
+        $tighter = StaySchedule::arrivalSlots();
+
+        $this->assertSame('3:00 PM', reset($tighter));
+        $this->assertArrayNotHasKey('14:00', $tighter);
     }
 
     // ── Checkout-due alert ───────────────────────────────────────────────────

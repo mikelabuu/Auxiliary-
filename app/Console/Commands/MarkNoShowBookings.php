@@ -45,7 +45,7 @@ class MarkNoShowBookings extends Command
         $now = Carbon::now(config('hostel.timezone'));
         $this->info("🔍 Checking for no-show bookings at {$now->format('Y-m-d H:i:s')}...");
 
-        $bookings = Booking::where('status', 'paid')
+        $bookings = Booking::where('status', Booking::STATUS_PAID)
             ->where('check_in', '<', $now->toDateString())
             // A guest who asked to move the stay in time has done the one thing
             // the policy asks of them. Forfeiting them because nobody at the
@@ -65,12 +65,12 @@ class MarkNoShowBookings extends Command
             foreach ($bookings as $booking) {
                 $previousStatus = $booking->status;
 
-                $booking->update(['status' => 'no_show']);
+                $booking->update(['status' => Booking::STATUS_NO_SHOW]);
 
                 NoShowLog::create([
                     'booking_id' => $booking->id,
                     'previous_status' => $previousStatus,
-                    'new_status' => 'no_show',
+                    'new_status' => Booking::STATUS_NO_SHOW,
                     // Was "did not check in by 11:00 PM", a time this command
                     // never enforced — it runs after midnight and looks at the
                     // whole day. The reason now states what actually happened

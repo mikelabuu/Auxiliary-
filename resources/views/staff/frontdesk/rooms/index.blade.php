@@ -320,9 +320,16 @@ $(function() {
 // Real-time push: the board reflects check-ins, check-outs and housekeeping
 // flips made anywhere else (admin console, another desk) without staff having
 // to refresh. Deferred while a modal or filter is in use — see live-refresh.js.
-window.liveRefresh([
-    { channel: 'rooms',    event: 'RoomStatusChanged' },
-    { channel: 'bookings', event: 'BookingChanged' },
-]);
+// Deferred: liveRefresh comes from admin.js, which Vite emits as a
+// <script type="module"> — deferred, so it runs *after* this block. Calling it
+// directly threw "window.liveRefresh is not a function" and left the page with
+// no live updates at all. Module scripts run before DOMContentLoaded, so by
+// here it exists.
+document.addEventListener('DOMContentLoaded', () => {
+    window.liveRefresh([
+        { channel: 'rooms',    event: 'RoomStatusChanged' },
+        { channel: 'bookings', event: 'BookingChanged' },
+    ]);
+});
 </script>
 @endpush

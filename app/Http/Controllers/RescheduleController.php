@@ -198,7 +198,7 @@ class RescheduleController extends Controller
     {
         if (! in_array($booking->status, RescheduleRequest::RESCHEDULABLE_STATUSES, true)) {
             return redirect()->route('booking.show', $booking->id)
-                ->with('error', $booking->status === 'pending_payment' || $booking->status === 'pending_discount'
+                ->with('error', $booking->status === Booking::STATUS_PENDING_PAYMENT || $booking->status === Booking::STATUS_PENDING_DISCOUNT
                     ? 'This booking has not been paid yet, so there is nothing to move — cancel it and book the dates you want instead.'
                     : 'Only a paid booking that has not started yet can be moved. Please contact our front desk.');
         }

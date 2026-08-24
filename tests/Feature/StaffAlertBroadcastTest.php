@@ -24,6 +24,31 @@ class StaffAlertBroadcastTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * The three handshake tests below drive the real /broadcasting/auth route,
+     * and that route only behaves like production under a real broadcaster.
+     * The suite defaults to the `null` driver (phpunit.xml) so that
+     * ShouldBroadcastNow events do not each pay a connection timeout to a
+     * Reverb server nobody started — but `null` authorises every channel and
+     * returns no signature, which would make the guard assertions here pass
+     * while proving nothing.
+     *
+     * Pinning the connection costs nothing: signing an auth response is a
+     * local HMAC over the socket id. Only *publishing* an event opens a
+     * socket, and nothing in this class publishes.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['broadcasting.default' => 'reverb']);
+
+        // Switching the default resolves a *new* broadcaster, and channel
+        // callbacks were registered against the old one — so re-run the
+        // registration or every channel below reads as unregistered.
+        require base_path('routes/channels.php');
+    }
+
     private function staff(array $overrides = []): Staff
     {
         return Staff::create(array_merge([

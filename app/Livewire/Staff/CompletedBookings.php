@@ -51,7 +51,7 @@ class CompletedBookings extends Component
         // BK-0004, which matched nothing against the bare id column.
         $refId = RefCode::toId($this->search);
 
-        $query = Booking::where('status', 'completed')
+        $query = Booking::where('status', Booking::STATUS_COMPLETED)
             // Grouped, which it was not. `->where(status)->when(fn => where(id)
             // ->orWhere(guest_name))` binds as
             // `(status = completed AND id LIKE ...) OR guest_name LIKE ...`,

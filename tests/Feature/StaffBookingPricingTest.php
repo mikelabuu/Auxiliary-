@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\BuildsBookingPayloads;
 use Tests\TestCase;
 
 /**
@@ -27,6 +28,7 @@ use Tests\TestCase;
  */
 class StaffBookingPricingTest extends TestCase
 {
+    use BuildsBookingPayloads;
     use RefreshDatabase;
 
     /** Both doors into the same flow: [store route, redirect route]. */
@@ -78,10 +80,15 @@ class StaffBookingPricingTest extends TestCase
             'check_in' => now()->addDay()->toDateString(),
             'check_out' => now()->addDays(3)->toDateString(),
             'expected_guests' => 2,
-            'region_code' => 'R3|Central Luzon',
-            'province_code' => 'P49|Nueva Ecija',
-            'city_code' => 'C123|Munoz',
-            'barangay_code' => 'B456|Bantug',
+            // Real nine-digit codes: App\Rules\PsgcCode checks the shape and
+            // resolves each against the committed gazetteer, so the invented
+            // 'R3|…' placeholders these used to carry failed validation and no
+            // booking was ever created — every assertion below then died on a
+            // missing Reservation rather than on what it meant to test.
+            'region_code' => self::PSGC_REGION,
+            'province_code' => self::PSGC_PROVINCE,
+            'city_code' => self::PSGC_CITY,
+            'barangay_code' => self::PSGC_BARANGAY,
             'reservations' => [
                 array_merge([
                     'room_type' => 'deluxe',

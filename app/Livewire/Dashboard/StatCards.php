@@ -52,7 +52,7 @@ class StatCards extends Component
         // Each bar has a real denominator; none of them are decoration.
         // The rooms meter went with the Total Rooms card when it moved to the
         // secondary strip, which has no meter — so it is no longer computed.
-        $bookingsFulfilled = Booking::whereIn('status', ['active', 'completed'])->count();
+        $bookingsFulfilled = Booking::whereIn('status', [Booking::STATUS_ACTIVE, Booking::STATUS_COMPLETED])->count();
         $bookingsFulfilledPct = $totalBookings > 0 ? ($bookingsFulfilled / $totalBookings) * 100 : 0;
 
         $usersWithBooking = Booking::whereNotNull('user_id')->distinct()->count('user_id');

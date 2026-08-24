@@ -19,7 +19,7 @@ class ActiveBookings extends Component
     public function loadActiveBookings()
     {
         $this->activeBookings = Booking::with('reservations.room')
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->latest('check_in')
             ->get();
     }

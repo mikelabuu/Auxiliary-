@@ -127,7 +127,7 @@ class BookingsController extends Controller{
             // not both drive it to paid and both cut a receipt.
             $locked = Booking::whereKey($booking->id)->lockForUpdate()->first();
 
-            if (! $locked || $locked->status !== 'pending_payment') {
+            if (! $locked || $locked->status !== Booking::STATUS_PENDING_PAYMENT) {
                 return null;
             }
 
@@ -164,15 +164,15 @@ class BookingsController extends Controller{
             }
 
             $locked->update([
-                'status'       => 'paid',
+                'status'       => Booking::STATUS_PAID,
                 'payment_mode' => $validated['method'],
             ]);
 
             AuditLogger::log(
                 'booking_settled_at_desk',
                 $locked,
-                ['status' => 'pending_payment'],
-                ['status' => 'paid'],
+                ['status' => Booking::STATUS_PENDING_PAYMENT],
+                ['status' => Booking::STATUS_PAID],
                 "Front desk staff {$staff->name} took " . self::DESK_PAYMENT_METHODS[$validated['method']]
                     . " payment of ₱" . number_format((float) $amount, 2) . " for booking #{$locked->id}"
                     . ($validated['reference'] ? " (ref {$validated['reference']})" : '')
@@ -230,7 +230,7 @@ class BookingsController extends Controller{
 
         DB::transaction(function () use ($booking, $staff) {
 
-            $booking->update(['status' => 'completed']);
+            $booking->update(['status' => Booking::STATUS_COMPLETED]);
 
             foreach ($booking->reservations as $reservation) {
                 $reservation->room->update(['status' => 'available']);
@@ -246,8 +246,8 @@ class BookingsController extends Controller{
             AuditLogger::log(
                 'booking_checked_out',
                 $booking,
-                ['status' => 'active'],
-                ['status' => 'completed'],
+                ['status' => Booking::STATUS_ACTIVE],
+                ['status' => Booking::STATUS_COMPLETED],
                 "Booking #{$booking->id} checked out by {$staff->name}"
             );
         });

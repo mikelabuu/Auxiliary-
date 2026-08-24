@@ -47,7 +47,7 @@ class RemindCheckoutsDue extends Command
         $today = Carbon::today(StaySchedule::timezone())->toDateString();
 
         $due = Booking::with('reservations')
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->where('check_out', $today)
             ->orderBy('id')
             ->get();

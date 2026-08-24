@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\Booking;
 use App\Support\RoomCatalog;
 use Livewire\Component;
 use Carbon\Carbon;
@@ -32,7 +33,7 @@ class OccupancySnapshot extends Component
 
     public $pollInterval = 30; // seconds
     public $date;
-    protected $occupyingStatuses = ['active'];
+    protected $occupyingStatuses = [Booking::STATUS_ACTIVE];
 
     protected $listeners = ['refreshOccupancy' => 'forceRecalculate'];
 

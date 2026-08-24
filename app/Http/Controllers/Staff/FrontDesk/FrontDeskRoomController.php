@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff\FrontDesk;
 
+use App\Models\Booking;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Support\RoomStays;
@@ -61,7 +62,7 @@ class FrontDeskRoomController extends Controller
             ->where('reservations.room_number', $room->room_number)
             ->where('bookings.check_in', '<=', $today)
             ->where('bookings.check_out', '>=', $today)
-            ->where('bookings.status', 'active')
+            ->where('bookings.status', Booking::STATUS_ACTIVE)
             ->distinct()
             ->get();
 

@@ -263,8 +263,15 @@ document.addEventListener('click', function (e) {
 // Real-time push: a booking paid online, checked out at another desk, or
 // expired by the scheduler shows up here immediately. Held back while a
 // SweetAlert confirmation is open — see live-refresh.js.
-window.liveRefresh([
-    { channel: 'bookings', event: 'BookingChanged' },
-]);
+// Deferred: liveRefresh comes from admin.js, which Vite emits as a
+// <script type="module"> — deferred, so it runs *after* this block. Calling it
+// directly threw "window.liveRefresh is not a function" and left the page with
+// no live updates at all. Module scripts run before DOMContentLoaded, so by
+// here it exists.
+document.addEventListener('DOMContentLoaded', () => {
+    window.liveRefresh([
+        { channel: 'bookings', event: 'BookingChanged' },
+    ]);
+});
 </script>
 @endpush

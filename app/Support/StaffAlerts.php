@@ -130,7 +130,7 @@ class StaffAlerts
         // command is what makes it *pop*. `at` is fixed to the reminder
         // time either way, so the row's age reads the same in both.
         Booking::with('reservations')
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->where('check_out', \Carbon\Carbon::today(config('hostel.timezone'))->toDateString())
             ->orderBy('id')
             ->take(5)

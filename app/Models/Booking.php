@@ -24,10 +24,10 @@ class Booking extends Model
      * for months because queries against them silently matched nothing.
      */
     public const BLOCKING_STATUSES = [
-        'pending_payment',
-        'pending_discount',
-        'paid',
-        'active',
+        self::STATUS_PENDING_PAYMENT,
+        self::STATUS_PENDING_DISCOUNT,
+        self::STATUS_PAID,
+        self::STATUS_ACTIVE,
     ];
 
     /**
@@ -37,9 +37,9 @@ class Booking extends Model
      * clock on it. See applyActiveHold().
      */
     public const SETTLED_BLOCKING_STATUSES = [
-        'pending_discount',
-        'paid',
-        'active',
+        self::STATUS_PENDING_DISCOUNT,
+        self::STATUS_PAID,
+        self::STATUS_ACTIVE,
     ];
 
     /**
@@ -114,15 +114,31 @@ class Booking extends Model
      * in sync with the lifecycle; do not add phantom values ('confirmed',
      * 'checked_in') that no code actually sets.
      */
+    public const STATUS_PENDING_DISCOUNT = 'pending_discount';
+
+    public const STATUS_PENDING_PAYMENT = 'pending_payment';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_EXPIRED = 'expired';
+
+    public const STATUS_NO_SHOW = 'no_show';
+
     public const STATUSES = [
-        'pending_discount',
-        'pending_payment',
-        'paid',
-        'active',
-        'completed',
-        'cancelled',
-        'expired',
-        'no_show',
+        self::STATUS_PENDING_DISCOUNT,
+        self::STATUS_PENDING_PAYMENT,
+        self::STATUS_PAID,
+        self::STATUS_ACTIVE,
+        self::STATUS_COMPLETED,
+        self::STATUS_CANCELLED,
+        self::STATUS_EXPIRED,
+        self::STATUS_NO_SHOW,
     ];
 
     /**
@@ -323,7 +339,7 @@ class Booking extends Model
 
     public function scopePending($query)
     {
-        return $query->whereIn('status', ['pending_payment', 'pending_discount']);
+        return $query->whereIn('status', [self::STATUS_PENDING_PAYMENT, self::STATUS_PENDING_DISCOUNT]);
     }
 
     public function checkouts()
@@ -348,7 +364,7 @@ class Booking extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['paid', 'active'])
+        return $query->whereIn('status', [self::STATUS_PAID, self::STATUS_ACTIVE])
                     ->where('check_out', '>=', now(config('hostel.timezone'))->startOfDay());
     }
     

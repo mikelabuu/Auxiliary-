@@ -135,11 +135,11 @@ class ArrivalsDepartures extends Component
      */
     protected function checkInBlocker(Booking $booking): ?string
     {
-        if ($booking->status === 'active') {
+        if ($booking->status === Booking::STATUS_ACTIVE) {
             return 'Already checked in';
         }
 
-        if ($booking->status !== 'paid') {
+        if ($booking->status !== Booking::STATUS_PAID) {
             return match ($booking->status) {
                 'pending', 'pending_payment' => 'Payment not settled',
                 'cancelled' => 'Booking cancelled',
@@ -177,11 +177,11 @@ class ArrivalsDepartures extends Component
             ->where(function ($q) use ($today) {
                 $q->where(function ($q2) use ($today) {
                     $q2->where('check_in', $today)
-                        ->where('status', 'paid');
+                        ->where('status', Booking::STATUS_PAID);
                 })
                 ->orWhere(function ($q3) use ($today) {
                     $q3->where('check_out', $today)
-                        ->where('status', 'active');
+                        ->where('status', Booking::STATUS_ACTIVE);
                 })
                 // In-house: checked in on or before this date, not due out
                 // until after it. These used to be absent from the panel
@@ -193,7 +193,7 @@ class ArrivalsDepartures extends Component
                 ->orWhere(function ($q4) use ($today) {
                     $q4->where('check_in', '<=', $today)
                         ->where('check_out', '>', $today)
-                        ->where('status', 'active');
+                        ->where('status', Booking::STATUS_ACTIVE);
                 });
             })
             ->get();
@@ -203,9 +203,9 @@ class ArrivalsDepartures extends Component
             $isDeparture = $b->check_out && Carbon::parse($b->check_out)->isSameDay(Carbon::parse($today));
 
             $type = null;
-            if ($isArrival && $b->status === 'paid') $type = 'arrival';
-            if ($isDeparture && $b->status === 'active') $type = $type ? 'both' : 'departure';
-            if (!$type && $b->status === 'active') $type = 'staying';
+            if ($isArrival && $b->status === Booking::STATUS_PAID) $type = 'arrival';
+            if ($isDeparture && $b->status === Booking::STATUS_ACTIVE) $type = $type ? 'both' : 'departure';
+            if (!$type && $b->status === Booking::STATUS_ACTIVE) $type = 'staying';
 
             return (object) [
                 'id' => $b->id,
@@ -264,11 +264,11 @@ class ArrivalsDepartures extends Component
         $upcomingBookings = Booking::with('reservations.room')
             ->where(function ($q) use ($today) {
                 $q->whereBetween('check_in', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])
-                  ->where('status', 'paid');
+                  ->where('status', Booking::STATUS_PAID);
             })
             ->orWhere(function ($q) use ($today) {
                 $q->whereBetween('check_out', [Carbon::parse($today)->addDay()->startOfDay(), Carbon::parse($today)->addDays(7)->endOfDay()])
-                  ->where('status', 'active');
+                  ->where('status', Booking::STATUS_ACTIVE);
             })
             ->orderBy('check_in')
             ->limit(5)
@@ -302,7 +302,7 @@ class ArrivalsDepartures extends Component
             });
 
         // In-house on the viewed date: active stays spanning it.
-        $inHouseCount = Booking::where('status', 'active')
+        $inHouseCount = Booking::where('status', Booking::STATUS_ACTIVE)
             ->where('check_in', '<=', $this->date)
             ->where('check_out', '>=', $this->date)
             ->count();
@@ -311,10 +311,10 @@ class ArrivalsDepartures extends Component
         $weekStart = Carbon::parse($this->date)->addDay()->startOfDay();
         $weekEnd = Carbon::parse($this->date)->addDays(7)->endOfDay();
         $upcomingCount = Booking::where(function ($q) use ($weekStart, $weekEnd) {
-                $q->whereBetween('check_in', [$weekStart, $weekEnd])->where('status', 'paid');
+                $q->whereBetween('check_in', [$weekStart, $weekEnd])->where('status', Booking::STATUS_PAID);
             })
             ->orWhere(function ($q) use ($weekStart, $weekEnd) {
-                $q->whereBetween('check_out', [$weekStart, $weekEnd])->where('status', 'active');
+                $q->whereBetween('check_out', [$weekStart, $weekEnd])->where('status', Booking::STATUS_ACTIVE);
             })
             ->count();
 
@@ -329,7 +329,7 @@ class ArrivalsDepartures extends Component
 
         // Overdue check-outs: still active past their check-out date.
         $overdueCheckouts = Booking::with('reservations')
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->where('check_out', '<', $actualToday)
             ->orderBy('check_out')
             ->limit(10)
@@ -338,7 +338,7 @@ class ArrivalsDepartures extends Component
 
         // Missed arrivals: paid, check-in date passed, never checked in.
         $missedArrivals = Booking::with('reservations')
-            ->where('status', 'paid')
+            ->where('status', Booking::STATUS_PAID)
             ->where('check_in', '<', $actualToday)
             ->orderBy('check_in')
             ->limit(10)
@@ -383,7 +383,7 @@ class ArrivalsDepartures extends Component
         $oldValues = $booking->getOriginal();
 
         // Update booking status
-        $booking->update(['status' => 'active']);
+        $booking->update(['status' => Booking::STATUS_ACTIVE]);
 
         // Update rooms
         foreach ($booking->reservations as $reservation) {
@@ -401,8 +401,8 @@ class ArrivalsDepartures extends Component
         AuditLogger::log(
             'booking_checked_in',
             $booking,
-            ['status' => 'paid'],  
-            ['status' => 'active'],
+            ['status' => Booking::STATUS_PAID],  
+            ['status' => Booking::STATUS_ACTIVE],
             "Booking #{$booking->id} checked in by {$staff->name}"
         );
 
@@ -431,7 +431,7 @@ class ArrivalsDepartures extends Component
         // window the auto-checkout command uses. A stay that still has nights
         // left is not refused outright any more; it is the emergency
         // check-out's to end, and the panel offers that button instead.
-        if ($booking->status !== 'active' || !$this->isDueOut($booking)) {
+        if ($booking->status !== Booking::STATUS_ACTIVE || !$this->isDueOut($booking)) {
             $this->dispatch('toast', type: 'error', message: 'Booking not eligible for check-out.');
             return;
         }
@@ -439,7 +439,7 @@ class ArrivalsDepartures extends Component
         $oldValues = $booking->getOriginal();
 
         // Update booking status
-        $booking->update(['status' => 'completed']);
+        $booking->update(['status' => Booking::STATUS_COMPLETED]);
 
         // Free rooms
         foreach ($booking->reservations as $reservation) {
@@ -458,8 +458,8 @@ class ArrivalsDepartures extends Component
         AuditLogger::log(
             'booking_checked_out',
             $booking,
-            ['status' => 'active'],
-            ['status' => 'completed'],
+            ['status' => Booking::STATUS_ACTIVE],
+            ['status' => Booking::STATUS_COMPLETED],
             "Booking #{$booking->id} checked out by {$staff->name}"
         );
 
@@ -504,7 +504,7 @@ class ArrivalsDepartures extends Component
         // Only a stay actually under way, and only one that is not due out.
         // Once the check-out date arrives the ordinary check-out covers it and
         // there is no exception left to record.
-        if ($booking->status !== 'active') {
+        if ($booking->status !== Booking::STATUS_ACTIVE) {
             $this->dispatch('toast', type: 'error', message: 'Only a checked-in guest can be checked out early.');
             return;
         }
@@ -527,7 +527,7 @@ class ArrivalsDepartures extends Component
         $dueOutOn = Carbon::parse($booking->check_out)->format('M d');
 
         DB::transaction(function () use ($booking, $reason) {
-            $booking->update(['status' => 'completed']);
+            $booking->update(['status' => Booking::STATUS_COMPLETED]);
 
             // Free rooms. The stay is over as far as the board is concerned,
             // so the remaining nights go back on sale.
@@ -547,8 +547,8 @@ class ArrivalsDepartures extends Component
         AuditLogger::log(
             'booking_checked_out_early',
             $booking,
-            ['status' => 'active'],
-            ['status' => 'completed'],
+            ['status' => Booking::STATUS_ACTIVE],
+            ['status' => Booking::STATUS_COMPLETED],
             "Booking #{$booking->id} checked out early by {$staff->name} — {$reason}"
         );
 
@@ -587,12 +587,12 @@ class ArrivalsDepartures extends Component
         $paymentExists = $booking->payments !== null;
         $paymentStatus = $booking->payments->status ?? null;
 
-        if ($booking->status === 'active') {
+        if ($booking->status === Booking::STATUS_ACTIVE) {
             $this->dispatch('toast', type: 'error', message: 'This guest has already checked in.');
             return;
         }
 
-        if ($booking->status !== 'paid' || !$paymentExists || $paymentStatus !== 'success') {
+        if ($booking->status !== Booking::STATUS_PAID || !$paymentExists || $paymentStatus !== 'success') {
             $this->dispatch('toast', type: 'error', message: 'Only a paid, verified booking can be marked a no-show.');
             return;
         }
@@ -609,7 +609,7 @@ class ArrivalsDepartures extends Component
         $now = Carbon::now(config('hostel.timezone'));
 
         // Update booking status
-        $booking->update(['status' => 'no_show']);
+        $booking->update(['status' => Booking::STATUS_NO_SHOW]);
 
         // The guest never arrived, so the rooms go back on the board.
         foreach ($booking->reservations as $reservation) {
@@ -620,7 +620,7 @@ class ArrivalsDepartures extends Component
         NoShowLog::create([
             'booking_id' => $booking->id,
             'previous_status' => $previousStatus,
-            'new_status' => 'no_show',
+            'new_status' => Booking::STATUS_NO_SHOW,
             'reason' => 'Guest did not check in. Marked by Staff',
             'marked_at' => $now,
             'processed_by' => auth('staff')->id(),
@@ -630,7 +630,7 @@ class ArrivalsDepartures extends Component
             'booking_no_show',
             $booking,
             ['status' => $previousStatus],
-            ['status' => 'no_show'],
+            ['status' => Booking::STATUS_NO_SHOW],
             "Booking #{$booking->id} marked as no-show by {$staff->name}"
         );
 

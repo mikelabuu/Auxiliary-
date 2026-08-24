@@ -34,7 +34,7 @@ class BookingsExport implements FromCollection, WithHeadings
                 });
                 break;
             case 'completed':
-                $query->where('status', 'completed');
+                $query->where('status', Booking::STATUS_COMPLETED);
                 break;
         }
 

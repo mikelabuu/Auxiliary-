@@ -33,7 +33,7 @@ class ExpireBookingsCommand extends Command
         //   · the guest's own arrival time came and went while still unpaid,
         //     which at a 24-hour window is the commoner of the two for
         //     anything booked for tonight or tomorrow
-        $expiredBookings = Booking::where('status', 'pending_payment')
+        $expiredBookings = Booking::where('status', Booking::STATUS_PENDING_PAYMENT)
             ->where(function ($q) use ($threshold, $liveFrom) {
                 $q->where(function ($q) use ($threshold) {
                     $q->whereNotNull('pending_payment_since')
@@ -67,12 +67,12 @@ class ExpireBookingsCommand extends Command
                     ]);
                 }
 
-                $booking->update(['status' => 'expired']);
+                $booking->update(['status' => Booking::STATUS_EXPIRED]);
 
                 ExpiryLog::create([
                     'booking_id' => $booking->id,
                     'previous_status' => $previousStatus,
-                    'new_status' => 'expired',
+                    'new_status' => Booking::STATUS_EXPIRED,
                     'reason' => $missedArrival
                         ? 'Booking was still unpaid when its check-in time arrived.'
                         : 'Booking did not complete payment before expiry window.',

@@ -84,7 +84,7 @@ class SettingsController extends Controller
 
         // Cooldown logic
         $onCooldown = $user->bookings()
-            ->where('status', 'cancelled')
+            ->where('status', Booking::STATUS_CANCELLED)
             ->where('updated_at', '>=', now()->subMinutes(30))
             ->exists();
 
@@ -289,7 +289,7 @@ class SettingsController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if ($booking->status !== 'pending_payment') {
+        if ($booking->status !== Booking::STATUS_PENDING_PAYMENT) {
             $message = match ($booking->status) {
                 'pending_discount' => 'This booking is waiting on your Senior / PWD discount review. Withdraw the discount request first, and you can cancel it after that.',
                 'paid' => \App\Models\RescheduleRequest::isOpenFor($booking)

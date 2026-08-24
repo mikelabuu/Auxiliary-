@@ -120,6 +120,12 @@ class InputHardeningTest extends TestCase
     {
         $admin = $this->admin();
 
+        // Relative to whatever migrations already seeded — the 2026_08_12 data
+        // migration inserts the Family Room type, so the table is not empty at
+        // the start of a test and an absolute count here breaks every time a
+        // type is added.
+        $before = RoomType::count();
+
         $this->actingAs($admin, 'staff')
             ->post('/staff/room-types', [
                 'name' => '<img src=x onerror=alert(1)>',
@@ -128,12 +134,13 @@ class InputHardeningTest extends TestCase
             ])
             ->assertSessionHasErrors('name');
 
-        $this->assertSame(0, RoomType::count());
+        $this->assertSame($before, RoomType::count(), 'A rejected name must not create a room type.');
     }
 
     public function test_legitimate_room_type_names_are_accepted(): void
     {
         $admin = $this->admin();
+        $before = RoomType::count();
 
         foreach (['Deluxe', 'Dormitory1', 'Bed & Breakfast', 'Twin-Share'] as $name) {
             $this->actingAs($admin, 'staff')
@@ -145,7 +152,7 @@ class InputHardeningTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $this->assertSame(4, RoomType::count());
+        $this->assertSame($before + 4, RoomType::count());
     }
 
     // ---------------------------------------------------------------

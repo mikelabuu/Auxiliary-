@@ -75,7 +75,7 @@ class PaymentWindow
      */
     public static function deadlineFor(Booking $booking): ?CarbonInterface
     {
-        if ($booking->status !== 'pending_payment' || ! $booking->pending_payment_since) {
+        if ($booking->status !== Booking::STATUS_PENDING_PAYMENT || ! $booking->pending_payment_since) {
             return null;
         }
 

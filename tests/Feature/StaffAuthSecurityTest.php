@@ -33,6 +33,24 @@ class StaffAuthSecurityTest extends TestCase
         ], $overrides));
     }
 
+    /**
+     * Turn the OTP step on for the role these tests actually sign in as.
+     *
+     * `otp_enabled` alone is not enough: IssuesStaffOtp::otpRequiredFor() also
+     * requires the role to be listed in `staff.otp_roles`, which defaults to
+     * master_admin only — and staff() here creates an admin. Setting just the
+     * feature flag therefore let every login skip straight to the dashboard,
+     * and the step-one tests were asserting against a redirect that no longer
+     * happened. config/staff.php says this list "fails open"; this is what
+     * that looks like from the test side.
+     */
+    private function enableOtp(string $role = 'admin'): void
+    {
+        config([
+            'staff.otp_enabled' => true,
+            'staff.otp_roles'   => [$role],
+        ]);
+    }
     /** Puts the session in the state step 2 expects, without re-running step 1. */
     private function pendingOtpSession(Staff $staff): array
     {
@@ -41,7 +59,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_master_otp_000000_is_rejected(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         StaffOtp::create([
@@ -59,7 +77,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_expired_otp_is_rejected(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         StaffOtp::create([
@@ -77,7 +95,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_already_used_otp_is_rejected(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         StaffOtp::create([
@@ -96,7 +114,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_valid_otp_still_logs_staff_in(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         StaffOtp::create([
@@ -114,7 +132,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_consuming_one_otp_burns_the_other_outstanding_codes(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         $stale = StaffOtp::create([
@@ -137,7 +155,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_login_step_one_issues_an_otp_and_marks_the_session_pending(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         Notification::fake();
         $staff = $this->staff();
 
@@ -153,7 +171,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_generated_otp_is_a_six_digit_code(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         Notification::fake();
         $staff = $this->staff();
 
@@ -168,7 +186,7 @@ class StaffAuthSecurityTest extends TestCase
 
     public function test_mail_failure_does_not_strand_the_login(): void
     {
-        config(['staff.otp_enabled' => true]);
+        $this->enableOtp();
         $staff = $this->staff();
 
         // Simulate the mailer throwing mid-request, which is what an SMTP

@@ -47,7 +47,7 @@ class GlobalSearchController extends Controller
                 'status' => str_replace('_', ' ', $b->status),
                 'dates'  => $b->check_in->format('M d') . ' – ' . $b->check_out->format('M d'),
                 // Completed bookings live on their own page; everything else is in the hub.
-                'url'    => $b->status === 'completed'
+                'url'    => $b->status === Booking::STATUS_COMPLETED
                     ? route('staff.completedbookings.index', ['search' => $b->id])
                     : route('staff.bookings.index', ['search' => $b->id]),
             ]);

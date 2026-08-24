@@ -40,24 +40,24 @@ class Hero extends Component
 
         // ── Today's operational counts ───────────────────────────────────
         $arriving = Booking::where('check_in', $today)
-            ->where('status', 'paid')
+            ->where('status', Booking::STATUS_PAID)
             ->count();
 
         $departing = Booking::where('check_out', $today)
-            ->where('status', 'active')
+            ->where('status', Booking::STATUS_ACTIVE)
             ->count();
 
-        $inHouse = Booking::where('status', 'active')
+        $inHouse = Booking::where('status', Booking::STATUS_ACTIVE)
             ->where('check_in', '<=', $today)
             ->where('check_out', '>=', $today)
             ->count();
 
         // Overdue = still checked in past check-out, plus paid arrivals that
         // never showed. Both are decisions a manager owes today.
-        $overdueCheckouts = Booking::where('status', 'active')
+        $overdueCheckouts = Booking::where('status', Booking::STATUS_ACTIVE)
             ->where('check_out', '<', $today)
             ->count();
-        $missedArrivals = Booking::where('status', 'paid')
+        $missedArrivals = Booking::where('status', Booking::STATUS_PAID)
             ->where('check_in', '<', $today)
             ->count();
         $overdue = $overdueCheckouts + $missedArrivals;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Models\Booking;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\DiscountChanged;
@@ -150,7 +151,7 @@ class DiscountAdminController extends Controller
             $booking->update([
                 'discount' => $amount,
                 'payable_amount' => $booking->total_price - $amount,
-                'status' => 'pending_payment',
+                'status' => Booking::STATUS_PENDING_PAYMENT,
             ]);
 
             // Delete all reviewed files
@@ -208,7 +209,7 @@ class DiscountAdminController extends Controller
                 'discount' => 0,
                 'payable_amount' => $booking->total_price,
                 'wants_discount' => false,
-                'status' => 'pending_payment',
+                'status' => Booking::STATUS_PENDING_PAYMENT,
             ]);
 
             // Delete all reviewed files

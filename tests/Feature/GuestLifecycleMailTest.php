@@ -94,9 +94,16 @@ class GuestLifecycleMailTest extends TestCase
         Mail::fake();
 
         $guest = $this->guest();
-        // Fresh hold: the status mutator stamps pending_payment_since as now(),
-        // so this one is comfortably inside its window.
-        $this->booking($guest, 'pending_payment');
+        // Fresh hold *and* a future arrival — both halves matter. The status
+        // mutator stamps pending_payment_since as now(), but a hold also dies
+        // the moment its guests were due (PaymentWindow::deadlineFor takes the
+        // earlier of the two), and the helper's default check_in is yesterday.
+        // Built with that default this booking was already past its arrival,
+        // so bookings:expire was right to expire it and the test was wrong.
+        $this->booking($guest, 'pending_payment', [
+            'check_in'  => now()->addDays(3),
+            'check_out' => now()->addDays(5),
+        ]);
 
         $this->artisan('bookings:expire')->assertSuccessful();
 

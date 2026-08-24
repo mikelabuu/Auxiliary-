@@ -60,7 +60,7 @@ trait CreatesStaffBooking
     public function create()
     {
         $upcomingBookings = Booking::with('reservations')
-            ->whereIn('status', ['paid', 'pending_payment'])
+            ->whereIn('status', [Booking::STATUS_PAID, Booking::STATUS_PENDING_PAYMENT])
             ->where('check_out', '>=', Carbon::today(config('hostel.timezone'))->toDateString())
             ->orderBy('check_in')
             ->get();

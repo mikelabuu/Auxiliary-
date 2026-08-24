@@ -158,7 +158,7 @@ class DiscountController extends Controller
                 'discount' => 0,
                 'payable_amount' => $booking->total_price,
                 'wants_discount' => false,
-                'status' => 'pending_payment',
+                'status' => Booking::STATUS_PENDING_PAYMENT,
             ]);
         });
 

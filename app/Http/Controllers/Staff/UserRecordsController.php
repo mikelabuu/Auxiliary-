@@ -50,7 +50,7 @@ class UserRecordsController extends Controller
             ->when($status === 'active', fn($q) => $q->where('is_suspended', false))
             ->when($status === 'suspended', fn($q) => $q->where('is_suspended', true))
             ->withCount(['bookings as completed_bookings_count' => function($q) {
-                $q->whereIn('status', ['paid', 'completed']);
+                $q->whereIn('status', [Booking::STATUS_PAID, Booking::STATUS_COMPLETED]);
             }])
             ->when($sort === 'stays',
                 fn($q) => $q->orderByDesc('completed_bookings_count')->orderByDesc('created_at'),
@@ -66,8 +66,8 @@ class UserRecordsController extends Controller
     {
         $user->loadCount([
             'bookings as total_bookings',
-            'bookings as completed_bookings' => fn($q) => $q->whereIn('status', ['paid', 'completed']),
-            'bookings as cancelled_bookings' => fn($q) => $q->where('status', 'cancelled'),
+            'bookings as completed_bookings' => fn($q) => $q->whereIn('status', [Booking::STATUS_PAID, Booking::STATUS_COMPLETED]),
+            'bookings as cancelled_bookings' => fn($q) => $q->where('status', Booking::STATUS_CANCELLED),
         ]);
 
         $lifetimeSpend = Payment::where('status', 'success')

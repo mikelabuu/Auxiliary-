@@ -14,6 +14,7 @@ use App\Support\RoomStays;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\Concerns\BuildsBookingPayloads;
 use Tests\TestCase;
 
 /**
@@ -30,6 +31,7 @@ use Tests\TestCase;
  */
 class RoomHoldTest extends TestCase
 {
+    use BuildsBookingPayloads;
     use RefreshDatabase;
 
     /** Reused rather than recreated — several helpers ask for the same guest. */
@@ -191,26 +193,13 @@ class RoomHoldTest extends TestCase
 
         $shopper = $this->user('shopper@example.test');
 
-        $this->actingAs($shopper)->post('/booking', [
-            'first_name' => 'Ana',
-            'middle_name' => 'B',
-            'last_name' => 'Cruz',
-            'guest_phone' => '09171234567',
-            'check_in' => now()->addDays(3)->toDateString(),
-            'check_out' => now()->addDays(5)->toDateString(),
-            'expected_guests' => 2,
-            'accept_terms' => 1,
-            'region_code' => 'R03',
-            'city_code' => 'C1|Munoz',
-            'barangay_code' => 'B1|Bantug',
-            'reservations' => [[
+        $this->actingAs($shopper)->post('/booking', $this->bookingPayload([
+            'last_name'    => 'Cruz',
+            'reservations' => [$this->bookingReservation([
                 'room_type' => $room->room_type,
-                'room_number' => $room->room_number,
-                'num_guests' => 2,
-                'num_seniors' => 0,
-                'meal' => [2],
-            ]],
-        ])->assertSessionHasErrors('reservations');
+                'meal'      => [2],
+            ])],
+        ]))->assertSessionHasErrors('reservations');
 
         // Only the original hold exists — no second booking got through.
         $this->assertSame(1, Booking::whereHas('reservations', fn ($q) =>

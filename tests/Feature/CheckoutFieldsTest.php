@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\Concerns\BuildsBookingPayloads;
 use Tests\TestCase;
 
 /**
@@ -20,6 +21,7 @@ use Tests\TestCase;
  */
 class CheckoutFieldsTest extends TestCase
 {
+    use BuildsBookingPayloads;
     use RefreshDatabase;
 
     private function guest(): User
@@ -47,35 +49,11 @@ class CheckoutFieldsTest extends TestCase
         ]);
     }
 
-    private function payload(array $override = []): array
-    {
-        return array_merge([
-            'first_name'      => 'Ana',
-            'middle_name'     => 'Cruz',
-            'last_name'       => 'Reyes',
-            'guest_phone'     => '09171234567',
-            'check_in'        => now()->addDays(3)->toDateString(),
-            'check_out'       => now()->addDays(5)->toDateString(),
-            'expected_guests' => 2,
-            'accept_terms'    => 1,
-            'region_code'     => 'R03|Central Luzon',
-            'province_code'   => 'P01|Nueva Ecija',
-            'city_code'       => 'C01|Science City of Munoz',
-            'barangay_code'   => 'B01|Bantug',
-            'reservations'    => [[
-                'room_type'   => 'double',
-                'room_number' => '112',
-                'num_guests'  => 2,
-                'num_seniors' => 0,
-            ]],
-        ], $override);
-    }
-
     private function book(array $override = [])
     {
         $this->room();
 
-        return $this->actingAs($this->guest())->post('/booking', $this->payload($override));
+        return $this->actingAs($this->guest())->post('/booking', $this->bookingPayload($override));
     }
 
     // ---------------------------------------------------------------
@@ -96,7 +74,7 @@ class CheckoutFieldsTest extends TestCase
         $this->room();
         $guest = $this->guest();
 
-        $this->actingAs($guest)->post('/booking', $this->payload());
+        $this->actingAs($guest)->post('/booking', $this->bookingPayload());
 
         $this->actingAs($guest)
             ->get(route('booking.show', Booking::sole()->id))
