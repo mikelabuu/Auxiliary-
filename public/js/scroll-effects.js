@@ -81,21 +81,27 @@
             });
         }
         function mea() {
+            clearTimeout(soonT);
             s.viewH = window.innerHeight; s.viewW = window.innerWidth;
             s.scrollY = window.pageYOffset || 0; s.docH = document.documentElement.scrollHeight;
             for (let i = 0; i < measures.length; i++) { try { measures[i](s); } catch (e) { } }
             req();
         }
+        // The shim carries the same debounce as the real bus: this path only
+        // runs when frame-bus.js failed to load, and it would otherwise
+        // reproduce exactly the measure storm that file exists to prevent.
+        let soonT;
+        function meaSoon() { clearTimeout(soonT); soonT = setTimeout(mea, 150); }
         window.addEventListener('scroll', req, { passive: true });
         window.addEventListener('resize', mea, { passive: true });
         window.addEventListener('load', mea);
-        if (window.ResizeObserver) new ResizeObserver(mea).observe(document.documentElement);
+        if (window.ResizeObserver) new ResizeObserver(meaSoon).observe(document.documentElement);
         window.FHFrame = {
             state: s,
             onTick: function (f) { ticks.push(f); req(); return f; },
             onMeasure: function (f) { measures.push(f); return f; },
             offTick: function (f) { const i = ticks.indexOf(f); if (i > -1) ticks.splice(i, 1); },
-            request: req, measure: mea, stop: function () { },
+            request: req, measure: mea, measureSoon: meaSoon, stop: function () { },
         };
         requestAnimationFrame(mea);
         return window.FHFrame;
@@ -105,8 +111,17 @@
     // Smoothstep — softens both ends of a scrub without hiding the mapping
     const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 
-    // Blur is a desktop luxury — same mobile stance as parallax.js
-    let allowBlur = window.innerWidth >= 768;
+    // Blur is a desktop luxury — same mobile stance as parallax.js, and now
+    // read the same way parallax.js reads it.
+    //
+    // This was `window.innerWidth >= 768`, which Chrome answers against current
+    // layout — so on a deferred script with the document still parsing it forces
+    // a full initial layout, the same reflow frame-bus.js was billed 138 ms for.
+    // matchMedia costs nothing: it consults the media-query state, not the box
+    // tree. The value here is a seed that measureAll() overwrites from
+    // `s.viewW` on the first measurement pass anyway, so it was paying a layout
+    // for a number that is thrown away.
+    let allowBlur = window.matchMedia('(min-width: 768px)').matches;
 
     // ── Collect ─────────────────────────────────────────────────────
     // Every tracked item carries { el, docTop, height } — its geometry in
@@ -157,7 +172,10 @@
     // Elements resizing under their own steam (a late webfont reflowing the
     // paragraph, a lazy image landing inside a band) move everything below them.
     if (window.ResizeObserver) {
-        const ro = new ResizeObserver(() => bus.measure());
+        // measureSoon, not measure — see the note in frame-bus.js. A late
+        // webfont reflowing a paragraph must not buy a forced layout per element.
+        const reMeasure = () => (bus.measureSoon || bus.measure)();
+        const ro = new ResizeObserver(reMeasure);
         all.forEach((item) => ro.observe(item.el));
     }
 

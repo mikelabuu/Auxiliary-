@@ -89,21 +89,27 @@
             });
         }
         function mea() {
+            clearTimeout(soonT);
             s.viewH = window.innerHeight; s.viewW = window.innerWidth;
             s.scrollY = window.pageYOffset || 0; s.docH = document.documentElement.scrollHeight;
             for (let i = 0; i < measures.length; i++) { try { measures[i](s); } catch (e) { } }
             req();
         }
+        // The shim carries the same debounce as the real bus: this path only
+        // runs when frame-bus.js failed to load, and it would otherwise
+        // reproduce exactly the measure storm that file exists to prevent.
+        let soonT;
+        function meaSoon() { clearTimeout(soonT); soonT = setTimeout(mea, 150); }
         window.addEventListener('scroll', req, { passive: true });
         window.addEventListener('resize', mea, { passive: true });
         window.addEventListener('load', mea);
-        if (window.ResizeObserver) new ResizeObserver(mea).observe(document.documentElement);
+        if (window.ResizeObserver) new ResizeObserver(meaSoon).observe(document.documentElement);
         window.FHFrame = {
             state: s,
             onTick: function (f) { ticks.push(f); req(); return f; },
             onMeasure: function (f) { measures.push(f); return f; },
             offTick: function (f) { const i = ticks.indexOf(f); if (i > -1) ticks.splice(i, 1); },
-            request: req, measure: mea, stop: function () { },
+            request: req, measure: mea, measureSoon: meaSoon, stop: function () { },
         };
         requestAnimationFrame(mea);
         return window.FHFrame;
@@ -289,7 +295,10 @@
     // ── ResizeObserver (cached rects — avoids layout thrash in rAF) ─
     // An element changing size moves everything below it, so this re-measures
     // the whole set through the bus rather than just the entries that fired.
-    const ro = new ResizeObserver(() => bus.measure());
+    // measureSoon, not measure: 25 observed elements each firing a full
+    // measure+tick during load is half of what made this page's TBT.
+    const reMeasure = () => (bus.measureSoon || bus.measure)();
+    const ro = new ResizeObserver(reMeasure);
 
     // ── The render loop ─────────────────────────────────────────────
     function render(s) {

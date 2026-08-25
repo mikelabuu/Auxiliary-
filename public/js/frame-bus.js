@@ -60,26 +60,37 @@
     var running = true;
     var lastTime = performance.now();
 
-    // Nothing here reads layout.
+    // Nothing here reads layout. Not one of these four.
     //
-    // `docH` was already left at 0 for the deferred measure() at the bottom to
-    // fill in; `scrollY` needed the same treatment and did not get it. Unlike
-    // innerHeight/innerWidth — which are viewport metrics and genuinely cheap —
-    // reading pageYOffset forces the engine to flush layout, and at script-eval
-    // time on a deferred script there is a whole freshly-parsed document
-    // pending. Lighthouse billed 68 ms of forced reflow to this line.
+    // `docH` and `scrollY` were already seeded to 0 for the deferred measure()
+    // at the bottom to fill in, on the reasoning that reading pageYOffset at
+    // script-eval time forces a layout flush against a freshly-parsed document.
+    // That reasoning was correct and was applied to exactly half the object:
+    // innerHeight and innerWidth were left alone as "viewport metrics and
+    // genuinely cheap", which they are not. Chrome resolves both against the
+    // current layout — scrollbar presence changes them — so on a deferred
+    // script with a 200 KB document still pending they force the entire initial
+    // layout. Lighthouse billed 138 ms of forced reflow to `viewH` on mobile.
     //
-    // Zero is safe as a seed: frame() rewrites scrollY on every tick and
-    // measure() rewrites it on the rAF scheduled at the end of this IIFE, both
-    // of which run before anything a subscriber could paint.
+    // Zero is safe as a seed only because `primed` below refuses to run any
+    // subscriber until measure() has replaced these with real numbers.
     var state = {
         scrollY: 0,
-        viewH: window.innerHeight,
-        viewW: window.innerWidth,
+        viewH: 0,
+        viewW: 0,
         docH: 0,
         dt: 1 / 60,
         now: lastTime,
     };
+
+    // Scroll offset, cached from the scroll event instead of read inside the
+    // loop. See onScroll().
+    var scrollY = 0;
+
+    // Subscribers divide by viewH; at the 0 seed above that is NaN, which would
+    // be written straight into a transform. Nothing ticks until the first
+    // measurement pass has landed.
+    var primed = false;
 
     function request() {
         if (!ticking && running) {
@@ -90,15 +101,18 @@
 
     function frame(now) {
         ticking = false;
-        if (!running) return;
+        if (!running || !primed) return;
 
         state.dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.1) || 1 / 60;
         lastTime = now;
         state.now = now;
-        // The one layout-adjacent read of the frame. scrollY is cheap (it does
-        // not force layout the way an element rect does) and doing it here means
-        // three subscribers share one read instead of taking one each.
-        state.scrollY = window.pageYOffset || 0;
+        // Cached by onScroll(). This used to read window.pageYOffset directly,
+        // called cheap because it "does not force layout the way an element rect
+        // does" — but it does exactly that whenever layout is dirty, and during
+        // load layout is always dirty: images are still arriving and every one
+        // of them invalidates the box tree. The read then pays for the page's
+        // own pending layout. Lighthouse billed 45 ms of forced reflow to it.
+        state.scrollY = scrollY;
 
         var again = false;
         for (var i = 0; i < ticks.length; i++) {
@@ -123,10 +137,12 @@
         measureQueued = true;
         requestAnimationFrame(function () {
             measureQueued = false;
+            clearTimeout(soonTimer);
             state.viewH = window.innerHeight;
             state.viewW = window.innerWidth;
-            state.scrollY = window.pageYOffset || 0;
+            scrollY = state.scrollY = window.pageYOffset || 0;
             state.docH = document.documentElement.scrollHeight;
+            primed = true;
             for (var i = 0; i < measures.length; i++) {
                 try {
                     measures[i](state);
@@ -138,7 +154,33 @@
         });
     }
 
-    window.addEventListener('scroll', request, { passive: true });
+    // Collapses a BURST of layout changes into a single measurement pass.
+    //
+    // measure()'s own rAF guard only merges calls landing inside one frame.
+    // During load they are spread across dozens of frames: every lazy image that
+    // decodes and every webfont that swaps resizes something this file,
+    // parallax.js or scroll-effects.js is observing — 31 observed elements
+    // between the three — and each callback bought a full-document forced
+    // layout, 30 getBoundingClientRect reads and a complete tick. Lighthouse
+    // measured the pile-up as two long tasks of 404 ms and 183 ms, which was
+    // essentially the whole of the desktop Total Blocking Time.
+    var soonTimer;
+    function measureSoon() {
+        clearTimeout(soonTimer);
+        soonTimer = setTimeout(measure, 150);
+    }
+
+    function onScroll() {
+        // Read here, not in frame(). A scroll event is dispatched with the
+        // previous frame's layout already complete, so this is a plain property
+        // read; the same read at the top of a rAF callback can land while a
+        // just-arrived image still has layout pending, and forces a synchronous
+        // flush to answer.
+        scrollY = window.pageYOffset || 0;
+        request();
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     var resizeTimer;
     window.addEventListener('resize', function () {
@@ -160,7 +202,19 @@
     // this one does not.
     if (window.ResizeObserver) {
         // measure() only reads, so it cannot feed back into this observer.
-        new ResizeObserver(measure).observe(document.documentElement);
+        //
+        // The entry hands us the new height for free, so the guard below costs
+        // nothing — where calling measure() unconditionally meant forcing a
+        // layout to answer `scrollHeight` even on the many callbacks where the
+        // document had not changed height at all.
+        var lastDocH = -1;
+        new ResizeObserver(function (entries) {
+            var e = entries[entries.length - 1];
+            var h = e && e.contentRect ? e.contentRect.height : -1;
+            if (h === lastDocH) return;
+            lastDocH = h;
+            measureSoon();
+        }).observe(document.documentElement);
     }
 
     document.addEventListener('visibilitychange', function () {
@@ -181,6 +235,10 @@
         },
         request: request,
         measure: measure,
+        // Prefer this over measure() from a ResizeObserver or any other
+        // high-frequency source. measure() remains the immediate form, for
+        // 'load' and for an explicit state change that must land this frame.
+        measureSoon: measureSoon,
         stop: function () { running = false; },
     };
 

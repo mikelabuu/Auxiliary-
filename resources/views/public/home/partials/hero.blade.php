@@ -62,12 +62,33 @@
         <div class="fh-hero-pool" aria-hidden="true"></div>
 
         {{-- The LCP element. Keeps fetchpriority so it still wins the race,
-             but now at ~70 KB instead of 2.2 MB. Rendered at max(104%, 560px)
-             of the stage, which tops out around the 1800px source. --}}
+             but now at ~70 KB instead of 2.2 MB.
+
+             The sizes below are derived, not guessed, and both halves matter
+             because `sizes` is a SELECTION hint multiplied by DPR — declare it
+             15% high on a 1.75x phone and the picker jumps a whole tier.
+
+             The containing block is .fh-hero-stage's CONTENT box, so the
+             viewport has to have the stage's padding taken off it first:
+
+               padding    clamp(20px, 3.4vw, 56px) per side
+               <= 900px   width: 118%  ->  118vw - 47px   (06-hero.css:688)
+               >  900px   width: max(104%, 560px), and 104% always wins from
+                          538px up, so the 560px floor is dead  ->  104vw - 90px
+
+             The old value was `(max-width: 640px) 560px, 104vw`. The fixed
+             560px was ~28% above the real 439px slot on a 412px phone, which at
+             DPR 1.75 asked for 980px and pulled the 1350 tier where the 900 tier
+             covers it — 47 KiB of LCP payload for nothing. The bare 104vw did
+             the smaller version of the same thing on desktop, ignoring the
+             ~92px of padding and taking 1500 where 1350 fits.
+
+             Tiers are [900, 1350, 1500, 1800]; re-check these if that ladder or
+             the stage padding changes. --}}
         <x-img src="image/hostel-front.png"
                alt="Farmers Hostel building inside the CLSU campus"
                fetchpriority="high" decoding="async" class="fh-hero-build"
-               sizes="(max-width: 640px) 560px, 104vw" />
+               sizes="(max-width: 900px) calc(118vw - 47px), calc(104vw - 90px)" />
 
         {{-- Raked legibility scrim — darkens the copy column, not the picture. --}}
         <div class="fh-hero-scrim" aria-hidden="true"></div>
