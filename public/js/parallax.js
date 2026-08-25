@@ -278,6 +278,16 @@
                     item.visible = e.isIntersecting;
                     applyWillChange(item);
                     if (item.visible) {
+                        // Re-measure on the way in. The bus measure pass below
+                        // skips offscreen items, so this rect may date from
+                        // registration or from a resize that passed this item
+                        // over — and everything above it has moved since.
+                        //
+                        // An IntersectionObserver callback is delivered after
+                        // the browser's own layout, so both reads here are free;
+                        // taking pageYOffset at the same moment as the rect is
+                        // what keeps the stored document-space top correct.
+                        measureRect(item, window.pageYOffset || 0);
                         woke = true;
                         // Give AOS a bounded window to run its own entrance
                         // first; if it never shows up, we take over anyway.
@@ -468,7 +478,13 @@
     // Scroll and resize are the bus's job now. This is the resize half:
     // re-measure every cached rect whenever geometry can have changed.
     bus.onMeasure((s) => {
-        for (const item of items) measureRect(item, s.scrollY);
+        // Visible items only. This used to walk all 25 registered elements on
+        // every measure pass, and Lighthouse billed 36 ms of forced reflow to
+        // measureRect for it — 20-odd getBoundingClientRect calls per pass
+        // whose results nothing would read before the IntersectionObserver
+        // above took them again on the way in. The render loop already skips
+        // invisible items, so their cached rects were pure overhead.
+        for (const item of items) if (item.visible) measureRect(item, s.scrollY);
     });
 
     // Cursor drift is wired up in init(), and only if something actually uses

@@ -427,7 +427,14 @@
                 const condenses = nav && nav.dataset.dark === '1';
                 let condensed = null;
                 let hidden = null;
-                let lastY = window.scrollY;
+                // Seeded, not read. `window.scrollY` here forces a layout
+                // flush inside the DOMContentLoaded task with the document
+                // still settling — Lighthouse billed 16 ms of forced reflow to
+                // this line. The first tick supplies the real value, and a
+                // reload partway down arrives as a >320px delta, which the
+                // guard below already treats as a fresh start rather than as
+                // reading.
+                let lastY = 0;
                 let travel = 0;          // signed distance since the last reversal
                 let queued = false;
 
@@ -468,9 +475,8 @@
                 const CONDENSE_AT = 56;  // px down before the pill forms
                 const RELEASE_AT = 16;   // px — must return this close to release
 
-                function update() {
+                function update(y) {
                     queued = false;
-                    const y = window.scrollY;
                     const delta = y - lastY;
                     lastY = y;
 
@@ -504,12 +510,38 @@
                     }
                 }
 
-                function onScroll() {
-                    if (!queued) { queued = true; requestAnimationFrame(update); }
+                // On the shared bus rather than a fourth scroll listener.
+                //
+                // The comment above notes that two handlers were folded into
+                // one rAF-coalesced pass — but that pass was still its own
+                // scroll listener and its own rAF loop, running alongside
+                // frame-bus.js and reading window.scrollY a second time every
+                // frame. That is precisely the cumulative cost frame-bus.js was
+                // written to remove (see its header): the loops are cheap
+                // individually and expensive together. Subscribing hands us the
+                // scroll offset the bus already has, so this costs no read at
+                // all, and returning false parks the loop immediately.
+                //
+                // The bare update() that used to run here is gone with it: at
+                // load scrollY is 0 and it only set `condensed` to false, while
+                // a reload partway down is served by the first tick a frame or
+                // two later.
+                if (window.FHFrame) {
+                    window.FHFrame.onTick(function (s) {
+                        update(s.scrollY);
+                        return false;
+                    });
+                } else {
+                    // frame-bus.js failed to load: keep the old local loop so
+                    // the header still condenses and retreats.
+                    window.addEventListener('scroll', function () {
+                        if (!queued) {
+                            queued = true;
+                            requestAnimationFrame(function () { update(window.scrollY); });
+                        }
+                    }, { passive: true });
+                    requestAnimationFrame(function () { update(window.scrollY); });
                 }
-
-                update();
-                window.addEventListener('scroll', onScroll, { passive: true });
 
                 // An open drawer sits above the header, and the scroll lock
                 // means no scroll events arrive to bring it back — so a nav
