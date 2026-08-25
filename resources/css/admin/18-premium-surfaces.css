@@ -138,14 +138,12 @@
    staff/rooms, Staff Accounts, Registered Users, and a ₱88,540.00 Total
    Collected on payment logs.
 
-   Restating the gradient removes the rail (the actual intent) and keeps the
-   card. background-size has to be restated with it, because .stat-card above
-   pins it to a 2px strip so the rail draws as a hairline. */
+   The fill is flat now, so this is a background-color; the rail still has to
+   be cleared explicitly, which is what `background-image: none` does here
+   safely (the card's colour no longer lives in a background-image). */
 .stat-card-hero {
-    background-image:
-        radial-gradient(120% 120% at 100% 0%, rgba(255, 255, 255, .22) 0%, transparent 50%),
-        linear-gradient(135deg, var(--color-brand-fill) 0%, var(--color-g-700) 100%);
-    background-size: 100% 100%;
+    background-color: var(--color-brand-fill);
+    background-image: none;
 }
 
 /* The hero card's brand-green sparkline and footnote were invisible against

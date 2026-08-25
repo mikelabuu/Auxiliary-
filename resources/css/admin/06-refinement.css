@@ -11,7 +11,7 @@
 .filter-toolbar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
     padding: 13px 15px; margin-bottom: 22px;
-    background: linear-gradient(180deg, #fff, var(--color-surface));
+    background: #fff;
     border: 1px solid var(--color-border); border-radius: var(--radius);
     box-shadow: var(--shadow-xs);
 }
@@ -194,12 +194,12 @@
 .density-switch-opt:active { transform: scale(.96); }
 .density-switch-opt:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 .density-switch-opt.is-on {
-    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    background: var(--btn-fill);
     color: var(--btn-fill-ink);
     box-shadow: 0 3px 10px -4px rgba(9,146,80,.5), inset 0 1px 0 rgba(255,255,255,.22);
 }
 .density-switch-opt.is-on:hover {
-    background: linear-gradient(180deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
+    background: var(--btn-fill-hover);
     color: var(--btn-fill-ink);
 }
 
@@ -234,16 +234,16 @@
     box-shadow: inset 0 -1px 0 var(--color-border);
 }
 
-/* ── Modal refinements: gradient accent + smoother ── */
+/* ── Modal refinements: accent rail + smoother ── */
 .modal { position: relative; }
 .modal::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     /* Green family only: amber is reserved for semantic states, not decoration */
-    background: linear-gradient(90deg, var(--color-g-600), var(--color-g-400) 60%, var(--color-g-300));
+    background: var(--color-brand-fill);
     z-index: 3;
 }
 .modal-header {
-    background: linear-gradient(180deg, var(--color-g-50), #fff);
+    background: var(--color-g-50);
 }
 .modal-title svg {
     width: 34px; height: 34px; padding: 8px;
@@ -255,7 +255,7 @@
 .card-accent { overflow: hidden; }
 .card-accent::after {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--color-g-500), var(--color-g-300));
+    background: var(--color-brand-fill);
     z-index: 1;
 }
 

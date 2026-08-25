@@ -22,7 +22,7 @@
     overflow: hidden;
     background:
         radial-gradient(120% 40% at 50% 0%, rgba(22, 179, 100, .055) 0%, transparent 60%),
-        linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-deep) 100%);
+        linear-gradient(var(--sidebar-bg), var(--sidebar-bg));
     border-right: 1px solid var(--sidebar-line);
     box-shadow: 4px 0 24px rgba(9, 60, 38, .04);
     transition: width var(--transition-slow), box-shadow var(--transition-slow);
@@ -166,7 +166,7 @@
 }
 
 .sidebar-link.active {
-    background: linear-gradient(90deg, #e6faee 0%, #f2fcf6 100%);
+    background: #edfbf3;
     border-color: rgba(22, 179, 100, .16);
     color: var(--color-g-800);
     font-weight: 650;
@@ -215,7 +215,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(180deg, var(--color-au-500), var(--color-au-600));
+    background: var(--color-au-600);
     color: #fff;
     font-size: var(--fs-2xs);
     font-weight: 800;
@@ -293,7 +293,7 @@
 .sidebar-user-card {
     border-radius: var(--radius);
     border: 1px solid rgba(22, 179, 100, .18);
-    background: linear-gradient(180deg, #f0fbf4 0%, #e9f8ef 100%);
+    background: #eef9f2;
     padding: 13px 15px;
     transition: opacity var(--transition);
 }
@@ -854,7 +854,7 @@
     width: 36px;
     height: 36px;
     border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--color-g-500), var(--color-g-700));
+    background: var(--color-brand-fill);
     color: #fff;
     display: inline-flex;
     align-items: center;

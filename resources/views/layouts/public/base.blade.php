@@ -158,9 +158,7 @@
 {{-- overflow-x-clip guards against pre-reveal translateX states (fade-left/right) widening the page --}}
 <body class="theme-boutique {{ $nightTheme ? 'theme-night' : '' }} antialiased font-sans bg-canvas text-ink flex flex-col min-h-screen overflow-x-clip selection:bg-gold-soft selection:text-ink">
 
-    {{-- Keyboard users land here first: one Tab jumps past the whole nav to the
-         page content. Off-screen until focused (see .skip-link in 01-tokens.css). --}}
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+
 
     <!-- Reading-progress hairline (driven by --scroll-progress from parallax.js) -->
     <div class="scroll-progress" aria-hidden="true"></div>

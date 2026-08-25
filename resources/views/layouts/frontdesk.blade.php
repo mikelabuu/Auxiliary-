@@ -60,9 +60,7 @@
     })();
   </script>
 
-  {{-- Keyboard users land here first: one Tab jumps past the band's pill nav
-       to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+
 
   {{-- Meadow Nightfall band: greeting, clock, pill nav (Finexa format) --}}
   <x-frontdesk.hero />

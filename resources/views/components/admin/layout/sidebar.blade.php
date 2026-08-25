@@ -16,7 +16,6 @@
     </div>
     <div class="sidebar-brand-wrap">
       <p class="sidebar-brand-title">Farmers Hostel</p>
-      <p class="sidebar-brand-sub">Admin Console</p>
     </div>
   </div>
 

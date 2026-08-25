@@ -269,8 +269,8 @@
     }
 
     .dash-btn--primary:hover {
-        background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
-        border-color: var(--btn-fill-hover-to);
+        background: var(--btn-fill-hover);
+        border-color: var(--btn-fill-hover);
         color: var(--btn-fill-ink);
     }
 }
@@ -281,10 +281,10 @@
     transform: scale(0.97);
 }
 
-/* Flat clsu-800 before, against .btn-primary's g-700 → g-800 gradient one
-   card away on the same screen. Same role, so same fill. */
+/* Flat clsu-800 before, against .btn-primary one card away on the same
+   screen. Same role, so same fill. */
 .dash-btn--primary {
-    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    background: var(--btn-fill);
     border-color: var(--btn-fill-border);
     color: var(--btn-fill-ink);
     box-shadow: 0 10px 22px -12px rgba(8, 92, 55, .7);
@@ -311,7 +311,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem clamp(1rem, 1.6vw, 1.35rem);
-    background: linear-gradient(180deg, #f2faf5 0%, #ecf7f0 100%);
+    background: #f0f9f4;
     border-bottom: 1px solid var(--color-line, rgba(20, 32, 26, 0.07));
 }
 

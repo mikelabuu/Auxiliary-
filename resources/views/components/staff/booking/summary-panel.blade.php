@@ -68,7 +68,7 @@
         </div>
 
         {{-- Total payable — emerald accent footer --}}
-        <div style="padding:22px 26px;background:radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.16) 0%, transparent 50%), linear-gradient(135deg,#10a45c 0%, var(--color-g-700) 100%);color:#fff;">
+        <div style="padding:22px 26px;background:#10a45c;color:#fff;">
             <div class="flex items-end justify-between gap-3">
                 <div>
                     <p class="text-2xs font-bold uppercase tracking-[0.24em]" style="color:rgba(255,255,255,.72);">Total payable</p>

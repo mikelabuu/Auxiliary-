@@ -72,11 +72,9 @@
 }
 .stat-card:hover::after { opacity: 1; }
 
-/* Hero / accent variant (vivid emerald gradient, used once per row) */
+/* Hero / accent variant (flat brand emerald, used once per row) */
 .stat-card-hero {
-    background:
-        radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.22) 0%, transparent 50%),
-        linear-gradient(135deg, var(--color-brand-fill) 0%, var(--color-g-700) 100%);
+    background: var(--color-brand-fill);
     border-color: rgba(255,255,255,.18);
     color: #fff;
     box-shadow: 0 8px 28px -8px rgba(8,116,67,.45), inset 0 1px 0 rgba(255,255,255,.25);
@@ -85,9 +83,7 @@
     border-color: rgba(255,255,255,.35);
     box-shadow: 0 14px 38px -8px rgba(8,116,67,.55), inset 0 1px 0 rgba(255,255,255,.25);
 }
-.stat-card-hero::after {
-    background: radial-gradient(circle, rgba(255,255,255,.18) 0%, transparent 70%);
-}
+.stat-card-hero::after { display: none; }
 .stat-card-hero .stat-value { color: #fff; }
 .stat-card-hero .stat-label { color: rgba(255,255,255,.85); }
 .stat-card-hero .stat-icon { background: rgba(255,255,255,.16); color: #fff; backdrop-filter: blur(4px); }
@@ -205,7 +201,7 @@
 }
 .dashboard-breakdown-fill {
     height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--color-g-400), var(--color-g-500));
+    background: var(--color-brand-fill);
     transition: width 700ms var(--ease-out);
 }
 .dashboard-breakdown-count {
@@ -401,41 +397,39 @@
 
 /* These were mixing two palettes: the fills came from Tailwind's stock
    `emerald` ramp (#10b981 / #059669) while the rest of the console runs on the
-   sage-emerald --color-g-* scale. That also put the console's main CTA at
-   2.54:1 white-on-fill at the top of the gradient — the worst contrast in the
-   admin, and invisible to a per-element audit because it is a gradient. The
-   g-700 → g-800 pair is on-palette and carries white at 5.85:1 → 8.08:1.
-   Hover lightens by one step rather than two so the fill never climbs back
-   above the AA line.
+   sage-emerald --color-g-* scale. The fill is now flat --color-brand-fill,
+   which is the same green the ops-header band and the card headers use, so a
+   button reads as part of the console rather than as a lit surface. Hover
+   brightens one step; see the contrast note on --btn-fill in 01-tokens.
 
-   The pair now lives on --btn-fill-* in 01-tokens, because four other
+   The fill now lives on --btn-fill-* in 01-tokens, because four other
    controls (.filter-tab.selected, .pager-btn[aria-current], .swal2-confirm,
    .dash-btn--primary) are the same "this is the filled one" role and had each
    picked their own green. */
 .btn-primary {
-    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    background: var(--btn-fill);
     color: var(--btn-fill-ink);
     border-color: var(--btn-fill-border);
     box-shadow: var(--btn-fill-shadow);
 }
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
-    border-color: var(--btn-fill-hover-to);
+    background: var(--btn-fill-hover);
+    border-color: var(--btn-fill-hover);
     box-shadow: var(--btn-fill-shadow-lift);
     transform: translateY(-2px);
 }
 
 /* Same story as .btn-primary: stock amber (#f59e0b) rather than the --color-au-*
-   scale, and white sat at 2.15:1 on it. au-700 → au-800 carries white at
-   5.43:1 → 7.52:1. Amber is the hardest hue to keep legible under white, so
-   hover deepens instead of brightening. */
+   scale, and white sat at 2.15:1 on it. Flat au-700 carries white at 5.43:1.
+   Amber is the hardest hue to keep legible under white, so hover deepens
+   instead of brightening. */
 .btn-gold {
-    background: linear-gradient(135deg, var(--btn-accent-from) 0%, var(--btn-accent-to) 100%);
+    background: var(--btn-accent);
     color: var(--btn-accent-ink);
     box-shadow: 0 4px 12px rgba(181, 71, 8, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 .btn-gold:hover {
-    background: linear-gradient(135deg, var(--btn-accent-hover-from) 0%, var(--btn-accent-hover-to) 100%);
+    background: var(--btn-accent-hover);
     box-shadow: 0 8px 24px rgba(181, 71, 8, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
 }
@@ -672,7 +666,7 @@
    are the same "this one is active" signal, and shipping two greens for it was
    the most visible inconsistency in the console. */
 .filter-tab.selected {
-    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    background: var(--btn-fill);
     color: var(--btn-fill-ink); border-color: var(--btn-fill-border);
     box-shadow: 0 4px 14px -4px rgba(9,146,80,.50), inset 0 1px 0 rgba(255,255,255,.22);
 }
@@ -733,8 +727,8 @@
 .bar-label { font-size: var(--fs-xs); font-weight: 600; color: var(--color-muted); width: 84px; flex-shrink: 0; }
 .bar-track { flex: 1; height: 26px; background: var(--color-surface); border-radius: 999px; overflow: hidden; position: relative; }
 .bar-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; transition: width 700ms var(--ease-out); }
-.bar-fill-green { background: linear-gradient(90deg, var(--color-g-400), var(--color-g-500)); }
-.bar-fill-gold { background: linear-gradient(90deg, var(--color-au-300), var(--color-au-500)); }
+.bar-fill-green { background: var(--color-brand-fill); }
+.bar-fill-gold { background: var(--color-au-500); }
 .bar-count { font-size: var(--fs-sm); font-weight: 700; color: var(--color-ink); width: 30px; text-align: right; }
 
 /* Legend */

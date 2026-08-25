@@ -108,7 +108,7 @@
 .fd-avatar {
     width: 32px; height: 32px; border-radius: 50%;
     display: grid; place-items: center; color: #fff;
-    background: linear-gradient(135deg, var(--color-g-500), var(--color-g-700));
+    background: var(--color-brand-fill);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
 }
 .fd-avatar svg { width: 14px; height: 14px; }

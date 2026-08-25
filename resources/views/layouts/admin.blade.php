@@ -96,9 +96,7 @@
     })();
   </script>
 
-  {{-- Keyboard users land here first: one Tab jumps past the sidebar and topbar
-       to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+
 
   <div class="grid-overlay"></div>
 

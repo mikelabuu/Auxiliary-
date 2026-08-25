@@ -71,7 +71,7 @@
         <span class="text-faint font-data tabnum">{{ $dormOccupied }} / {{ $dormTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $dormPercent }}%"></div>
+        <div class="h-full bg-brand-fill rounded-full transition-[width] duration-500" style="width:{{ $dormPercent }}%"></div>
       </div>
     </div>
     <div>
@@ -80,7 +80,7 @@
         <span class="text-faint font-data tabnum">{{ $standardOccupied }} / {{ $standardTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $standardPercent }}%"></div>
+        <div class="h-full bg-brand-fill rounded-full transition-[width] duration-500" style="width:{{ $standardPercent }}%"></div>
       </div>
     </div>
     <div>
@@ -89,12 +89,12 @@
         <span class="text-faint font-data tabnum">{{ $deluxeOccupied }} / {{ $deluxeTotal }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-clsu-100 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-clsu-500 to-clsu-700 rounded-full transition-[width] duration-500" style="width:{{ $deluxePercent }}%"></div>
+        <div class="h-full bg-brand-fill rounded-full transition-[width] duration-500" style="width:{{ $deluxePercent }}%"></div>
       </div>
     </div>
   </div>
 
-  <div class="bg-gradient-to-br from-clsu-50 to-white border border-clsu-100 rounded-xl p-3.5 mt-4">
+  <div class="bg-clsu-50 border border-clsu-100 rounded-xl p-3.5 mt-4">
     <p class="text-xs text-clsu-800 leading-snug">
         @if($occupied == 0)
             No guests checked in yet. Rooms are ready to go.

@@ -43,10 +43,9 @@
         height: 100%;
         width: 0;
         border-radius: 0 3px 3px 0;
-        /* Brand green running into amber, the same pairing as the topbar
-           hairline. Literal hex because the design tokens live in the
-           stylesheet that has not loaded yet. */
-        background: linear-gradient(90deg, #16b364 0%, #099250 55%, #f79009 100%);
+        /* The console's flat brand green. Literal hex because the design
+           tokens live in the stylesheet that has not loaded yet. */
+        background: #10a45c;
         box-shadow: 0 0 10px rgba(22, 179, 100, .45);
         transition: width 200ms ease-out;
     }

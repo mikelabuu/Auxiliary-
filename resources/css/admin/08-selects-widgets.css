@@ -47,7 +47,7 @@
 .flatpickr-calendar.arrowBottom::after { border-top-color: #fff; }
 .flatpickr-months {
     padding: 6px 4px 2px;
-    background: linear-gradient(180deg, var(--color-g-50), #fff);
+    background: var(--color-g-50);
     border-bottom: 1px solid var(--color-border);
 }
 .flatpickr-months .flatpickr-month,
@@ -140,23 +140,23 @@ body.swal2-toast-shown .swal2-container.swal2-backdrop-show {
    green. Danger dialogs now say so with a class instead; see .swal2-confirm.is-danger
    below and TONES in resources/js/staff-actions.js. */
 .swal2-confirm {
-    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%) !important;
+    background: var(--btn-fill) !important;
     color: var(--btn-fill-ink) !important;
     border-radius: var(--radius-sm) !important; font-weight: 700 !important;
     box-shadow: 0 2px 8px rgba(9,146,80,.25) !important;
 }
 .swal2-confirm:hover {
-    background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%) !important;
+    background: var(--btn-fill-hover) !important;
 }
 /* Ink has to be restated: the affirmative confirm is a mint fill under
    near-black green, and that type is unreadable on ember. */
 .swal2-confirm.is-danger {
-    background: linear-gradient(135deg, var(--btn-danger-fill) 0%, var(--btn-danger-fill-hover) 100%) !important;
+    background: var(--btn-danger-fill) !important;
     color: #fff !important;
     box-shadow: 0 2px 8px rgba(185,28,28,.25) !important;
 }
 .swal2-confirm.is-danger:hover {
-    background: linear-gradient(135deg, var(--btn-danger-fill-hover) 0%, var(--color-ember-800) 100%) !important;
+    background: var(--btn-danger-fill-hover) !important;
 }
 .swal2-cancel {
     background: rgba(255,255,255,.9) !important;

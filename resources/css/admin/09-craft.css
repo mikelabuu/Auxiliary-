@@ -73,7 +73,7 @@
 .pager-btn:active { transform: scale(.94); }
 .pager-btn:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 .pager-btn[aria-current="page"] {
-    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    background: var(--btn-fill);
     border-color: var(--btn-fill-border); color: var(--btn-fill-ink);
     box-shadow: 0 3px 10px -3px rgba(9,146,80,.45), inset 0 1px 0 rgba(255,255,255,.22);
 }

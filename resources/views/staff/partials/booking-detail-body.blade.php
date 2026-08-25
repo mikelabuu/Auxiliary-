@@ -78,7 +78,7 @@
         {{-- ─────────── Left rail: who the guest is ─────────── --}}
         <aside class="min-w-0">
             <div class="rounded-2xl border border-stone-200 overflow-hidden">
-                <div class="px-5 pt-6 pb-5 text-center bg-linear-to-b from-clsu-50/70 to-transparent">
+                <div class="px-5 pt-6 pb-5 text-center bg-clsu-50/70">
                     <x-admin.ui.avatar size="lg" />
                     <p class="mt-3.5 text-lg font-bold text-stone-900 leading-tight break-words">{{ $booking->guest_name }}</p>
                     <p class="mt-1.5 text-xs font-bold text-clsu-700 font-data tracking-wide">
@@ -146,7 +146,7 @@
             <div class="rounded-2xl border border-stone-200 p-5">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="flex items-center gap-3.5 min-w-0">
-                        <span class="w-12 h-12 shrink-0 rounded-2xl bg-linear-to-br from-clsu-500 to-clsu-700 text-white flex items-center justify-center shadow-sm">
+                        <span class="w-12 h-12 shrink-0 rounded-2xl bg-brand-fill text-white flex items-center justify-center shadow-sm">
                             <x-admin.ui.icon name="bed" class="w-5 h-5" stroke-width="2" />
                         </span>
                         <div class="min-w-0">

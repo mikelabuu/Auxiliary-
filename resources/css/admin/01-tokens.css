@@ -235,29 +235,28 @@
        .pager-btn[aria-current] and .swal2-confirm all sat on a
        literal #12a95d -> g-600 that belongs to no ramp in the file.
 
-       All of them now open on --color-brand-fill and close on g-700:
-       the same gradient the ops-header band and the card headers use,
-       so a button reads as part of the console rather than as a green
-       borrowed from somewhere else.
+       They were then unified onto a --color-brand-fill -> g-700
+       gradient, and are now flat --color-brand-fill: no gradients on
+       filled controls anywhere in the admin or the front desk. One
+       colour, so a button reads as one object rather than as a
+       surface that is lit from a corner.
 
-       Contrast note, so the next person does not have to rediscover it:
-       white on the #10a45c top stop is 3.24:1, under the 4.5:1 AA line
-       for body-sized text, and clears it (5.85:1) by the g-700 end of
-       the gradient. This is the console's established pairing — the
-       header band has always shipped it. To make it AA at every stop,
-       move --btn-fill-from to var(--color-g-700): one line, and every
-       filled control in the admin and the front desk follows.
+       Contrast note, so the next person does not have to rediscover
+       it: white on #10a45c is 3.24:1, under the 4.5:1 AA line for
+       body-sized text. It is the console's established pairing — the
+       ops-header band has always shipped it, and now the buttons match
+       it exactly instead of only starting there. To make it AA, move
+       --btn-fill to var(--color-g-700): one line, and every filled
+       control in the admin and the front desk follows.
 
        Anything that fills, tints or outlines a control should reach
        for these rather than for a ramp step directly, so the next
        change to the console's green happens once. */
-    --btn-fill-from:        var(--color-brand-fill);
-    --btn-fill-to:          var(--color-g-700);
+    --btn-fill:             var(--color-brand-fill);
     /* Hover brightens rather than deepens — the fill is mid-ramp so it has
        room to go up, and a button that darkens under the cursor reads as
        going disabled. */
-    --btn-fill-hover-from:  var(--color-g-500);
-    --btn-fill-hover-to:    var(--color-g-600);
+    --btn-fill-hover:       var(--color-g-500);
     --btn-fill-ink:         #ffffff;
     --btn-fill-border:      var(--color-g-600);
     --btn-fill-shadow:      0 4px 12px rgba(8, 116, 67, .25), inset 0 1px 1px rgba(255, 255, 255, .2);
@@ -277,11 +276,10 @@
     --btn-soft-border:      var(--color-g-400);
 
     /* Amber accent (revenue, "needs attention" affirmatives). Amber is the
-       hardest hue to keep legible under white, so hover deepens. */
-    --btn-accent-from:       var(--color-au-700);
-    --btn-accent-to:         var(--color-au-800);
-    --btn-accent-hover-from: var(--color-au-800);
-    --btn-accent-hover-to:   var(--color-palay-900);
+       hardest hue to keep legible under white, so hover deepens. Flat, for
+       the same reason the green fill is. */
+    --btn-accent:            var(--color-au-700);
+    --btn-accent-hover:      var(--color-au-800);
 
     /* Destructive. Ember, not stock Tailwind red — the console had
        #dc2626 / #f87171 / #fef2f2 / #b91c1c scattered across the
