@@ -35,6 +35,15 @@ class Staff extends Authenticatable
      */
     public const ASSIGNABLE_ROLES = ['admin', 'frontdesk'];
 
+    /**
+     * Roles the "New Staff Account" form may hand out. Narrower than
+     * ASSIGNABLE_ROLES on purpose: `admin` is an elevated console role, so a
+     * fresh account is never born into it — an existing account is promoted to
+     * it through the edit form instead, which leaves an audit entry naming the
+     * account that was raised. `master_admin` is out of band as always.
+     */
+    public const CREATABLE_ROLES = ['frontdesk'];
+
     protected $fillable = [
         'name',
         'email',

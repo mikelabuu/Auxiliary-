@@ -231,14 +231,17 @@
                 </div>
                 <div>
                     <label class="{{ $labelClasses }}">Role</label>
-                    {{-- Driven by ASSIGNABLE_ROLES, not a hand-written list: the
+                    {{-- Driven by CREATABLE_ROLES, not a hand-written list: the
                          two were maintained separately and drifted, so the form
-                         offered Housekeeping while nothing could sign into it. --}}
+                         offered Housekeeping while nothing could sign into it.
+                         Narrower than the edit form's ASSIGNABLE_ROLES — Admin
+                         is not created here, it is granted by editing an
+                         existing account. --}}
                     <select name="role" class="{{ $inputClasses }} cursor-pointer" required>
                         <option value="">Select role</option>
-                        @foreach (\App\Models\Staff::ASSIGNABLE_ROLES as $assignable)
-                            <option value="{{ $assignable }}" @selected($errorForm === 'create-staff' && old('role') === $assignable)>
-                                {{ $roleMeta[$assignable]['label'] ?? ucfirst($assignable) }}
+                        @foreach (\App\Models\Staff::CREATABLE_ROLES as $creatable)
+                            <option value="{{ $creatable }}" @selected($errorForm === 'create-staff' && old('role') === $creatable)>
+                                {{ $roleMeta[$creatable]['label'] ?? ucfirst($creatable) }}
                             </option>
                         @endforeach
                     </select>

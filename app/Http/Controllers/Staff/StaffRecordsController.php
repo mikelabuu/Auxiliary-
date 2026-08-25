@@ -75,7 +75,10 @@ class StaffRecordsController extends Controller
                 // resolve to one identity. Mirrors the check in signup().
                 Rule::unique('users', 'email'),
             ],
-            'role'     => ['required', Rule::in(Staff::ASSIGNABLE_ROLES)],
+            // CREATABLE_ROLES, not ASSIGNABLE_ROLES: the create form no longer
+            // offers Admin, and a select is only a suggestion — without this
+            // the same POST with role=admin still lands an admin account.
+            'role'     => ['required', Rule::in(Staff::CREATABLE_ROLES)],
             'password' => ['required', ...self::PASSWORD_RULES],
         ], [
             'email.unique' => 'That email address is already in use by a guest or staff account.',
