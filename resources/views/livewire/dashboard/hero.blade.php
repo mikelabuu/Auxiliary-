@@ -7,10 +7,7 @@
         {{-- The pill was previously opened and never closed, so the date fell
              inside it and the heartbeat dot the CSS expects was never emitted.
              Both elements are explicit now. --}}
-        <span class="dash-live">
-            <span class="dash-live__dot" aria-hidden="true"></span>
-            Live
-        </span>
+
         <span class="dash-welcome__date">{{ now(config('hostel.timezone'))->format('l, M j, Y') }}</span>
     </div>
 
