@@ -68,7 +68,7 @@
         </div>
 
         {{-- Total payable — emerald accent footer --}}
-        <div style="padding:22px 26px;background:#10a45c;color:#fff;">
+        <div style="padding:22px 26px;background:#0f8f51;color:#fff;">
             <div class="flex items-end justify-between gap-3">
                 <div>
                     <p class="text-2xs font-bold uppercase tracking-[0.24em]" style="color:rgba(255,255,255,.72);">Total payable</p>

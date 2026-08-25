@@ -1,4 +1,56 @@
-<div x-data="{ showModal: false, modalLog: null }">
+{{-- The details overlay is a standard <x-admin.ui.modal>, driven by
+     resources/js/admin-modals.js (window.openModal / data-modal-close), like
+     every other modal in the console. It used to be a hand-rolled x-show +
+     x-transition:leave overlay, which is why it opened once and then stopped:
+     Alpine owned the show/hide here while the CSS exit lives on [data-closing],
+     so the two never agreed on when the overlay was actually hidden. Alpine now
+     only holds the fetched row; it does not decide whether the dialog is up. --}}
+<div x-data="{
+        modalLog: null,
+        loadingId: null,
+
+        /* Raw JSON in a black box said `null` on 39% of entries, because most
+           actions record no before/after. Fold old+new into one key-by-key
+           list instead, and let the template drop the block when it is empty. */
+        get changes() {
+            const o = (this.modalLog && this.modalLog.old_values) || {};
+            const n = (this.modalLog && this.modalLog.new_values) || {};
+            return [...new Set([...Object.keys(o), ...Object.keys(n)])].sort().map(k => ({
+                key: k.replace(/_/g, ' '),
+                from: this.fmt(o[k]),
+                to: this.fmt(n[k]),
+                changed: JSON.stringify(o[k]) !== JSON.stringify(n[k]),
+            }));
+        },
+        fmt(v) {
+            if (v === undefined || v === null) return '—';
+            if (typeof v === 'object') return JSON.stringify(v);
+            return String(v);
+        },
+
+        /* A bare .then() with no .catch() meant a failed request did nothing at
+           all -- no modal, no error. Non-master_admin staff get a 403 here, so
+           that was every click for them. */
+        open(url, id) {
+            this.loadingId = id;
+            fetch(url, { headers: { Accept: 'application/json' } })
+                .then(r => r.json().catch(() => null).then(j => {
+                    if (!r.ok || !j || !j.success) {
+                        throw new Error((j && j.message) || ('Could not load this entry (HTTP ' + r.status + ').'));
+                    }
+                    return j;
+                }))
+                .then(j => {
+                    this.modalLog = Object.assign({}, j.log, { old_values: j.old_values, new_values: j.new_values });
+                    this.$nextTick(() => window.openModal('auditLogModal'));
+                })
+                .catch(e => {
+                    if (window.toast) window.toast(e.message, 'error');
+                    else alert(e.message);
+                })
+                .finally(() => { this.loadingId = null; });
+        }
+     }">
     @php
         $tableTabs = [
             'all'       => 'All',
@@ -116,11 +168,8 @@
                                     <td>
                                         <div class="table-actions">
                                             <button type="button" class="btn btn-outline btn-sm cursor-pointer"
-                                                @click.prevent="
-                                                    fetch('{{ route('staff.audit.show', $log->id) }}')
-                                                      .then(r => r.json())
-                                                      .then(j => { modalLog = j.log; modalLog.old_values = j.old_values; modalLog.new_values = j.new_values; showModal = true; })
-                                                ">
+                                                @click.prevent="open('{{ route('staff.audit.show', $log->id) }}', {{ $log->id }})"
+                                                :disabled="loadingId === {{ $log->id }}">
                                                 <x-admin.ui.icon name="eye" class="w-3.5 h-3.5" />
                                                 View
                                             </button>
@@ -149,71 +198,67 @@
         @endif
     </x-admin.ui.section-card>
 
-    {{-- Details modal (entry animated by @starting-style on .modal) --}}
-    <div x-show="showModal" x-transition:leave.opacity.duration.140ms x-cloak
-         class="fixed inset-0 z-[300] flex items-center justify-center p-5"
-         @keydown.escape.window="showModal = false">
-        <div class="modal-backdrop-tint" @click="showModal = false"></div>
-        <div class="modal modal-lg relative w-full max-h-[88vh] overflow-y-auto custom-scrollbar" role="dialog" aria-modal="true" aria-labelledby="auditLogModalTitle">
-            <div class="modal-header">
-                <h3 class="modal-title" id="auditLogModalTitle">
-                    <x-admin.ui.icon name="shield" class="w-[18px] h-[18px] shrink-0" stroke-width="2" style="color:var(--color-g-600);" />
-                    Audit Log Details
-                </h3>
-                <button type="button" class="btn btn-ghost btn-sm btn-icon" @click="showModal = false" aria-label="Close">
-                    <x-admin.ui.icon name="x" class="w-4 h-4" stroke-width="2" />
-                </button>
-            </div>
-
-            <template x-if="modalLog">
-                <div class="modal-body">
-                    <div class="record-detail-panel">
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">Action</span>
-                            <span class="record-detail-value" x-text="(modalLog.action || '').replace(/_/g, ' ')"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">Performed by</span>
-                            <span class="record-detail-value" x-text="modalLog.staff ? (modalLog.staff.name + ' (' + (modalLog.staff.role ?? '') + ')') : 'System'"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">Record</span>
-                            <span class="record-detail-value" x-text="modalLog.target_type ? modalLog.target_type.split('\\\\').pop() + (modalLog.target_id ? ' #' + modalLog.target_id : '') : 'Unsorted'"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">IP address</span>
-                            <span class="record-detail-value font-data" x-text="modalLog.ip_address"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">Timestamp</span>
-                            <span class="record-detail-value font-data tabnum" x-text="modalLog.created_at"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">Description</span>
-                            <span class="record-detail-value" x-text="modalLog.description"></span>
-                        </div>
-                        <div class="record-detail-row">
-                            <span class="record-detail-label">User agent</span>
-                            <span class="record-detail-value !font-normal text-2xs text-muted font-data break-words" x-text="modalLog.user_agent"></span>
-                        </div>
+    {{-- Details modal --}}
+    <x-admin.ui.modal id="auditLogModal" icon="shield" title="Audit Log Details" max-width="2xl" scroll-body>
+        <template x-if="modalLog">
+            <div class="modal-body">
+                <div class="record-detail-panel">
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">Action</span>
+                        <span class="record-detail-value" x-text="(modalLog.action || '').replace(/_/g, ' ')"></span>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-                        <div>
-                            <p class="kv-label">Old values</p>
-                            <pre class="bg-stone-900 text-stone-200 rounded-xl p-3.5 font-mono text-xs leading-relaxed overflow-x-auto max-h-52 custom-scrollbar" x-text="JSON.stringify(modalLog.old_values, null, 2)"></pre>
-                        </div>
-                        <div>
-                            <p class="kv-label">New values</p>
-                            <pre class="bg-stone-900 text-stone-200 rounded-xl p-3.5 font-mono text-xs leading-relaxed overflow-x-auto max-h-52 custom-scrollbar" x-text="JSON.stringify(modalLog.new_values, null, 2)"></pre>
-                        </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">Performed by</span>
+                        <span class="record-detail-value" x-text="modalLog.staff ? (modalLog.staff.name + ' (' + (modalLog.staff.role ?? '') + ')') : 'System'"></span>
+                    </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">Record</span>
+                        <span class="record-detail-value" x-text="modalLog.target_type ? modalLog.target_type.split('\\').pop() + (modalLog.target_id ? ' #' + modalLog.target_id : '') : 'Unsorted'"></span>
+                    </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">IP address</span>
+                        <span class="record-detail-value font-data" x-text="modalLog.ip_address"></span>
+                    </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">Timestamp</span>
+                        <span class="record-detail-value font-data tabnum" x-text="modalLog.created_at"></span>
+                    </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">Description</span>
+                        <span class="record-detail-value" x-text="modalLog.description"></span>
+                    </div>
+                    <div class="record-detail-row">
+                        <span class="record-detail-label">User agent</span>
+                        <span class="record-detail-value !font-normal text-2xs text-muted font-data break-words" x-text="modalLog.user_agent"></span>
                     </div>
                 </div>
-            </template>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" @click="showModal = false">Close</button>
+                {{-- Only shown when the action actually recorded a before/after.
+                     Most do not, and two black boxes reading "null" were noise. --}}
+                <template x-if="changes.length">
+                    <div class="mt-5">
+                        <p class="kv-label">What changed</p>
+                        <div class="audit-change-table" role="table" aria-label="Field changes">
+                            <div class="audit-change-head" role="row">
+                                <span role="columnheader">Field</span>
+                                <span role="columnheader">Before</span>
+                                <span role="columnheader">After</span>
+                            </div>
+                            <template x-for="c in changes" :key="c.key">
+                                <div class="audit-change-row" :class="c.changed && 'is-changed'" role="row">
+                                    <span class="audit-change-key" role="cell" x-text="c.key"></span>
+                                    <span class="audit-change-from font-data" role="cell" x-text="c.from"></span>
+                                    <span class="audit-change-to font-data" role="cell" x-text="c.to"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
             </div>
+        </template>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-modal-close="auditLogModal">Close</button>
         </div>
-    </div>
+    </x-admin.ui.modal>
 </div>

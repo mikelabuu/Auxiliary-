@@ -126,12 +126,13 @@
     --color-brand-ink: #087443;
 
     /* ── The console's signature filled-surface green ──
-       #10a45c sits between g-500 and g-600 and is on no ramp step, but it is
+       #0f8f51 sits between g-600 and g-700 and is on no ramp step, but it is
        what the console actually looks like: the ops-header band, the card
-       header accents and the premium-surface gradients have all opened on it
-       since the reskin. It was a literal in three files; naming it is what
-       lets a button use the same green as the header above it. */
-    --color-brand-fill: #10a45c;
+       header accents and every filled control open on it. It is a literal in
+       two more places that cannot see this file — the pre-stylesheet inline
+       CSS in partials/page-progress.blade.php and the summary-panel footer —
+       so grep the hex, not just the token, when this changes. */
+    --color-brand-fill: #0f8f51;
 
     /* ── Type scale ──
        The console had grown 20 distinct sizes on one page, hand-picked in half
@@ -242,12 +243,14 @@
        surface that is lit from a corner.
 
        Contrast note, so the next person does not have to rediscover
-       it: white on #10a45c is 3.24:1, under the 4.5:1 AA line for
-       body-sized text. It is the console's established pairing — the
-       ops-header band has always shipped it, and now the buttons match
-       it exactly instead of only starting there. To make it AA, move
-       --btn-fill to var(--color-g-700): one line, and every filled
-       control in the admin and the front desk follows.
+       it: white on #0f8f51 is 4.14:1 — clear of the 3:1 AA line for
+       large/bold text, still under the 4.5:1 one for body-sized text.
+       (The previous #10a45c was 3.24:1, so this moved toward AA, not
+       away.) It is the console's established pairing — the ops-header
+       band has always shipped it, and the buttons match it exactly. To
+       make it AA at body size, move --btn-fill to var(--color-g-700):
+       one line, and every filled control in the admin and the front
+       desk follows.
 
        Anything that fills, tints or outlines a control should reach
        for these rather than for a ramp step directly, so the next

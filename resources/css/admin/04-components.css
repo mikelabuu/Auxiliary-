@@ -901,3 +901,58 @@
     .record-detail-label { font-size: var(--fs-2xs); }
     .record-detail-value { font-size: var(--fs-md); }
 }
+
+/* ── Audit log: field-level before/after ───────────────────────
+   Replaces two `<pre>` blocks of raw JSON on a stone-900 ground. Those read
+   "null" on 39% of entries (most actions record no before/after at all), and
+   on the rest they asked a human to diff two JSON objects by eye. This is the
+   same data as one row per field, with the changed ones marked, and the whole
+   block is dropped by the template when there is nothing to show. */
+.audit-change-table {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: var(--fs-sm);
+}
+.audit-change-head,
+.audit-change-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
+    gap: 12px;
+    padding: 9px 14px;
+    align-items: start;
+}
+.audit-change-head {
+    background: var(--color-g-50);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--fs-2xs);
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+}
+.audit-change-row + .audit-change-row { border-top: 1px dashed var(--color-border); }
+.audit-change-key {
+    font-weight: 700;
+    color: var(--color-ink);
+    text-transform: capitalize;
+    word-break: break-word;
+}
+.audit-change-from,
+.audit-change-to { word-break: break-word; }
+/* Unchanged keys stay quiet so the eye lands on what actually moved. */
+.audit-change-from { color: var(--color-muted); text-decoration: line-through; text-decoration-color: var(--color-faint); }
+.audit-change-to   { color: var(--color-muted); }
+.audit-change-row.is-changed .audit-change-to { color: var(--color-brand-ink); font-weight: 700; }
+.audit-change-row:not(.is-changed) .audit-change-from { text-decoration: none; }
+
+@media (max-width: 640px) {
+    .audit-change-head { display: none; }
+    .audit-change-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+        padding: 11px 14px;
+    }
+    .audit-change-from::before { content: 'Before: '; color: var(--color-faint); }
+    .audit-change-to::before   { content: 'After: ';  color: var(--color-faint); }
+}
