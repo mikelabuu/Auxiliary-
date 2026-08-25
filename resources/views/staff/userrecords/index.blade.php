@@ -100,6 +100,7 @@
             </select>
             <button type="submit" class="btn btn-outline btn-sm">Apply</button>
             <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             @if($search || $status !== 'all' || $sort !== 'latest')
                 <a href="{{ route('staff.userrecords.index') }}" class="filter-clear">
                     <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
@@ -134,7 +135,7 @@
                             <tr>
                                 <td>
                                     <div class="cell-name">
-                                        <span class="avatar-initials" @if($user->is_suspended) style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c;border-color:#fca5a5;" @endif>{{ strtoupper(mb_substr($user->username, 0, 1)) }}</span>
+                                        <x-admin.ui.avatar :state="$user->is_suspended ? 'suspended' : null" />
                                         <div class="cell-name-text">
                                             <p class="cell-name-primary truncate">{{ $user->username }}</p>
                                             <p class="cell-name-secondary truncate">{{ $user->email }}</p>

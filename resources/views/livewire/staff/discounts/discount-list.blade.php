@@ -26,6 +26,7 @@
                 </button>
             @endforeach
             <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             <span class="refresh-chip" wire:loading.delay.flex wire:target="status, sort, gotoPage, previousPage, nextPage">
                 <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                 Updating
@@ -60,15 +61,12 @@
                         @foreach($discounts as $discount)
                             @php
                                 $sClass = $statusClassMap[$discount->status] ?? 'status-neutral';
-                                $initials = collect(explode(' ', trim($discount->booking->guest_name)))
-                                    ->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
-                                $initials = strtoupper($initials ?: 'G');
                             @endphp
                             <tr>
                                 <td><span class="ref-code">DR-{{ str_pad($discount->id, 4, '0', STR_PAD_LEFT) }}</span></td>
                                 <td>
                                     <div class="cell-name">
-                                        <span class="avatar-initials">{{ $initials }}</span>
+                                        <x-admin.ui.avatar />
                                         <div class="cell-name-text">
                                             <p class="cell-name-primary">{{ $discount->booking->guest_name }}</p>
                                         </div>

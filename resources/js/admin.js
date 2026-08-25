@@ -21,6 +21,10 @@ import './bootstrap';
 // Echo-driven console updates — inert without the import above.
 import './live-refresh';
 import './admin-notifications';
+// Sidebar queue badges. Listens for the `staff-counts` event the module above
+// dispatches, so it must be imported after it (both only bind listeners at
+// import time, but the ordering is the documented one).
+import './sidebar-counts';
 
 // Staff-only DOM behaviours (moved out of app.js for the same reason).
 import './sortable-tables';
@@ -34,6 +38,10 @@ import './staff-tables';
 import './staff-console';
 // Confirm-then-submit for irreversible actions, with the double-submit guard.
 import './staff-actions';
+
+// Keeps the room board's status menu inside the viewport. Shared by both
+// boards, which each own their own open/close handler.
+import './room-kebab';
 
 import './pages/admin-dashboard';
 import './pages/admin-reports';

@@ -60,6 +60,7 @@
                 <option value="oldest">Oldest first</option>
             </select>
             <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             <span class="refresh-chip" wire:loading.delay.flex wire:target="search, statusFilter, sort, resetFilters, gotoPage, previousPage, nextPage">
                 <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                 Updating

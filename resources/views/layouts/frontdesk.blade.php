@@ -31,12 +31,34 @@
 {{-- Gate for the private `staff.alerts` Reverb subscription — see
      resources/js/admin-notifications.js. The desk gets the same live alerts as
      the admin console; it is usually the screen someone is actually sitting at. --}}
-<body class="bg-surface text-ink antialiased" data-staff-alerts>
+<body class="bg-surface text-ink antialiased" data-staff-alerts
+      x-data="{
+        density: (localStorage.getItem('adminDensity') || (localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal')),
+        setDensity(v) {
+          if (this.density === v) return;
+          this.density = v;
+          localStorage.setItem('adminDensity', v);
+          // Brief opacity dip masks the one-frame reflow (05-motion-ux.css)
+          document.body.classList.add('density-switching');
+          setTimeout(() => document.body.classList.remove('density-switching'), 160);
+        }
+      }"
+      :class="{ 'density-compact': density === 'compact', 'density-large': density === 'large' }">
 
   {{-- Both first in the body on purpose — see the note in layouts/admin.
        Curtain for full document loads, bar for in-page Livewire work. --}}
   @include('partials.page-loader')
   @include('partials.page-progress')
+
+  {{-- Apply the saved row size before Alpine boots so nothing flashes --}}
+  <script>
+    (function () {
+      var d = localStorage.getItem('adminDensity');
+      if (!d) d = localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal';
+      if (d === 'compact') document.body.classList.add('density-compact');
+      else if (d === 'large') document.body.classList.add('density-large');
+    })();
+  </script>
 
   {{-- Keyboard users land here first: one Tab jumps past the band's pill nav
        to the page content. Off-screen until focused (.skip-link, 02-base.css). --}}

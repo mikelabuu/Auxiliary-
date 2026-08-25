@@ -66,6 +66,7 @@
             <option value="status:asc" @selected($currentSort === 'status:asc')>Status, A to Z</option>
         </select>
         <div class="filter-toolbar-spacer"></div>
+        <x-admin.ui.density-switch />
         <span class="refresh-chip" wire:loading.delay.flex wire:target="search, dateFilter, setStatus, toggleDate, toggleStatus, resetFilters, gotoPage, previousPage, nextPage">
             <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
             Updating
@@ -132,9 +133,6 @@
                             $statusClass = $statusClassMap[$booking->status] ?? 'status-neutral';
                             $statusText = ucwords(str_replace('_', ' ', $booking->status));
                             $ref = 'BK-' . str_pad($booking->id, 4, '0', STR_PAD_LEFT);
-                            $initials = collect(explode(' ', trim($booking->guest_name)))
-                                ->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
-                            $initials = strtoupper($initials ?: 'G');
                             $rooms = $booking->reservations->pluck('room_number')->filter()->implode(', ');
                             // Shown only in the folded layout, where check-out
                             // has no column of its own and the span has to read
@@ -157,7 +155,7 @@
                             </td>
                             <td>
                                 <div class="cell-name">
-                                    <span class="avatar-initials">{{ $initials }}</span>
+                                    <x-admin.ui.avatar />
                                     <div class="cell-name-text">
                                         <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</p>
                                         <p class="cell-name-secondary">

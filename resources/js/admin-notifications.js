@@ -190,6 +190,13 @@ window.staffAlert = function staffAlert(a) {
             // The bell owns its own list — hand it the payload and let it
             // decide where the row goes and whether it counts as unread.
             window.dispatchEvent(new CustomEvent('staff-alert', { detail: payload }));
+
+            // An alert that arrived this way did not come from the poll, so
+            // the sidebar's queue counts are now a push behind. Ask the poller
+            // for fresh ones rather than deriving them from the payload: one
+            // alert does not map to one badge (verifying a proof moves two of
+            // them), and the server is the only thing that knows.
+            window.dispatchEvent(new CustomEvent('staff-counts-stale'));
         });
     }
 
@@ -247,6 +254,15 @@ window.staffAlert = function staffAlert(a) {
                 const data = await res.json();
                 const items = Array.isArray(data.items) ? data.items : [];
 
+                // The sidebar's queue badges ride along on this response —
+                // see App\Support\StaffAlerts::pendingCounts(). Dispatched
+                // rather than applied here for the same reason the bell gets a
+                // CustomEvent: this module should not know what the sidebar
+                // looks like. resources/js/sidebar-counts.js listens.
+                if (data.counts) {
+                    window.dispatchEvent(new CustomEvent('staff-counts', { detail: data.counts }));
+                }
+
                 // Oldest first: the topbar prepends, so dispatching in reverse
                 // leaves the newest alert at the top of the list.
                 items.slice().reverse().forEach(function (item) {
@@ -277,6 +293,14 @@ window.staffAlert = function staffAlert(a) {
         timer = setInterval(poll, INTERVAL);
         document.addEventListener('visibilitychange', function () {
             if (!document.hidden) poll();
+        });
+
+        // Reverb asking for fresh counts. Debounced, because one desk action
+        // can broadcast several alerts and they must not become several polls.
+        let nudge = null;
+        window.addEventListener('staff-counts-stale', function () {
+            clearTimeout(nudge);
+            nudge = setTimeout(poll, 800);
         });
     }
 

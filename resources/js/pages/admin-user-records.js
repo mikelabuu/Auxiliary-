@@ -154,6 +154,7 @@ function initAdminUserRecords() {
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: isSuspend ? 'Yes, suspend' : 'Yes, unsuspend',
+            customClass: isSuspend ? { confirmButton: 'is-danger' } : {},
             scrollbarPadding: false
         }).then((result) => {
             if (!result.isConfirmed) return;

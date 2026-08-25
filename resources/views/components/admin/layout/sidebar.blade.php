@@ -1,9 +1,9 @@
 {{-- Sidebar — AAIS shell: light airy surface, emerald accents, seal head, user card footer --}}
 @php
-  $pendingBookingsCount = \App\Models\Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count();
-  $pendingDiscountsCount = \App\Models\Discount::where('status', 'pending')->count();
-  $pendingProofsCount = \App\Models\Payment::whereNotNull('proof_path')->awaitingVerification()->count();
-  $pendingReschedulesCount = \App\Models\RescheduleRequest::pending()->count();
+  // Same source as the JSON the console polls for the bell, so the number
+  // rendered here and the number JS writes over it cannot disagree. See
+  // StaffAlerts::pendingCounts() for why these stopped being inline queries.
+  $queues = \App\Support\StaffAlerts::pendingCounts();
   $staffUser = Auth::guard('staff')->user();
 @endphp
 
@@ -28,7 +28,7 @@
 
     <p class="sidebar-section-label">Overview</p>
     <nav class="sidebar-nav">
-      <x-admin.layout.sidebar-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" :badge="$pendingBookingsCount > 0 ? $pendingBookingsCount : null">
+      <x-admin.layout.sidebar-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" badge-key="bookings" :badge="$queues['bookings']">
         <x-slot name="icon">
           <x-admin.ui.icon name="dashboard" />
         </x-slot>
@@ -73,7 +73,7 @@
       {{-- Sits with bookings, not with Financials: what this queue decides is
            which nights a stay covers. The money it moves is settled at the desk
            by hand, so it is a consequence rather than the subject. --}}
-      <x-admin.layout.sidebar-link :href="route('staff.reschedules.index')" :active="request()->routeIs('staff.reschedules.*')" :badge="$pendingReschedulesCount > 0 ? $pendingReschedulesCount : null">
+      <x-admin.layout.sidebar-link :href="route('staff.reschedules.index')" :active="request()->routeIs('staff.reschedules.*')" badge-key="reschedules" :badge="$queues['reschedules']">
         <x-slot name="icon">
           <x-admin.ui.icon name="calendar" />
         </x-slot>
@@ -104,14 +104,14 @@
         Payments
       </x-admin.layout.sidebar-link>
 
-      <x-admin.layout.sidebar-link :href="route('staff.paymentverification.index')" :active="request()->routeIs('staff.paymentverification.*')" :badge="$pendingProofsCount > 0 ? $pendingProofsCount : null">
+      <x-admin.layout.sidebar-link :href="route('staff.paymentverification.index')" :active="request()->routeIs('staff.paymentverification.*')" badge-key="proofs" :badge="$queues['proofs']">
         <x-slot name="icon">
           <x-admin.ui.icon name="check-circle" />
         </x-slot>
         Verify Payments
       </x-admin.layout.sidebar-link>
 
-      <x-admin.layout.sidebar-link :href="route('staff.discounts.index')" :active="request()->routeIs('staff.discounts.*')" :badge="$pendingDiscountsCount > 0 ? $pendingDiscountsCount : null">
+      <x-admin.layout.sidebar-link :href="route('staff.discounts.index')" :active="request()->routeIs('staff.discounts.*')" badge-key="discounts" :badge="$queues['discounts']">
         <x-slot name="icon">
           <x-admin.ui.icon name="tag" />
         </x-slot>

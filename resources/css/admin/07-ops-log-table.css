@@ -17,7 +17,7 @@
     background:
         radial-gradient(120% 130% at 100% 0%, rgba(255,255,255,.20) 0%, transparent 46%),
         radial-gradient(90% 120% at 0% 100%, rgba(5,46,28,.30) 0%, transparent 55%),
-        linear-gradient(135deg, #10a45c 0%, var(--color-g-700) 60%, var(--color-g-800) 100%);
+        linear-gradient(135deg, var(--color-brand-fill) 0%, var(--color-g-700) 60%, var(--color-g-800) 100%);
     color: #fff;
     box-shadow: 0 12px 34px -12px rgba(8,116,67,.5), inset 0 1px 0 rgba(255,255,255,.22);
     display: flex; align-items: flex-start; justify-content: space-between;
@@ -111,7 +111,7 @@
     border-radius: 999px; background: var(--color-stone-100); color: var(--color-muted);
     font-variant-numeric: tabular-nums;
 }
-.filter-tab.selected .ft-count { background: rgba(255,255,255,.22); color: #fff; }
+.filter-tab.selected .ft-count { background: rgba(255,255,255,.22); color: var(--btn-fill-ink); }
 
 /* ── Log-table cells: ref-code w/ copy, avatar initials ── */
 .ref-cell { display: inline-flex; flex-direction: column; gap: 3px; }
@@ -130,12 +130,43 @@
     color: var(--color-faint);
 }
 .cell-name { display: inline-flex; align-items: center; gap: 11px; max-width: 100%; }
-.avatar-initials {
+
+/* Per-person marker in tables, lists and the profile chip. This used to be
+   two letters of the person's name. Initials looked like data and were not:
+   a table of guests fills with DC, DC, DC the moment two surnames rhyme, the
+   glyph is unreadable at 34px for anyone with a single-word name, and screen
+   readers announced the letters right before announcing the full name they
+   were cut from. The name itself is already in the cell beside it and does
+   the identifying; the chip only has to say "this row is a person".
+
+   Rendered through <x-admin.ui.avatar>, never by hand — the two state
+   variants below exist because two pages had been reaching for inline
+   `style="background:linear-gradient(135deg,#fee2e2,#fecaca)"` with stock
+   Tailwind reds that are on no ramp in this file. */
+.avatar-user {
     width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: var(--fs-xs); font-weight: 800; letter-spacing: .02em;
     background: linear-gradient(135deg, var(--color-g-100), var(--color-g-200));
     color: var(--color-g-800); border: 1px solid rgba(22,179,100,.2);
+}
+.avatar-user svg { width: 15px; height: 15px; }
+
+/* The glyph has to scale with the box, which is why size is a prop on the
+   component and not a `w-8` on the call site. */
+.avatar-user--sm { width: 32px; height: 32px; border-radius: 50%; }
+.avatar-user--sm svg { width: 14px; height: 14px; }
+.avatar-user--lg { width: 72px; height: 72px; border-radius: var(--radius-lg); }
+.avatar-user--lg svg { width: 30px; height: 30px; }
+
+/* Suspended: ember, so the row reads as blocked at a glance. */
+.avatar-user--suspended {
+    background: linear-gradient(135deg, var(--color-ember-50), var(--color-ember-100));
+    color: var(--color-ember-700); border-color: var(--color-ember-300);
+}
+/* Master admin: ink, the one account that outranks the console it is in. */
+.avatar-user--owner {
+    background: linear-gradient(135deg, var(--color-stone-900), var(--color-stone-700));
+    color: #fff; border-color: var(--color-stone-600);
 }
 /* Names are free text, so they must never be allowed to size the column —
    one long value otherwise widens the table until Actions is scrolled off. */
@@ -194,20 +225,20 @@
 .arrival-row-name {
     font-size: var(--fs-sm);
     font-weight: 600;
-    color: var(--color-heading);
+    color: var(--color-ink);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .arrival-row-name .guest-history-link { cursor: pointer; }
-.arrival-row-name .guest-history-link:hover { color: var(--color-brand-700, #15803d); text-decoration: underline; }
+.arrival-row-name .guest-history-link:hover { color: var(--color-brand-ink); text-decoration: underline; }
 
 .arrival-row-id {
     margin-left: 4px;
     font-size: var(--fs-xs);
     font-weight: 600;
-    color: var(--color-faint, #9ca3af);
+    color: var(--color-faint);
 }
 
 /* Room, stay and length read as one line of small print under the name. */

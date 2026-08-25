@@ -10,6 +10,7 @@
             <option value="oldest">Oldest first</option>
         </select>
         <div class="filter-toolbar-spacer"></div>
+        <x-admin.ui.density-switch />
         <span class="refresh-chip" wire:loading.delay.flex wire:target="search, sort, resetFilters, gotoPage, previousPage, nextPage">
             <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
             Updating
@@ -39,11 +40,6 @@
                 </thead>
                 <tbody>
                     @foreach($bookings as $booking)
-                        @php
-                            $initials = collect(explode(' ', trim($booking->guest_name)))
-                                ->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
-                            $initials = strtoupper($initials ?: 'G');
-                        @endphp
                         <tr>
                             <td>
                                 <div class="ref-cell">
@@ -57,7 +53,7 @@
                             </td>
                             <td>
                                 <div class="cell-name">
-                                    <span class="avatar-initials">{{ $initials }}</span>
+                                    <x-admin.ui.avatar />
                                     <div class="cell-name-text">
                                         <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</p>
                                         <p class="cell-name-secondary">#{{ $booking->id }}</p>

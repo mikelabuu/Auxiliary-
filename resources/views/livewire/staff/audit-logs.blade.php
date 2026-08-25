@@ -61,6 +61,7 @@
             <input type="date" wire:model.live="from" class="filter-select" aria-label="From date">
             <input type="date" wire:model.live="to" class="filter-select" aria-label="To date">
             <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             <span class="refresh-chip" wire:loading.delay.flex wire:target="search, table, role, action, sort, from, to, perPage, resetFilters, gotoPage, previousPage, nextPage">
                 <svg class="spinner-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9" class="opacity-20"/><path d="M21 12a9 9 0 0 0-9-9"/></svg>
                 Updating
@@ -93,7 +94,6 @@
                             @foreach($logs as $log)
                                 @php
                                     $staffName = $log->staff?->name ?? 'System';
-                                    $initials = strtoupper(mb_substr($staffName, 0, 1));
                                     $target = $log->target_type
                                         ? \Illuminate\Support\Str::afterLast($log->target_type, '\\') . ($log->target_id ? " #{$log->target_id}" : '')
                                         : 'Unsorted';
@@ -102,7 +102,7 @@
                                     <td class="font-data tabnum text-muted whitespace-nowrap">{{ $log->created_at->timezone(config('hostel.timezone'))->format('M d, Y · H:i:s') }}</td>
                                     <td>
                                         <div class="cell-name">
-                                            <span class="avatar-initials">{{ $initials }}</span>
+                                            <x-admin.ui.avatar />
                                             <div class="cell-name-text">
                                                 <p class="cell-name-primary truncate">{{ $staffName }}</p>
                                                 <p class="cell-name-secondary truncate">{{ $log->role ? ucwords(str_replace('_', ' ', $log->role)) : '—' }}</p>

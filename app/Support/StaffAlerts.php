@@ -6,6 +6,7 @@ use App\Events\StaffNotification;
 use App\Models\Booking;
 use App\Models\Discount;
 use App\Models\Payment;
+use App\Models\RescheduleRequest;
 use App\Models\Room;
 use Illuminate\Support\Collection;
 
@@ -162,5 +163,32 @@ class StaffAlerts
         }
 
         return $notifications->sortByDesc('at')->take(8)->values();
+    }
+
+    /**
+     * How many items are waiting in each queue the sidebar badges.
+     *
+     * These four counts were four inline queries at the top of
+     * components/admin/layout/sidebar, which meant they were only ever true
+     * for the render that produced them: a console left open on the dashboard
+     * kept showing "3" next to Verify Payments long after all three had been
+     * verified — from another tab, or by whoever is sitting at the front desk.
+     *
+     * Living here gives them the second caller that fixes it —
+     * Staff\NotificationFeedController returns them beside the bell's items,
+     * on the poll the console is already making, so the badges stay true
+     * without a reload and without a second request.
+     *
+     * Keys are the contract with resources/js/sidebar-counts.js; changing one
+     * means changing the data-sidebar-count attribute that reads it.
+     */
+    public static function pendingCounts(): array
+    {
+        return [
+            'bookings'    => Booking::whereIn('status', ['pending_payment', 'pending_discount'])->count(),
+            'discounts'   => Discount::where('status', 'pending')->count(),
+            'proofs'      => Payment::whereNotNull('proof_path')->awaitingVerification()->count(),
+            'reschedules' => RescheduleRequest::pending()->count(),
+        ];
     }
 }

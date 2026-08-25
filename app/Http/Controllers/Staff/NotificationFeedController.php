@@ -21,13 +21,19 @@ use Illuminate\Http\JsonResponse;
  * load are one row, read state and all. If Reverb is ever running, alerts
  * simply arrive sooner; the topbar de-dupes on the stable id either way, so
  * both paths can be live at once without showing anything twice.
+ *
+ * It also carries the sidebar's four queue counts. Those used to be inline
+ * queries in the sidebar view, true only at render time; returning them on the
+ * poll the console is already making keeps the badges live for free rather
+ * than adding a second endpoint and a second timer.
  */
 class NotificationFeedController extends Controller
 {
     public function __invoke(): JsonResponse
     {
         return response()->json([
-            'items' => StaffAlerts::current(),
+            'items'  => StaffAlerts::current(),
+            'counts' => StaffAlerts::pendingCounts(),
         ]);
     }
 }

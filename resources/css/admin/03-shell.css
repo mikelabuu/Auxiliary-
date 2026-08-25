@@ -225,6 +225,29 @@
         opacity var(--transition), transform var(--transition);
 }
 
+/* A chip whose queue is empty is rendered anyway, so the poll that keeps
+   these live (resources/js/sidebar-counts.js) always has an element to
+   write into.
+
+   This rule is what actually hides it. The `hidden` attribute alone does
+   not: Preflight's `[hidden] { display: none }` lives inside a Tailwind
+   layer, and everything in this bundle is unlayered, so the
+   `display: inline-flex` above wins and an empty chip would render as a
+   bare amber pill next to every quiet link. Exactly the trap that left
+   every room advertising an unpaid hold — see the note in 16-room-board. */
+.sidebar-link-chip[hidden] { display: none; }
+
+/* A count that moved while someone was looking at another part of the page
+   should say so rather than change silently. Shares dotPulse with the bell's
+   unread dot (15-alert-popup), which is the same event in a different place. */
+.sidebar-link-chip.is-bumped {
+    animation: dotPulse 420ms var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-link-chip.is-bumped { animation: none; }
+}
+
 .sidebar-link-caret {
     margin-left: auto;
     width: 15px !important;
@@ -396,7 +419,7 @@
 .sidebar-action-btn:hover {
     background: var(--color-g-50);
     border-color: var(--color-g-300);
-    color: var(--color-g-800);
+    color: var(--btn-soft-ink);
 }
 
 .sidebar-action-btn svg {
@@ -456,7 +479,7 @@
 .sidebar-collapse-btn:hover {
     background: var(--color-g-50);
     border-color: var(--color-g-200);
-    color: var(--color-g-700);
+    color: var(--btn-soft-ink);
 }
 
 .sidebar-collapse-btn:focus-visible {
@@ -823,21 +846,23 @@
     outline-offset: 2px;
 }
 
+/* Was the first two letters of the signed-in staff member's name. The name
+   is spelled out in full immediately to its right, so the initials were
+   restating it in a less legible form — see the longer note on .avatar-user
+   in admin/07-ops-log-table. */
 .user-menu-avatar {
     width: 36px;
     height: 36px;
     border-radius: var(--radius-sm);
     background: linear-gradient(135deg, var(--color-g-500), var(--color-g-700));
     color: #fff;
-    font-size: var(--fs-xs);
-    font-weight: 800;
-    letter-spacing: .04em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 3px 10px rgba(9, 146, 80, .28);
 }
+.user-menu-avatar svg { width: 16px; height: 16px; }
 
 .user-menu-id {
     text-align: left;

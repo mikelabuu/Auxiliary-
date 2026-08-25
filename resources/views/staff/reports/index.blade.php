@@ -41,7 +41,21 @@
         'manual'        => 'Manual / Walk-in',
     ];
 
-    $chipClass = 'filter-chip text-xs font-semibold px-3 py-1.5 rounded-full border border-stone-200 bg-white text-muted hover:bg-stone-50 hover:text-stone-700 transition-colors cursor-pointer';
+    /*
+     * Quick ranges, resolved in the browser against the user's own clock and
+     * submitted as an ordinary custom range — so they need no new date_range
+     * type on the server and export/validation keep working unchanged.
+     *
+     * These are the four questions actually asked of this page. Reaching them
+     * before meant picking Custom Range and typing two dates, which is a lot of
+     * work for "last month".
+     */
+    $rangePresets = [
+        'last7'   => 'Last 7 days',
+        'last30'  => 'Last 30 days',
+        'last90'  => 'Last 90 days',
+        'ytd'     => 'Year to date',
+    ];
 @endphp
 
 @section('content')
@@ -67,87 +81,142 @@
     <!-- Filters -->
     <x-admin.ui.section-card icon="filter" title="Report Filters" subtitle="Choose a category and timeframe, refine with status filters, then generate." :delay="40">
         <div class="space-y-5">
+            {{-- Every group below is a real group: role + aria-labelledby, and
+                 aria-pressed on each chip. They were bare <button>s before, so
+                 a screen reader announced nine unrelated buttons with no way to
+                 tell which were on — which for a filter is the only thing that
+                 matters. .filter-tab is the console's own chip, shared with the
+                 bookings, payments and audit filter bars; these used to carry
+                 their own 140-character class string and their own idea of what
+                 "selected" looks like. --}}
+
             <!-- Report category -->
             <div>
-                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Report Category</p>
-                <div id="reportTypeGroup" class="flex flex-wrap gap-2">
-                    <button type="button" class="report-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-report-type="booking">Booking Report</button>
-                    <button type="button" class="report-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-report-type="payment">Financial Report</button>
-                    <button type="button" class="report-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-report-type="combined">Combined Overview</button>
+                <p id="lbl_reportType" class="filter-row-label !mr-0 block mb-2">Report Category</p>
+                <div id="reportTypeGroup" class="filter-row" role="group" aria-labelledby="lbl_reportType">
+                    <button type="button" class="filter-tab report-type-btn" data-report-type="booking" aria-pressed="false">Booking Report</button>
+                    <button type="button" class="filter-tab report-type-btn" data-report-type="payment" aria-pressed="false">Financial Report</button>
+                    <button type="button" class="filter-tab report-type-btn" data-report-type="combined" aria-pressed="false">Combined Overview</button>
                 </div>
             </div>
 
             <!-- Timeframe -->
             <div>
-                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Timeframe</p>
-                <div id="dateTypeGroup" class="flex flex-wrap gap-2 mb-3">
-                    <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="monthly">Monthly</button>
-                    <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="yearly">Yearly</button>
-                    <button type="button" class="date-type-btn text-sm font-medium px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer" data-date-type="range">Custom Range</button>
+                <p id="lbl_dateType" class="filter-row-label !mr-0 block mb-2">Timeframe</p>
+                <div id="dateTypeGroup" class="filter-row mb-3" role="group" aria-labelledby="lbl_dateType">
+                    <button type="button" class="filter-tab date-type-btn" data-date-type="monthly" aria-pressed="false">Monthly</button>
+                    <button type="button" class="filter-tab date-type-btn" data-date-type="yearly" aria-pressed="false">Yearly</button>
+                    <button type="button" class="filter-tab date-type-btn" data-date-type="range" aria-pressed="false">Custom Range</button>
                 </div>
-                {{-- aria-label rather than a visible <label> for each: the four
+
+                {{-- aria-label rather than a visible <label> for each: the
                      controls are mutually exclusive views of one choice and
-                     share the "Timeframe" caption above, so four visible
+                     share the "Timeframe" caption above, so several visible
                      labels would be noise on screen. Without them a screen
                      reader announces an unnamed date field, and only the month
-                     picker showed up in an audit at all — the other three
-                     start hidden, so they were never even flagged. --}}
+                     picker showed up in an audit at all — the others start
+                     hidden, so they were never even flagged. --}}
                 <div class="flex flex-wrap items-center gap-3">
-                    <input type="month" id="date_month" aria-label="Report month" class="w-full sm:w-48 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
-                    <select id="date_year" aria-label="Report year" class="hidden w-full sm:w-40 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 cursor-pointer transition-colors"></select>
+                    {{-- Steppers. "Last month" was previously a trip into the
+                         native month picker; it is now one click, and holding
+                         the period fixed while flipping report type is the
+                         other half of how this page is actually used. --}}
+                    <div id="monthStepper" class="date-stepper">
+                        <button type="button" class="pager-btn" data-step="-1" aria-label="Previous month">
+                            <x-admin.ui.icon name="chevron-left" />
+                        </button>
+                        <input type="month" id="date_month" aria-label="Report month" class="date-stepper-field w-full sm:w-48">
+                        <button type="button" class="pager-btn" data-step="1" aria-label="Next month">
+                            <x-admin.ui.icon name="chevron-right" />
+                        </button>
+                    </div>
+
+                    <div id="yearStepper" class="date-stepper hidden">
+                        <button type="button" class="pager-btn" data-step="-1" aria-label="Previous year">
+                            <x-admin.ui.icon name="chevron-left" />
+                        </button>
+                        <select id="date_year" aria-label="Report year" class="date-stepper-field w-full sm:w-40 cursor-pointer"></select>
+                        <button type="button" class="pager-btn" data-step="1" aria-label="Next year">
+                            <x-admin.ui.icon name="chevron-right" />
+                        </button>
+                    </div>
+
                     <div id="dateRangeInputs" class="hidden flex-wrap items-center gap-2">
-                        <input type="date" id="date_from" aria-label="Report start date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                        <input type="date" id="date_from" aria-label="Report start date" class="date-stepper-field">
                         <span class="text-xs text-faint font-medium">to</span>
-                        <input type="date" id="date_to" aria-label="Report end date" class="px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors">
+                        <input type="date" id="date_to" aria-label="Report end date" class="date-stepper-field">
                     </div>
                 </div>
+
+                {{-- Quick ranges, custom-range mode only. --}}
+                <div id="rangePresets" class="filter-row mt-2.5 hidden" role="group" aria-label="Quick ranges">
+                    @foreach ($rangePresets as $key => $label)
+                        <button type="button" class="filter-tab filter-tab-sm range-preset-btn" data-range-preset="{{ $key }}">{{ $label }}</button>
+                    @endforeach
+                </div>
+
+                {{-- A backwards range used to reach the server and come back as
+                     a 422 under the table, several seconds and one wasted query
+                     later. It is knowable here. --}}
+                <p id="dateError" class="filter-inline-error hidden" role="alert"></p>
             </div>
 
             <!-- Status filter chip groups -->
             <div id="group_booking_status" class="filter-group">
-                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Booking Status</p>
-                <div class="flex flex-wrap gap-1.5" data-filter-chips="booking_status">
-                    <button type="button" class="{{ $chipClass }}" data-filter-group="booking_status" data-filter-value="all">All Statuses</button>
+                <p id="lbl_booking_status" class="filter-row-label !mr-0 block mb-2">Booking Status</p>
+                <div class="filter-row" data-filter-chips="booking_status" role="group" aria-labelledby="lbl_booking_status">
+                    <button type="button" class="filter-tab filter-tab-sm" data-filter-group="booking_status" data-filter-value="all" aria-pressed="false">All Statuses</button>
                     @foreach ($bookingStatusChips as $value => $label)
-                        <button type="button" class="{{ $chipClass }}" data-filter-group="booking_status" data-filter-value="{{ $value }}">{{ $label }}</button>
+                        <button type="button" class="filter-tab filter-tab-sm" data-filter-group="booking_status" data-filter-value="{{ $value }}" aria-pressed="false">{{ $label }}</button>
                     @endforeach
                 </div>
             </div>
 
             <div id="group_payment_status" class="filter-group">
-                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Payment Status</p>
-                <div class="flex flex-wrap gap-1.5" data-filter-chips="payment_status">
-                    <button type="button" class="{{ $chipClass }}" data-filter-group="payment_status" data-filter-value="all">All Statuses</button>
+                <p id="lbl_payment_status" class="filter-row-label !mr-0 block mb-2">Payment Status</p>
+                <div class="filter-row" data-filter-chips="payment_status" role="group" aria-labelledby="lbl_payment_status">
+                    <button type="button" class="filter-tab filter-tab-sm" data-filter-group="payment_status" data-filter-value="all" aria-pressed="false">All Statuses</button>
                     @foreach ($paymentStatusChips as $value => $label)
-                        <button type="button" class="{{ $chipClass }}" data-filter-group="payment_status" data-filter-value="{{ $value }}">{{ $label }}</button>
+                        <button type="button" class="filter-tab filter-tab-sm" data-filter-group="payment_status" data-filter-value="{{ $value }}" aria-pressed="false">{{ $label }}</button>
                     @endforeach
                 </div>
             </div>
 
             <div id="group_gateway" class="filter-group">
-                <p class="text-2xs font-bold text-muted tracking-widest uppercase mb-2">Gateway</p>
-                <div class="flex flex-wrap gap-1.5" data-filter-chips="gateway">
-                    <button type="button" class="{{ $chipClass }}" data-filter-group="gateway" data-filter-value="all">All Gateways</button>
+                <p id="lbl_gateway" class="filter-row-label !mr-0 block mb-2">Gateway</p>
+                <div class="filter-row" data-filter-chips="gateway" role="group" aria-labelledby="lbl_gateway">
+                    <button type="button" class="filter-tab filter-tab-sm" data-filter-group="gateway" data-filter-value="all" aria-pressed="false">All Gateways</button>
                     @foreach ($gatewayChips as $value => $label)
-                        <button type="button" class="{{ $chipClass }}" data-filter-group="gateway" data-filter-value="{{ $value }}">{{ $label }}</button>
+                        <button type="button" class="filter-tab filter-tab-sm" data-filter-group="gateway" data-filter-value="{{ $value }}" aria-pressed="false">{{ $label }}</button>
                     @endforeach
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-stone-100">
-                <div id="reportSummary" class="hidden flex-wrap items-center gap-1.5"></div>
-                <div class="flex items-center gap-2.5 sm:ml-auto">
-                    <x-admin.ui.button variant="secondary" type="button" id="resetBtn">Reset</x-admin.ui.button>
-                    {{-- The dot is the only thing telling you a chip you just
-                         clicked has not been applied yet. Filters compose
-                         without querying, so without it the table simply does
-                         not move and that reads as a broken filter. --}}
-                    <x-admin.ui.button variant="primary" type="button" id="generateBtn" class="relative">
-                        <span id="dirtyDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-palay-400 ring-2 ring-white"></span>
-                        <x-admin.ui.icon name="refresh" class="w-4 h-4" stroke-width="2" />
-                        Update Results
-                    </x-admin.ui.button>
+            <div class="flex flex-col gap-3 pt-4 border-t border-stone-100">
+                {{-- What is actually on screen, and a way out of each part of
+                     it. The summary used to be a read-only restatement that
+                     also lagged: it described the last applied query while the
+                     chips above showed the composed one, with nothing saying
+                     which was which. Now it says when it is stale, and every
+                     applied filter can be dropped from here without hunting
+                     for the chip that set it. --}}
+                <div id="reportSummary" class="report-summary hidden"></div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <p class="text-2xs text-faint sm:mr-auto">Filters compose here and apply on <b class="text-muted">Update Results</b>.</p>
+                    <div class="flex items-center gap-2.5">
+                        <x-admin.ui.button variant="secondary" type="button" id="resetBtn">Reset all</x-admin.ui.button>
+                        {{-- The dot is the only thing telling you a chip you just
+                             clicked has not been applied yet. Filters compose
+                             without querying, so without it the table simply does
+                             not move and that reads as a broken filter. --}}
+                        <x-admin.ui.button variant="primary" type="button" id="generateBtn" class="relative">
+                            <span id="dirtyDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-palay-400 ring-2 ring-white"></span>
+                            <x-admin.ui.icon name="refresh" class="w-4 h-4" stroke-width="2" />
+                            Update Results
+                        </x-admin.ui.button>
+                    </div>
                 </div>
             </div>
         </div>

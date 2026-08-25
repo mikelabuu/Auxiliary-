@@ -102,6 +102,7 @@
             </select>
             <button type="submit" class="btn btn-outline btn-sm">Apply</button>
             <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             @if($search || $role !== 'all' || $sort !== 'latest')
                 <a href="{{ route('staff.staffrecords.index') }}" class="filter-clear">
                     <x-admin.ui.icon name="x" class="w-3 h-3" stroke-width="2.5" /> Clear
@@ -130,9 +131,7 @@
                             <tr>
                                 <td>
                                     <div class="cell-name">
-                                        <span class="avatar-initials"
-                                            @if($staff->is_suspended) style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c;border-color:#fca5a5;"
-                                            @elseif($staff->role === 'master_admin') style="background:linear-gradient(135deg,#17201b,#39463e);color:#fff;border-color:#4a5b50;" @endif>{{ strtoupper(mb_substr($staff->name, 0, 1)) }}</span>
+                                        <x-admin.ui.avatar :state="$staff->is_suspended ? 'suspended' : ($staff->role === 'master_admin' ? 'owner' : null)" />
                                         <div class="cell-name-text">
                                             <p class="cell-name-primary truncate">{{ $staff->name }}</p>
                                             <p class="cell-name-secondary truncate">{{ $staff->email }}</p>
@@ -423,6 +422,7 @@ $(document).on('click', '.password-verify-btn', function(e) {
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: isSuspend ? 'Yes, suspend' : 'Yes, unsuspend',
+        customClass: isSuspend ? { confirmButton: 'is-danger' } : {},
         scrollbarPadding: false
     }).then((result) => {
         if (result.isConfirmed) {
@@ -467,7 +467,7 @@ $(document).on('click', '.delete-staff-btn', function(e) {
             + `To only block access instead, use <em>Suspend</em>.</p>`,
         showCancelButton: true,
         confirmButtonText: 'Yes, delete permanently',
-        confirmButtonColor: '#b91c1c',
+        customClass: { confirmButton: 'is-danger' },
         cancelButtonText: 'Cancel',
         focusCancel: true,
         scrollbarPadding: false

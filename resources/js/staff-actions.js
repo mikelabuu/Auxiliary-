@@ -29,10 +29,15 @@
  * in ember for rejections and cancellations.
  */
 
-const TONES = {
-    // Matches --color-clsu-600 / --color-ember-600 in admin/01-tokens.css.
-    default: '#167C39',
-    danger: '#DC2626',
+// `confirmButtonColor` cannot be used here: admin/08-selects-widgets styles
+// .swal2-confirm with !important (it has to, to beat SweetAlert's own inline
+// background), so every colour passed from JS was silently discarded and the
+// danger confirmations rendered in the same green as the affirmative ones.
+// A class survives that, and keeps the palette in the stylesheet where the
+// rest of the button colours now live (--btn-* in admin/01-tokens).
+const CONFIRM_CLASS = {
+    default: '',
+    danger: 'is-danger',
 };
 
 document.addEventListener('submit', (e) => {
@@ -74,7 +79,7 @@ document.addEventListener('submit', (e) => {
         showCancelButton: true,
         confirmButtonText: form.dataset.confirmAction || 'Yes, continue',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: TONES[tone],
+        customClass: { confirmButton: CONFIRM_CLASS[tone] },
         reverseButtons: true,
         focusCancel: tone === 'danger',
     }).then((result) => {

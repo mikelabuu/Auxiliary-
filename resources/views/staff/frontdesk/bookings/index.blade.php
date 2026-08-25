@@ -35,6 +35,8 @@
                 <input type="hidden" name="status" value="{{ $status }}">
             @endif
             <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+            <div class="filter-toolbar-spacer"></div>
+            <x-admin.ui.density-switch />
             @if(request('search') || (request('sort') && request('sort') !== 'latest') || $status !== 'all')
                 <a href="{{ route('frontdesk.booking') }}" class="filter-clear !no-underline">
                     <x-admin.ui.icon name="x" stroke-width="2.5" />
@@ -81,15 +83,11 @@
                     </thead>
                     <tbody>
                         @foreach($bookings as $booking)
-                            @php
-                                $initials = strtoupper(collect(explode(' ', trim($booking->guest_name ?? '')))
-                                    ->filter()->map(fn ($w) => mb_substr($w, 0, 1))->take(2)->implode('') ?: 'G');
-                            @endphp
                             <tr>
                                 <td><span class="ref-code">BK-{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}</span></td>
                                 <td>
                                     <span class="cell-name">
-                                        <span class="avatar-initials">{{ $initials }}</span>
+                                        <x-admin.ui.avatar />
                                         <span class="min-w-0">
                                             <span class="block max-w-44 truncate font-semibold text-ink">{{ $booking->guest_name }}</span>
                                             <span class="block font-data text-2xs text-faint tabnum">{{ $booking->guest_phone }}</span>

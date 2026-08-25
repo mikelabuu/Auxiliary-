@@ -76,7 +76,7 @@
 .stat-card-hero {
     background:
         radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.22) 0%, transparent 50%),
-        linear-gradient(135deg, #10a45c 0%, var(--color-g-700) 100%);
+        linear-gradient(135deg, var(--color-brand-fill) 0%, var(--color-g-700) 100%);
     border-color: rgba(255,255,255,.18);
     color: #fff;
     box-shadow: 0 8px 28px -8px rgba(8,116,67,.45), inset 0 1px 0 rgba(255,255,255,.25);
@@ -406,15 +406,22 @@
    admin, and invisible to a per-element audit because it is a gradient. The
    g-700 → g-800 pair is on-palette and carries white at 5.85:1 → 8.08:1.
    Hover lightens by one step rather than two so the fill never climbs back
-   above the AA line. */
+   above the AA line.
+
+   The pair now lives on --btn-fill-* in 01-tokens, because four other
+   controls (.filter-tab.selected, .pager-btn[aria-current], .swal2-confirm,
+   .dash-btn--primary) are the same "this is the filled one" role and had each
+   picked their own green. */
 .btn-primary {
-    background: linear-gradient(135deg, var(--color-g-700) 0%, var(--color-g-800) 100%);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(8, 116, 67, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    color: var(--btn-fill-ink);
+    border-color: var(--btn-fill-border);
+    box-shadow: var(--btn-fill-shadow);
 }
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--color-g-600) 0%, var(--color-g-700) 100%);
-    box-shadow: 0 8px 24px rgba(8, 116, 67, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
+    border-color: var(--btn-fill-hover-to);
+    box-shadow: var(--btn-fill-shadow-lift);
     transform: translateY(-2px);
 }
 
@@ -423,12 +430,12 @@
    5.43:1 → 7.52:1. Amber is the hardest hue to keep legible under white, so
    hover deepens instead of brightening. */
 .btn-gold {
-    background: linear-gradient(135deg, var(--color-au-700) 0%, var(--color-au-800) 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--btn-accent-from) 0%, var(--btn-accent-to) 100%);
+    color: var(--btn-accent-ink);
     box-shadow: 0 4px 12px rgba(181, 71, 8, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 .btn-gold:hover {
-    background: linear-gradient(135deg, var(--color-au-800) 0%, var(--color-palay-900) 100%);
+    background: linear-gradient(135deg, var(--btn-accent-hover-from) 0%, var(--btn-accent-hover-to) 100%);
     box-shadow: 0 8px 24px rgba(181, 71, 8, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
 }
@@ -438,18 +445,20 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.03); backdrop-filter: blur(8px);
 }
 .btn-outline:hover { 
-    background: #fff; border-color: var(--color-g-400); color: var(--color-g-800); 
+    background: #fff; border-color: var(--btn-soft-border); color: var(--btn-soft-ink); 
     box-shadow: 0 6px 16px rgba(0,0,0,0.06); transform: translateY(-2px); 
 }
 
 .btn-ghost { background: transparent; color: var(--color-muted); border-color: transparent; }
-.btn-ghost:hover { background: rgba(22, 179, 100, 0.08); color: var(--color-g-800); transform: translateY(-1px); }
+.btn-ghost:hover { background: var(--btn-soft-tint); color: var(--btn-soft-ink); transform: translateY(-1px); }
 
 /* ember-600 on the ember-50 fill is 4.41:1 — just under AA, and this is the
    button that suspends an account, so it is the last place to be borderline.
-   ember-700 reads 5.91:1 on the same fill. */
-.btn-danger { background: var(--color-ember-50); color: var(--color-ember-700); border-color: var(--color-ember-300); box-shadow: 0 2px 6px rgba(220,38,38,0.05); }
-.btn-danger:hover { background: #fee2e2; border-color: #f87171; box-shadow: 0 6px 16px rgba(220,38,38,0.15); transform: translateY(-2px); }
+   ember-700 reads 5.91:1 on the same fill. The hover pair used to be stock
+   Tailwind red (#fee2e2 / #f87171); ember-100 / ember-300 is the same step on
+   the ramp the rest of the console's destructive UI already runs on. */
+.btn-danger { background: var(--btn-danger-bg); color: var(--btn-danger-ink); border-color: var(--btn-danger-border); box-shadow: 0 2px 6px rgba(185,28,28,0.05); }
+.btn-danger:hover { background: var(--btn-danger-bg-hover); border-color: var(--color-ember-500); box-shadow: 0 6px 16px rgba(185,28,28,0.15); transform: translateY(-2px); }
 
 .btn-sm { padding: 8px 16px; font-size: var(--fs-sm); border-radius: 8px; }
 .btn-lg { padding: 14px 28px; font-size: var(--fs-base); border-radius: 14px; }
@@ -654,14 +663,17 @@
     white-space: nowrap;
 }
 .filter-tab:hover {
-    border-color: var(--color-g-400); color: var(--color-g-800); background: var(--color-g-50);
+    border-color: var(--btn-soft-border); color: var(--btn-soft-ink); background: var(--color-g-50);
     transform: translateY(-1px);
 }
 .filter-tab:active { transform: translateY(0) scale(.96); }
 .filter-tab:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
+/* Same fill as .btn-primary — a selected status pill and the primary button
+   are the same "this one is active" signal, and shipping two greens for it was
+   the most visible inconsistency in the console. */
 .filter-tab.selected {
-    background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%);
-    color: #fff; border-color: var(--color-g-600);
+    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    color: var(--btn-fill-ink); border-color: var(--btn-fill-border);
     box-shadow: 0 4px 14px -4px rgba(9,146,80,.50), inset 0 1px 0 rgba(255,255,255,.22);
 }
 .filter-tab svg { width: 14px; height: 14px; flex-shrink: 0; }

@@ -61,10 +61,10 @@
           localStorage.setItem('adminSidebarCollapsed', this.sidebarCollapsed ? '1' : '0');
         },
         density: (localStorage.getItem('adminDensity') || (localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal')),
-        cycleDensity() {
-          const order = ['compact', 'normal', 'large'];
-          this.density = order[(order.indexOf(this.density) + 1) % order.length];
-          localStorage.setItem('adminDensity', this.density);
+        setDensity(v) {
+          if (this.density === v) return;
+          this.density = v;
+          localStorage.setItem('adminDensity', v);
           // Brief opacity dip masks the one-frame reflow (05-motion-ux.css)
           document.body.classList.add('density-switching');
           setTimeout(() => document.body.classList.remove('density-switching'), 160);

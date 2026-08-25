@@ -284,17 +284,8 @@ class ArrivalsDepartures extends Component
                     ? 'Check-in ' . Carbon::parse($b->check_in)->format('M d')
                     : 'Check-out ' . Carbon::parse($b->check_out)->format('M d');
 
-                $parts = explode(' ', trim($b->guest_name));
-                $initials = '';
-                if (count($parts) >= 2) {
-                    $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
-                } else {
-                    $initials = strtoupper(substr($b->guest_name, 0, 2));
-                }
-
                 return [
                     'guest_name' => $b->guest_name,
-                    'initials' => $initials ?: 'G',
                     'type' => $type,
                     'details' => $roomType . ' · ' . $dateStr,
                     'status' => strtoupper($b->status),

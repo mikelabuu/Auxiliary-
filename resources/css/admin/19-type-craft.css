@@ -245,12 +245,14 @@ label, .form-label {
    full size while the row keeps its height. */
 .copy-ref,
 .cell-action,
+.report-pill-x,
 button.text-stone-300 {
     position: relative;
 }
 
 .copy-ref::after,
 .cell-action::after,
+.report-pill-x::after,
 button.text-stone-300::after {
     content: '';
     position: absolute;

@@ -130,12 +130,45 @@ body.swal2-toast-shown .swal2-container.swal2-backdrop-show {
 }
 .swal2-title { font-size: 19px !important; font-weight: 800 !important; color: var(--color-ink) !important; font-family: var(--font-display) !important; }
 .swal2-html-container { font-size: var(--fs-base) !important; color: var(--color-muted) !important; }
+/* The dialog buttons are buttons, so they take the same fill as .btn-primary
+   / .btn-outline rather than SweetAlert's defaults (a stock blue confirm and a
+   grey cancel) or the off-ramp green they used to carry.
+
+   The !important is what SweetAlert's own inline `background-color` needs to be
+   beaten — but that is also why `confirmButtonColor` in JS has no effect here,
+   which is how every destructive confirmation in the console ended up painted
+   green. Danger dialogs now say so with a class instead; see .swal2-confirm.is-danger
+   below and TONES in resources/js/staff-actions.js. */
 .swal2-confirm {
-    background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%) !important;
+    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%) !important;
+    color: var(--btn-fill-ink) !important;
     border-radius: var(--radius-sm) !important; font-weight: 700 !important;
     box-shadow: 0 2px 8px rgba(9,146,80,.25) !important;
 }
-.swal2-cancel { border-radius: var(--radius-sm) !important; font-weight: 700 !important; }
+.swal2-confirm:hover {
+    background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%) !important;
+}
+/* Ink has to be restated: the affirmative confirm is a mint fill under
+   near-black green, and that type is unreadable on ember. */
+.swal2-confirm.is-danger {
+    background: linear-gradient(135deg, var(--btn-danger-fill) 0%, var(--btn-danger-fill-hover) 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(185,28,28,.25) !important;
+}
+.swal2-confirm.is-danger:hover {
+    background: linear-gradient(135deg, var(--btn-danger-fill-hover) 0%, var(--color-ember-800) 100%) !important;
+}
+.swal2-cancel {
+    background: rgba(255,255,255,.9) !important;
+    color: var(--color-ink) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-sm) !important; font-weight: 700 !important;
+}
+.swal2-cancel:hover {
+    background: #fff !important;
+    border-color: var(--btn-soft-border) !important;
+    color: var(--btn-soft-ink) !important;
+}
 
 /* ------------------------------------------------------------
    TOASTS

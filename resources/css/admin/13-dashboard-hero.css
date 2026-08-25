@@ -263,15 +263,15 @@
 /* Gated: touch devices fire :hover on tap and then keep it stuck. */
 @media (hover: hover) and (pointer: fine) {
     .dash-btn:hover {
-        background: var(--color-clsu-50);
-        border-color: var(--color-clsu-200);
-        color: var(--color-clsu-800);
+        background: var(--color-g-50);
+        border-color: var(--color-g-200);
+        color: var(--btn-soft-ink);
     }
 
     .dash-btn--primary:hover {
-        background: var(--color-clsu-700);
-        border-color: var(--color-clsu-700);
-        color: #fff;
+        background: linear-gradient(135deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
+        border-color: var(--btn-fill-hover-to);
+        color: var(--btn-fill-ink);
     }
 }
 
@@ -281,11 +281,13 @@
     transform: scale(0.97);
 }
 
+/* Flat clsu-800 before, against .btn-primary's g-700 → g-800 gradient one
+   card away on the same screen. Same role, so same fill. */
 .dash-btn--primary {
-    background: var(--color-clsu-800);
-    border-color: var(--color-clsu-800);
-    color: #fff;
-    box-shadow: 0 10px 22px -12px rgba(8, 92, 55, 0.7);
+    background: linear-gradient(135deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    border-color: var(--btn-fill-border);
+    color: var(--btn-fill-ink);
+    box-shadow: 0 10px 22px -12px rgba(8, 92, 55, .7);
 }
 
 /* ── Booking calendar card ─────────────────────────────────── */

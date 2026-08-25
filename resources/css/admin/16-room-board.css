@@ -37,10 +37,51 @@
 @media (min-width: 1280px){ .rooms-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 @media (min-width: 1536px){ .rooms-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
+/* No `overflow: hidden` here. The kebab panel is absolutely positioned
+   inside the card and hangs below it, so a clipping ancestor cut the menu
+   off mid-list — on a card with the full status set, "Cleaning" was half a
+   row tall and "Delete Room" could not be reached at all. The front desk
+   board dropped the same rule for the same reason; the rounding the clip
+   used to provide is spelled out on the two children that touch a corner
+   (.status-bar carries rounded-t-xl in the markup, the foot is below). */
 .room-card {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+}
+
+.room-card-foot { border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+
+/* An open menu has to outrank the cards after it in the grid. Source order
+   alone puts the next row on top of anything hanging past this card's own
+   box, whatever z-index the panel itself carries — the panel cannot escape
+   its card's place in the stack, so the card is what has to be raised. */
+.room-card:has([data-kebab-panel]:not(.hidden)) { z-index: 40; }
+
+/* ── Status menu placement ───────────────────────────────────────
+   Defaults live in the markup (absolute, right-0, top-full). These
+   are the corrections resources/js/room-kebab.js applies when the
+   default would put the panel off screen — a card low in the grid,
+   or the right-hand column of a narrow one. Written here rather than
+   as inline styles so the entrance animation keeps its own transform.
+
+   Not in a @layer, so these beat the Tailwind utilities on the panel
+   without needing !important. */
+[data-kebab-panel] {
+    transform: translateX(var(--kebab-shift, 0));
+    /* Last resort for a viewport too short to fit the menu either way up:
+       scroll the list rather than hide the end of it, which is what the
+       card's old `overflow: hidden` was doing. */
+    max-height: min(66vh, 340px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Opens upward when there is more room above the button than below it. */
+[data-kebab-panel].is-up {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 6px;
 }
 
 .room-card-body {

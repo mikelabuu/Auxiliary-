@@ -125,6 +125,14 @@
        should reach for this instead: 5.85:1 on white, 5.46:1 on surface. */
     --color-brand-ink: #087443;
 
+    /* ── The console's signature filled-surface green ──
+       #10a45c sits between g-500 and g-600 and is on no ramp step, but it is
+       what the console actually looks like: the ops-header band, the card
+       header accents and the premium-surface gradients have all opened on it
+       since the reskin. It was a literal in three files; naming it is what
+       lets a button use the same green as the header above it. */
+    --color-brand-fill: #10a45c;
+
     /* ── Type scale ──
        The console had grown 20 distinct sizes on one page, hand-picked in half
        pixels (9.5 / 10.5 / 11.5 / 12.5 / 13.5 / 15.5) and compounded by nested
@@ -218,6 +226,72 @@
     --radius: 14px;
     --radius-lg: 18px;
     --radius-xl: 24px;
+
+    /* ── Button colour ─────────────────────────────────────────
+       One place that decides what a button looks like. Before this,
+       five button families each hard-coded their own fill and the
+       console shipped three different "greens" for the same job:
+       .btn-primary on g-700 -> g-800, while .filter-tab.selected,
+       .pager-btn[aria-current] and .swal2-confirm all sat on a
+       literal #12a95d -> g-600 that belongs to no ramp in the file.
+
+       All of them now open on --color-brand-fill and close on g-700:
+       the same gradient the ops-header band and the card headers use,
+       so a button reads as part of the console rather than as a green
+       borrowed from somewhere else.
+
+       Contrast note, so the next person does not have to rediscover it:
+       white on the #10a45c top stop is 3.24:1, under the 4.5:1 AA line
+       for body-sized text, and clears it (5.85:1) by the g-700 end of
+       the gradient. This is the console's established pairing — the
+       header band has always shipped it. To make it AA at every stop,
+       move --btn-fill-from to var(--color-g-700): one line, and every
+       filled control in the admin and the front desk follows.
+
+       Anything that fills, tints or outlines a control should reach
+       for these rather than for a ramp step directly, so the next
+       change to the console's green happens once. */
+    --btn-fill-from:        var(--color-brand-fill);
+    --btn-fill-to:          var(--color-g-700);
+    /* Hover brightens rather than deepens — the fill is mid-ramp so it has
+       room to go up, and a button that darkens under the cursor reads as
+       going disabled. */
+    --btn-fill-hover-from:  var(--color-g-500);
+    --btn-fill-hover-to:    var(--color-g-600);
+    --btn-fill-ink:         #ffffff;
+    --btn-fill-border:      var(--color-g-600);
+    --btn-fill-shadow:      0 4px 12px rgba(8, 116, 67, .25), inset 0 1px 1px rgba(255, 255, 255, .2);
+    --btn-fill-shadow-lift: 0 8px 24px rgba(8, 116, 67, .4), inset 0 1px 1px rgba(255, 255, 255, .3);
+
+    /* Amber keeps white type: au-700/au-800 are dark enough to carry it
+       (5.43:1 / 7.52:1) and there is no light amber that would not turn
+       the accent button into a warning banner. */
+    --btn-accent-ink:       #ffffff;
+
+    /* Quiet controls: ghost hovers, outline hovers, selected-but-not-filled
+       chips. The tint is the brand green at low alpha, so it reads as the
+       same family as the fills above rather than as a grey. */
+    --btn-soft-tint:        rgba(22, 179, 100, .08);
+    --btn-soft-tint-strong: rgba(22, 179, 100, .14);
+    --btn-soft-ink:         var(--color-g-800);
+    --btn-soft-border:      var(--color-g-400);
+
+    /* Amber accent (revenue, "needs attention" affirmatives). Amber is the
+       hardest hue to keep legible under white, so hover deepens. */
+    --btn-accent-from:       var(--color-au-700);
+    --btn-accent-to:         var(--color-au-800);
+    --btn-accent-hover-from: var(--color-au-800);
+    --btn-accent-hover-to:   var(--color-palay-900);
+
+    /* Destructive. Ember, not stock Tailwind red — the console had
+       #dc2626 / #f87171 / #fef2f2 / #b91c1c scattered across the
+       danger buttons, none of which are on the ember ramp. */
+    --btn-danger-bg:         var(--color-ember-50);
+    --btn-danger-bg-hover:   var(--color-ember-100);
+    --btn-danger-border:     var(--color-ember-300);
+    --btn-danger-ink:        var(--color-ember-700);
+    --btn-danger-fill:       var(--color-ember-700);
+    --btn-danger-fill-hover: var(--color-ember-800);
 
     /* Layered per Tobias Ahlin, "Smoother & sharper shadows with layered
        box-shadows": several shadows with doubling offset and blur, instead of

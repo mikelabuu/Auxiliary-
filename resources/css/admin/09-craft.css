@@ -69,23 +69,22 @@
         border-color var(--transition), transform 140ms var(--ease-out);
 }
 .pager-btn svg { width: 15px; height: 15px; }
-.pager-btn:hover { background: var(--color-g-50); border-color: var(--color-g-300); color: var(--color-g-800); }
+.pager-btn:hover { background: var(--color-g-50); border-color: var(--color-g-300); color: var(--btn-soft-ink); }
 .pager-btn:active { transform: scale(.94); }
 .pager-btn:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
 .pager-btn[aria-current="page"] {
-    background: linear-gradient(180deg, #12a95d 0%, var(--color-g-600) 100%);
-    border-color: var(--color-g-600); color: #fff;
+    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    border-color: var(--btn-fill-border); color: var(--btn-fill-ink);
     box-shadow: 0 3px 10px -3px rgba(9,146,80,.45), inset 0 1px 0 rgba(255,255,255,.22);
 }
 .pager-btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
 .pager-gap { padding: 0 3px; color: var(--color-faint); font-size: var(--fs-sm); }
 
-/* ── Reports-page chip/type buttons (inline Tailwind base) get press feedback ── */
-.filter-chip, .report-type-btn, .date-type-btn {
-    transition: background-color var(--transition), color var(--transition),
-        border-color var(--transition), transform 140ms var(--ease-out);
-}
-.filter-chip:active, .report-type-btn:active, .date-type-btn:active { transform: scale(.96); }
+/* The reports page used to hand-roll its chips in Tailwind and needed this to
+   get the press feedback every other control had. They are .filter-tab now —
+   the console's own chip, which carries its own transition and :active scale —
+   so the rule that used to live here would only fight it. .filter-chip is gone
+   with them; nothing renders that class any more. */
 
 /* ── Touch devices: no hover lifts, no cursor spotlight ── */
 @media (hover: none), (pointer: coarse) {

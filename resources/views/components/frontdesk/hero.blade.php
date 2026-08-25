@@ -68,7 +68,7 @@
                     <p class="fd-clock-date" id="fdClockDate"></p>
                 </div>
                 <div class="fd-chip">
-                    <span class="fd-avatar">{{ strtoupper(substr($firstName, 0, 1)) }}</span>
+                    <span class="fd-avatar" aria-hidden="true"><x-admin.ui.icon name="user" /></span>
                     <span class="hidden leading-tight md:block">
                         <span class="fd-chip-name block max-w-40 truncate">{{ $staff->name ?? 'Staff' }}</span>
                         <span class="fd-chip-role block">Front Desk</span>

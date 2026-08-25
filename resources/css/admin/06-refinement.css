@@ -52,9 +52,162 @@
     text-decoration: none;
     transition: background var(--transition), color var(--transition), transform 140ms var(--ease-out);
 }
-.filter-clear:hover { background: #fef2f2; color: #dc2626; }
+.filter-clear:hover { background: var(--btn-danger-bg); color: var(--btn-danger-ink); }
 .filter-clear:active { transform: scale(.96); }
 .filter-clear svg { width: 13px; height: 13px; }
+
+/* ── Report criteria (staff/reports) ─────────────────────────────────────
+   The page composes a query out of chips and then submits it, so two things
+   have to be legible at once: what is currently on screen, and what has been
+   changed since. Everything below serves that split. */
+
+/* Date field paired with prev/next steppers. The steppers are .pager-btn —
+   the console already has a 34px square button with the right hover, and a
+   fourth one-off would only drift from it. */
+.date-stepper { display: inline-flex; align-items: center; gap: 6px; }
+.date-stepper-field {
+    height: 40px; padding: 0 14px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+    background: #fff; font-size: var(--fs-md); color: var(--color-ink); outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.date-stepper-field:focus {
+    border-color: var(--color-g-500); box-shadow: 0 0 0 4px rgba(22,179,100,.12);
+}
+
+/* Smaller chip for the long status rows — nine of them at full size wrapped
+   to three lines and pushed the Update button below the fold. */
+.filter-tab-sm { padding: 5px 13px; font-size: var(--fs-2xs); }
+
+/* Said next to the field, before anything is sent. */
+.filter-inline-error {
+    display: flex; align-items: center; gap: 6px; margin-top: 10px;
+    font-size: var(--fs-xs); font-weight: 600; color: var(--btn-danger-ink);
+}
+
+/* ── The applied-criteria bar ── */
+.report-summary {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+    padding: 11px 13px; border-radius: var(--radius);
+    border: 1px solid var(--color-border); background: var(--color-surface);
+}
+.report-summary-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: var(--fs-2xs); font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--color-faint);
+}
+.report-summary-label svg { width: 13px; height: 13px; }
+
+/* A criterion that is part of the report's identity — its category and its
+   period. There is always exactly one of each, so neither can be removed;
+   they are stated, not offered. */
+.report-crumb {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: var(--fs-2xs); font-weight: 700; white-space: nowrap;
+    background: var(--color-card); border: 1px solid var(--color-border);
+    color: var(--color-muted);
+}
+.report-crumb-strong { color: var(--btn-soft-ink); border-color: var(--color-g-200); background: var(--color-g-50); }
+
+/* A filter that was chosen and can be un-chosen from here. One chip per
+   value, not one per group: "Booking: Expired, No Show" told you what was
+   applied and gave you no way to drop only the No Show. */
+.report-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 5px 4px 11px; border-radius: 999px;
+    font-size: var(--fs-2xs); font-weight: 700; white-space: nowrap;
+    background: var(--color-card); border: 1px solid var(--color-g-200);
+    color: var(--btn-soft-ink);
+}
+.report-pill-group { font-weight: 800; color: var(--color-faint); text-transform: uppercase; letter-spacing: .06em; }
+.report-pill-x {
+    display: inline-grid; place-items: center;
+    width: 17px; height: 17px; border-radius: 999px;
+    border: 0; padding: 0; cursor: pointer;
+    background: transparent; color: var(--color-faint);
+    transition: background var(--transition), color var(--transition), transform 120ms var(--ease-out);
+}
+.report-pill-x svg { width: 11px; height: 11px; }
+.report-pill-x:hover { background: var(--btn-danger-bg); color: var(--btn-danger-ink); }
+.report-pill-x:active { transform: scale(.9); }
+.report-pill-x:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 1px; }
+
+.report-summary-clear {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: var(--fs-2xs); font-weight: 700; color: var(--color-muted);
+    padding: 5px 10px; border-radius: var(--radius-sm);
+    background: transparent; border: 1px solid transparent; cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+.report-summary-clear:hover { background: var(--btn-danger-bg); color: var(--btn-danger-ink); }
+.report-summary-clear svg { width: 12px; height: 12px; }
+
+/* Composed but not applied. The dot on the Update button is 10px and sits
+   several hundred pixels from the chips that caused it; this says the same
+   thing where the change was made. The bar keeps describing the report that
+   is actually on screen — it is the mismatch that has to be named, not the
+   contents. */
+.report-summary.is-stale {
+    border-color: var(--color-au-300);
+    background: var(--color-au-50);
+}
+.report-summary-stale {
+    display: none; align-items: center; gap: 6px;
+    width: 100%; margin-top: 2px;
+    font-size: var(--fs-2xs); font-weight: 700; color: var(--color-au-800);
+}
+.report-summary.is-stale .report-summary-stale { display: flex; }
+.report-summary-stale svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Row-size switch (x-admin.ui.density-switch) ──────────────────────────
+   A segmented control, not a cycle button: all three levels are on screen and
+   the one in force is filled, so the toolbar answers "how big are these rows"
+   without anyone having to press anything. Painted from the shared --btn-*
+   tokens, so the active segment is the same green as .filter-tab.selected
+   sitting a few pixels away in the same toolbar. */
+.density-switch {
+    display: inline-flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+}
+.density-switch-label {
+    font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--color-faint);
+    white-space: nowrap;
+}
+.density-switch-track {
+    display: inline-flex; align-items: center;
+    padding: 3px; gap: 2px;
+    border: 1px solid var(--color-border); border-radius: 999px;
+    background: var(--color-surface);
+}
+.density-switch-opt {
+    padding: 5px 13px; border-radius: 999px; border: 1px solid transparent;
+    font-size: var(--fs-2xs); font-weight: 650; letter-spacing: .01em;
+    color: var(--color-muted); background: transparent; cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition), color var(--transition),
+        box-shadow var(--transition), transform 140ms var(--ease-out);
+}
+.density-switch-opt:hover { background: var(--btn-soft-tint); color: var(--btn-soft-ink); }
+.density-switch-opt:active { transform: scale(.96); }
+.density-switch-opt:focus-visible { outline: 2px solid var(--color-g-500); outline-offset: 2px; }
+.density-switch-opt.is-on {
+    background: linear-gradient(180deg, var(--btn-fill-from) 0%, var(--btn-fill-to) 100%);
+    color: var(--btn-fill-ink);
+    box-shadow: 0 3px 10px -4px rgba(9,146,80,.5), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.density-switch-opt.is-on:hover {
+    background: linear-gradient(180deg, var(--btn-fill-hover-from) 0%, var(--btn-fill-hover-to) 100%);
+    color: var(--btn-fill-ink);
+}
+
+/* The caption is the first thing to go when the toolbar runs out of room —
+   the three named options still say what the control does without it. */
+@media (max-width: 640px) {
+    .density-switch-label { display: none; }
+}
 
 /* ── Sortable table headers ── */
 .data-table thead th.sortable {

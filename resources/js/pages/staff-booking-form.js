@@ -572,7 +572,7 @@ function initStaffBookingForm() {
 
         if (problem) {
             e.preventDefault();
-            window.Swal.fire({ icon: 'warning', title: 'Almost there', text: problem, confirmButtonColor: '#14532d' });
+            window.Swal.fire({ icon: 'warning', title: 'Almost there', text: problem });
             return;
         }
 

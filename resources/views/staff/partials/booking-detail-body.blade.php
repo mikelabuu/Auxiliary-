@@ -30,9 +30,6 @@
     $roomNumbers = $booking->reservations->pluck('room_number')->filter();
     $payable = $booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price;
 
-    $initials = Str::of($booking->guest_name)->trim()->explode(' ')
-        ->filter()->take(2)->map(fn ($p) => Str::upper(Str::substr($p, 0, 1)))->implode('');
-
     // Presentation data for the rooms on this booking. Reservations store a
     // room_type snapshot, so the catalog lookup is by that slug — never by the
     // live Room relation, which may have been re-typed since booking time.
@@ -82,7 +79,7 @@
         <aside class="min-w-0">
             <div class="rounded-2xl border border-stone-200 overflow-hidden">
                 <div class="px-5 pt-6 pb-5 text-center bg-linear-to-b from-clsu-50/70 to-transparent">
-                    <span class="inline-flex w-[72px] h-[72px] rounded-2xl items-center justify-center text-xl font-extrabold bg-linear-to-br from-clsu-100 to-clsu-200 text-clsu-800 ring-1 ring-clsu-500/25">{{ $initials ?: '—' }}</span>
+                    <x-admin.ui.avatar size="lg" />
                     <p class="mt-3.5 text-lg font-bold text-stone-900 leading-tight break-words">{{ $booking->guest_name }}</p>
                     <p class="mt-1.5 text-xs font-bold text-clsu-700 font-data tracking-wide">
                         {{ $booking->user_id ? 'GS-' . str_pad($booking->user_id, 4, '0', STR_PAD_LEFT) : 'WALK-IN' }}

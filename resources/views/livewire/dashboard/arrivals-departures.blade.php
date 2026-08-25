@@ -127,7 +127,7 @@
                   </div>
                   <p class="text-sm font-semibold text-stone-700">No arrivals or departures {{ $isToday ? 'today' : 'on ' . $viewLabel }}</p>
                   <p class="text-xs text-faint mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
-                  <a href="{{ route('staff.manualbooking') }}" class="mt-4 text-sm font-bold text-white bg-clsu-700 rounded-lg px-5 py-3 hover:bg-clsu-800 active:scale-[0.98] transition-[color,background-color,transform] duration-200 !no-underline shadow-sm">Create manual booking</a>
+                  <a href="{{ route('staff.manualbooking') }}" class="btn btn-primary mt-4 !no-underline">Create manual booking</a>
                 </div>
             @else
                 {{-- Sorting used to be the two clickable column headers. A list
@@ -168,9 +168,6 @@
                 <ul class="arrival-list divide-y divide-stone-100">
                     @foreach ($arrivalsDepartures as $item)
                         @php
-                            $initials = collect(explode(' ', trim($item->guest_name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('');
-                            $initials = strtoupper($initials ?: 'G');
-
                             // The row's state in the words someone at the counter
                             // would use. This used to be two columns — a "Type"
                             // tag reading Arrival / Departure and beside it the
@@ -195,7 +192,7 @@
                             ];
                         @endphp
                         <li class="arrival-row">
-                            <span class="avatar-initials shrink-0">{{ $initials }}</span>
+                            <x-admin.ui.avatar class="shrink-0" />
 
                             <div class="arrival-row-main">
                                 <p class="arrival-row-name">
@@ -289,9 +286,7 @@
                 <div class="divide-y divide-stone-100 rounded-xl border border-stone-200 overflow-hidden">
                     @foreach($upcomingBookings as $booking)
                         <div class="flex items-center gap-3 px-4 py-3 hover:bg-clsu-50/60 transition-colors">
-                            <div class="w-8 h-8 rounded-full bg-clsu-700 text-white flex items-center justify-center text-2xs font-bold shrink-0">
-                                {{ $booking['initials'] }}
-                            </div>
+                            <x-admin.ui.avatar size="sm" class="shrink-0" />
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-stone-800 truncate">{{ $booking['guest_name'] }}</p>
                                 <p class="text-xs text-faint">{{ $booking['details'] }}</p>
@@ -403,7 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
         opts.showCancelButton = true;
         opts.cancelButtonText = 'Cancel';
         opts.reverseButtons = true;
-        opts.focusCancel = action === 'noshow' || action === 'emergency';
+        // The two irreversible ones get the ember confirm button, not the
+        // console's affirmative green (see .swal2-confirm.is-danger).
+        const destructive = action === 'noshow' || action === 'emergency';
+        opts.focusCancel = destructive;
+        if (destructive) opts.customClass = { confirmButton: 'is-danger' };
 
         Swal.fire(opts).then(result => {
             if (result.isConfirmed) {

@@ -155,13 +155,13 @@
                                                      state and the double-submit guard. --}}
                                                 <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
-                                                    <button type="submit" data-busy-btn class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-clsu-700 px-3 py-2 text-2xs font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-800 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" data-busy-btn class="btn btn-primary btn-sm btn-center w-full">
                                                         <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> Approve
                                                     </button>
                                                 </form>
                                                 <form method="POST" action="{{ route('staff.discounts.file.reject', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
-                                                    <button type="submit" data-busy-btn class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-ember-200 bg-ember-50 px-3 py-2 text-2xs font-bold text-ember-700 transition-colors hover:bg-ember-100 active:scale-[0.98] cursor-pointer">
+                                                    <button type="submit" data-busy-btn class="btn btn-danger btn-sm btn-center w-full">
                                                         <x-admin.ui.icon name="x" class="w-3.5 h-3.5" stroke-width="2.5" /> Reject
                                                     </button>
                                                 </form>
@@ -228,7 +228,7 @@
                               data-confirm="The 20% per approved ID will be applied to the booking total."
                               data-confirm-action="Yes, approve">
                             @csrf
-                            <button type="submit" data-busy-btn class="inline-flex items-center gap-1.5 rounded-xl bg-clsu-700 px-5 py-2.5 text-sm font-bold text-white shadow-card transition-[color,background-color,transform] duration-200 ease-out hover:bg-clsu-800 active:scale-[0.98] cursor-pointer">
+                            <button type="submit" data-busy-btn class="btn btn-primary">
                                 <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve Discount
                             </button>
                         </form>
