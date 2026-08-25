@@ -126,9 +126,33 @@
     // deliberately does not recompute it.
     let isMobile = window.matchMedia('(max-width: 767px)').matches;
     let mobileDampen = isMobile ? 0.5 : 1;
-    // Depth flourishes (blur / velocity-skew) are a desktop luxury — keep
-    // narrow viewports light and fast, exactly like v2's mobile-aware stance.
-    let allowDepthFX = !isMobile;
+
+    // Depth flourishes (blur / velocity-skew / mouse drift) are the expensive
+    // path: an animated filter: blur() cannot be composited, so every frame
+    // re-rasters the element instead of just moving a finished layer.
+    //
+    // This used to be gated on viewport width alone, which gets the easy half
+    // right and the hard half backwards. A 412px flagship phone — often the
+    // fastest machine in the room — is spared, while a 1366x768 budget laptop
+    // or a school Chromebook, which is genuinely the weaker device, is handed
+    // the full set because it happens to be wide. PageSpeed has been showing
+    // that shape the whole time: desktop Total Blocking Time has run 15-25x
+    // mobile's across every measurement of this page, because the costly work
+    // is the work that only desktop is allowed to do.
+    //
+    // deviceMemory (GiB) and hardwareConcurrency are hints, and Safari answers
+    // neither. When a browser declines to say, we keep the old width-only
+    // behaviour rather than quietly stripping the design from machines that are
+    // probably fine — the gate only fires on a positive admission of being small.
+    const lowPowerDevice = (function () {
+        const mem = navigator.deviceMemory;
+        const cores = navigator.hardwareConcurrency;
+        if (typeof mem === 'number' && mem <= 4) return true;
+        if (typeof cores === 'number' && cores <= 4) return true;
+        return false;
+    })();
+
+    let allowDepthFX = !isMobile && !lowPowerDevice;
     let allowMouseFX = allowDepthFX && pointerFineMQ.matches;
 
     // ── State ───────────────────────────────────────────────────────
@@ -272,31 +296,45 @@
     const io = new IntersectionObserver(
         (entries) => {
             let woke = false;
+
+            // TWO passes: every read, then every write. Do not merge them.
+            //
+            // applyWillChange() writes el.style.willChange and measureRect()
+            // reads a rect. Interleaved per entry — which is how this was first
+            // written — a batch of N entries costs N separate forced layouts,
+            // because each write re-dirties the style the next read has to
+            // flush. Lighthouse billed 111 ms of forced reflow to measureRect
+            // on mobile for exactly that. Split, the whole batch costs one.
+            //
+            // The scroll offset is read once, before any of it: an
+            // IntersectionObserver callback is delivered after the browser's
+            // own layout, so this is free here, and sharing one value across
+            // the batch is what keeps the stored document-space tops mutually
+            // consistent.
+            const sy = window.pageYOffset || 0;
+            const touched = [];
+
             for (const e of entries) {
                 const item = items.find(i => i.el === e.target);
-                if (item) {
-                    item.visible = e.isIntersecting;
-                    applyWillChange(item);
-                    if (item.visible) {
-                        // Re-measure on the way in. The bus measure pass below
-                        // skips offscreen items, so this rect may date from
-                        // registration or from a resize that passed this item
-                        // over — and everything above it has moved since.
-                        //
-                        // An IntersectionObserver callback is delivered after
-                        // the browser's own layout, so both reads here are free;
-                        // taking pageYOffset at the same moment as the rect is
-                        // what keeps the stored document-space top correct.
-                        measureRect(item, window.pageYOffset || 0);
-                        woke = true;
-                        // Give AOS a bounded window to run its own entrance
-                        // first; if it never shows up, we take over anyway.
-                        if (item.hasAos && item.aosDeadline === null) {
-                            item.aosDeadline = performance.now() + 1200;
-                        }
+                if (!item) continue;
+                item.visible = e.isIntersecting;
+                touched.push(item);
+                if (item.visible) {
+                    // Re-measure on the way in: the bus measure pass below
+                    // skips offscreen items, so this rect may date from
+                    // registration or from a resize that passed this item
+                    // over — and everything above it has moved since.
+                    measureRect(item, sy);
+                    woke = true;
+                    // Give AOS a bounded window to run its own entrance
+                    // first; if it never shows up, we take over anyway.
+                    if (item.hasAos && item.aosDeadline === null) {
+                        item.aosDeadline = performance.now() + 1200;
                     }
                 }
             }
+
+            for (const item of touched) applyWillChange(item);
             if (woke) bus.request();
         },
         { rootMargin: '25% 0px 25% 0px', threshold: 0 }

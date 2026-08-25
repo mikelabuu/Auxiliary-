@@ -97,25 +97,46 @@
         function measure() {
             // Distance down the page at which the nearest target is `margin`
             // away from the bottom of the viewport.
+            // scrollY and innerHeight are hoisted: neither can change while
+            // this loop runs, so reading them per target only repeats the same
+            // two lookups N times.
+            var sy = window.scrollY;
+            var vh = window.innerHeight;
             var top = Infinity;
             for (var i = 0; i < targets.length; i++) {
-                top = Math.min(top, targets[i].getBoundingClientRect().top + window.scrollY);
+                top = Math.min(top, targets[i].getBoundingClientRect().top + sy);
             }
-            triggerY = top - window.innerHeight - margin;
+            triggerY = top - vh - margin;
             check();
         }
 
         function check() {
+            // A scroll that beat the deferred measurement below: take the
+            // measurement now rather than miss the trigger. This is what lets
+            // the scheduling be lazy without giving up the guarantee, and it
+            // can happen at most once — measure() sets triggerY. A scroll event
+            // is dispatched with the previous frame's layout already complete,
+            // so it is also the cheapest moment available outside idle time.
+            if (triggerY === Infinity) { measureOnce(); return; }
             if (window.scrollY < triggerY) return;
             window.removeEventListener('scroll', check);
             window.removeEventListener('resize', measure);
-            window.removeEventListener('load', measure);
+            window.removeEventListener('load', onLoad);
             inject(cfg);
         }
 
+        // Images settling after load move every target beneath them, so the
+        // trigger point has to be retaken — but not *during* the load burst,
+        // which is where the old direct binding put it, forcing a layout while
+        // the browser was still working through the last of the images. A
+        // couple of hundred milliseconds later the page is quiet and the read
+        // is nearly free; nothing can need the new value before then, because
+        // needing it means scrolling, and check() re-measures on demand.
+        function onLoad() { setTimeout(measure, 250); }
+
         window.addEventListener('scroll', check, { passive: true });
         window.addEventListener('resize', measure, { passive: true });
-        window.addEventListener('load', measure);
+        window.addEventListener('load', onLoad);
 
         // The first measurement — covering an anchor landing or a reload partway
         // down — used to run synchronously right here, inside the
@@ -125,12 +146,18 @@
         // this (swiper and lightbox). Nothing needs triggerY during that task:
         // the earliest it can matter is the first scroll event.
         //
-        // rAF is where a layout read belongs, since it lands after the browser
-        // has done its own. But this whole file exists because rAF does NOT
-        // fire in a document that is never painted (see the note above), and
-        // arming the gallery must not depend on that. So both are scheduled and
-        // the first to arrive wins — the timeout is what makes it a guarantee,
-        // the rAF is what makes it free when the page is genuinely rendering.
+        // The first fix for that was `requestAnimationFrame + setTimeout(0)`,
+        // whichever arrived first. It moved the read out of the DOMContentLoaded
+        // task and then put it down again a millisecond later, still inside the
+        // busiest stretch of the page's life — PageSpeed went on billing ~106 ms
+        // of forced reflow across the same two callers.
+        //
+        // Idle time is the honest answer. rAF is ruled out for the reason this
+        // whole file exists (it never fires in a document that is not being
+        // painted), but requestIdleCallback takes a timeout, so it degrades to
+        // a plain deadline in exactly that case instead of never running. The
+        // on-demand path in check() covers a reader who scrolls first, and the
+        // setTimeout branch covers browsers without rIC.
         var measured = false;
         function measureOnce() {
             if (measured) return;
@@ -138,8 +165,11 @@
             measure();
         }
 
-        requestAnimationFrame(measureOnce);
-        setTimeout(measureOnce, 0);
+        if (window.requestIdleCallback) {
+            requestIdleCallback(measureOnce, { timeout: 2500 });
+        } else {
+            setTimeout(measureOnce, 1200);
+        }
     }
 })();
 </script>

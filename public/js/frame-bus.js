@@ -190,7 +190,13 @@
 
     // Images settling after DOMContentLoaded move everything below them, so the
     // cached rects taken at init are stale until this fires.
-    window.addEventListener('load', measure);
+    //
+    // measureSoon, not measure: 'load' fires at the tail of the busiest stretch
+    // of the page's life, and a direct call forces a full-document layout right
+    // there. The debounce lets that burst finish first, and nothing can need the
+    // fresh geometry inside those 150 ms — needing it means scrolling, and a
+    // scroll wakes the loop on its own.
+    window.addEventListener('load', measureSoon);
 
     // ...and `load` is not the end of it. Lazy images below the fold decode as
     // the reader approaches them, and each one that lands changes the document

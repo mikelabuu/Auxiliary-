@@ -101,6 +101,17 @@ const SOURCES = {
     // 800px wide, so the ladder stops there; the win here is AVIF/WebP, not a
     // smaller box.
     '2.jpg': [400, 800],
+
+    // ...and its sibling in the same partial, which had the identical bug and
+    // survived the fix above because only the image that was looked at got
+    // added. Lighthouse listed image/4.jpg as the single largest asset on the
+    // desktop landing page — 121 KB of raw JPEG, larger than the LCP hero —
+    // while image/2.jpg two elements away was serving a 34 KB AVIF.
+    //
+    // Same ladder as 2.jpg deliberately: same source size (1280x960), same
+    // full-bleed band, and the same green wash plus .img-night-grade sits over
+    // it, so the extra sharpness of a 1280 rung would not survive the overlay.
+    '4.jpg': [400, 800],
 };
 
 // Bento gallery tiles + the per-room-type galleries, all drawn from the same

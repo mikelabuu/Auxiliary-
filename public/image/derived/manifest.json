@@ -745,6 +745,43 @@
     },
     "fallback": "jpg"
   },
+  "image/4.jpg": {
+    "width": 1280,
+    "height": 960,
+    "sources": {
+      "avif": [
+        {
+          "w": 400,
+          "src": "image/derived/4-400.avif"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/4-800.avif"
+        }
+      ],
+      "webp": [
+        {
+          "w": 400,
+          "src": "image/derived/4-400.webp"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/4-800.webp"
+        }
+      ],
+      "jpg": [
+        {
+          "w": 400,
+          "src": "image/derived/4-400.jpg"
+        },
+        {
+          "w": 800,
+          "src": "image/derived/4-800.jpg"
+        }
+      ]
+    },
+    "fallback": "jpg"
+  },
   "image/gallery/1.jpg": {
     "width": 1280,
     "height": 960,
