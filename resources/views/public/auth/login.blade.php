@@ -114,11 +114,8 @@
             <div id="registerPanel" role="tabpanel" aria-labelledby="registerTab" class="fha-fob hidden-form" tabindex="-1">
 
                 <h1 class="fha-panel-title">Cut a new key.</h1>
-                {{-- True and worth saying: staff rows are provisioned by an admin
-                     through staff management, never through this form. --}}
                 <p class="fha-panel-lede">
-                    For guests booking a room. Staff accounts are set up for you,
-                    never from this form.
+                    For guests booking a room. Fill this in once and the key is yours.
                 </p>
 
                 <form method="POST" action="{{ route('signup') }}" class="fha-form" novalidate data-busy-form>
