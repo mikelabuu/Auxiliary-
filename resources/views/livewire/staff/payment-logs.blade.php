@@ -37,6 +37,23 @@
     </div>
 
     <x-admin.ui.section-card icon="receipt" title="Payment Ledger" :subtitle="$payments->total() . ' record' . ($payments->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+        {{-- Exports live on the ledger they export, not in the page header.
+
+             data-no-loader: these serve a spreadsheet download and leave the
+             page where it is, so the navigation curtain
+             (partials/page-loader) must not be raised for them. --}}
+        <x-slot:actions>
+            <span class="section-label hidden sm:inline">Export</span>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.payments.all')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                All
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.payments.cash')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Cash
+            </x-admin.ui.button>
+        </x-slot:actions>
+
         {{-- Status filters --}}
         <div class="filter-row mb-4">
             <span class="filter-row-label">Status</span>

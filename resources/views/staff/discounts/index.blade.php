@@ -9,27 +9,6 @@
 <div class="space-y-6 max-w-[1680px] mx-auto">
     <x-admin.ui.page-header subtitle="Review Senior Citizen / PWD verification documents and approve the 20% discount.">
         Discount Requests
-        {{-- data-no-loader: these serve a spreadsheet download and leave the
-             page where it is, so the navigation curtain
-             (partials/page-loader) must not be raised for them. --}}
-        <x-slot:actions>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.discounts.all')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                All
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.discounts.pending')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                Pending
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.discounts.approved')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                Approved
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.discounts.rejected')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                Rejected
-            </x-admin.ui.button>
-        </x-slot:actions>
     </x-admin.ui.page-header>
 
     @livewire('staff.discounts.discount-list')

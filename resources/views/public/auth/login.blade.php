@@ -63,8 +63,8 @@
 
                 <h1 class="fha-panel-title">Take your key.</h1>
                 <p class="fha-panel-lede">
-                    One door for guests, the front desk and administration.
-                    Your account decides where it opens.
+                    One key, one door.
+                    Sign in and it opens what's yours.
                 </p>
 
                 <form method="POST" action="{{ route('login.attempt') }}" class="fha-form" novalidate data-busy-form>
@@ -117,7 +117,7 @@
                 {{-- True and worth saying: staff rows are provisioned by an admin
                      through staff management, never through this form. --}}
                 <p class="fha-panel-lede">
-                    For guests booking a room. Staff keys are issued by an administrator,
+                    For guests booking a room. Staff accounts are set up for you,
                     never from this form.
                 </p>
 

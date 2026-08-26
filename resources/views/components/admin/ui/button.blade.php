@@ -1,5 +1,6 @@
 @props([
     'variant' => 'primary',
+    'size' => null,
     'type' => 'submit',
     'href' => null
 ])
@@ -16,7 +17,12 @@
         'outline'   => 'btn btn-outline',
     ];
 
-    $classes = $variants[$variant] ?? $variants['primary'];
+    // .btn-sm / .btn-lg from 04-components.css. `sm` is what a card header
+    // takes: an action sitting beside a card title has to be quieter than the
+    // title, and a full-size button there outweighs the heading it belongs to.
+    $sizes = ['sm' => ' btn-sm', 'lg' => ' btn-lg'];
+
+    $classes = ($variants[$variant] ?? $variants['primary']) . ($sizes[$size] ?? '');
 @endphp
 
 @if($href)

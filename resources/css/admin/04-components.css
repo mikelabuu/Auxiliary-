@@ -19,6 +19,12 @@
 .card-header {
     padding: 20px 26px; border-bottom: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    /* Wraps at every width, not only on phones. The actions slot now carries
+       the add/export controls that used to sit in the page header, so between
+       roughly 700px and 1000px the title and four buttons no longer fit on one
+       line — without this they were squeezed instead of stacked. On wide
+       screens everything still fits, so nothing moves. */
+    flex-wrap: wrap;
     background: transparent;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -895,7 +901,7 @@
     .topbar-date { display: none; }
     .modal-grid-two { grid-template-columns: 1fr; gap: 12px; }
     .selection-bar { flex-wrap: wrap; }
-    .card-header { flex-wrap: wrap; }
+    /* .card-header wraps at all widths now (see the base rule). */
     .card-header-actions { width: 100%; justify-content: flex-start; }
     .record-detail-row { grid-template-columns: 1fr; gap: 4px; padding: 6px 0; }
     .record-detail-label { font-size: var(--fs-2xs); }

@@ -14,6 +14,32 @@
     @endphp
 
     <x-admin.ui.section-card icon="tag" title="Verification Queue" :subtitle="$discounts->total() . ' request' . ($discounts->total() === 1 ? '' : 's') . ' · refreshes automatically'" :delay="40">
+        {{-- Exports live on the queue they export, not in the page header —
+             four full-size buttons up there outweighed the page title.
+
+             data-no-loader: these serve a spreadsheet download and leave the
+             page where it is, so the navigation curtain
+             (partials/page-loader) must not be raised for them. --}}
+        <x-slot:actions>
+            <span class="section-label hidden sm:inline">Export</span>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.discounts.all')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                All
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.discounts.pending')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Pending
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.discounts.approved')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Approved
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.discounts.rejected')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Rejected
+            </x-admin.ui.button>
+        </x-slot:actions>
+
 
         {{-- Status pills + sort --}}
         <div class="filter-row mb-4">

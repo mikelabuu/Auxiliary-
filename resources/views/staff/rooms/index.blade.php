@@ -64,14 +64,13 @@
 
     <x-admin.ui.page-header subtitle="Manage availability, wings, and pricing across all rooms.">
         Room Management
+        {{-- Status Map stays here: it is navigation to another screen, not an
+             action on the list below. Add Room moved down onto the All Rooms
+             card, next to the rooms it adds to. --}}
         <x-slot:actions>
             <x-admin.ui.button variant="secondary" :href="route('staff.dashboard') . '#room-map'">
                 <x-admin.ui.icon name="grid" class="w-4 h-4" />
                 Status Map
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="primary" type="button" id="openAddRoomBtn">
-                <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
-                Add Room
             </x-admin.ui.button>
         </x-slot:actions>
     </x-admin.ui.page-header>
@@ -135,6 +134,11 @@
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-palay-400"></span>Unpaid hold · <span id="legendPending">{{ $pendingRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-sky-400"></span>Cleaning · <span id="legendCleaning">{{ $cleaningRooms }}</span></span>
             <span class="flex items-center gap-1.5 text-2xs font-medium text-muted"><span class="w-2 h-2 rounded-full bg-ember-500"></span>Maintenance · <span id="legendMaintenance">{{ $maintenanceRooms }}</span></span>
+            <span class="hidden sm:block w-px h-4 bg-stone-200" aria-hidden="true"></span>
+            <x-admin.ui.button variant="primary" size="sm" type="button" id="openAddRoomBtn">
+                <x-admin.ui.icon name="plus" class="w-3.5 h-3.5" stroke-width="2.5" />
+                Add Room
+            </x-admin.ui.button>
         </x-slot:actions>
 
         <!-- Controls -->

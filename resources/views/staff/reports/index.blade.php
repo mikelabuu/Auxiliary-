@@ -63,19 +63,6 @@
 
     <x-admin.ui.page-header subtitle="Generate, filter, and export booking and payment data.">
         Analytics &amp; Reporting
-        <x-slot:actions>
-            {{-- Two buttons rather than a format dropdown: the choice is not a
-                 setting to configure, it is which of two jobs you are doing —
-                 keep working on the numbers, or hand the report to someone. --}}
-            <x-admin.ui.button variant="secondary" type="button" id="exportPdfBtn" disabled>
-                <x-admin.ui.icon name="file" class="w-4 h-4" stroke-width="2" />
-                PDF
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" type="button" id="exportBtn" disabled>
-                <x-admin.ui.icon name="download" class="w-4 h-4" stroke-width="2" />
-                Excel
-            </x-admin.ui.button>
-        </x-slot:actions>
     </x-admin.ui.page-header>
 
     <!-- Filters -->
@@ -239,6 +226,23 @@
                     @endforeach
                 </select>
             </div>
+            <span class="hidden sm:block w-px h-4 bg-stone-200" aria-hidden="true"></span>
+            {{-- On the results card rather than the page header: these export
+                 the table directly below them and stay disabled until it holds
+                 something, which is only legible next to the table itself.
+
+                 Two buttons rather than a format dropdown: the choice is not a
+                 setting to configure, it is which of two jobs you are doing —
+                 keep working on the numbers, or hand the report to someone. --}}
+            <span class="section-label hidden sm:inline">Export</span>
+            <x-admin.ui.button variant="secondary" size="sm" type="button" id="exportPdfBtn" disabled>
+                <x-admin.ui.icon name="file" class="w-3.5 h-3.5" stroke-width="2" />
+                PDF
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" type="button" id="exportBtn" disabled>
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
+                Excel
+            </x-admin.ui.button>
         </x-slot:actions>
 
         <div id="reportTableContainer" class="-mx-6 -mb-6 border-t border-stone-100">

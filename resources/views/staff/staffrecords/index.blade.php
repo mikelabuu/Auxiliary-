@@ -38,14 +38,6 @@
 
     <x-admin.ui.page-header subtitle="Administrative and staff accounts, their roles, and access standing.">
         Staff Center
-        @if ($isMaster)
-            <x-slot:actions>
-                <x-admin.ui.button variant="primary" type="button" id="openCreateStaffBtn">
-                    <x-admin.ui.icon name="plus" class="w-4 h-4" />
-                    New Staff Account
-                </x-admin.ui.button>
-            </x-slot:actions>
-        @endif
     </x-admin.ui.page-header>
 
     {{-- Session success toasts fire from layouts/admin; error lists stay inline --}}
@@ -83,6 +75,19 @@
     </div>
 
     <x-admin.ui.section-card icon="users" title="Staff Accounts" :subtitle="$staffs->total() . ' record' . ($staffs->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+        {{-- The create action sits on the card that owns the list it adds to,
+             not up in the page header. The header is the page's name; an action
+             parked there is a long way from the rows it changes, and reads as
+             belonging to the screen rather than to this table. Same placement
+             as the front desk's Bookings card. --}}
+        @if ($isMaster)
+            <x-slot:actions>
+                <x-admin.ui.button variant="primary" size="sm" type="button" id="openCreateStaffBtn">
+                    <x-admin.ui.icon name="plus" class="w-3.5 h-3.5" stroke-width="2.5" />
+                    New Staff Account
+                </x-admin.ui.button>
+            </x-slot:actions>
+        @endif
 
         {{-- Search + filters --}}
         <form method="GET" class="filter-toolbar">

@@ -30,23 +30,6 @@
 
     <x-admin.ui.page-header subtitle="Every guest account on the platform — activity, verification, and standing.">
         User Hub
-        {{-- data-no-loader: these serve a spreadsheet download and leave the
-             page where it is, so the navigation curtain
-             (partials/page-loader) must not be raised for them. --}}
-        <x-slot:actions>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.all')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                All
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.active')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                Active
-            </x-admin.ui.button>
-            <x-admin.ui.button variant="secondary" data-no-loader :href="route('reports.users.suspended')">
-                <x-admin.ui.icon name="download" class="w-4 h-4" />
-                Suspended
-            </x-admin.ui.button>
-        </x-slot:actions>
     </x-admin.ui.page-header>
 
     <!-- Account stats -->
@@ -73,6 +56,29 @@
     </div>
 
     <x-admin.ui.section-card icon="users" title="User Directory" :subtitle="$users->total() . ' record' . ($users->total() === 1 ? '' : 's') . ($search ? ' matching “' . $search . '”' : '')" :delay="200">
+        {{-- The exports sit on the card holding the data they export, the same
+             way the booking log carries its own. In the page header they read
+             as belonging to the screen, and the three of them at full size were
+             the loudest thing on it.
+
+             data-no-loader: these serve a spreadsheet download and leave the
+             page where it is, so the navigation curtain
+             (partials/page-loader) must not be raised for them. --}}
+        <x-slot:actions>
+            <span class="section-label hidden sm:inline">Export</span>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.users.all')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                All
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.users.active')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Active
+            </x-admin.ui.button>
+            <x-admin.ui.button variant="secondary" size="sm" data-no-loader :href="route('reports.users.suspended')">
+                <x-admin.ui.icon name="download" class="w-3.5 h-3.5" />
+                Suspended
+            </x-admin.ui.button>
+        </x-slot:actions>
 
         {{-- Status filters --}}
         <div class="filter-row mb-4">
