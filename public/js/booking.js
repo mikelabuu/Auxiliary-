@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof window.refreshCalendarAvailability === 'function') {
           window.refreshCalendarAvailability();
         }
-        document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
+        document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = '');
       }, 150);
     });
 
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function () {
     reservationContainer.appendChild(block);
     if (typeof Alpine !== 'undefined') Alpine.initTree(block);
     
-    document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none');
+    document.querySelectorAll('.btn-remove-block').forEach(b => b.style.display = '');
     
     // Re-read availability when a room arrives already knowing its dates and
     // its style.
@@ -976,61 +976,94 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); followBlocker(); }
   });
 
+  // Which step is on screen. Declared here because updateBlockerLine reads it
+  // and runs on the very first updateProgressRail(); the wizard that writes it
+  // is set up further down.
+  let currentStep = 'dates';
+
+  // Set once the guest has committed and the button has gone into its
+  // in-flight state, so nothing re-types the button out from under it.
+  let isSubmittingBooking = false;
+
+  // What the hint says when nothing is in the way. One per step, because
+  // "you can confirm" is only true on the last one.
+  const READY_HINT = {
+    dates:   'Dates set — next, choose your rooms.',
+    rooms:   'Everyone has a bed — next, your details.',
+    details: 'Everything checks out — you can confirm.'
+  };
+
   function updateBlockerLine(r) {
     const line = document.getElementById('bookingBlocker');
     const text = document.getElementById('bookingBlockerText');
     if (!line || !text) return;
 
     let msg = null;
-    // Which card the guest has to reach to clear this. The line names a
-    // step ("in step 3") and, until now, offered no way of getting to it —
-    // from the Confirm button that card is a screenful away, behind the
-    // whole personal-details form.
+    // What to flash when the hint is pressed. It is always inside the live
+    // step now: the button beside this line only ever moves one step, so a
+    // hint naming something two screens away is advice, not a blocker. The
+    // old version said "Choose your rooms in step 3" while the guest was
+    // standing in step 1 with nothing to do about it.
     let goTo = null;
 
-    if (!r.datesDone) {
-      msg = 'Start by choosing your stay dates.';
-      goTo = 'stepCardDates';
-    } else if (!r.blocks.length) {
-      msg = 'Choose your rooms in step 3.';
-      goTo = 'stepCardRooms';
-    } else if (!r.detailsDone) {
-      msg = 'Fill in your name and contact number.';
-      goTo = 'stepCardDetails';
-    } else if (r.overfilled) {
-      msg = 'One room has more guests than it sleeps.';
-      goTo = 'stepCardRooms';
-    } else if (r.untyped) {
-      msg = 'Choose a room style for each room you are booking.';
-      goTo = 'stepCardRooms';
-    } else if (r.oversold) {
-      goTo = 'stepCardRooms';
-      msg = r.oversold.available === 0
-        ? `No ${r.oversold.title} rooms are free for these dates.`
-        : `Only ${r.oversold.available} ${r.oversold.title} left for these dates — you have asked for ${r.oversold.wanted}.`;
-    } else if (!r.balanced) {
-      goTo = 'stepCardRooms';
-      const diff = Math.abs(r.expected - r.assigned);
-      // Same words as the status line above the rooms — "needs a bed" — so the
-      // two places that can raise this are plainly talking about one thing.
-      // The over-assigned branch is a backstop: the steppers stop at the party
-      // size, so reaching it means a count was written by some path that did
-      // not go through them.
-      msg = r.assigned < r.expected
-        ? `${diff} guest${diff > 1 ? 's' : ''} still ${diff > 1 ? 'need' : 'needs'} a bed.`
-        : `Your rooms hold ${diff} more than you are bringing.`;
-    } else if (!r.termsDone) {
-      // Last, because it is the last thing standing between the guest and a
-      // booking once everything else is filled in.
-      msg = 'Tick the booking terms below to confirm.';
+    if (currentStep === 'dates') {
+      if (!r.datesDone) {
+        msg = 'Choose your check-in and check-out dates.';
+        goTo = 'stepCardDates';
+      }
+    } else if (currentStep === 'rooms') {
+      if (!r.blocks.length) {
+        msg = 'Add a room to get started.';
+        goTo = 'roomPicker';
+      } else if (r.untyped) {
+        msg = 'One of your rooms has no style chosen yet.';
+        goTo = 'reservationBlocks';
+      } else if (r.overfilled) {
+        msg = 'One room has more guests than it sleeps.';
+        goTo = 'reservationBlocks';
+      } else if (r.oversold) {
+        goTo = 'roomPicker';
+        msg = r.oversold.available === 0
+          ? `No ${r.oversold.title} rooms are free for these dates.`
+          : `Only ${r.oversold.available} ${r.oversold.title} left for these dates — you have asked for ${r.oversold.wanted}.`;
+      } else if (!r.balanced) {
+        goTo = 'allocationMeter';
+        const diff = Math.abs(r.expected - r.assigned);
+        // Same words as the status line above the rooms — "needs a bed" — so the
+        // two places that can raise this are plainly talking about one thing.
+        // The over-assigned branch is a backstop: the steppers stop at the party
+        // size, so reaching it means a count was written by some path that did
+        // not go through them.
+        msg = r.assigned < r.expected
+          ? `${diff} guest${diff > 1 ? 's' : ''} still ${diff > 1 ? 'need' : 'needs'} a bed.`
+          : `Your rooms hold ${diff} more than you are bringing.`;
+      }
+    } else {
+      if (!r.detailsDone) {
+        msg = 'Fill in your name, number and who is endorsing the stay.';
+        goTo = 'stepCardDetails';
+      } else if (!r.termsDone) {
+        // Last, because it is the last thing standing between the guest and a
+        // booking once everything else is filled in.
+        msg = 'Tick the booking terms to confirm.';
+        goTo = 'termsCard';
+      }
     }
+
+    // Mark the terms card itself while it is the thing in the way, so the
+    // hint and the control it names are visibly the same subject. Only once
+    // everything else is done — flagging it beside six empty fields would be
+    // shouting at the guest about the last step of a form they have not
+    // started.
+    document.getElementById('termsCard')
+      ?.classList.toggle('is-missing', currentStep === 'details' && r.detailsDone && !r.termsDone);
 
     if (msg) {
       line.removeAttribute('data-ready');
       text.textContent = msg;
     } else {
       line.setAttribute('data-ready', '');
-      text.textContent = 'Everything checks out — you can confirm.';
+      text.textContent = READY_HINT[currentStep] || READY_HINT.details;
     }
 
     // Nothing to jump to once it reads as ready.
@@ -1269,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', function () {
     reseatRooms();
     generateBookingSummary();
     document.querySelectorAll('.btn-remove-block').forEach(function (b) {
-      b.style.display = document.querySelectorAll('.reservation-block').length > 1 ? 'inline-block' : 'none';
+      b.style.display = '';
     });
     if (typeof window.refreshCalendarAvailability === 'function') window.refreshCalendarAvailability();
     updateProgressRail();
@@ -1428,10 +1461,57 @@ document.addEventListener('DOMContentLoaded', function () {
         // the bed budget — see roomsLeft.
         b.disabled = soldOut || outOfStock || tooSmall || (expected > 0 && roomsLeft <= 0);
       });
+
+      // The Add button says what pressing it would do, and when it cannot say
+      // that it says why instead. A disabled control with no label change is
+      // the thing that sends a guest back up the page to work out what
+      // happened.
+      const addLabel = item.row.querySelector('[data-room-add-label]');
+      if (addLabel) {
+        addLabel.textContent = soldOut ? 'Sold out'
+          : outOfStock ? (have === 1 ? 'Only one free' : 'All ' + free + ' added')
+          : tooSmall ? 'Too small'
+          : (expected > 0 && roomsLeft <= 0 && have === 0) ? 'Room limit reached'
+          : have > 0 ? 'Add another'
+          : 'Add';
+      }
     });
 
     updateRoomSplitControl(expected, fitting.length, mustSplit);
+    updateSoldOutControl();
   }
+
+  /**
+   * The press that folds the sold-out styles away, and says how many.
+   *
+   * They stay in the grid rather than being removed: the availability pass,
+   * the fit pass and the suggestion all address every card by type, and a
+   * card that is not there cannot be addressed. Hiding is a class on the
+   * list.
+   */
+  function updateSoldOutControl() {
+    const btn = document.getElementById('roomSoldOutToggle');
+    const list = document.getElementById('roomPicker');
+    if (!btn || !list) return;
+
+    const n = list.querySelectorAll('.room-card.is-sold-out').length;
+    if (n === 0) {
+      btn.hidden = true;
+      list.classList.add('hide-sold-out');
+      return;
+    }
+    btn.hidden = false;
+    const hidden = list.classList.contains('hide-sold-out');
+    btn.textContent = hidden
+      ? 'Show ' + n + ' sold-out room' + (n > 1 ? 's' : '')
+      : 'Hide sold-out rooms';
+    btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+  }
+
+  document.getElementById('roomSoldOutToggle')?.addEventListener('click', function () {
+    document.getElementById('roomPicker')?.classList.toggle('hide-sold-out');
+    updateSoldOutControl();
+  });
 
   /**
    * The line under the list that explains the strict view and undoes it.
@@ -1615,6 +1695,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateRoomSuggestion(r);
     updateBlockHeadings();
     updateBlockerLine(r);
+    syncStepAffordances(r);
   }
 
   bookingForm?.addEventListener('input', function (e) {
@@ -1625,14 +1706,119 @@ document.addEventListener('DOMContentLoaded', function () {
     e.target?.classList?.remove('field-invalid');
   });
 
-  // Rail steps double as jump-links to their step cards — same scroll +
-  // block-flash contract as the summary rows' deep links.
-  const railTargets = { dates: 'stepCardDates', details: 'stepCardDetails', rooms: 'stepCardRooms' };
-  /** Scroll a step card into view and flash it. Shared by the rail, the
-   *  summary rows' deep links and the blocker line above Confirm. */
+  // ── The wizard ───────────────────────────────────────────────────
+  //
+  // One step on screen at a time, in the order the decisions are actually
+  // made: when you are coming, what you are taking, then who you are. The
+  // panels hide — they are never unmounted — so every field the server is
+  // posted, and every element the availability / fit / reseating passes
+  // address, is in the DOM the whole way through. That is the property that
+  // let this be a presentation change rather than a rewrite.
+  const STEPS = ['dates', 'rooms', 'details'];
+
+  /**
+   * May the guest stand on this step yet?
+   *
+   * The gate is the same readiness() the hint line reads, so Continue, the
+   * rail and the hint can never disagree about what is missing.
+   */
+  function stepReachable(key, r) {
+    r = r || readiness();
+    if (key === 'dates') return true;
+    if (key === 'rooms') return r.datesDone;
+    return r.datesDone && r.roomsDone;
+  }
+
+  /** Paint the panels, the rail and the two buttons for `currentStep`.
+   *  Takes the caller's readiness where there is one: this runs on every
+   *  keystroke through updateProgressRail, and readiness() walks every block. */
+  function syncStepAffordances(r) {
+    r = r || readiness();
+
+    document.querySelectorAll('[data-step-panel]').forEach(function (panel) {
+      panel.classList.toggle('is-active', panel.dataset.stepPanel === currentStep);
+    });
+
+    document.querySelectorAll('[data-progress-step]').forEach(function (li) {
+      const key = li.dataset.progressStep;
+      const here = key === currentStep;
+      li.classList.toggle('is-current', here);
+      li.classList.toggle('is-locked', !here && !stepReachable(key, r));
+      const btn = li.querySelector('button');
+      if (btn) {
+        if (here) btn.setAttribute('aria-current', 'step');
+        else btn.removeAttribute('aria-current');
+      }
+    });
+
+    const back = document.getElementById('coBack');
+    if (back) back.hidden = STEPS.indexOf(currentStep) <= 0;
+
+    // type, not just label: on the first two steps the button must not be a
+    // submit at all. A required field inside a display:none panel is still a
+    // candidate for constraint validation, so an implicit submission from a
+    // date field would be refused by the browser with "an invalid form control
+    // is not focusable" and no visible reason. Only the last step submits.
+    const last = currentStep === STEPS[STEPS.length - 1];
+    const primary = document.getElementById('btnSubmitBooking');
+    if (primary && !isSubmittingBooking) primary.type = last ? 'submit' : 'button';
+    const label = document.getElementById('coPrimaryLabel');
+    if (label) label.textContent = last ? 'Confirm booking' : 'Continue';
+  }
+
+  /**
+   * Go to a step.
+   *
+   * `force` is for going BACKWARDS to fix something — an Edit press in the
+   * summary, a rejected field in a panel that is not on screen — where the
+   * forward gate would be exactly the wrong answer.
+   */
+  function goToStep(key, opts) {
+    opts = opts || {};
+    if (STEPS.indexOf(key) === -1) return false;
+    if (!opts.force && !stepReachable(key)) return false;
+
+    currentStep = key;
+    // updateProgressRail ends in syncStepAffordances, so this paints the
+    // panels, the rail and the two buttons as well as recomputing the hint —
+    // which belongs to the step, and so has to be redone on arrival and not
+    // only when a field changes.
+    updateProgressRail();
+
+    if (!opts.silent) {
+      const panel = document.querySelector('[data-step-panel="' + key + '"]');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      panel?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+    return true;
+  }
+
+  /** Refuse to move, and point at the reason rather than just not moving. */
+  function nudgeBlocker() {
+    const line = document.getElementById('bookingBlocker');
+    if (!line) return;
+    line.classList.remove('is-nudge');
+    void line.offsetWidth; // restart the shake on a repeated press
+    line.classList.add('is-nudge');
+    if (line.dataset.target) jumpToCardById(line.dataset.target);
+  }
+
+  function advanceStep() {
+    const next = STEPS[STEPS.indexOf(currentStep) + 1];
+    if (!next) return;
+    if (!goToStep(next)) nudgeBlocker();
+  }
+
+  /** Scroll a card into view and flash it, revealing its step if it is not
+   *  the one on screen. Shared by the rail, the summary's deep links and the
+   *  hint in the action bar. */
   function jumpToCardById(id) {
     const card = document.getElementById(id || '');
     if (!card) return;
+    const panel = card.closest('[data-step-panel]');
+    if (panel && panel.dataset.stepPanel !== currentStep) {
+      goToStep(panel.dataset.stepPanel, { force: true, silent: true });
+    }
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
     card.classList.remove('block-flash');
@@ -1640,18 +1826,44 @@ document.addEventListener('DOMContentLoaded', function () {
     card.classList.add('block-flash');
   }
 
-  function jumpToStepCard(li) {
-    jumpToCardById(railTargets[li.dataset.progressStep] || '');
-  }
   const progressRail = document.getElementById('checkoutProgress');
   progressRail?.addEventListener('click', function (e) {
     const li = e.target.closest('[data-progress-step]');
-    if (li) jumpToStepCard(li);
+    if (!li) return;
+    if (!goToStep(li.dataset.progressStep)) nudgeBlocker();
   });
-  progressRail?.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const li = e.target.closest('[data-progress-step]');
-    if (li) { e.preventDefault(); jumpToStepCard(li); }
+
+  document.getElementById('coBack')?.addEventListener('click', function () {
+    const prev = STEPS[STEPS.indexOf(currentStep) - 1];
+    if (prev) goToStep(prev, { force: true });
+  });
+
+  // The one button that moves. On the first two steps it is a plain button
+  // and this advances; on the last it is the real submit and the handler
+  // below takes over — except for one guard: a field the browser will refuse
+  // that lives in a panel the guest cannot see. Chrome reports that as a
+  // console error and does nothing at all, so we surface it ourselves.
+  document.getElementById('btnSubmitBooking')?.addEventListener('click', function (e) {
+    if (currentStep !== STEPS[STEPS.length - 1]) {
+      e.preventDefault();
+      advanceStep();
+      return;
+    }
+    if (!bookingForm || bookingForm.checkValidity()) return;
+    const bad = bookingForm.querySelector('input:invalid, select:invalid, textarea:invalid');
+    const panel = bad && bad.closest('[data-step-panel]');
+    if (!panel || panel.dataset.stepPanel === currentStep) return;
+    e.preventDefault();
+    goToStep(panel.dataset.stepPanel, { force: true });
+    // After the panel is painted, or reportValidity has nothing to attach to.
+    setTimeout(function () { try { bad.reportValidity(); } catch (_) {} }, 80);
+  });
+
+  // Edit in the summary goes back to the step, not to a card in a scroll.
+  document.getElementById('summaryInvoice')?.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-sum-edit]');
+    if (!btn) return;
+    goToStep(btn.dataset.sumEdit, { force: true });
   });
 
   // Checkout problems pop up rather than sitting in a banner at the top of a
@@ -1668,6 +1880,16 @@ document.addEventListener('DOMContentLoaded', function () {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const block = target.closest ? target.closest('.reservation-block') : null;
       const scrollTo = block || target;
+
+      // The step the target lives on may not be the one on screen — the
+      // submit checks run from Details and half of what they can refuse is a
+      // room count back in step 2. Scrolling to a display:none element moves
+      // nothing and leaves the toast as the whole instruction again, which is
+      // the failure this function exists to fix.
+      const panel = scrollTo.closest ? scrollTo.closest('[data-step-panel]') : null;
+      if (panel && panel.dataset.stepPanel !== currentStep) {
+        goToStep(panel.dataset.stepPanel, { force: true, silent: true });
+      }
 
       scrollTo.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
 
@@ -1717,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!row) return;
     const block = document.querySelector('.reservation-block[data-index="' + row.dataset.jumpBlock + '"]');
     if (!block) return;
+    if (currentStep !== 'rooms') goToStep('rooms', { force: true, silent: true });
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     block.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
     block.classList.remove('block-flash');
@@ -1724,7 +1947,6 @@ document.addEventListener('DOMContentLoaded', function () {
     block.classList.add('block-flash');
   });
 
-  let isSubmittingBooking = false;
   bookingForm && bookingForm.addEventListener('submit', function(e) {
     if (isSubmittingBooking) {
       e.preventDefault();
@@ -1808,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // All client checks passed — lock both submit buttons against double-submit
     isSubmittingBooking = true;
-    ['btnSubmitBooking', 'btnSubmitBookingMobile'].forEach(id => {
+    ['btnSubmitBooking'].forEach(id => {
       const b = document.getElementById(id);
       if (!b) return;
       b.classList.add('opacity-80', 'pointer-events-none');
@@ -2022,7 +2244,84 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
       });
+
+      paintPickerAvailability(data.summary || []);
+      updateStayAvailability(data.summary || []);
+
+      // The counts have only just landed, and the picker's sold-out state, its
+      // Add labels and the disclosure that folds sold-out styles away are all
+      // computed from them. Without this they wait for the next thing the
+      // guest touches — which, on the Rooms step they have just arrived at, is
+      // the room they are about to be told they cannot have.
+      updateProgressRail();
     } catch (e) { console.error(e); }
+  }
+
+  /**
+   * The scarcity pill over each picker photo.
+   *
+   * The per-block .type-card grid above has carried this since the calendar
+   * learned about bookings, but that grid is never shown any more — the guest
+   * chooses from #roomPicker, which had no way of saying "one left" until the
+   * card was already in the booking.
+   */
+  function paintPickerAvailability(summary) {
+    summary.forEach(function (row) {
+      const card = document.querySelector('#roomPicker .room-card[data-room-type="' + row.room_type + '"]');
+      const pill = card && card.querySelector('[data-room-avail]');
+      if (!pill) return;
+
+      if (row.available <= 0) {
+        pill.textContent = 'Sold out';
+        pill.dataset.state = 'none';
+        pill.hidden = false;
+      } else if (row.available <= 2) {
+        pill.textContent = row.available === 1 ? 'Last one' : 'Only ' + row.available + ' left';
+        delete pill.dataset.state;
+        pill.hidden = false;
+      } else {
+        pill.textContent = '';
+        pill.hidden = true;
+      }
+    });
+  }
+
+  /**
+   * What the chosen dates bought, said in step 1 rather than discovered in
+   * step 2.
+   *
+   * Picking a week that is nearly full and finding out only once the room
+   * grid comes back mostly grey is the sequence this exists to break.
+   */
+  function updateStayAvailability(summary) {
+    const box = document.getElementById('stayAvailability');
+    const line = document.getElementById('stayAvailabilityLine');
+    const sub = document.getElementById('stayAvailabilitySub');
+    if (!box || !line || !sub) return;
+
+    if (!check_in?.value || !check_out?.value) {
+      box.hidden = true;
+      return;
+    }
+
+    const styles = summary.filter(function (row) { return row.available > 0; });
+    const rooms = styles.reduce(function (n, row) { return n + row.available; }, 0);
+    const nights = Math.max(1, Math.round((new Date(check_out.value) - new Date(check_in.value)) / 86400000));
+    const stay = fmtShortDate(check_in.value) + ' – ' + fmtShortDate(check_out.value);
+
+    box.hidden = false;
+    if (rooms === 0) {
+      box.dataset.state = 'none';
+      line.textContent = 'Nothing free for ' + stay + '.';
+      sub.textContent = 'Every room is taken for at least one of these nights. Try shifting a night either way.';
+      return;
+    }
+
+    box.dataset.state = rooms <= 3 ? 'tight' : 'ok';
+    line.textContent = rooms + ' room' + (rooms > 1 ? 's' : '') + ' free across '
+      + styles.length + ' style' + (styles.length > 1 ? 's' : '') + ' for ' + stay + '.';
+    sub.textContent = nights + ' night' + (nights > 1 ? 's' : '')
+      + (rooms <= 3 ? ' — these go quickly, so pick your rooms next.' : ' — pick your rooms next.');
   }
 
   function fmtShortDate(iso) {
@@ -2052,6 +2351,20 @@ document.addEventListener('DOMContentLoaded', function () {
   // re-renders that follow every input (that would be motion noise).
   let summaryWasEmpty = true;
 
+  /** Text → HTML. Guest-typed values (a name, a purpose) reach this. */
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /**
+   * The summary is the only thing on screen showing all three steps at once,
+   * which is exactly the job a summary has in a wizard: the form shows where
+   * you are, this shows where you have been. Each block carries the rail's
+   * number, fills its dot once the step is satisfied, and offers Edit — which
+   * goes back to that step rather than scrolling to a card.
+   */
   function generateBookingSummary() {
     const container = document.getElementById('summaryInvoice');
     if (!container) return;
@@ -2059,125 +2372,172 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const checkInVal  = check_in?.value  || '';
     const checkOutVal = check_out?.value || '';
-
-    if (!checkInVal || !checkOutVal) {
-      container.innerHTML = `
-        <div class="text-center py-10 text-stone-500">
-            ${icon('calendar-days')}
-            <p class="font-semibold">Please select your stay dates.</p>
-        </div>`;
-      if (mobileMeta) mobileMeta.textContent = 'Pick your stay dates';
-      summaryWasEmpty = true;
-      syncTotals(0);
-      updateProgressRail();
-      return;
-    }
-
-    let nights = 1;
-    const d1 = new Date(checkInVal);
-    const d2 = new Date(checkOutVal);
-    nights = Math.max(1, Math.round((d2 - d1) / 86400000));
-
-    const blocks = document.querySelectorAll('.reservation-block');
-    if (blocks.length === 0) {
-      container.innerHTML = `
-        <div class="text-center py-10 text-stone-500">
-            ${icon('bed')}
-            <p class="font-semibold">Your total appears once you pick rooms.</p>
-        </div>`;
-      if (mobileMeta) mobileMeta.textContent = 'Add a room to continue';
-      summaryWasEmpty = true;
-      syncTotals(0);
-      updateProgressRail();
-      return;
-    }
-
-    let totalPrice = 0;
-    let roomRows = '';
-
-    blocks.forEach(block => {
-      const typeSelect = block.querySelector('.room-type-select');
-      const typeName   = typeSelect?.selectedOptions[0]?.text?.split('(')[0]?.trim() || 'Unknown Room';
-      const price      = parseFloat(block.querySelector('.res-price-hidden')?.value) || 0;
-      const numGuests  = parseInt(block.querySelector('.res-num-guests')?.value)  || 0;
-      const blockTotal = price * nights;
-      totalPrice += blockTotal;
-
-      // Breakfast chips for this room
-      const mealChips = [];
-      block.querySelectorAll('.meal-qty').forEach(inp => {
-        const q = parseInt(inp.value, 10) || 0;
-        if (q > 0) {
-          const m = inp.name && inp.name.match(/\[meal\]\[([a-z0-9_]+)\]/i);
-          if (m) mealChips.push(q + '× ' + m[1].charAt(0).toUpperCase() + m[1].slice(1));
-        }
-      });
-      const mealLine = mealChips.length
-        ? `<p class="text-[11px] font-semibold text-palay-800 mt-0.5">Breakfast: ${mealChips.join(', ')}</p>`
-        : '';
-
-      roomRows += `
-        <div class="sum-row flex items-start justify-between gap-3 py-3.5 border-b border-emerald-deep/10 last:border-0" data-jump-block="${block.dataset.index}" title="Review this room">
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-ink truncate">${typeName}</p>
-            <p class="text-[11px] font-semibold text-stone-500 mt-0.5">${numGuests} ${numGuests === 1 ? 'guest' : 'guests'} &middot; room assigned on confirmation</p>
-            <p class="text-[11px] font-semibold text-stone-500">${formatPrice(price)} &times; ${nights} ${nights === 1 ? 'night' : 'nights'}</p>
-            ${mealLine}
-          </div>
-          <span class="text-sm font-extrabold text-palay-800 tabnum">${formatPrice(blockTotal)}</span>
-        </div>`;
-    });
-
-    const discountNote = document.getElementById('request_discount')?.checked
-      ? `
-      <div class="mt-4 text-xs font-bold text-stone-700 bg-gold/10 rounded-xl px-4 py-3 border border-gold/30 leading-relaxed flex items-start gap-1.5">
-          ${icon('circle-info')}
-          <div>20% Senior/PWD discount will be calculated and applied at check-in upon verification.</div>
-      </div>`
-      : '';
-
+    const blocks = Array.prototype.slice.call(document.querySelectorAll('.reservation-block'));
     const guestsTotal = parseInt(expectedGuestsInput?.value) || 1;
 
-    container.innerHTML = `
-      <div class="grid grid-cols-3 items-center bg-white/60 ring-1 ring-emerald-deep/5 rounded-2xl px-2 py-3 text-center">
-        <div>
-          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Check-in</span>
-          <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkInVal)}</span>
-        </div>
-        <div class="border-x border-emerald-deep/10">
-          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Nights</span>
-          <span class="block text-[13px] font-extrabold text-palay-800 mt-0.5">${nights}</span>
-        </div>
-        <div>
-          <span class="block font-label text-[10px] uppercase tracking-[0.22em] text-ink-faint">Check-out</span>
-          <span class="block text-[13px] font-extrabold text-ink mt-0.5">${fmtShortDate(checkOutVal)}</span>
-        </div>
-      </div>
-      <div class="mt-1.5 text-center text-[11px] font-semibold text-stone-500">${guestsTotal} guest${guestsTotal > 1 ? 's' : ''} expected</div>
-      <div class="space-y-1 bg-white/60 p-4 rounded-2xl ring-1 ring-emerald-deep/5 mt-3">
-        ${roomRows}
-      </div>
-      <div class="mt-5 bg-emerald-deep p-5 rounded-2xl flex justify-between items-center">
-        <div>
-          <span class="font-label text-[10px] uppercase tracking-[0.24em] text-cream/60">Total Due</span>
-          <span class="block text-[11px] font-semibold text-cream/70 mt-0.5">${blocks.length} ${blocks.length === 1 ? 'room' : 'rooms'} for ${nights} ${nights === 1 ? 'night' : 'nights'}</span>
-        </div>
-        <div class="font-display text-2xl text-gold-soft tabnum" id="summaryTotalAmount">${formatPrice(totalPrice)}</div>
-      </div>
-      ${discountNote}
-    `;
-    if (mobileMeta) mobileMeta.textContent = `${blocks.length} room${blocks.length > 1 ? 's' : ''} · ${nights} night${nights > 1 ? 's' : ''}`;
-    if (summaryWasEmpty) {
-      // Empty → populated: bridge the swap with the shared 150ms pop
+    const nights = (checkInVal && checkOutVal)
+      ? Math.max(1, Math.round((new Date(checkOutVal) - new Date(checkInVal)) / 86400000))
+      : 0;
+
+    // Rooms, with their subtotals. Breakfast rides along on the room it was
+    // ordered for — it costs nothing, so it is a line of description, not a
+    // charge.
+    let totalPrice = 0;
+    let roomRows = '';
+    blocks.forEach(function (block) {
+      const sel = block.querySelector('.room-type-select');
+      const opt = sel && sel.selectedOptions ? sel.selectedOptions[0] : null;
+      const typeName = (sel && sel.value && opt) ? opt.textContent.replace(/\s*\(.*$/, '').trim() : 'Room';
+      const price = parseFloat(block.querySelector('.res-price-hidden')?.value) || 0;
+      const inRoom = parseInt(block.querySelector('.res-num-guests')?.value) || 0;
+      const subtotal = price * Math.max(1, nights);
+      if (sel && sel.value) totalPrice += subtotal;
+
+      const meals = [];
+      block.querySelectorAll('.meal-qty').forEach(function (inp) {
+        const q = parseInt(inp.value, 10) || 0;
+        const m = inp.name && inp.name.match(/\[meal\]\[([a-z0-9_]+)\]/i);
+        if (q > 0 && m) meals.push(q + '\u00d7 ' + m[1].charAt(0).toUpperCase() + m[1].slice(1));
+      });
+
+      roomRows += '<div class="co-sum-row" data-jump-block="' + esc(block.dataset.index) + '">'
+        + '<span>' + esc(typeName) + (inRoom ? ' \u00b7 ' + inRoom + ' guest' + (inRoom > 1 ? 's' : '') : '')
+        + (meals.length ? '<br>' + esc(meals.join(', ')) : '')
+        + '</span><span>' + (sel && sel.value ? formatPrice(subtotal) : '\u2014') + '</span></div>';
+    });
+
+    // What the guest has told us about themselves, read back rather than
+    // re-listed: the name and the number the desk would ring.
+    const val = function (name) {
+      return (bookingForm?.querySelector('[name="' + name + '"]')?.value || '').trim();
+    };
+    const who = [val('first_name'), val('last_name')].filter(Boolean).join(' ');
+    const phone = val('guest_phone');
+
+    const stayDone = !!nights;
+    const roomsDone = blocks.length > 0 && totalPrice > 0;
+    const whoDone = !!(who && phone);
+
+    const block = function (n, key, label, done, value, sub, rows, placeholder) {
+      return '<div class="co-sum-block" data-done="' + (done ? '1' : '0') + '">'
+        + '<div class="co-sum-head">'
+        + '<span class="co-sum-dot">' + (done ? '\u2713' : n) + '</span>'
+        + '<span class="co-sum-label">' + label + '</span>'
+        + '<button type="button" class="co-sum-edit" data-sum-edit="' + key + '">Edit</button>'
+        + '</div>'
+        + '<div class="co-sum-value" data-empty="' + (value ? '0' : '1') + '">' + (value || placeholder || 'Not chosen yet') + '</div>'
+        + (sub ? '<div class="co-sum-sub">' + sub + '</div>' : '')
+        + (rows || '')
+        + '</div>';
+    };
+
+    let html = block(1, 'dates', 'Stay', stayDone,
+      stayDone ? esc(fmtShortDate(checkInVal)) + ' \u2013 ' + esc(fmtShortDate(checkOutVal)) : '',
+      stayDone ? nights + ' night' + (nights > 1 ? 's' : '') + ' \u00b7 ' + guestsTotal + ' guest' + (guestsTotal > 1 ? 's' : '') : '');
+
+    html += block(2, 'rooms', 'Rooms', roomsDone,
+      blocks.length ? blocks.length + ' room' + (blocks.length > 1 ? 's' : '') : '',
+      '', roomRows);
+
+    html += block(3, 'details', 'Guest', whoDone,
+      who ? esc(who) : '', phone ? esc(phone) : '', '', 'Not filled in yet');
+
+    // The tally. No discount figure is invented here: the 20% is applied at
+    // the desk once the IDs are verified, and quoting a number the system has
+    // not agreed to would be a promise this page cannot keep.
+    const wantsDiscount = !!document.getElementById('request_discount')?.checked;
+    html += '<div class="co-sum-tally">'
+      + '<div class="co-sum-tally-row"><span>Rooms \u00d7 ' + (nights || 1) + ' night' + ((nights || 1) > 1 ? 's' : '') + '</span>'
+      + '<span>' + (totalPrice ? formatPrice(totalPrice) : '\u2014') + '</span></div>'
+      + (wantsDiscount
+        ? '<div class="co-sum-tally-row" data-kind="discount"><span>Senior / PWD 20%</span><span>Applied at the desk</span></div>'
+        : '')
+      + '<div class="co-sum-total"><span class="co-sum-total-label">Total</span>'
+      + '<span class="co-sum-total-value tabnum" id="summaryTotalAmount">' + (totalPrice ? formatPrice(totalPrice) : '\u2014') + '</span></div>'
+      + '<p class="co-sum-note">' + (totalPrice
+        ? 'Nothing to pay now. Settled ' + (wantsDiscount ? 'at the front desk.' : 'online or at the desk.')
+        : 'Your total appears once you have dates and rooms.') + '</p>'
+      + '</div>';
+
+    container.innerHTML = html;
+
+    if (mobileMeta) {
+      mobileMeta.textContent = !stayDone ? 'Pick your stay dates'
+        : !blocks.length ? 'Add a room to continue'
+        : blocks.length + ' room' + (blocks.length > 1 ? 's' : '') + ' \u00b7 ' + nights + ' night' + (nights > 1 ? 's' : '');
+    }
+
+    if (summaryWasEmpty && totalPrice) {
+      // Empty \u2192 populated: bridge the swap with the shared 150ms pop
       container.classList.remove('animate-pop');
       void container.offsetWidth; // restart if a previous pop is mid-flight
       container.classList.add('animate-pop');
       summaryWasEmpty = false;
+    } else if (!totalPrice) {
+      summaryWasEmpty = true;
     }
+
     syncTotals(totalPrice);
+    syncPicksList();
     updateProgressRail();
   }
-  
+
+  /**
+   * The smallest derivative that still covers the 62px thumbnail at 2x.
+   *
+   * currentSrc is the obvious answer and the wrong one: the picker lives in a
+   * display:none panel while the guest is still choosing dates, so the
+   * candidate the browser settled on there is the largest in the set. Reading
+   * the srcset directly asks for the size this box actually needs.
+   */
+  function thumbSrc(img) {
+    if (!img) return '';
+    const sets = [];
+    const picture = img.closest('picture');
+    if (picture) picture.querySelectorAll('source[srcset]').forEach(function (el) { sets.push(el.srcset); });
+    if (img.srcset) sets.push(img.srcset);
+
+    let best = null;
+    sets.forEach(function (set) {
+      set.split(',').forEach(function (part) {
+        const m = part.trim().match(/^(\S+)\s+(\d+)w$/);
+        if (!m) return;
+        const w = parseInt(m[2], 10);
+        if (w >= 160 && (!best || w < best.w)) best = { url: m[1], w: w };
+      });
+    });
+    return best ? best.url : (img.currentSrc || img.src || '');
+  }
+
+  /**
+   * The picks list's own furniture: the thumbnail on each row, the empty
+   * state, and the room-number note that is now said once for the booking
+   * instead of once per room.
+   */
+  function syncPicksList() {
+    const list = document.getElementById('reservationBlocks');
+    if (!list) return;
+    const blocks = list.querySelectorAll('.reservation-block');
+
+    const empty = document.getElementById('reservationEmpty');
+    if (empty) empty.hidden = blocks.length > 0;
+    const keynote = document.getElementById('reservationKeyNote');
+    if (keynote) keynote.hidden = blocks.length === 0;
+
+    blocks.forEach(function (b) {
+      const thumb = b.querySelector('[data-pick-thumb]');
+      const type = b.querySelector('.room-type-select')?.value || '';
+      if (!thumb) return;
+      // Read off the picker card the guest chose from, so a room photo is
+      // named in exactly one place (the Blade that renders the grid).
+      const img = type
+        ? document.querySelector('#roomPicker .room-card[data-room-type="' + type + '"] .room-card-media img')
+        : null;
+      const src = thumbSrc(img);
+      thumb.style.backgroundImage = src ? 'url("' + src + '")' : '';
+    });
+  }
+
   window.generateBookingSummary = generateBookingSummary;
 
   // Initialize page
@@ -2426,6 +2786,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // Badge the room-type cards immediately on load — uses the guest's dates if
     // deep-linked, otherwise a default (tonight) so "Fully booked" shows upfront.
     updateTypeAvailability();
+
+    // Open on the step the page asked for. Normally that is the first, but a
+    // rejected submission comes back on Details, where the refused field is —
+    // forced, because the gate would send the guest back to step 1 and hide
+    // the error behind two Continue presses.
+    //
+    // silent: the wizard's own scroll would drag the guest down the page
+    // before they have read the heading.
+    goToStep(bookingForm?.dataset.openStep || 'dates', { force: true, silent: true });
+    syncPicksList();
   }, 100);
 
 });

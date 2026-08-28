@@ -91,13 +91,10 @@
          reason the guest could see. A guest nobody sent still has a number and
          still has a reason for coming, so asking for them costs a guest with
          nothing to hide nothing, and the desk gets a field it can rely on. --}}
-    <div class="sm:col-span-2 pt-5 mt-1 border-t border-emerald-deep/10">
-        <div class="flex items-center gap-2.5 mb-4">
-            <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><x-booking.ui.icon-solid name="user-tie" class="text-[17px]" /></span>
-            <div>
-                <h4 class="text-sm font-bold text-ink tracking-tight">Reference Person</h4>
-                <p class="text-[11px] font-medium text-ink-faint">Who is endorsing this stay, and what for.</p>
-            </div>
+    <div class="sm:col-span-2 co-subsection">
+        <div class="co-subhead">
+            <h4 class="co-subhead-title">Reference Person</h4>
+            <p class="co-subhead-lead">Who is endorsing this stay, and what for.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -146,10 +143,10 @@
 </div>
 
 <!-- Address Info using Livewire Component in Tailwind Theme -->
-<div class="pt-5 mt-5 border-t border-emerald-deep/10">
-    <div class="flex items-center gap-2.5 mb-5">
-        <span class="w-8 h-8 rounded-xl bg-gold/10 text-palay-800 ring-1 ring-gold/25 flex items-center justify-center shrink-0"><x-booking.ui.icon-solid name="house" class="text-[18px]" /></span>
-        <h4 class="text-sm font-bold text-ink tracking-tight">Home Address</h4>
+<div class="co-subsection">
+    <div class="co-subhead">
+        <h4 class="co-subhead-title">Home Address</h4>
+        <p class="co-subhead-lead">Pick your region first — the rest narrows down from there.</p>
     </div>
     <div class="night-fields">
         <x-address-selector theme="tailwind" :saved="$prefill['address'] ?? []" />
@@ -167,7 +164,7 @@
 {{-- Two things the front desk had no way of knowing until the guest walked in.
      Both optional on purpose: a forced guess about arrival time is worse than
      no answer, because the desk would plan around it. --}}
-<div class="pt-5 mt-5 border-t border-emerald-deep/10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="co-subsection grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
         <label class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5" for="arrival_time">
             Estimated Arrival <span class="text-ink-faint font-medium normal-case">(Optional)</span>
@@ -204,10 +201,7 @@
     </div>
 </div>
 
-<div class="pt-5 mt-5 border-t border-emerald-deep/10 flex items-start gap-2.5">
-    <input type="checkbox" id="request_discount" name="request_discount" class="w-4.5 h-4.5 mt-0.5 rounded-md border-emerald-deep/25 bg-cream-warm/60 text-palay-800 focus:ring-gold focus:ring-2 cursor-pointer transition-[color,background-color,border-color,box-shadow]" value="1">
-    <label for="request_discount" class="text-xs font-bold text-ink-soft cursor-pointer select-none leading-relaxed">
-        I want to request a 20% discount per Senior Citizen / PWD
-        <span class="block text-[11px] font-medium text-ink-faint mt-0.5">You'll upload verification documents after booking.</span>
-    </label>
-</div>
+{{-- The Senior/PWD request used to end this form, one step away from the
+     per-room counters it governs — so a guest ticked a box and nothing
+     visible happened. It is asked in the Rooms step now, immediately above
+     the rooms it opens a counter in. --}}

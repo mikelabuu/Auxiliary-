@@ -1,0 +1,1220 @@
+/* ============================================================
+   CHECKOUT WIZARD — one step at a time.
+
+   15-checkout-flow.css is still the file for the parts that keep a guest
+   out of a dead end: the seating meter, the blocker line, the invalid
+   states. This is the shell those parts now live in — the stepped panels,
+   the card they sit on, the rail across the top and the bar along the
+   bottom — plus the two pieces whose shape changed outright: the room
+   grid's Add affordance and the picks list underneath it.
+
+   Imported directly after 15 so it wins on source order where the two
+   describe the same element (.room-card-qty is a badge here and was a
+   stepper there). It must stay ahead of 18-shadow-lift, which overrides
+   card box-shadow transitions on purpose, and ahead of 20-ios-input-zoom,
+   which is a floor on control font-size.
+
+   EVERY value here lands on a documented step. The layout came from a
+   reference drawn in raw pixels — 18px radii, 25px titles, 13.5px copy,
+   #EDE5D2 rules — and none of that survived the port. DESIGN.md's radius
+   scale is 4 / 12 / 16 / pill, its type ramp has no 13.5px step, and its
+   palette has no hairline colour: the rule below is mixed from gold and
+   canvas-deep, which is what "brass carries the rules" means when it has
+   to be a real value. Same for the voice: Playfair for the editorial
+   line, Oswald for every uppercase micro-label (the Signage Rule),
+   Manrope for copy. The reference set those in Hanken Grotesk and IBM
+   Plex Mono; adopting its layout is not a reason for checkout to speak in
+   a different voice from the pages either side of it.
+   ============================================================ */
+
+/* Warm rules and inner surfaces, stated once and derived from the palette.
+
+   The boutique canvas and the card surface are 1.5 lightness points apart,
+   which is not enough separation on its own — the old cards leaned on a
+   ring plus a long shadow to be seen at all. This layout gives the border
+   the job instead, which is why it is a real brass-tinted hairline and not
+   an ink at 8% alpha: a green-tinted rule on cream reads as dirt, and the
+   Ink-Not-Gray Rule cuts the same way for edges as it does for text. */
+.co-layout {
+    --co-line: color-mix(in oklch, var(--color-gold) 14%, var(--color-canvas-deep));
+    --co-line-soft: color-mix(in oklch, var(--color-gold) 8%, var(--color-cream-warm));
+    /* A row inside a card is a step DOWN from the card, not up: there is no
+       paper whiter than cream-warm in this world (the No-White Rule), so
+       depth inside a surface is made by recessing toward the page. */
+    --co-surface-hi: color-mix(in oklch, var(--color-cream) 45%, var(--color-cream-warm));
+    --co-surface-lo: var(--color-canvas-deep);
+    /* shadow-tint, per DESIGN.md — evergreen-shifted, never neutral black. */
+    --co-card-shadow: 0 2px 14px -4px oklch(15% 0.05 160 / 0.08);
+}
+
+/* ── Page skeleton ────────────────────────────────────────────────
+   The form beside a summary that follows it down the page. Below lg the
+   summary stacks underneath, and the action bar's own total is what keeps
+   the figure in view. */
+.co-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (min-width: 1024px) {
+    .co-layout {
+        grid-template-columns: minmax(0, 1fr) 22rem;
+        gap: 1.25rem;
+    }
+}
+
+.co-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.co-side { min-width: 0; }
+
+@media (min-width: 1024px) {
+    .co-side {
+        position: sticky;
+        top: 6rem;
+    }
+}
+
+/* ── The card ─────────────────────────────────────────────────────
+   A gold hairline, an editorial title, one line saying what the step is
+   for. The icon chip and the "Step 2 of 3" eyebrow that used to head every
+   card are gone: inside a wizard showing one card at a time, a card
+   repeating the number the rail is already showing is the least useful
+   line on screen. */
+.co-card {
+    border: 1px solid var(--co-line);
+    border-radius: 1rem;
+    background: var(--color-cream-warm);
+    box-shadow: var(--co-card-shadow);
+    padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .co-card { padding: 1.75rem; }
+}
+
+.co-card-head { margin-bottom: 1.25rem; }
+
+.co-card-rule {
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--color-gold);
+}
+
+.co-card-headline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.75rem;
+}
+
+/* Display sm — "secondary panel titles", which is exactly what a step is. */
+.co-card-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+    min-width: 0;
+}
+
+.co-card-aside { flex: 0 0 auto; }
+
+.co-card-lead {
+    margin-top: 0.5rem;
+    max-width: 58ch;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+/* ── The rail ─────────────────────────────────────────────────────
+   Three equal segments, each a dot, a name and a bar underneath. The bar
+   is the state: hairline while the step is ahead, gold while it is live,
+   emerald once it is satisfied (the .done rules live in 08-utilities with
+   the rest of the rail's completed state).
+
+   The un-done track has to be DARKER than the page, not lighter —
+   white-on-cream is invisible. */
+.co-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0 0 2rem;
+    padding: 0;
+    list-style: none;
+}
+
+.checkout-step { flex: 1 1 11rem; }
+
+.co-rail-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.co-rail-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+}
+
+.step-dot {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    flex: none;
+    border-radius: 9999px;
+    border: 1px solid var(--co-line);
+    background: var(--color-cream-warm);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-ink-faint);
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+
+.step-check {
+    display: none;
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.co-rail-label {
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    line-height: 1.2;
+    color: var(--color-ink-faint);
+    transition: color 200ms ease;
+}
+
+.step-bar {
+    display: block;
+    height: 3px;
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--color-emerald-deep) 14%, transparent);
+    transition: background-color 300ms ease;
+}
+
+/* The live step. Gold, not emerald: emerald is what "finished" looks like
+   two rules down, and a rail where current and complete share a colour
+   tells the guest nothing about where they are. */
+.checkout-step.is-current .step-dot {
+    border-color: var(--color-gold);
+    background: color-mix(in oklch, var(--color-gold) 16%, var(--color-cream-warm));
+    color: var(--color-brass-ink);
+}
+
+.checkout-step.is-current .co-rail-label { color: var(--color-ink); }
+.checkout-step.is-current .step-bar { background: var(--color-gold); }
+
+/* A step the guest cannot reach yet still reads, it just does not invite a
+   press. Set by booking.js from the same gate Continue uses. */
+.checkout-step.is-locked .co-rail-btn { cursor: default; }
+.checkout-step.is-locked .co-rail-head { opacity: 0.55; }
+
+/* ── Panels ───────────────────────────────────────────────────────
+   Hidden, never unmounted: every field stays in the DOM so the reseating
+   pass, the availability pass and the submit contract are untouched by
+   which step happens to be on screen. */
+.co-panel:not(.is-active) { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+    .co-panel.is-active > .co-card {
+        animation: coRise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+}
+
+@keyframes coRise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* ── The action bar ───────────────────────────────────────────────
+   Back, what is still missing, and the one button that moves. Sticky to
+   the foot of the column: under the thumb on a phone, in the corner of the
+   eye on a desktop, and never in a sidebar that is off-screen below lg. */
+.co-actions {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--co-line);
+    border-radius: 1rem;
+    background: var(--color-cream-warm);
+    box-shadow: 0 10px 30px -12px oklch(15% 0.05 160 / 0.3);
+}
+
+.co-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.co-btn[hidden] { display: none; }
+
+.co-btn--ghost {
+    border-color: var(--co-line);
+    background: var(--co-surface-lo);
+    color: var(--color-ink-soft);
+}
+
+.co-btn--ghost:hover { border-color: var(--color-emerald-deep); color: var(--color-emerald-deep); }
+
+/* button-primary, per DESIGN.md: emerald-deep on cream, pill, label type. */
+.co-btn--primary {
+    padding: 0.95rem 1.75rem;
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+}
+
+.co-btn--primary:hover {
+    background: var(--color-emerald);
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--color-gold) 30%, transparent);
+}
+
+.co-btn--primary:disabled {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* The total, for the widths where the summary column is stacked out of
+   sight underneath. */
+.co-actions-total {
+    flex: 0 0 auto;
+    display: grid;
+    line-height: 1.2;
+}
+
+.co-actions-total-label {
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+.co-actions-total-value {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--color-ink);
+    margin-top: 0.125rem;
+}
+
+.co-actions-total-meta {
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+/* The blocker line keeps its own colours and its jump behaviour from
+   15-checkout-flow; inside the bar it simply becomes the flexible middle
+   rather than a block above a button. */
+.co-actions .blocker-line {
+    flex: 1 1 9rem;
+    min-width: 7rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+/* Pressing Continue with something still missing does not silently do
+   nothing: the hint beside it shakes once and the offending control is
+   scrolled to and flashed. A control that refuses without saying so is the
+   worst version of a gate. */
+.blocker-line.is-nudge {
+    animation: coNudge 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes coNudge {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-3px); }
+    40%, 60% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .blocker-line.is-nudge { animation: none; }
+    .co-panel.is-active > .co-card { animation: none; }
+}
+
+/* ── Small shared pieces ──────────────────────────────────────────── */
+
+/* Section signage inside a card. Oswald at micro, per the Signage Rule. */
+.co-eyebrow {
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+    margin: 0 0 0.75rem;
+}
+
+.co-eyebrow--spaced { margin-top: 1.25rem; }
+
+/* What the dates just bought. */
+.co-note {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in oklch, var(--color-emerald-deep) 14%, transparent);
+    border-radius: 12px;
+    background: color-mix(in oklch, var(--color-emerald-deep) 4%, transparent);
+}
+
+.co-note[hidden] { display: none; }
+
+.co-note-line {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--color-emerald-deep);
+}
+
+.co-note-sub {
+    margin: 0.125rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-note[data-state='tight'] {
+    border-color: color-mix(in oklch, var(--color-gold) 45%, transparent);
+    background: color-mix(in oklch, var(--color-gold) 10%, transparent);
+}
+
+.co-note[data-state='tight'] .co-note-line { color: var(--color-brass-ink); }
+
+.co-note[data-state='none'] {
+    border-color: color-mix(in oklch, var(--color-ember-600) 35%, transparent);
+    background: color-mix(in oklch, var(--color-ember-600) 8%, transparent);
+}
+
+.co-note[data-state='none'] .co-note-line { color: var(--color-ember-700); }
+
+/* A decision with its consequence written under it: the Senior/PWD request
+   and the booking terms are the same object in two places. */
+.co-check-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--co-line);
+    border-radius: 12px;
+    background: var(--co-surface-hi);
+}
+
+.co-check-card--terms.is-missing {
+    border-color: color-mix(in oklch, var(--color-ember-600) 45%, transparent);
+    background: color-mix(in oklch, var(--color-ember-600) 5%, transparent);
+}
+
+.co-check {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.125rem;
+    flex: none;
+    accent-color: var(--color-emerald-deep);
+    cursor: pointer;
+}
+
+.co-check-body {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.co-check-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--color-ink);
+    cursor: pointer;
+}
+
+.co-check-sub {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-check-more {
+    justify-self: start;
+    margin-top: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-brass-ink);
+}
+
+.co-check-more:hover { color: var(--color-emerald-deep); }
+
+.co-terms-full {
+    margin-top: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--co-line);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+}
+
+.co-terms-full strong { color: var(--color-ink); font-weight: 700; }
+
+/* One press that folds a group away and says how big it is. */
+.co-disclosure {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--co-line);
+    border-radius: 9999px;
+    background: var(--co-surface-lo);
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-soft);
+    transition: color 180ms ease, border-color 180ms ease;
+}
+
+.co-disclosure:hover { border-color: var(--color-gold); color: var(--color-ink); }
+.co-disclosure[hidden] { display: none; }
+
+/* Editorial sub-headings inside the Details card. */
+.co-subsection {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--co-line-soft);
+}
+
+.co-subhead { margin-bottom: 1.25rem; }
+
+/* Heading — "section heads inside a surface". */
+.co-subhead-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    color: var(--color-ink);
+}
+
+.co-subhead-lead {
+    margin-top: 0.125rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+/* ── The room grid's Add affordance ───────────────────────────────
+   The card kept its photo, its capacity pill and its rate from
+   15-checkout-flow; what changed is the bottom of it. A stepper asked "how
+   many of these", which is a question about a quantity whose consequences
+   are not on screen. Add says what it does, and the room it produces
+   appears in the list underneath with its own guest count and its own way
+   out. */
+.room-card-media { position: relative; }
+
+/* What is left of this style for these dates, over the photo where the
+   guest is already looking. */
+.room-card-avail {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    background: var(--color-gold);
+    color: var(--color-clsu-950);
+    box-shadow: 0 2px 8px oklch(15% 0.05 160 / 0.25);
+}
+
+.room-card-avail[hidden] { display: none; }
+
+/* ember-700, not ember-600: cream on 600 lands at 4.36:1, and this pill is
+   10px Oswald — under the 4.5 floor for text that small. The darker step in
+   the same ramp clears it without introducing a colour. */
+.room-card-avail[data-state='none'] {
+    background: var(--color-ember-700);
+    color: var(--color-cream);
+}
+
+/* How many of this style the booking holds. Only drawn on a card that has
+   been taken — a "0" on every other card is six pieces of noise. */
+.room-card-qty {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    display: none;
+    min-width: 1.375rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 0 2px 8px oklch(15% 0.05 160 / 0.3);
+}
+
+.room-card.is-chosen .room-card-qty { display: block; }
+
+.room-add {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-emerald-deep);
+    border-radius: 9999px;
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.room-add:hover:not(:disabled) { background: var(--color-emerald); border-color: var(--color-emerald); }
+
+/* Already taken: still live, because a second Double is a real thing to
+   want, but no longer the loudest control on the card. */
+.room-card.is-chosen .room-add {
+    background: transparent;
+    color: var(--color-emerald-deep);
+}
+
+.room-card.is-chosen .room-add:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--color-emerald-deep) 8%, transparent);
+    border-color: var(--color-emerald-deep);
+    color: var(--color-emerald-deep);
+}
+
+.room-add:disabled {
+    border-color: var(--co-line);
+    background: var(--co-surface-lo);
+    color: var(--color-ink-faint);
+    cursor: not-allowed;
+}
+
+/* Sold-out styles stay in the grid — the availability pass, the fit pass
+   and the suggestion all read every card — but a guest scanning for a room
+   should not have to read past four of them. */
+#roomPicker.hide-sold-out .room-card.is-sold-out { display: none; }
+
+/* ── The picks list ───────────────────────────────────────────────
+   What used to be a 3xl-radius panel per room, with its own header rule, a
+   numbered gold bead, a two-column count grid and a paragraph about room
+   numbers — about 320px of chrome per room, inside a card that already
+   said what it was. A guest reads the room back, moves a person in or out
+   of it, and drops it. That is a row. */
+.co-picks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.co-picks:empty { display: none; }
+
+.co-picks-empty {
+    padding: 1.25rem;
+    border: 1px dashed color-mix(in oklch, var(--color-brass-ink) 25%, var(--co-line));
+    border-radius: 1rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-picks-empty[hidden] { display: none; }
+
+.reservation-block {
+    padding: 0.75rem;
+    border: 1px solid var(--co-line);
+    border-radius: 1rem;
+    background: var(--co-surface-hi);
+    transition: border-color 200ms ease;
+}
+
+.reservation-block:hover { border-color: color-mix(in oklch, var(--color-gold) 55%, var(--co-line)); }
+
+.pick-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.pick-thumb {
+    flex: none;
+    width: 3.875rem;
+    height: 2.875rem;
+    border-radius: 12px;
+    background-color: color-mix(in oklch, var(--color-emerald-deep) 8%, transparent);
+    background-size: cover;
+    background-position: center;
+}
+
+.pick-id {
+    flex: 1 1 9rem;
+    min-width: 0;
+    display: grid;
+    gap: 0.125rem;
+}
+
+.pick-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-ink);
+}
+
+.pick-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.pick-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.pick-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pick-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pick-step {
+    display: grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    flex: none;
+    border: 1px solid var(--co-line);
+    border-radius: 12px;
+    background: var(--co-surface-lo);
+    color: var(--color-ink-soft);
+    cursor: pointer;
+    transition: color 180ms ease, border-color 180ms ease;
+}
+
+.pick-step:hover:not(:disabled) { border-color: var(--color-emerald-deep); color: var(--color-emerald-deep); }
+.pick-step:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pick-input {
+    width: 2.75rem;
+    padding: 0.5rem 0.25rem;
+    border: 1px solid var(--co-line);
+    border-radius: 12px;
+    background: var(--color-cream-warm);
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    outline: none;
+    appearance: textfield;
+}
+
+.pick-input::-webkit-inner-spin-button,
+.pick-input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+
+.pick-input:focus {
+    border-color: var(--color-emerald-deep);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-emerald-deep) 10%, transparent);
+}
+
+.pick-remove {
+    padding: 0.5rem;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+    transition: color 180ms ease;
+}
+
+.pick-remove:hover { color: var(--color-ember-700); }
+
+.pick-note {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.pick-note:empty { display: none; }
+
+/* The senior counter only exists once the guest has asked for the
+   discount, one card up. The input stays in the DOM at 0 either way, so a
+   booking that never asks still posts the field the server expects. */
+.pick-seniors {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--co-line);
+}
+
+.co-picks.wants-seniors .pick-seniors { display: flex; }
+
+.pick-seniors-label {
+    flex: 1 1 12rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.pick-seniors .pick-note { flex: 1 1 100%; margin-top: 0; }
+
+/* Breakfast, behind a press: optional, free, and not something a guest
+   picking rooms is deciding on. */
+.pick-meals { margin-top: 0.75rem; }
+
+.pick-meals-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+    transition: color 180ms ease;
+}
+
+.pick-meals-toggle:hover { color: var(--color-emerald-deep); }
+.pick-meals-opt { font-weight: 500; color: var(--color-ink-faint); }
+
+.pick-meals-panel {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--co-line-soft);
+    border-radius: 12px;
+    background: var(--color-cream-warm);
+}
+
+.pick-meals-note {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-faint);
+    margin-bottom: 0.75rem;
+}
+
+.pick-meals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5.25rem, 1fr));
+    gap: 0.75rem;
+}
+
+.pick-meal-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    text-align: center;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+.pick-meal-control {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid var(--co-line);
+    border-radius: 12px;
+    background: var(--co-surface-hi);
+}
+
+.pick-meal-control button {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.875rem;
+    flex: none;
+    border: 0;
+    background: none;
+    color: var(--color-ink-faint);
+    cursor: pointer;
+    transition: color 180ms ease, background-color 180ms ease;
+}
+
+.pick-meal-control button:hover { background: var(--co-surface-lo); color: var(--color-brass-ink); }
+
+.pick-meal-control .meal-qty {
+    width: 100%;
+    min-width: 0;
+    padding: 0.25rem 0.125rem;
+    border: 0;
+    background: none;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    outline: none;
+    appearance: textfield;
+}
+
+.pick-meal-control .meal-qty::-webkit-inner-spin-button,
+.pick-meal-control .meal-qty::-webkit-outer-spin-button { appearance: none; margin: 0; }
+
+/* Said once for the booking, not once per room. */
+.co-keynote {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-keynote[hidden] { display: none; }
+.co-keynote .icon-solid { margin-top: 0.1875rem; color: var(--color-brass-ink); }
+
+/* ── The summary ──────────────────────────────────────────────────
+   A numbered block per step, each one addressable: the dot repeats the
+   rail's number, and Edit goes back to that step. It is the only thing on
+   screen that shows all three steps at once, which is exactly the job a
+   summary has in a wizard. */
+.co-summary { padding: 1.25rem; }
+
+@media (min-width: 1024px) {
+    .co-summary {
+        max-height: calc(100dvh - 8rem);
+        overflow-y: auto;
+    }
+}
+
+.co-summary-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    color: var(--color-ink);
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--co-line-soft);
+}
+
+.co-summary-empty {
+    padding: 2rem 0;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--color-ink-faint);
+}
+
+.co-sum-block {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--co-line-soft);
+}
+
+.co-sum-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.co-sum-dot {
+    display: grid;
+    place-items: center;
+    width: 1.0625rem;
+    height: 1.0625rem;
+    flex: none;
+    border-radius: 9999px;
+    border: 1px solid var(--co-line);
+    background: var(--color-cream-warm);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-ink-faint);
+}
+
+.co-sum-block[data-done='1'] .co-sum-dot {
+    border-color: var(--color-emerald-deep);
+    background: var(--color-emerald-deep);
+    color: var(--color-cream);
+}
+
+.co-sum-label {
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+.co-sum-edit {
+    margin-left: auto;
+    padding: 0.125rem 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-brass-ink);
+}
+
+.co-sum-edit:hover { color: var(--color-emerald-deep); }
+
+.co-sum-value {
+    margin-top: 0.5rem;
+    padding-left: 1.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--color-ink);
+}
+
+.co-sum-value[data-empty='1'] { font-weight: 500; color: var(--color-ink-faint); }
+
+.co-sum-sub {
+    padding-left: 1.625rem;
+    margin-top: 0.125rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-sum-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    padding-left: 1.625rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.co-sum-row span:first-child { color: var(--color-ink-soft); font-weight: 500; }
+.co-sum-row span:last-child { font-weight: 700; white-space: nowrap; color: var(--color-ink); }
+
+.co-sum-tally {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.75rem 0 0.25rem;
+}
+
+.co-sum-tally-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-sum-tally-row[data-kind='discount'] { color: var(--color-emerald-deep); font-weight: 600; }
+
+.co-sum-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.125rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--co-line-soft);
+}
+
+.co-sum-total-label {
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+.co-sum-total-value {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--color-ink);
+}
+
+.co-sum-note {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+}
+
+.co-summary-hold,
+.co-summary-desk {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: color-mix(in oklch, var(--color-gold) 12%, var(--color-cream-warm));
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+}
+
+.co-summary-hold strong,
+.co-summary-desk strong { color: var(--color-ink); font-weight: 700; }
+
+.co-summary-desk {
+    background: color-mix(in oklch, var(--color-emerald-deep) 6%, var(--color-cream-warm));
+}
+
+.co-summary-assure {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+    margin-top: 1.25rem;
+    text-align: center;
+}
+
+.co-summary-assure span {
+    display: grid;
+    justify-items: center;
+    gap: 0.25rem;
+    font-family: var(--font-label);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-ink-faint);
+}
+
+.co-summary-assure .icon-solid {
+    font-size: 1rem;
+    color: var(--color-brass-ink);
+}
+
+/* ── Narrow widths ───────────────────────────────────────────────
+   The action bar is three items wide; on a phone the hint gets a line of
+   its own so neither button shrinks below its tap target, and the rail
+   drops to dots because three wide-tracked labels do not fit across 375px
+   without breaking mid-word. */
+@media (max-width: 30rem) {
+    /* Two rows, not four. Left to wrap on its own the bar came out 162px tall
+       — a fifth of a phone screen permanently spent on furniture. The hint
+       takes the first row because it is the only part that needs the width;
+       Back drops to its arrow, the total stops repeating the room-and-night
+       line the summary already carries, and the button that moves gets
+       everything left over. */
+    .co-actions { gap: 0.5rem 0.75rem; }
+    .co-actions .blocker-line { flex: 1 1 100%; order: -1; }
+    .co-btn--ghost { flex: 0 0 auto; padding-left: 0.875rem; padding-right: 0.875rem; }
+    .co-btn--ghost .co-btn-word { display: none; }
+    .co-actions-total { flex: 0 0 auto; }
+    .co-actions-total-meta { display: none; }
+    .co-btn--primary { flex: 1 1 auto; padding-left: 1rem; padding-right: 1rem; }
+
+    .co-rail-label { display: none; }
+    .checkout-step { flex: 1 1 4rem; }
+
+    .pick-controls { margin-left: 0; width: 100%; justify-content: space-between; }
+    .pick-id { flex: 1 1 6rem; }
+}

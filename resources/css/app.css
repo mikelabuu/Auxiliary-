@@ -97,6 +97,11 @@
 @import './public/13-booking-night-v3.css';
 @import './public/14-auth.css';
 @import './public/15-checkout-flow.css';
+/* The wizard shell the checkout-flow parts now live in. MUST come directly
+   after 15: the two files describe some of the same elements (.room-card-qty
+   is a badge here and was a stepper there) at the same specificity, so it
+   wins on source order alone. */
+@import './public/15b-checkout-wizard.css';
 @import './public/16-hold-countdown.css';
 @import './public/17-stay-card.css';
 /* Compositor-driven hover elevation. After the component layers because it
