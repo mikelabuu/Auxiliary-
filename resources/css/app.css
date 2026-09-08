@@ -102,6 +102,7 @@
    is a badge here and was a stepper there) at the same specificity, so it
    wins on source order alone. */
 @import './public/15b-checkout-wizard.css';
+@import './public/15c-checkout-reservation.css';
 @import './public/16-hold-countdown.css';
 @import './public/17-stay-card.css';
 /* Compositor-driven hover elevation. After the component layers because it

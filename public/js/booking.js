@@ -880,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // see beats one you have to read. Above a dozen the dots stop being
     // countable at a glance, so the figures carry it alone.
     const countEl = document.getElementById('allocCount');
-    const usePips = r.expected > 0 && r.expected <= 12;
+    const usePips = false;
 
     if (pipsEl) {
       if (usePips) {
@@ -897,14 +897,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // The figures are the fallback for a party too big to count as dots, not a
     // second copy of the dots.
-    if (countEl) countEl.hidden = usePips;
+    if (countEl) {
+      countEl.hidden = false;
+      countEl.innerHTML = '<span id="allocAssigned">' + r.assigned + '</span> of <span id="allocExpected">' + r.expected + '</span> guests assigned';
+    }
 
     // Three states, not four. "Too many guests assigned" is gone because it can
     // no longer happen: the steppers stop at the party size, so the rooms
     // cannot outrun it. What is left is the honest progression — none seated,
     // some seated, all seated — and each says the one thing to do next.
     let state = 'empty';
-    let msg = 'Pick a room style below and we’ll seat your guests in it.';
+    let msg = 'Choose a room below. We’ll assign guests automatically.';
 
     if (r.blocks.length && r.expected > 0) {
       if (r.assigned === 0) {
@@ -925,7 +928,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         msg = '<b>' + short + (short > 1 ? ' guests' : ' guest') + '</b> still ' +
               (short > 1 ? 'need a bed' : 'needs a bed') +
-              (spare ? ' — raise a room with a spare bed, or add another.' : '.');
+              (spare ? '. Adjust guests in your selected rooms, or add another room.' : '. Add another room below.');
       } else {
         state = 'balanced';
         // Everyone is seated, and the picker may well have gone quiet: a room
@@ -933,15 +936,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // That was being enforced in silence — every + greyed out with nothing
         // saying why, and this line congratulating the guest while it happened.
         // If the cap is what stopped them, the cap is what to say.
-        const capped = r.blocks.length >= r.expected;
-        msg = (r.expected === 1
-          ? 'Your guest has a bed.'
-          : 'All ' + r.expected + ' guests have a bed.');
-        if (capped) {
-          msg += r.expected === 1
-            ? ' A room needs someone in it, so one guest is one room — <b>add a guest</b> in step 1 if you want a second.'
-            : ' A room needs someone in it, so ' + r.expected + ' guests can hold at most <b>' + r.expected + ' rooms</b>.';
-        }
+        msg = r.blocks.length + (r.blocks.length === 1 ? ' room' : ' rooms') + ' for ' + r.expected + (r.expected === 1 ? ' guest. Ready for your details.' : ' guests. Ready for your details.');
       }
     }
 
@@ -980,8 +975,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // What the hint says when nothing is in the way. One per step, because
   // "you can confirm" is only true on the last one.
   const READY_HINT = {
-    dates:   'Dates set — next, choose your rooms.',
-    rooms:   'Everyone has a bed — next, your details.',
+    dates:   'Dates set. Choose your rooms next.',
+    rooms:   'Rooms ready. Next, your details.',
     details: 'Everything checks out — you can confirm.'
   };
 
@@ -1124,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', function () {
       note.textContent = 'That is one guest per room — remove a room to go lower.';
       note.dataset.state = 'warn';
     } else {
-      note.textContent = 'Everyone staying, including children. We fit them into rooms in step 3.';
+      note.textContent = 'Include everyone staying, including children.';
       note.dataset.state = 'idle';
     }
   }
@@ -1392,7 +1387,11 @@ document.addEventListener('DOMContentLoaded', function () {
       const tooSmall = strict && item.beds < need && have === 0;
 
       const out = item.row.querySelector('[data-room-qty]');
-      if (out) out.textContent = have;
+      if (out) out.textContent = have + ' selected';
+      const stayPrice = item.row.querySelector('[data-room-stay-price]');
+      const stayNights = check_in?.value && check_out?.value ? Math.round((new Date(check_out.value) - new Date(check_in.value)) / 86400000) : 0;
+      if (stayPrice) stayPrice.textContent = stayNights > 0 ? formatPrice(item.price * stayNights) + ' for ' + stayNights + (stayNights === 1 ? ' night' : ' nights') : '';
+
       item.row.classList.toggle('is-chosen', have > 0);
       item.row.classList.toggle('is-sold-out', soldOut);
       item.row.classList.toggle('is-too-small', tooSmall);
@@ -1461,11 +1460,13 @@ document.addEventListener('DOMContentLoaded', function () {
       const addLabel = item.row.querySelector('[data-room-add-label]');
       if (addLabel) {
         addLabel.textContent = soldOut ? 'Sold out'
-          : outOfStock ? (have === 1 ? 'Only one free' : 'All ' + free + ' added')
+          : outOfStock ? (have === 1 ? 'Selected' : 'All ' + free + ' selected')
           : tooSmall ? 'Too small'
           : (expected > 0 && roomsLeft <= 0 && have === 0) ? 'Room limit reached'
+          : (expected > 0 && roomsLeft <= 0 && have > 0) ? 'Selected'
           : have > 0 ? 'Add another'
-          : 'Add';
+          : 'Choose room';
+        item.row.querySelector('[data-room-add]')?.setAttribute('aria-label', addLabel.textContent + ': ' + item.title);
       }
     });
 
@@ -1726,6 +1727,7 @@ document.addEventListener('DOMContentLoaded', function () {
    *  keystroke through updateProgressRail, and readiness() walks every block. */
   function syncStepAffordances(r) {
     r = r || readiness();
+    document.getElementById('bookingBlocker')?.classList.remove('is-nudge');
 
     document.querySelectorAll('[data-step-panel]').forEach(function (panel) {
       panel.classList.toggle('is-active', panel.dataset.stepPanel === currentStep);
@@ -1755,7 +1757,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const primary = document.getElementById('btnSubmitBooking');
     if (primary && !isSubmittingBooking) primary.type = last ? 'submit' : 'button';
     const label = document.getElementById('coPrimaryLabel');
-    if (label) label.textContent = last ? 'Confirm booking' : 'Continue';
+    if (label) label.textContent = last ? 'Confirm booking' : currentStep === 'dates' ? 'Choose rooms' : 'Guest details';
   }
 
   /**
@@ -1781,6 +1783,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const panel = document.querySelector('[data-step-panel="' + key + '"]');
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       panel?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      const heading = panel?.querySelector('.co-card-title');
+      if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
     }
     return true;
   }
@@ -1850,6 +1854,35 @@ document.addEventListener('DOMContentLoaded', function () {
     // After the panel is painted, or reportValidity has nothing to attach to.
     setTimeout(function () { try { bad.reportValidity(); } catch (_) {} }, 80);
   });
+
+
+  const summaryDisclosure = document.getElementById('checkoutSummary');
+  const summaryTrigger = document.getElementById('coViewSummary');
+  const desktopSummary = window.matchMedia('(min-width: 1024px)');
+  function syncSummaryLayout() {
+    if (!summaryDisclosure) return;
+    summaryDisclosure.open = desktopSummary.matches;
+    summaryTrigger?.setAttribute('aria-expanded', String(summaryDisclosure.open));
+  }
+  desktopSummary.addEventListener('change', syncSummaryLayout);
+  syncSummaryLayout();
+  summaryDisclosure?.addEventListener('toggle', function () {
+    summaryTrigger?.setAttribute('aria-expanded', String(summaryDisclosure.open));
+  });
+  summaryDisclosure?.querySelector('summary')?.addEventListener('click', function (event) {
+    if (desktopSummary.matches) event.preventDefault();
+  });
+  summaryTrigger?.addEventListener('click', function () {
+    if (!summaryDisclosure) return;
+    summaryDisclosure.open = true;
+    summaryDisclosure.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    summaryDisclosure.querySelector('summary')?.focus({ preventScroll: true });
+  });
+  // Invalid controls inside optional/adjustment disclosures must be revealed.
+  bookingForm?.addEventListener('invalid', function (event) {
+    let disclosure = event.target.closest('details');
+    while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement?.closest('details'); }
+  }, true);
 
   // Edit in the summary goes back to the step, not to a card in a scroll.
   document.getElementById('summaryInvoice')?.addEventListener('click', function (e) {
@@ -2342,6 +2375,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function syncTotals(totalPrice) {
     const sideEl = document.getElementById('summaryTotalAmount');
     const mobEl  = document.getElementById('mobileTotalAmount');
+    const compact = document.getElementById('summaryCompactTotal');
+    if (compact) compact.textContent = totalPrice ? formatPrice(totalPrice) : '';
     if (!totalPrice) {
       if (sideEl) sideEl.textContent = '—';
       if (mobEl)  mobEl.textContent  = '—';
@@ -2407,10 +2442,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (q > 0 && m) meals.push(q + '\u00d7 ' + m[1].charAt(0).toUpperCase() + m[1].slice(1));
       });
 
-      roomRows += '<div class="co-sum-row" data-jump-block="' + esc(block.dataset.index) + '">'
-        + '<span>' + esc(typeName) + (inRoom ? ' \u00b7 ' + inRoom + ' guest' + (inRoom > 1 ? 's' : '') : '')
-        + (meals.length ? '<br>' + esc(meals.join(', ')) : '')
-        + '</span><span>' + (sel && sel.value ? formatPrice(subtotal) : '\u2014') + '</span></div>';
+      const pickerImage = sel?.value ? document.querySelector('#roomPicker .room-card[data-room-type="' + sel.value + '"] img') : null;
+      const photo = thumbSrc(pickerImage);
+      roomRows += '<button type="button" class="co-summary-room" data-jump-block="' + esc(block.dataset.index) + '" aria-label="Edit ' + esc(typeName) + '">'
+        + (photo ? '<img src="' + esc(photo) + '" alt="" width="56" height="56">' : '')
+        + '<span class="co-summary-room-info"><strong>' + esc(typeName) + '</strong><span>' + inRoom + (inRoom === 1 ? ' guest' : ' guests') + ' · ' + formatPrice(price) + ' / night</span>'
+        + (meals.length ? '<span>' + esc(meals.join(', ')) + '</span>' : '')
+        + '</span><span class="co-summary-room-price">' + (sel?.value ? formatPrice(subtotal) : 'Pending') + '</span></button>';
+
     });
 
     // What the guest has told us about themselves, read back rather than
@@ -2428,9 +2467,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const block = function (n, key, label, done, value, sub, rows, placeholder) {
       return '<div class="co-sum-block" data-done="' + (done ? '1' : '0') + '">'
         + '<div class="co-sum-head">'
-        + '<span class="co-sum-dot">' + (done ? '\u2713' : n) + '</span>'
         + '<span class="co-sum-label">' + label + '</span>'
-        + '<button type="button" class="co-sum-edit" data-sum-edit="' + key + '">Edit</button>'
+        + '<button type="button" class="co-sum-edit" data-sum-edit="' + key + '" aria-label="Edit ' + label.toLowerCase() + '">Edit</button>'
         + '</div>'
         + '<div class="co-sum-value" data-empty="' + (value ? '0' : '1') + '">' + (value || placeholder || 'Not chosen yet') + '</div>'
         + (sub ? '<div class="co-sum-sub">' + sub + '</div>' : '')
@@ -2459,7 +2497,7 @@ document.addEventListener('DOMContentLoaded', function () {
       + (wantsDiscount
         ? '<div class="co-sum-tally-row" data-kind="discount"><span>Senior / PWD 20%</span><span>Applied at the desk</span></div>'
         : '')
-      + '<div class="co-sum-total"><span class="co-sum-total-label">Total</span>'
+      + '<div class="co-sum-total"><span class="co-sum-total-label">Booking total</span>'
       + '<span class="co-sum-total-value tabnum" id="summaryTotalAmount">' + (totalPrice ? formatPrice(totalPrice) : '\u2014') + '</span></div>'
       + '<p class="co-sum-note">' + (totalPrice
         ? 'Nothing to pay now. Settled ' + (wantsDiscount ? 'at the front desk.' : 'online or at the desk.')
@@ -2526,6 +2564,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!list) return;
     const blocks = list.querySelectorAll('.reservation-block');
 
+    const selectionCount = document.getElementById('selectionCount');
+    const selectedGuests = Array.from(blocks).reduce((total, block) => total + (parseInt(block.querySelector('.res-num-guests')?.value, 10) || 0), 0);
+    if (selectionCount) selectionCount.textContent = blocks.length ? blocks.length + (blocks.length === 1 ? ' room' : ' rooms') + ' · ' + selectedGuests + ' of ' + (parseInt(expectedGuestsInput?.value, 10) || 1) + ' guests assigned' : 'Your choices will appear here';
+    const selectedSection = document.getElementById('coSelectedRooms');
+    if (selectedSection) selectedSection.hidden = !blocks.length;
     const empty = document.getElementById('reservationEmpty');
     if (empty) empty.hidden = blocks.length > 0;
     const keynote = document.getElementById('reservationKeyNote');
@@ -2540,6 +2583,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const img = type
         ? document.querySelector('#roomPicker .room-card[data-room-type="' + type + '"] .room-card-media img')
         : null;
+      const assignedLabel = b.querySelector('[data-assigned-label]');
+      const assigned = parseInt(b.querySelector('.res-num-guests')?.value, 10) || 0;
+      if (assignedLabel) assignedLabel.textContent = assigned + (assigned === 1 ? ' guest' : ' guests');
       const src = thumbSrc(img);
       thumb.style.backgroundImage = src ? 'url("' + src + '")' : '';
     });

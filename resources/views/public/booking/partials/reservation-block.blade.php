@@ -33,7 +33,10 @@
             </span>
         </span>
 
-        <span class="pick-controls">
+        <div class="pick-controls">
+            <details class="co-guest-adjust">
+                <summary><span data-assigned-label>Guests</span><span class="co-adjust-label">Adjust guests</span></summary>
+                <div class="co-guest-adjust-body">
             {{-- One pip per bed, filled as the room fills. Drawn by booking.js
                  once a style is chosen; a count you can see at a glance beats
                  one you have to read. --}}
@@ -68,8 +71,11 @@
                 <span class="count-auto-tag" data-auto-tag hidden>Filled for you</span>
             </span>
 
+
+                </div>
+            </details>
             <button type="button" class="btn-remove-block pick-remove" style="display:none;">Remove</button>
-        </span>
+        </div>
     </div>
 
     <small id="res-__INDEX__-guests-note" class="count-note guests-note pick-note">Pick a room style above and we’ll fill this in for you.</small>

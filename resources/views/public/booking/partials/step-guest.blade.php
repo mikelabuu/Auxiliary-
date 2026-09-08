@@ -23,10 +23,11 @@
     </p>
 @endif
 
+<div class="co-subhead"><h3 class="co-subhead-title">Guest & contact details</h3><p class="co-subhead-lead">Use the name on your ID and a number we can reach.</p></div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
         <label for="guest-first-name" class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5">First Name</label>
-        <input type="text" name="first_name" id="guest-first-name" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <input type="text" name="first_name" autocomplete="given-name" id="guest-first-name" value="{{ old('first_name', $prefill['first_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
     <div>
         {{-- Server-side this has always been required; the input was not, so a
@@ -34,18 +35,18 @@
              trip instead of a hint while they were still standing in the
              field. Only the "(Optional)" fields are optional now. --}}
         <label for="guest-middle-name" class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5">Middle Name</label>
-        <input type="text" name="middle_name" id="guest-middle-name" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <input type="text" name="middle_name" autocomplete="additional-name" id="guest-middle-name" value="{{ old('middle_name', $prefill['middle_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
     <div>
         <label for="guest-last-name" class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5">Last Name</label>
-        <input type="text" name="last_name" id="guest-last-name" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
+        <input type="text" name="last_name" autocomplete="family-name" id="guest-last-name" value="{{ old('last_name', $prefill['last_name'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold" required>
     </div>
     <div>
         <label for="guest-suffix" class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5">Suffix <span class="text-ink-faint font-medium normal-case">(Optional)</span></label>
-        <input type="text" name="suffix" id="guest-suffix" value="{{ old('suffix', $prefill['suffix'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
+        <input type="text" name="suffix" autocomplete="honorific-suffix" id="guest-suffix" value="{{ old('suffix', $prefill['suffix'] ?? '') }}" class="w-full px-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold">
     </div>
 </div>
 
@@ -58,7 +59,7 @@
         <label for="guest_phone" class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5">Contact Number</label>
         <div class="relative flex items-center">
             <x-booking.ui.icon-solid name="phone" class="text-ink-faint absolute left-3.5 text-[18px]" />
-            <input type="tel" name="guest_phone" id="guest_phone" value="{{ old('guest_phone', $prefill['guest_phone'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
+            <input type="tel" name="guest_phone" autocomplete="tel" id="guest_phone" value="{{ old('guest_phone', $prefill['guest_phone'] ?? '') }}" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-emerald-deep/10 bg-cream-warm/60 text-ink text-sm placeholder:text-ink-faint focus:bg-cream-warm focus:border-gold/60 focus:ring-2 focus:ring-gold/20 outline-none transition-[color,background-color,border-color,box-shadow] font-semibold"
                    inputmode="numeric" pattern="^(09|\+639)\d{9}$" placeholder="09xxxxxxxxx" maxlength="13" required>
         </div>
     </div>
@@ -94,7 +95,7 @@
     <div class="sm:col-span-2 co-subsection">
         <div class="co-subhead">
             <h4 class="co-subhead-title">Reference Person</h4>
-            <p class="co-subhead-lead">Who is endorsing this stay, and what for.</p>
+            <p class="co-subhead-lead">Tell us who arranged your stay and the reason for your visit.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -146,7 +147,7 @@
 <div class="co-subsection">
     <div class="co-subhead">
         <h4 class="co-subhead-title">Home Address</h4>
-        <p class="co-subhead-lead">Pick your region first — the rest narrows down from there.</p>
+        <p class="co-subhead-lead">Start with your region, then choose your local address.</p>
     </div>
     <div class="night-fields">
         <x-address-selector theme="tailwind" :saved="$prefill['address'] ?? []" />
@@ -164,7 +165,9 @@
 {{-- Two things the front desk had no way of knowing until the guest walked in.
      Both optional on purpose: a forced guess about arrival time is worse than
      no answer, because the desk would plan around it. --}}
-<div class="co-subsection grid grid-cols-1 sm:grid-cols-2 gap-4">
+<details class="co-optional" @if(old('arrival_time') || old('special_requests')) open @endif>
+    <summary><span>Arrival & special requests</span><span>Optional <span aria-hidden="true">+</span></span></summary>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 co-optional-body">
     <div>
         <label class="font-label block text-xs font-normal text-ink-faint tracking-[0.2em] uppercase mb-1.5" for="arrival_time">
             Estimated Arrival <span class="text-ink-faint font-medium normal-case">(Optional)</span>
@@ -199,7 +202,8 @@
                   placeholder="Ground floor, travelling with an elderly parent, allergies…">{{ old('special_requests') }}</textarea>
         <p class="text-[11px] font-medium text-ink-faint mt-1.5">We'll do our best, though requests aren't guaranteed and don't change your rate.</p>
     </div>
-</div>
+    </div>
+</details>
 
 {{-- The Senior/PWD request used to end this form, one step away from the
      per-room counters it governs — so a guest ticked a box and nothing

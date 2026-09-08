@@ -1,0 +1,223 @@
+/* Guest checkout refinement. Existing availability and validation states remain
+   in 15/15b; every visual rule here is scoped to this reservation surface.
+   Design: brand-preserving overhaul, variance 4 / motion 3 / density 3. */
+.checkout-page.checkout-page.co-redesign {
+    padding-top: 6.5rem;
+    padding-bottom: 9rem;
+}
+.checkout-page.co-redesign .co-intro { margin-bottom: 1.75rem; }
+.checkout-page.co-redesign .co-back-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-bottom: .75rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+}
+.checkout-page.co-redesign .co-back-link:hover { color: var(--color-emerald-deep); text-decoration: underline; }
+.checkout-page.co-redesign .co-intro-line { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.checkout-page.co-redesign .co-intro h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.2rem + 1.5vw, 2.5rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -.018em;
+    color: var(--color-ink);
+}
+.checkout-page.co-redesign .co-intro p { margin-top: .75rem; font-size: .9375rem; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .co-intro-note { display: flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 600; color: var(--color-emerald-deep); }
+.checkout-page.co-redesign .co-layout { gap: 2rem; }
+.checkout-page.co-redesign .co-main { gap: 1.5rem; }
+.checkout-page.co-redesign .co-rail { gap: 0; margin-bottom: 2rem; border-bottom: 1px solid var(--color-canvas-deep); }
+.checkout-page.co-redesign .checkout-step { flex: 1 1 0; min-width: 0; }
+.checkout-page.co-redesign .co-rail-head { gap: .75rem; padding: .75rem .5rem 1rem; }
+.checkout-page.co-redesign .co-rail-label { font-family: var(--font-sans); font-size: .875rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .step-dot { width: 1.75rem; height: 1.75rem; font-family: var(--font-sans); font-size: .8125rem; }
+.checkout-page.co-redesign .step-bar { height: 2px; }
+.checkout-page.co-redesign .co-card { padding: 2rem; border-color: var(--co-line); }
+.checkout-page.co-redesign .co-card-rule { display: none; }
+.checkout-page.co-redesign .co-card-headline { margin-top: 0; }
+.checkout-page.co-redesign .co-card-head { margin-bottom: 1.75rem; }
+.checkout-page.co-redesign .co-card-title { font-size: 1.75rem; line-height: 1.2; }
+.checkout-page.co-redesign .co-card-title:focus { outline: none; }
+.checkout-page.co-redesign .co-card-lead { font-size: .875rem; font-weight: 400; max-width: 56ch; line-height: 1.65; }
+.checkout-page.co-redesign .co-panel { scroll-margin-top: 6rem; }
+.checkout-page.co-redesign .date-presets { gap: .5rem; margin-bottom: 1.25rem; }
+.checkout-page.co-redesign .date-preset { min-height: 2.75rem; padding: .65rem 1rem; font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .date-preset-nights { font-size: .8125rem; font-weight: 400; letter-spacing: 0; }
+.checkout-page.co-redesign .stay-bar { border-radius: 12px; }
+.checkout-page.co-redesign .stay-field { padding: 1.25rem 1rem; }
+.checkout-page.co-redesign .stay-field-label { margin-bottom: .65rem; }
+.checkout-page.co-redesign .stay-field-input, .checkout-page.co-redesign .stay-field-value { font-family: var(--font-sans); font-size: 1rem; font-weight: 600; }
+.checkout-page.co-redesign .co-note { margin-top: 1.5rem; padding: 1rem; }
+.checkout-page.co-redesign .co-note-line { font-size: .875rem; }
+.checkout-page.co-redesign .guest-pop { width: min(20rem, calc(100vw - 4rem)); }
+
+/* A two-column comparison grid with real room photography. */
+.checkout-page.co-redesign .room-picker-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.checkout-page.co-redesign .room-card { border-radius: 12px; background: var(--color-cream-warm); border-color: var(--co-line); box-shadow: none; }
+.checkout-page.co-redesign .room-card.is-chosen { border-color: var(--color-emerald-deep); box-shadow: inset 0 0 0 1px var(--color-emerald-deep); }
+.checkout-page.co-redesign .room-card-media { aspect-ratio: 16 / 10; padding: .5rem .5rem 0; background: transparent; }
+.checkout-page.co-redesign .room-card-media img { border-radius: 4px; }
+.checkout-page.co-redesign .room-card-body { padding: 1rem; gap: .6rem; }
+.checkout-page.co-redesign .room-card-title { font-family: var(--font-sans); font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.checkout-page.co-redesign .room-card-line { gap: .5rem; }
+.checkout-page.co-redesign .room-cap-pill { padding: 0; border: 0; background: none; font-family: var(--font-sans); font-size: .8125rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .room-card-price { font-size: 1rem; font-weight: 700; color: var(--color-ink); }
+.checkout-page.co-redesign .room-card-per { font-family: var(--font-sans); font-size: .8125rem; font-weight: 400; letter-spacing: 0; }
+.checkout-page.co-redesign .room-card-fit { min-height: 0; margin: 0; font-family: var(--font-sans); font-size: .8125rem; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .room-card-fit:empty, .checkout-page.co-redesign .room-card-note:empty { display: none; }
+.checkout-page.co-redesign .room-card-note { font-size: .8125rem; margin: 0; }
+.checkout-page.co-redesign .co-room-stay-price { display: block; margin-top: auto; padding-top: .25rem; font-size: .8125rem; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .room-card-avail { display: none; } /* Availability is also shown by the text beneath the rate. */
+.checkout-page.co-redesign .room-card-qty { top: 1rem; right: 1rem; padding: .4rem .65rem; font-size: .8125rem; border: 1px solid var(--color-cream-warm); }
+.checkout-page.co-redesign .room-add { min-height: 2.75rem; margin-top: .25rem; padding: .7rem 1rem; font-family: var(--font-sans); font-size: .875rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.checkout-page.co-redesign .room-card.is-chosen .room-add:disabled { color: var(--color-emerald-deep); opacity: 1; background: var(--color-success-surface); }
+.checkout-page.co-redesign .room-card.is-full { opacity: .7; }
+.checkout-page.co-redesign .alloc-meter { padding: 1rem; border: 1px solid var(--co-line); border-radius: 12px; background: var(--co-surface-hi); }
+.checkout-page.co-redesign .alloc-meter-track, .checkout-page.co-redesign .alloc-pips { display: none; }
+.checkout-page.co-redesign .alloc-meter-head { margin-bottom: .25rem; }
+.checkout-page.co-redesign .alloc-meter-count { font-family: var(--font-sans); font-size: .875rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .alloc-meter-hint { font-size: .8125rem; margin-top: .25rem; }
+.checkout-page.co-redesign .alloc-meter[data-state='balanced'] { background: var(--color-success-surface); border-color: color-mix(in oklch, var(--color-emerald) 25%, transparent); }
+.checkout-page.co-redesign .room-suggestion { padding: 1rem; gap: .75rem; border-radius: 12px; }
+.checkout-page.co-redesign .room-suggestion-label { font-family: var(--font-sans); font-size: .8125rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .room-suggestion-text { font-size: .875rem; line-height: 1.5; }
+.checkout-page.co-redesign .room-suggestion-btn, .checkout-page.co-redesign .room-split-btn, .checkout-page.co-redesign .co-disclosure { min-height: 2.75rem; font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .co-selection-head { margin: 2rem 0 1rem; }
+.checkout-page.co-redesign .co-selection-head h3 { font-size: 1rem; font-weight: 700; color: var(--color-ink); }
+.checkout-page.co-redesign .co-selection-head p { margin-top: .25rem; font-size: .8125rem; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .reservation-block { padding: 1rem; border-radius: 12px; }
+.checkout-page.co-redesign .pick-row { align-items: start; }
+.checkout-page.co-redesign .pick-thumb { height: 3.5rem; width: 4.5rem; border-radius: 4px; }
+.checkout-page.co-redesign .pick-id { padding-top: .25rem; }
+.checkout-page.co-redesign .pick-meta { flex-wrap: wrap; }
+.checkout-page.co-redesign .pick-controls { align-items: start; gap: .5rem; }
+.checkout-page.co-redesign .co-guest-adjust > summary { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; cursor: pointer; list-style: none; font-size: .875rem; color: var(--color-ink); }
+.checkout-page.co-redesign .co-adjust-label { font-size: .8125rem; text-decoration: underline; text-underline-offset: 3px; color: var(--color-emerald-deep); }
+.checkout-page.co-redesign .co-guest-adjust-body { padding: .75rem 0 .5rem; }
+.checkout-page.co-redesign .guests-pips, .checkout-page.co-redesign .guests-readout, .checkout-page.co-redesign .count-auto-tag { display: none; }
+.checkout-page.co-redesign .pick-step { width: 2.75rem; height: 2.75rem; }
+.checkout-page.co-redesign .pick-input { min-height: 2.75rem; font-size: 1rem; }
+.checkout-page.co-redesign .pick-remove { min-height: 2.75rem; font-family: var(--font-sans); font-size: .8125rem; letter-spacing: 0; text-transform: none; text-decoration: underline; text-underline-offset: 3px; }
+.checkout-page.co-redesign .pick-meals-toggle { min-height: 2.75rem; font-family: var(--font-sans); font-size: .8125rem; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .pick-meal-control button { width: 2.75rem; height: 2.75rem; }
+.checkout-page.co-redesign .pick-meals-grid { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+
+/* A readable invoice: stay, actual room photos, guest, then the amount. */
+.checkout-page.co-redesign .co-summary { padding: 1.5rem; }
+.checkout-page.co-redesign .co-summary-toggle { display: flex; justify-content: space-between; align-items: center; gap: .75rem; font-family: var(--font-display); font-size: 1.25rem; font-weight: 400; cursor: pointer; list-style: none; color: var(--color-ink); }
+.checkout-page.co-redesign summary::-webkit-details-marker { display: none; }
+.checkout-page.co-redesign .co-summary-toggle-end { display: flex; align-items: center; gap: .75rem; font-family: var(--font-sans); font-size: .875rem; font-weight: 700; }
+.checkout-page.co-redesign .co-summary-toggle-end svg { font-size: .8125rem; transition: transform 180ms ease; }
+.checkout-page.co-redesign .co-summary[open] .co-summary-toggle-end svg { transform: rotate(180deg); }
+.checkout-page.co-redesign .co-property { display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0 .5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--co-line); }
+.checkout-page.co-redesign .co-property picture { display: contents; }
+.checkout-page.co-redesign .co-property-photo { width: 4rem; height: 4rem; object-fit: cover; border-radius: 4px; flex: none; }
+.checkout-page.co-redesign .co-property strong { display: block; font-size: .875rem; color: var(--color-ink); }
+.checkout-page.co-redesign .co-property span span { display: block; margin-top: .3rem; font-size: .8125rem; line-height: 1.5; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .co-sum-block { padding: .75rem 0; }
+.checkout-page.co-redesign .co-sum-label { font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.checkout-page.co-redesign .co-sum-edit { min-height: 2.5rem; padding: .5rem 0 .5rem .5rem; font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; letter-spacing: 0; text-transform: none; text-decoration: underline; text-underline-offset: 3px; }
+.checkout-page.co-redesign .co-sum-value, .checkout-page.co-redesign .co-sum-sub { padding-left: 0; margin-top: .125rem; }
+.checkout-page.co-redesign .co-sum-value { font-size: .875rem; }
+.checkout-page.co-redesign .co-summary-room { display: flex; align-items: center; width: 100%; gap: .65rem; margin-top: .75rem; padding: .5rem 0; border: 0; background: transparent; text-align: left; cursor: pointer; color: var(--color-ink); }
+.checkout-page.co-redesign .co-summary-room img { width: 3.5rem; height: 3.5rem; object-fit: cover; border-radius: 4px; flex: none; }
+.checkout-page.co-redesign .co-summary-room-info { flex: 1; min-width: 0; }
+.checkout-page.co-redesign .co-summary-room-info strong { display: block; font-size: .8125rem; font-weight: 700; }
+.checkout-page.co-redesign .co-summary-room-info > span { display: block; margin-top: .25rem; font-size: .8125rem; line-height: 1.5; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .co-summary-room-price { font-size: .875rem; font-weight: 700; }
+.checkout-page.co-redesign .co-sum-tally { padding-top: 1.25rem; gap: .75rem; }
+.checkout-page.co-redesign .co-sum-total { padding-top: 1rem; }
+.checkout-page.co-redesign .co-sum-total-label { font-family: var(--font-sans); font-size: .875rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.checkout-page.co-redesign .co-sum-total-value { font-family: var(--font-sans); font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; }
+.checkout-page.co-redesign .co-sum-note { color: var(--color-emerald-deep); }
+.checkout-page.co-redesign .co-summary-hold { padding: 1rem; margin-top: 1.25rem; }
+.checkout-page.co-redesign .co-summary-assure { display: none; }
+
+/* Form hierarchy, optional requests and comfortable touch targets. */
+.checkout-page.co-redesign #stepCardDetails .co-subhead-title { font-family: var(--font-sans); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
+.checkout-page.co-redesign #stepCardDetails .co-subsection { margin-top: 2rem; padding-top: 2rem; }
+.checkout-page.co-redesign #stepCardDetails input:not([type='checkbox']):not([type='hidden']),
+.checkout-page.co-redesign #stepCardDetails select, .checkout-page.co-redesign #stepCardDetails textarea { font-size: 1rem; min-height: 3rem; font-weight: 500; border-radius: 4px; }
+.checkout-page.co-redesign #stepCardDetails label { font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .co-optional { margin-top: 2rem; border: 1px solid var(--co-line); border-radius: 12px; }
+.checkout-page.co-redesign .co-optional > summary { display: flex; justify-content: space-between; align-items: center; gap: .75rem; min-height: 3.5rem; padding: 1rem; list-style: none; cursor: pointer; font-size: .875rem; font-weight: 600; color: var(--color-ink); }
+.checkout-page.co-redesign .co-optional > summary > span:last-child { font-size: .8125rem; font-weight: 400; color: var(--color-ink-soft); }
+.checkout-page.co-redesign .co-optional-body { padding: .5rem 1rem 1.25rem; }
+.checkout-page.co-redesign .co-check { width: 1.25rem; height: 1.25rem; }
+.checkout-page.co-redesign .co-check-title { display: block; padding-bottom: .25rem; }
+.checkout-page.co-redesign .co-check-more { min-height: 2.75rem; font-family: var(--font-sans); font-size: .8125rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.checkout-page.co-redesign .co-actions { gap: .75rem; padding: 1rem; bottom: 1rem; }
+.checkout-page.co-redesign .co-btn { min-height: 3rem; font-family: var(--font-sans); font-size: .875rem; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.checkout-page.co-redesign .co-btn--primary { margin-left: auto; padding-inline: 1.5rem; }
+.checkout-page.co-redesign .co-btn--primary:hover { box-shadow: none; }
+.checkout-page.co-redesign .co-actions .blocker-line { font-size: .8125rem; line-height: 1.45; }
+.checkout-page.co-redesign :is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--color-emerald); outline-offset: 3px; }
+
+@media (min-width: 1024px) {
+    .checkout-page.co-redesign .co-layout { grid-template-columns: minmax(0,1fr) 23rem; }
+    .checkout-page.co-redesign .co-summary-toggle { cursor: default; }
+    .checkout-page.co-redesign .co-summary-toggle-end { display: none; }
+    .checkout-page.co-redesign .co-actions-total { display: none; }
+}
+@media (max-width: 1023px) {
+    .checkout-page.co-redesign .co-layout { gap: 1.25rem; }
+    .checkout-page.co-redesign .co-side { order: -1; }
+    .checkout-page.co-redesign .co-summary { padding: 1rem 1.25rem; scroll-margin-top: 6rem; }
+    .checkout-page.co-redesign .co-summary-toggle { font-family: var(--font-sans); font-size: .875rem; font-weight: 600; min-height: 1.5rem; }
+    .checkout-page.co-redesign .co-actions { position: fixed; left: 1rem; right: 1rem; bottom: max(.75rem, env(safe-area-inset-bottom)); flex-wrap: nowrap; }
+    .checkout-page.co-redesign .co-actions-total { border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: var(--color-ink); }
+    .checkout-page.co-redesign .co-actions-total-label { font-family: var(--font-sans); font-size: .8125rem; text-transform: none; letter-spacing: 0; }
+    .checkout-page.co-redesign .co-actions-total-value { font-family: var(--font-sans); font-size: 1.25rem; font-weight: 700; }
+    .checkout-page.co-redesign .co-actions-total-meta { display: none; }
+    .checkout-page.co-redesign .co-actions .blocker-line { display: none; }
+    .checkout-page.co-redesign .co-actions .blocker-line.is-nudge { display: flex; position: absolute; left: 0; right: 0; bottom: calc(100% + .5rem); padding: 1rem; border: 1px solid var(--co-line); border-radius: 12px; background: var(--color-cream-warm); }
+    .checkout-page.co-redesign .co-back-link { margin-bottom: .5rem; }
+    .checkout-page.co-redesign .co-intro-note { display: none; }
+}
+@media (max-width: 639px) {
+    .checkout-page.checkout-page.co-redesign { padding-top: 5rem; }
+    .checkout-page.co-redesign .co-intro { margin-bottom: 1.25rem; }
+    .checkout-page.co-redesign .co-intro p { font-size: .875rem; line-height: 1.6; }
+    .checkout-page.co-redesign .co-rail { margin-bottom: 1.25rem; }
+    .checkout-page.co-redesign .co-rail-head { flex-direction: column; align-items: flex-start; gap: .5rem; padding: .5rem .25rem .75rem; }
+    .checkout-page.co-redesign .co-rail-label { font-size: .8125rem; }
+    .checkout-page.co-redesign .step-dot { width: 1.5rem; height: 1.5rem; }
+    .checkout-page.co-redesign .co-card { padding: 1.25rem; }
+    .checkout-page.co-redesign .co-card-title { font-size: 1.5rem; }
+    .checkout-page.co-redesign .co-card-head { margin-bottom: 1.25rem; }
+    .checkout-page.co-redesign .room-picker-list { grid-template-columns: minmax(0,1fr); gap: 1rem; }
+    .checkout-page.co-redesign .room-card-media { aspect-ratio: 16 / 9; }
+    .checkout-page.co-redesign .room-card-line { flex-wrap: nowrap; }
+    .checkout-page.co-redesign .room-card-body { gap: .5rem; }
+    .checkout-page.co-redesign .date-presets { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .checkout-page.co-redesign .date-preset { justify-content: center; padding-inline: .5rem; }
+    .checkout-page.co-redesign .stay-field { padding: 1rem; }
+    .checkout-page.co-redesign .pick-controls { margin-left: 0; width: 100%; justify-content: space-between; }
+    .checkout-page.co-redesign .co-actions { left: .75rem; right: .75rem; padding: .75rem; gap: .5rem; }
+    .checkout-page.co-redesign .co-actions .co-btn--ghost { padding: .5rem .75rem; }
+    .checkout-page.co-redesign .co-btn-word { display: none; }
+    .checkout-page.co-redesign .co-btn--primary { padding-inline: 1rem; }
+    .checkout-page.co-redesign .co-actions-total-value { font-size: 1rem; }
+    .checkout-page.co-redesign .co-summary-room { gap: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .checkout-page.co-redesign *, .checkout-page.co-redesign *::before, .checkout-page.co-redesign *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+.checkout-page.co-redesign .room-card.is-too-small { order: 2; }
+.checkout-page.co-redesign .co-selected-rooms { margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--co-line); border-radius: 12px; background: var(--co-surface-hi); }
+.checkout-page.co-redesign .co-selected-rooms[hidden] { display: none; }
+.checkout-page.co-redesign .co-selected-rooms .co-selection-head { margin-top: 1.25rem; }
+.checkout-page.co-redesign .co-selected-rooms .co-check-card { margin-top: 0; background: transparent; border: 0; padding: 0; }
+@media (max-width: 639px) {
+    .checkout-page.co-redesign .co-selected-rooms { padding: 1rem; margin-inline: -.25rem; }
+}
+
+/* Keep the step names visible at the narrowest phone widths. */
+.checkout-page.co-redesign .co-rail-label { display: block; }
+.checkout-page.co-redesign .co-selected-rooms { padding: 0; border: 0; background: none; }
+.checkout-page.co-redesign .co-selected-rooms .co-selection-head { margin-top: 0; }
+.checkout-page.co-redesign .co-selected-rooms .co-check-card { margin-top: 1rem; padding: 1rem; border: 1px solid var(--co-line); background: var(--co-surface-hi); }

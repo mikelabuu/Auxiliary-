@@ -41,25 +41,16 @@
         $openStep = $errors->any() ? 'details' : 'dates';
     @endphp
 
-    <div class="checkout-page min-h-screen bg-canvas pt-28 pb-24 relative isolate overflow-x-clip">
+    <div class="checkout-page co-redesign min-h-screen bg-canvas pt-28 pb-24 relative isolate overflow-x-clip">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="co-enter mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4" style="--co:0">
-                <div>
-                    <span class="font-label inline-flex items-center gap-3 text-[11px] font-normal uppercase tracking-[0.4em] text-palay-800 mb-3">
-                        <span class="h-px w-8 bg-gold/50"></span> New reservation
-                    </span>
-                    <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Complete your {{-- brass-ink, not gold. --color-gold is a 75%-lightness accent and lands
-                         at 2.02:1 on cream — DESIGN.md is explicit that gold never carries
-                         text on this ground, and at 48px display the floor is still 3:1.
-                         brass-ink is the same brass darkened until it reads (~4.9:1), so the
-                         accent survives and the word does too. --}}
-                        <span class="italic text-brass-ink">booking</span></h1>
-                    <p class="text-sm font-medium text-ink-soft mt-3">Dates, then rooms, then your details. No payment needed yet.</p>
+            <header class="co-intro">
+                <a href="{{ route('home') }}#rooms" class="co-back-link">&larr; Back to rooms</a>
+                <div class="co-intro-line">
+                    <h1>Make yourself at home.</h1>
+                    <span class="co-intro-note"><x-booking.ui.icon-solid name="lock" /> No payment needed to reserve</span>
                 </div>
-                <a href="{{ route('home') }}#rooms" class="font-label gold-underline self-start sm:self-end text-[11px] font-normal uppercase tracking-[0.3em] text-ink-soft hover:text-emerald-deep transition-colors">
-                    &larr; Back to Rooms
-                </a>
-            </div>
+                <p>A few details, and your stay at Farmers Hostel is one step closer.</p>
+            </header>
 
             {{-- The rail is the wizard's map and its steering. Each step shows a
                  dot (its number, or a tick once satisfied), its name, and a bar
@@ -68,7 +59,7 @@
                  same gate as Continue, so a guest cannot jump to Details before
                  a room exists. --}}
             <ol id="checkoutProgress" class="co-rail co-enter" style="--co:1">
-                @foreach (['dates' => 'Your stay', 'rooms' => 'Your rooms', 'details' => 'Your details'] as $step => $label)
+                @foreach (['dates' => 'Your stay', 'rooms' => 'Choose rooms', 'details' => 'Details & review'] as $step => $label)
                     {{-- The <li> used to carry role="button" itself, which strips
                          its listitem semantics and left the <ol> announcing as a
                          list with no items (axe `list`). The interactive part is
@@ -113,7 +104,7 @@
 
                     {{-- ─────────────── STEP 1 · YOUR STAY ─────────────── --}}
                     <section class="co-panel @if ($openStep === 'dates') is-active @endif" data-step-panel="dates" id="stepCardDates" aria-label="Your stay">
-                        <x-booking.checkout.step-card title="Your Stay" lead="How many nights, and how many people are coming. Everything after this depends on it.">
+                        <x-booking.checkout.step-card title="When are you staying?" lead="Choose your dates and the number of guests. We’ll find the rooms that fit.">
                             <x-slot:aside>
                                 <span id="nights_duration_badge" class="font-label hidden px-3.5 py-1.5 rounded-full bg-gold/15 border border-gold/40 text-ink-soft text-[11px] font-normal uppercase tracking-[0.2em] animate-pop whitespace-nowrap"></span>
                             </x-slot:aside>
@@ -208,7 +199,7 @@
                                                 <x-booking.ui.icon-solid name="plus" class="text-[18px]" />
                                             </button>
                                         </div>
-                                        <p id="totalGuestsNote" class="count-note">Everyone staying, including children. We fit them into rooms in the next step.</p>
+                                        <p id="totalGuestsNote" class="count-note">Include everyone staying, including children.</p>
                                         <button type="button" class="guest-pop-done" @click="open = false">Done</button>
                                     </div>
                                 </div>
@@ -226,7 +217,7 @@
 
                     {{-- ─────────────── STEP 2 · YOUR ROOMS ─────────────── --}}
                     <section class="co-panel @if ($openStep === 'rooms') is-active @endif" data-step-panel="rooms" id="stepCardRooms" aria-label="Your rooms">
-                        <x-booking.checkout.step-card title="Your Rooms" lead="Pick the styles you want. We seat your party as you add them, and you can move people between rooms below.">
+                        <x-booking.checkout.step-card title="Find your room." lead="Choose a little space to call your own. Guest allocation is taken care of as you add rooms.">
                             {{-- No preamble beyond the card's own lead. The status
                                  line below says the same thing about the guest's
                                  actual numbers rather than in the abstract.
@@ -249,7 +240,7 @@
                                 <div class="alloc-meter-track">
                                     <span id="allocMeterFill" class="alloc-meter-fill"></span>
                                 </div>
-                                <p id="allocMeterHint" class="alloc-meter-hint">Pick a room style below and we’ll seat your guests in it.</p>
+                                <p id="allocMeterHint" class="alloc-meter-hint">Choose a room. We’ll assign your guests automatically.</p>
                             </div>
 
                             {{-- A ready-made answer, offered before the guest is
@@ -265,12 +256,43 @@
                                  it costs, and one press takes it. Hidden whenever
                                  it has nothing to offer: no dates yet, one guest,
                                  or a party already seated. --}}
+                            <div id="coSelectedRooms" class="co-selected-rooms" hidden>
+                            <div class="co-selection-head"><h3>Your selected rooms</h3><p id="selectionCount" aria-live="polite">Your choices will appear here</p></div>
+                            <div id="reservationBlocks" class="co-picks">
+                                <!-- JS will inject blocks here -->
+                            </div>
+                            <p id="reservationEmpty" class="co-picks-empty">Choose a room above to start your reservation.</p>
+
+                            {{-- Said once for the booking, not once per room.
+
+                                 Guests choose a style, not a door. The room is
+                                 assigned by BookingController::store from what is
+                                 actually free at the moment the booking commits,
+                                 which is the only moment the answer is true — a
+                                 tile picked five minutes earlier was a promise the
+                                 server then had to break about a third of the time
+                                 on a busy weekend. Front desk and admin still pick
+                                 numbers, because they are standing in the building. --}}
+                            <div class="co-check-card mt-6">
+                                <input type="checkbox" id="request_discount" name="request_discount" value="1" class="co-check" @checked(old('request_discount'))>
+                                <div class="co-check-body">
+                                    <label for="request_discount" class="co-check-title">Request a Senior Citizen / PWD discount</label>
+                                    <span class="co-check-sub">20% per eligible guest, subject to verification. Select the eligible guests in each room below. Documents can be uploaded after booking.</span>
+                                </div>
+                            </div>
+
+                            <p id="reservationKeyNote" class="co-keynote" hidden>
+                                <x-booking.ui.icon-solid name="key" />
+                                <span>Room numbers are assigned when you confirm. Add floor or group preferences under Special requests.</span>
+                            </p>
+                            </div>
+
                             <div id="roomSuggestion" class="room-suggestion mb-4" hidden>
                                 <div class="room-suggestion-body">
-                                    <p class="room-suggestion-label">Suggested</p>
+                                    <p class="room-suggestion-label">A fit for your group</p>
                                     <p id="roomSuggestionText" class="room-suggestion-text"></p>
                                 </div>
-                                <button type="button" id="roomSuggestionApply" class="press room-suggestion-btn">Use this</button>
+                                <button type="button" id="roomSuggestionApply" class="press room-suggestion-btn">Choose these rooms</button>
                             </div>
 
                             <p class="co-eyebrow" id="roomPickerLabel">Available <span id="roomPickerDates"></span></p>
@@ -298,7 +320,7 @@
                                 @foreach (($roomTypes ?? \App\Support\RoomCatalog::all()) as $type)
                                     <li class="room-card" data-room-type="{{ $type['id'] }}" data-beds="{{ $type['beds'] }}" data-price="{{ $type['price'] }}">
                                         <span class="room-card-media">
-                                            <x-img :src="$type['image']" :alt="$type['title']" loading="lazy" sizes="(max-width: 640px) 45vw, 200px" class="h-full w-full object-cover" />
+                                            <x-img :src="$type['image']" :alt="$type['title']" loading="lazy" sizes="(max-width: 639px) 90vw, (max-width: 1023px) 45vw, 360px" class="h-full w-full object-cover" />
                                             {{-- What is left of this style for these dates. Filled by
                                                  booking.js once the availability pass has run. --}}
                                             <span class="room-card-avail" data-room-avail hidden></span>
@@ -314,8 +336,9 @@
                                                  everyone, takes some of them, or too small. --}}
                                             <span class="room-card-fit" data-room-fit></span>
                                             <span class="room-card-note" data-room-note></span>
+                                            <span class="co-room-stay-price" data-room-stay-price></span>
                                             <button type="button" class="room-add press" data-room-step="1" data-room-add>
-                                                <span data-room-add-label>Add</span>
+                                                <span data-room-add-label>Choose room</span>
                                             </button>
                                         </span>
                                     </li>
@@ -353,40 +376,12 @@
                                  nothing visible happened. Here it opens the
                                  per-room senior counter in each room below it, and
                                  the sentence says so. --}}
-                            <div class="co-check-card mt-6">
-                                <input type="checkbox" id="request_discount" name="request_discount" value="1" class="co-check" @checked(old('request_discount'))>
-                                <div class="co-check-body">
-                                    <label for="request_discount" class="co-check-title">I want to request a 20% discount per Senior Citizen / PWD</label>
-                                    <span class="co-check-sub">You'll upload verification documents after booking. Tick this and each room below gets a counter for how many of them sleep there.</span>
-                                </div>
-                            </div>
-
-                            <p class="co-eyebrow co-eyebrow--spaced">Rooms in your booking</p>
-                            <div id="reservationBlocks" class="co-picks">
-                                <!-- JS will inject blocks here -->
-                            </div>
-                            <p id="reservationEmpty" class="co-picks-empty">Nothing added yet. Pick a room above and we’ll seat your guests in it.</p>
-
-                            {{-- Said once for the booking, not once per room.
-
-                                 Guests choose a style, not a door. The room is
-                                 assigned by BookingController::store from what is
-                                 actually free at the moment the booking commits,
-                                 which is the only moment the answer is true — a
-                                 tile picked five minutes earlier was a promise the
-                                 server then had to break about a third of the time
-                                 on a busy weekend. Front desk and admin still pick
-                                 numbers, because they are standing in the building. --}}
-                            <p id="reservationKeyNote" class="co-keynote" hidden>
-                                <x-booking.ui.icon-solid name="key" />
-                                <span>We’ll assign your room numbers when the booking is confirmed, and they’re on your confirmation. Travelling together or need a particular floor? Say so in Special requests on the next step.</span>
-                            </p>
                         </x-booking.checkout.step-card>
                     </section>
 
                     {{-- ─────────────── STEP 3 · YOUR DETAILS ─────────────── --}}
                     <section class="co-panel @if ($openStep === 'details') is-active @endif" data-step-panel="details" id="stepCardDetails" aria-label="Your details">
-                        <x-booking.checkout.step-card title="Your Details" lead="Your rooms are picked. This is the last thing before we hold them.">
+                        <x-booking.checkout.step-card title="Who’s coming to stay?" lead="Check your details, then review your reservation. Fields marked optional can be left blank.">
                             @include('public.booking.partials.step-guest')
 
                             {{-- A booking used to be agreed to in silence, and then in
@@ -429,12 +424,12 @@
 
                         {{-- The total, for the widths where the summary column is
                              stacked out of sight underneath. --}}
-                        <div class="co-actions-total lg:hidden">
-                            <span class="co-actions-total-label">Total due</span>
+                        <button type="button" id="coViewSummary" class="co-actions-total lg:hidden" aria-controls="checkoutSummary" aria-expanded="false" aria-label="View total and booking summary">
+                            <span class="co-actions-total-label">View total <span aria-hidden="true">⌃</span></span>
                             {{-- "—" until a real total exists; ₱0 due would be a false statement --}}
                             <span id="mobileTotalAmount" class="co-actions-total-value tabnum">—</span>
                             <span id="mobileMetaLine" class="co-actions-total-meta"></span>
-                        </div>
+                        </button>
 
                         {{-- What is still missing, stated where the guest is about to
                              press the button rather than after they have. The button
@@ -471,8 +466,15 @@
                          fixes it at every height. Below lg it is not sticky at all —
                          the column is stacked there and the action bar's own total
                          keeps the figure in view. --}}
-                    <div class="co-card co-summary co-enter" style="--co:3">
-                        <h3 class="co-summary-title">Booking <span class="italic text-brass-ink">Summary</span></h3>
+                    <details id="checkoutSummary" class="co-card co-summary co-enter" style="--co:3" open>
+                        <summary class="co-summary-toggle">
+                            <span>Your reservation</span>
+                            <span class="co-summary-toggle-end"><span id="summaryCompactTotal"></span><x-booking.ui.icon-solid name="chevron-down" /></span>
+                        </summary>
+                        <div class="co-property">
+                            <x-img src="image/hostel-front.png" alt="" sizes="96px" class="co-property-photo" />
+                            <span><strong>Farmers Hostel</strong><span>Inside CLSU · Muñoz, Nueva Ecija</span></span>
+                        </div>
 
                         {{-- Rendered by booking.js. The initial markup mirrors its
                              empty state exactly, so the takeover on load is
@@ -507,7 +509,7 @@
                             <span><x-booking.ui.icon-solid name="ban" /> No prepayment</span>
                             <span><x-booking.ui.icon-solid name="circle-check" /> Instant hold</span>
                         </div>
-                    </div>
+                    </details>
                 </aside>
             </form>
         </div>

@@ -397,9 +397,6 @@
         <div class="border-t border-white/10 bg-black/20">
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-[10px] uppercase tracking-[0.3em] text-bone/50 md:flex-row">
                 <p>&copy; {{ date('Y') }} Farmers Hostel · CLSU Campus</p>
-                <a href="{{ route('staff.login') }}" class="gold-underline focus-ring inline-flex items-center gap-2 rounded">
-                    <x-booking.ui.icon name="lock" class="h-3 w-3" /> Staff Portal
-                </a>
             </div>
         </div>
     </footer>
