@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\RescheduleRequest;
 use App\Models\Reservation;
+use App\Models\Room;
 use App\Services\AuditLogger;
 use App\Support\GuestNotice;
 use App\Support\Realtime;
@@ -80,26 +81,45 @@ class RescheduleAdminController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($reschedule, $staff, $validated) {
+                // Every writer in this workflow locks booking -> request. That
+                // gives one serial decision point per booking and avoids the
+                // approve/withdraw race that could previously move dates but
+                // leave the request recorded as withdrawn.
+                $booking = Booking::whereKey($reschedule->booking_id)->lockForUpdate()->first();
                 $locked = RescheduleRequest::whereKey($reschedule->id)->lockForUpdate()->first();
 
-                if (! $locked || ! $locked->isPending()) {
+                if (! $booking || ! $locked || $locked->booking_id !== $booking->id || ! $locked->isPending()) {
                     return null;
                 }
-
-                $booking = Booking::whereKey($locked->booking_id)->lockForUpdate()->first();
 
                 // The booking may have moved on while the request sat in the
                 // queue — expired, checked in, or forfeited by the no-show
                 // sweep. Moving the dates of any of those is meaningless.
-                if (! $booking || ! in_array($booking->status, RescheduleRequest::RESCHEDULABLE_STATUSES, true)) {
+                if (! in_array($booking->status, RescheduleRequest::RESCHEDULABLE_STATUSES, true)) {
                     throw new RoomUnavailable('Booking #' . $locked->booking_id . ' is no longer a paid, upcoming stay, so its dates cannot be moved.');
+                }
+
+                if (RescheduleRequest::hasApprovedFor($booking, $locked->id)) {
+                    throw new RoomUnavailable('Booking #' . $booking->id . ' has already used its one allowed reschedule. This request can no longer be approved.');
                 }
 
                 $roomNumbers = $booking->reservations->pluck('room_number')
                     ->map(fn ($n) => trim((string) $n))
                     ->filter()
                     ->unique()
+                    ->sort()
+                    ->values()
                     ->all();
+
+                // Different bookings can ask for the same room and dates. Lock
+                // those inventory rows in stable order before checking clashes
+                // so concurrent approvals cannot both observe the room as free.
+                if (! empty($roomNumbers)) {
+                    Room::whereIn('room_number', $roomNumbers)
+                        ->orderBy('room_number')
+                        ->lockForUpdate()
+                        ->get();
+                }
 
                 // The same guard the booking passed on the way in, minus this
                 // booking itself — its own hold over the old dates must not
@@ -199,8 +219,8 @@ class RescheduleAdminController extends Controller
 
         // The stay now covers different nights, so both the booking boards and
         // the room map are looking at stale inventory.
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
 
         if (BookingStatusChanged::shouldEmitFor($booking)) {
             Realtime::emit(BookingStatusChanged::for($booking->refresh()));
@@ -234,9 +254,10 @@ class RescheduleAdminController extends Controller
         $staff = Auth::guard('staff')->user();
 
         $decided = DB::transaction(function () use ($reschedule, $staff, $validated) {
+            $booking = Booking::whereKey($reschedule->booking_id)->lockForUpdate()->first();
             $locked = RescheduleRequest::whereKey($reschedule->id)->lockForUpdate()->first();
 
-            if (! $locked || ! $locked->isPending()) {
+            if (! $booking || ! $locked || $locked->booking_id !== $booking->id || ! $locked->isPending()) {
                 return null;
             }
 
@@ -262,7 +283,7 @@ class RescheduleAdminController extends Controller
             return back()->with('error', 'That request was already decided by another staff member.');
         }
 
-        Realtime::emit(new BookingChanged());
+        Realtime::emit(new BookingChanged);
 
         $booking = $decided->booking()->first();
 

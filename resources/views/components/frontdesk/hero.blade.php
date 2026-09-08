@@ -6,6 +6,8 @@
 
 @php
     $staff = Auth::guard('staff')->user();
+    $isCashier = $staff?->role === 'cashier';
+    $workspaceLabel = $isCashier ? 'Cashier' : 'Front Desk';
     $firstName = explode(' ', trim($staff->name ?? 'Staff'))[0];
     // The desk is at CLSU; the app clock may be UTC, so pin the greeting
     // and date to Manila time.
@@ -24,16 +26,22 @@
         return $out;
     };
 
-    $navItems = [
-        ['route' => 'frontdesk.dashboard.index', 'icon' => 'grid',          'label' => 'Dashboard'],
-        ['route' => 'frontdesk.walkin.create',   'icon' => 'calendar-plus', 'label' => 'Manual Booking'],
-        ['route' => 'frontdesk.room.index',      'icon' => 'bed',           'label' => 'Rooms'],
-        ['route' => 'frontdesk.booking',         'icon' => 'clipboard',     'label' => 'Bookings'],
-        ['route' => 'staff.paymentverification.index', 'icon' => 'receipt', 'label' => 'Verify Payments'],
-        // The desk is who a guest rings when they cannot make their dates, and
-        // a paid booking can only be moved — never cancelled.
-        ['route' => 'staff.reschedules.index',   'icon' => 'calendar',      'label' => 'Reschedules'],
-    ];
+    $navItems = $isCashier
+        ? [
+            ['route' => 'staff.paymentverification.index', 'active' => 'staff.paymentverification.*', 'icon' => 'receipt', 'label' => 'Payment Proofs'],
+        ]
+        : [
+            ['route' => 'frontdesk.dashboard.index', 'icon' => 'grid',          'label' => 'Dashboard'],
+            ['route' => 'frontdesk.walkin.create',   'icon' => 'calendar-plus', 'label' => 'Manual Booking'],
+            ['route' => 'frontdesk.room.index',      'icon' => 'bed',           'label' => 'Rooms'],
+            ['route' => 'frontdesk.booking',         'icon' => 'clipboard',     'label' => 'Bookings'],
+            // Discount requests are only promises until the guest presents
+            // every original Senior/PWD ID at the counter.
+            ['route' => 'staff.discounts.index',     'active' => 'staff.discounts.*', 'icon' => 'tag', 'label' => 'Discounts'],
+            // The desk is who a guest rings when they cannot make their dates,
+            // and a paid booking can only be moved — never cancelled.
+            ['route' => 'staff.reschedules.index',   'icon' => 'calendar',      'label' => 'Reschedules'],
+        ];
 @endphp
 
 <header class="fd-hero">
@@ -59,7 +67,7 @@
                        alt="Farmers Hostel logo" sizes="40px" width="40" height="40" />
                 <div class="leading-tight">
                     <p class="fd-brand-title">Farmers Hostel</p>
-                    <p class="fd-brand-sub fd-shine">Front Desk</p>
+                    <p class="fd-brand-sub fd-shine">{{ $workspaceLabel }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -71,7 +79,7 @@
                     <span class="fd-avatar" aria-hidden="true"><x-admin.ui.icon name="user" /></span>
                     <span class="hidden leading-tight md:block">
                         <span class="fd-chip-name block max-w-40 truncate">{{ $staff->name ?? 'Staff' }}</span>
-                        <span class="fd-chip-role block">Front Desk</span>
+                        <span class="fd-chip-role block">{{ $workspaceLabel }}</span>
                     </span>
                 </div>
                 <form method="POST" action="{{ route('staff.logout') }}">
@@ -92,11 +100,11 @@
         </div>
 
         {{-- Pill nav --}}
-        <nav class="mt-7" aria-label="Front desk">
+        <nav class="mt-7" aria-label="{{ $workspaceLabel }}">
             <div class="fd-nav">
                 <div class="fd-nav-glide" aria-hidden="true"></div>
                 @foreach ($navItems as $item)
-                    @php $active = request()->routeIs($item['route']); @endphp
+                    @php $active = request()->routeIs($item['active'] ?? $item['route']); @endphp
                     <a href="{{ route($item['route']) }}"
                        class="fd-nav-link {{ $active ? 'is-active' : '' }}"
                        @if($active) aria-current="page" @endif>

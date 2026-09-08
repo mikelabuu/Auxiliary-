@@ -30,7 +30,18 @@ class StaffAlert
     {
         self::send(
             fn () => StaffBookingAlertMail::proofSubmitted($booking, $payment),
-            'proof of payment for booking #' . $booking->id
+            'proof of payment for booking #' . $booking->id,
+            self::cashierRecipients()
+        );
+    }
+
+    /** Tell administrators that the financial decision is complete. */
+    public static function paymentVerified(Booking $booking, Payment $payment): void
+    {
+        self::send(
+            fn () => StaffBookingAlertMail::paymentVerified($booking, $payment),
+            'cashier verification for booking #' . $booking->id,
+            self::adminRecipients()
         );
     }
 
@@ -50,34 +61,75 @@ class StaffAlert
      */
     public static function recipients(): array
     {
-        $configured = config('staff.alerts.to');
+        return self::resolveRecipients(
+            config('staff.alerts.to'),
+            (array) config('staff.alerts.roles', [])
+        );
+    }
 
+    /** @return array<int, string> */
+    public static function cashierRecipients(): array
+    {
+        return self::resolveRecipients(
+            config('staff.alerts.cashier_to'),
+            (array) config('staff.alerts.cashier_roles', ['cashier'])
+        );
+    }
+
+    /** @return array<int, string> */
+    public static function adminRecipients(): array
+    {
+        return self::resolveRecipients(
+            config('staff.alerts.admin_to'),
+            (array) config('staff.alerts.admin_roles', ['admin', 'master_admin'])
+        );
+    }
+
+    /**
+     * @param  array<int, string>  $roles
+     * @return array<int, string>
+     */
+    private static function resolveRecipients($configured, array $roles): array
+    {
         if (filled($configured)) {
-            $addresses = collect(explode(',', (string) $configured))
+            $allowed = collect(explode(',', (string) $configured))
                 ->map(fn ($email) => trim($email))
-                ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false);
-        } else {
+                ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
+                ->map(fn ($email) => strtolower($email))
+                ->unique()
+                ->all();
+
+            // A configured delivery address is still not an identity. Only a
+            // live account holding the required role may receive the guest's
+            // financial details; suspending or reassigning it stops mail too.
             $addresses = Staff::query()
-                ->whereIn('role', (array) config('staff.alerts.roles', []))
+                ->whereIn('role', $roles)
                 ->where('is_suspended', false)
                 ->pluck('email')
-                ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false);
+                ->filter(fn ($email) => in_array(strtolower((string) $email), $allowed, true));
+        } else {
+            $addresses = Staff::query()
+                ->whereIn('role', $roles)
+                ->where('is_suspended', false)
+                ->pluck('email');
         }
 
         return $addresses
+            ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
             ->unique()
             ->take((int) config('staff.alerts.max_recipients', 5))
             ->values()
             ->all();
     }
 
-    private static function send(callable $makeMailable, string $what): void
+    /** @param array<int, string>|null $recipients */
+    private static function send(callable $makeMailable, string $what, ?array $recipients = null): void
     {
         if (! config('staff.alerts.enabled', true)) {
             return;
         }
 
-        $recipients = self::recipients();
+        $recipients ??= self::recipients();
 
         if (empty($recipients)) {
             Log::info("[STAFF-ALERT] No recipients configured; skipped alert for {$what}.");

@@ -20,7 +20,7 @@
                 <span class="h-px w-8 bg-emerald/50"></span> Verification
             </span>
             <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Senior &amp; PWD <span class="italic text-gold">discount</span></h1>
-            <p class="text-sm font-medium text-ink/55 mt-3 max-w-xl">Upload a valid Senior Citizen or PWD ID for each declared guest. Once our staff verifies them, a 20% discount per approved ID is applied to your bill.</p>
+            <p class="text-sm font-medium text-ink/55 mt-3 max-w-xl">Upload a clear reference photo for each declared guest, then bring every original Senior Citizen or PWD ID to the front desk. The discount is granted only after an in-person check.</p>
         </div>
 
         @if ($booking->num_seniors > 0)
@@ -49,15 +49,15 @@
             <div class="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="flex items-start gap-3 bg-cream-warm ring-1 ring-emerald-deep/5 rounded-2xl px-4 py-3.5">
                     <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">1</span>
-                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Add a clear photo of each ID, one per declared senior/PWD guest.</p>
+                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Upload a clear advance photo for each declared senior/PWD guest.</p>
                 </div>
                 <div class="flex items-start gap-3 bg-cream-warm ring-1 ring-emerald-deep/5 rounded-2xl px-4 py-3.5">
                     <span class="w-7 h-7 rounded-full bg-emerald-deep text-cream font-display italic text-xs flex items-center justify-center shrink-0">2</span>
-                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Our staff reviews every document, usually within the day.</p>
+                    <p class="text-xs font-bold text-stone-700 leading-relaxed">Your rooms stay on hold while you bring the original IDs to the front desk.</p>
                 </div>
                 <div class="flex items-start gap-3 bg-cream-warm ring-1 ring-emerald-deep/5 rounded-2xl px-4 py-3.5">
                     <span class="w-7 h-7 rounded-full bg-gold text-ink font-display italic text-xs flex items-center justify-center shrink-0">3</span>
-                    <p class="text-xs font-bold text-stone-700 leading-relaxed">20% off per approved ID is deducted before you pay.</p>
+                    <p class="text-xs font-bold text-stone-700 leading-relaxed">The front desk verifies them in person, applies the discount, and takes payment.</p>
                 </div>
             </div>
 

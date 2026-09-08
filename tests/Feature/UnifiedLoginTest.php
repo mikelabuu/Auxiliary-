@@ -80,6 +80,28 @@ class UnifiedLoginTest extends TestCase
         $this->assertAuthenticatedAs($staff, 'staff');
     }
 
+    public function test_cashier_lands_on_the_payment_verification_queue(): void
+    {
+        config(['staff.otp_enabled' => false]);
+        $staff = $this->staff('cashier@example.test', 'cashier');
+
+        $this->post('/login', [
+            'email' => 'cashier@example.test',
+            'password' => 'password-12345',
+        ])->assertRedirect('/staff/payment-verification');
+
+        $this->assertAuthenticatedAs($staff, 'staff');
+    }
+
+    public function test_signed_in_cashier_is_redirected_from_login_to_its_queue(): void
+    {
+        $staff = $this->staff('cashier@example.test', 'cashier');
+
+        $this->actingAs($staff, 'staff')
+            ->get('/login')
+            ->assertRedirect(route('staff.paymentverification.index'));
+    }
+
     public function test_email_is_case_insensitive(): void
     {
         $user = $this->guest();
@@ -176,5 +198,26 @@ class UnifiedLoginTest extends TestCase
             ])->assertSessionHasErrors('email');
 
         $this->assertSame(0, Staff::where('email', 'taken@example.test')->count());
+    }
+
+    public function test_master_admin_can_create_a_dedicated_cashier_account(): void
+    {
+        $master = $this->staff('master@example.test', 'master_admin');
+
+        $this->actingAs($master, 'staff')
+            ->post('/staff/staff/create', [
+                'name' => 'Hostel Cashier',
+                'email' => 'cashier@example.test',
+                'role' => 'cashier',
+                'password' => 'password-12345',
+                'password_confirmation' => 'password-12345',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('staff', [
+            'email' => 'cashier@example.test',
+            'role' => 'cashier',
+            'is_suspended' => false,
+        ]);
     }
 }

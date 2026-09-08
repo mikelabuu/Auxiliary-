@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomType;
@@ -144,6 +145,38 @@ class LapsedHoldTest extends TestCase
 
         // The point of the guarantee: nothing rewrote the booking.
         $this->assertSame('pending_payment', $booking->fresh()->status);
+    }
+
+    public function test_a_lapsed_hold_stays_reserved_while_payment_proof_is_awaiting_staff(): void
+    {
+        $this->seedRoom('101');
+        $booking = $this->holdRoom('101', $this->checkIn(), $this->checkOut(), ageMinutes: $this->window() + 5);
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'user_id' => $booking->user_id,
+            'amount' => $booking->payable_amount ?? $booking->total_price,
+            'status' => Payment::STATUS_AWAITING_VERIFICATION,
+            'payment_type' => 'manual',
+            'reference_no' => 'AWAITING01',
+            'gateway' => 'gcash',
+            'proof_path' => 'payment_proofs/awaiting.png',
+            'proof_method' => 'gcash',
+            'proof_reference' => '9988776655',
+            'proof_submitted_at' => now(),
+        ]);
+
+        $response = $this->postJson('/rooms/available', [
+            'check_in' => $this->checkIn(),
+            'check_out' => $this->checkOut(),
+            'room_type' => 'double',
+        ])->assertOk();
+
+        $this->assertSame(
+            'reserved',
+            collect($response->json('rooms'))->firstWhere('room_number', '101')['status'],
+            'Staff review, not the old payment clock, now owns this hold.'
+        );
     }
 
     public function test_a_lapsed_hold_does_not_block_a_new_booking(): void

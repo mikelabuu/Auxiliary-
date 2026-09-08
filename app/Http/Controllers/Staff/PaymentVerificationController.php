@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Staff;
 
-use App\Models\Booking;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\GuestBookingUpdated;
@@ -10,13 +9,15 @@ use App\Events\PaymentProofSubmitted;
 use App\Events\RoomStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Mail\BookingPaidMail;
+use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\AuditLogger;
 use App\Support\Realtime;
+use App\Support\StaffAlert;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -66,7 +67,30 @@ class PaymentVerificationController extends Controller
         abort_if(blank($payment->proof_path), 404);
         abort_unless(Storage::disk('local')->exists($payment->proof_path), 404);
 
-        return response()->file(Storage::disk('local')->path($payment->proof_path));
+        $response = response()->file(Storage::disk('local')->path($payment->proof_path));
+        $response->setPrivate();
+        $response->headers->addCacheControlDirective('no-store');
+        $response->headers->set('Pragma', 'no-cache');
+
+        return $response;
+    }
+
+    /**
+     * Review one claim reached from a staff alert.
+     *
+     * This GET is deliberately read-only. Mail clients and security scanners
+     * follow links automatically, so approval remains the authenticated,
+     * CSRF-protected POST below after a staff member has seen the receipt.
+     */
+    public function show(Payment $payment)
+    {
+        abort_if(blank($payment->proof_path), 404);
+
+        $payment->load(['booking.reservations', 'verifier:id,name']);
+
+        return response()
+            ->view('staff.paymentverification.show', compact('payment'))
+            ->header('Cache-Control', 'private, no-store');
     }
 
     /**
@@ -76,56 +100,104 @@ class PaymentVerificationController extends Controller
     public function approve(Request $request, Payment $payment)
     {
         $staff = Auth::guard('staff')->user();
+        $duplicateReference = false;
 
-        $booking = DB::transaction(function () use ($payment, $staff) {
-            // Re-read under a lock. Two staff opening the same queue and both
-            // clicking Verify must not both drive the booking to paid.
-            $locked = Payment::whereKey($payment->id)->lockForUpdate()->first();
+        try {
+            $booking = DB::transaction(function () use ($payment, $staff, &$duplicateReference) {
+                // Every payment lifecycle writer locks booking -> payment. Two
+                // staff clicks, and the expiry command racing one of them, can
+                // therefore produce only one terminal transition.
+                $booking = Booking::whereKey($payment->booking_id)->lockForUpdate()->first();
+                $locked = Payment::whereKey($payment->id)->lockForUpdate()->first();
 
-            if (! $locked || ! $locked->isAwaitingVerification()) {
-                return null;
+                if (! $locked || ! $locked->isAwaitingVerification()) {
+                    return null;
+                }
+
+                if (! $booking || $booking->status !== Booking::STATUS_PENDING_PAYMENT) {
+                    return null;
+                }
+
+                $amountDue = $booking->payable_amount ?? $booking->total_price;
+
+                // Never let an old/reused payment row settle a newly priced
+                // booking. StoreProof refreshes this value on submission; this
+                // second check protects legacy rows and any future writer.
+                if (number_format((float) $locked->amount, 2, '.', '')
+                    !== number_format((float) $amountDue, 2, '.', '')) {
+                    return null;
+                }
+
+                $acceptedReferenceKey = Payment::acceptedReferenceKey(
+                    $locked->proof_method,
+                    $locked->proof_reference
+                );
+
+                if ($acceptedReferenceKey === null) {
+                    return null;
+                }
+
+                if (Payment::where('accepted_reference_key', $acceptedReferenceKey)
+                    ->where('id', '!=', $locked->id)
+                    ->exists()) {
+                    $duplicateReference = true;
+
+                    return null;
+                }
+
+                $locked->update([
+                    'status' => 'success',
+                    'paid_at' => now(),
+                    'verified_by' => $staff->id,
+                    'verified_at' => now(),
+                    'accepted_reference_key' => $acceptedReferenceKey,
+                    'rejection_reason' => null,
+                ]);
+
+                $booking->update([
+                    'status' => Booking::STATUS_PAID,
+                    'payment_mode' => $locked->proof_method ?? 'manual',
+                ]);
+
+                AuditLogger::log(
+                    'payment_proof_verified',
+                    $locked,
+                    ['status' => Payment::STATUS_AWAITING_VERIFICATION],
+                    ['status' => 'success'],
+                    "Staff {$staff->name} verified the {$locked->proof_method_label} proof of payment "
+                        . "(ref {$locked->proof_reference}) for booking #{$booking->id}"
+                );
+
+                return $booking;
+            });
+        } catch (QueryException $e) {
+            $sqlState = (string) ($e->errorInfo[0] ?? $e->getCode());
+
+            if (in_array($sqlState, ['23000', '23505'], true)
+                && str_contains(strtolower($e->getMessage()), 'accepted_reference')) {
+                // The unique index is the concurrency backstop: if two
+                // bookings race with the same bank reference, one transaction
+                // commits and the other returns a normal cashier-facing error.
+                $duplicateReference = true;
+                $booking = null;
+            } else {
+                throw $e;
             }
-
-            $booking = $locked->booking;
-
-            if (! $booking || $booking->status !== Booking::STATUS_PENDING_PAYMENT) {
-                return null;
-            }
-
-            $locked->update([
-                'status' => 'success',
-                'paid_at' => now(),
-                'verified_by' => $staff->id,
-                'verified_at' => now(),
-                'rejection_reason' => null,
-            ]);
-
-            $booking->update([
-                'status' => Booking::STATUS_PAID,
-                'payment_mode' => $locked->proof_method ?? 'manual',
-            ]);
-
-            AuditLogger::log(
-                'payment_proof_verified',
-                $locked,
-                ['status' => Payment::STATUS_AWAITING_VERIFICATION],
-                ['status' => 'success'],
-                "Staff {$staff->name} verified the {$locked->proof_method_label} proof of payment "
-                    . "(ref {$locked->proof_reference}) for booking #{$booking->id}"
-            );
-
-            return $booking;
-        });
+        }
 
         if ($booking === null) {
-            return back()->with('error', 'This payment was already handled by another staff member.');
+            if ($duplicateReference) {
+                return back()->with('error', 'This bank or GCash reference was already accepted for another booking. Do not verify it again.');
+            }
+
+            return back()->with('error', 'This payment could not be verified. It may already be handled or the booking amount may have changed.');
         }
 
         // Both consoles care: the queue loses a row, the booking board gains a
         // paid reservation, and the guest's own page is waiting on the status.
-        Realtime::emit(new PaymentProofSubmitted());
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new PaymentProofSubmitted);
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
 
         if (BookingStatusChanged::shouldEmitFor($booking)) {
             Realtime::emit(BookingStatusChanged::for($booking->refresh()));
@@ -136,6 +208,11 @@ class PaymentVerificationController extends Controller
         if (GuestBookingUpdated::shouldEmitFor($booking)) {
             Realtime::emit(GuestBookingUpdated::paymentVerified($booking->refresh()));
         }
+
+        // Financial authority ends with the cashier. Administrators receive
+        // an informational notice for oversight; there is no second payment
+        // approval action. Delivery failure must not roll back the decision.
+        StaffAlert::paymentVerified($booking->refresh(), $payment->refresh());
 
         // The official receipt is generated inside the mailable. A dead SMTP —
         // or a booking with no account behind it — must not undo a
@@ -178,9 +255,13 @@ class PaymentVerificationController extends Controller
         $staff = Auth::guard('staff')->user();
 
         $booking = DB::transaction(function () use ($payment, $staff, $validated) {
+            $booking = Booking::whereKey($payment->booking_id)->lockForUpdate()->first();
             $locked = Payment::whereKey($payment->id)->lockForUpdate()->first();
 
-            if (! $locked || ! $locked->isAwaitingVerification()) {
+            if (! $booking
+                || $booking->status !== Booking::STATUS_PENDING_PAYMENT
+                || ! $locked
+                || ! $locked->isAwaitingVerification()) {
                 return null;
             }
 
@@ -188,8 +269,15 @@ class PaymentVerificationController extends Controller
                 'status' => Payment::STATUS_REJECTED,
                 'verified_by' => $staff->id,
                 'verified_at' => now(),
+                'accepted_reference_key' => null,
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
+
+            // A claim waits on staff, not on the guest. If the original
+            // payment clock elapsed while the receipt was being reviewed,
+            // give the guest a real window to correct and re-upload it after
+            // rejection instead of expiring the booking immediately.
+            $booking->forceFill(['pending_payment_since' => now()])->save();
 
             AuditLogger::log(
                 'payment_proof_rejected',
@@ -200,15 +288,15 @@ class PaymentVerificationController extends Controller
                     . "for booking #{$locked->booking_id}: {$validated['rejection_reason']}"
             );
 
-            return $locked->booking;
+            return $booking;
         });
 
         if ($booking === null) {
             return back()->with('error', 'This payment was already handled by another staff member.');
         }
 
-        Realtime::emit(new PaymentProofSubmitted());
-        Realtime::emit(new BookingChanged());
+        Realtime::emit(new PaymentProofSubmitted);
+        Realtime::emit(new BookingChanged);
 
         // A rejection is the one outcome the guest must act on, so tell them
         // the reason rather than leaving them to discover it on a refresh.

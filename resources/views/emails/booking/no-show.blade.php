@@ -2,20 +2,32 @@
      the outcome this mail is reporting — see App\Mail\BookingNoShowMail. Then
      it hands the guest to a person, because the policy is the default and not
      the last word on their circumstances. --}}
-@component('mail::message')
+@php
+    $bookingDetails = [
+        'Check-in' => $booking->check_in->format('M d, Y') . " ({$checkinTime})",
+        'Check-out' => $booking->check_out->format('M d, Y') . " ({$checkoutTime})",
+        'Guests' => $booking->expected_guests,
+    ];
+
+    if ($booking->reservations->isNotEmpty()) {
+        $bookingDetails[\Illuminate\Support\Str::plural('Room', $booking->reservations->count())]
+            = $booking->reservations->pluck('room_number')->implode(', ');
+    }
+@endphp
+
+@component('mail::message', ['preheader' => "Booking #{$booking->id} is recorded as a no-show. Contact the front desk if this is incorrect."])
+@component('mail::status', ['tone' => 'danger'])
+Arrival status · No-show recorded
+@endcomponent
+
 # We missed you
 
 Dear {{ $booking->guest_name }},
 
 Your check-in date for booking **#{{ $booking->id }}** has passed and you were not checked in, so the booking is now recorded as a no-show and the {{ \Illuminate\Support\Str::plural('room', max(1, $booking->reservations->count())) }} has been released.
 
-**The booking**
-- Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
-- Guests: {{ $booking->expected_guests }}
-@if($booking->reservations->isNotEmpty())
-- {{ \Illuminate\Support\Str::plural('Room', $booking->reservations->count()) }}: {{ $booking->reservations->pluck('room_number')->implode(', ') }}
-@endif
+@component('mail::details', ['title' => 'The booking', 'rows' => $bookingDetails])
+@endcomponent
 
 @component('mail::panel')
 **A booking nobody checks in to is forfeited, and there is no refund.** That is the arrangement you agreed to when you booked: a paid stay cannot be cancelled, only moved — and moving it had to be asked for by {{ $deadline->format('g:i A, M d') }}, a full 24 hours before your check-in.

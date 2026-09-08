@@ -1,7 +1,7 @@
-@extends('layouts.admin')
+@extends(auth('staff')->user()?->role === 'frontdesk' ? 'layouts.frontdesk' : 'layouts.admin')
 
-@section('title', 'Admin - Discount Approval')
-@section('page-title', 'Discount Approval')
+@section('title', 'Discount Verification')
+@section('page-title', 'Discount Verification')
 
 @section('content')
 @php
@@ -53,6 +53,11 @@
             <x-admin.ui.icon name="clock" class="w-4 h-4 shrink-0" />
             This booking has expired. Documents are shown for reference only and can no longer be actioned.
         </div>
+    @elseif(!$isFinalized)
+        <div class="animate-in flex items-start gap-2.5 rounded-2xl border border-palay-200 bg-palay-50 px-5 py-3 text-sm font-medium leading-relaxed text-palay-800">
+            <x-admin.ui.icon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+            Compare every uploaded reference with the guest's original Senior Citizen or PWD ID at the front desk. Do not approve from the uploaded image alone.
+        </div>
     @endif
 
     <!-- Booking summary -->
@@ -100,7 +105,7 @@
     </div>
 
     <!-- Documents per room -->
-    <x-admin.ui.section-card icon="clipboard" title="Verification Documents" subtitle="Approve or reject each uploaded ID. The discount is computed from approved IDs only" :delay="120">
+    <x-admin.ui.section-card icon="clipboard" title="Original ID Check" subtitle="Mark each document only after comparing it with the original ID presented in person" :delay="120">
         <div class="space-y-7">
             @forelse($booking->reservations as $reservation)
                 @php $files = $reservation->discountFiles ?? collect(); @endphp
@@ -156,13 +161,13 @@
                                                 <form method="POST" action="{{ route('staff.discounts.file.approve', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
                                                     <button type="submit" data-busy-btn class="btn btn-primary btn-sm btn-center w-full">
-                                                        <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> Approve
+                                                        <x-admin.ui.icon name="check" class="w-3.5 h-3.5" stroke-width="2.5" /> ID matches
                                                     </button>
                                                 </form>
                                                 <form method="POST" action="{{ route('staff.discounts.file.reject', [$discount->id, $file->id]) }}" data-busy-form>
                                                     @csrf
                                                     <button type="submit" data-busy-btn class="btn btn-danger btn-sm btn-center w-full">
-                                                        <x-admin.ui.icon name="x" class="w-3.5 h-3.5" stroke-width="2.5" /> Reject
+                                                        <x-admin.ui.icon name="x" class="w-3.5 h-3.5" stroke-width="2.5" /> Does not match
                                                     </button>
                                                 </form>
                                             </div>
@@ -222,14 +227,21 @@
                                 <x-admin.ui.icon name="x" class="w-4 h-4" stroke-width="2.5" /> Reject Request
                             </button>
                         </form>
-                        <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}"
+                        <form method="POST" action="{{ route('staff.discounts.approve', $discount->id) }}" class="space-y-2"
                               data-busy-form
                               data-confirm-title="Approve this discount?"
-                              data-confirm="The 20% per approved ID will be applied to the booking total."
+                              data-confirm="The checked originals will be recorded and the 20% per approved ID applied to the booking total."
                               data-confirm-action="Yes, approve">
                             @csrf
-                            <button type="submit" data-busy-btn class="btn btn-primary">
-                                <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve Discount
+                            <label class="flex max-w-sm cursor-pointer items-start gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold leading-relaxed text-stone-700">
+                                <input type="checkbox" name="original_ids_verified" value="1" required class="mt-0.5 rounded border-stone-300 text-clsu-700 focus:ring-clsu-600">
+                                <span>I checked every approved original ID in person.</span>
+                            </label>
+                            @error('original_ids_verified')
+                                <p class="text-xs font-semibold text-ember-700">{{ $message }}</p>
+                            @enderror
+                            <button type="submit" data-busy-btn class="btn btn-primary w-full justify-center">
+                                <x-admin.ui.icon name="check-circle" class="w-4 h-4" /> Approve after ID check
                             </button>
                         </form>
                     </div>

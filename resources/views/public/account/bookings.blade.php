@@ -285,7 +285,11 @@
                                      from the list, and a button the server would
                                      refuse is worse than no button. --}}
                                 @php $openReschedule = \App\Models\RescheduleRequest::openFor($booking); @endphp
-                                @if($openReschedule)
+                                @if(\App\Models\RescheduleRequest::hasApprovedFor($booking))
+                                    <span class="stay-card__meta text-emerald-deep">
+                                        <x-booking.ui.icon-solid name="check-circle" class="text-[11px]" /> Reschedule used
+                                    </span>
+                                @elseif($openReschedule)
                                     <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="stay-card__meta text-palay-800 !no-underline hover:text-palay-900">
                                         <x-booking.ui.icon-solid name="hourglass" class="text-[11px]" />
                                         Reschedule pending &middot; {{ $openReschedule->requested_check_in->format('M d') }}

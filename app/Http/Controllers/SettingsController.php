@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BookingChanged;
+use App\Events\RoomStatusChanged;
+use App\Models\Booking;
+use App\Models\CancellationLog;
+use App\Models\Payment;
+use App\Support\GuestNotice;
+use App\Support\Realtime;
 use App\Support\RefCode;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Events\BookingChanged;
-use App\Events\RoomStatusChanged;
-use App\Models\Booking;
-use App\Models\Payment;
-use App\Models\CancellationLog;
-use App\Support\GuestNotice;
-use App\Support\Realtime;
-use Carbon\Carbon;
 
 class SettingsController extends Controller
 {
@@ -23,9 +23,10 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
         $username = $user->username;
+
         return view('public.account.profile', compact('username'));
     }
-    
+
     public function bookings(Request $request)
     {
         $user = Auth::user();
@@ -77,7 +78,9 @@ class SettingsController extends Controller
 
         // Sort
         $allowedSorts = ['id', 'check_in', 'check_out', 'total_price', 'payable_amount', 'status', 'created_at'];
-        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'created_at';
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
         $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
 
         $bookings = $query->orderBy($sortBy, $sortDir)->paginate(8)->withQueryString();
@@ -106,7 +109,6 @@ class SettingsController extends Controller
         ]);
     }
 
-
     public function transactions(Request $request)
     {
         $user = Auth::user();
@@ -131,7 +133,7 @@ class SettingsController extends Controller
             // and matching the wrong one only ever costs an extra row.
             $refId = RefCode::toId($search);
 
-            $query->where(function($q) use ($search, $refId) {
+            $query->where(function ($q) use ($search, $refId) {
                 $q->where('payments.id', 'like', "%{$search}%")
                 ->orWhere('payments.booking_id', 'like', "%{$search}%")
                 ->orWhere('payments.reference_no', 'like', "%{$search}%")
@@ -150,9 +152,11 @@ class SettingsController extends Controller
         }
 
         // Sort
-        $allowedSorts = ['id','booking_id','amount','status','reference_no','gateway','landbank_transaction_id','created_at'];
-        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'created_at';
-        $sortDir = in_array($sortDir, ['asc','desc']) ? $sortDir : 'desc';
+        $allowedSorts = ['id', 'booking_id', 'amount', 'status', 'reference_no', 'gateway', 'landbank_transaction_id', 'created_at'];
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
 
         $payments = $query->orderBy($sortBy, $sortDir)
                         ->paginate(10)
@@ -196,7 +200,7 @@ class SettingsController extends Controller
                 'password' => ['required', 'confirmed', 'min:8', 'max:72'],
             ]);
 
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (! Hash::check($request->current_password, $user->password)) {
                 return back()->withErrors(['current_password' => 'The current password is incorrect.']);
             }
 
@@ -292,9 +296,16 @@ class SettingsController extends Controller
         if ($booking->status !== Booking::STATUS_PENDING_PAYMENT) {
             $message = match ($booking->status) {
                 'pending_discount' => 'This booking is waiting on your Senior / PWD discount review. Withdraw the discount request first, and you can cancel it after that.',
-                'paid' => \App\Models\RescheduleRequest::isOpenFor($booking)
-                    ? 'A paid booking cannot be cancelled. If you cannot make these dates, request a reschedule at least 24 hours before your check-in.'
-                    : 'A paid booking cannot be cancelled, and the deadline to move it has passed. Please contact our front desk.',
+                'paid' => match (true) {
+                    \App\Models\RescheduleRequest::hasApprovedFor($booking)
+                        => 'A paid booking cannot be cancelled, and this booking has already used its one allowed reschedule. Please contact our front desk if you need help.',
+                    \App\Models\RescheduleRequest::openFor($booking) !== null
+                        => 'A paid booking cannot be cancelled. Your reschedule request is already waiting for our front desk to decide.',
+                    \App\Models\RescheduleRequest::isOpenFor($booking)
+                        => 'A paid booking cannot be cancelled. If you cannot make these dates, you may request its one reschedule at least 24 hours before check-in.',
+                    default
+                    => 'A paid booking cannot be cancelled, and the deadline to move it has passed. Please contact our front desk.',
+                },
                 'active' => 'You are already checked in, so there is nothing to cancel. Please speak to our front desk.',
                 default => 'This booking can no longer be cancelled.',
             };
@@ -311,6 +322,7 @@ class SettingsController extends Controller
             if ($secondsRemaining > 0) {
                 $remaining = (int) ceil($secondsRemaining / 60);
                 $unit = $remaining === 1 ? 'minute' : 'minutes';
+
                 return back()->with('error', "Please wait {$remaining} {$unit} before cancelling another booking.");
             }
         }
@@ -339,8 +351,8 @@ class SettingsController extends Controller
         // A guest cancelling drops the booking out of BLOCKING_STATUSES, which
         // frees its rooms for everyone else — but no console was being told,
         // so the freed rooms stayed spoken-for until the next poll.
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
 
         // The guest knows they cancelled — this is their written record of it,
         // and the only copy that lives outside our own CancellationLog.

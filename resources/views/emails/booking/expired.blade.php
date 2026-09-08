@@ -1,17 +1,29 @@
-@component('mail::message')
+@php
+    $bookingDetails = [
+        'Check-in' => $booking->check_in->format('M d, Y') . " ({$checkinTime})",
+        'Check-out' => $booking->check_out->format('M d, Y') . " ({$checkoutTime})",
+        'Guests' => $booking->expected_guests,
+    ];
+
+    if ($booking->reservations->isNotEmpty()) {
+        $bookingDetails[\Illuminate\Support\Str::plural('Room', $booking->reservations->count())]
+            = $booking->reservations->pluck('room_number')->implode(', ');
+    }
+@endphp
+
+@component('mail::message', ['preheader' => "Booking #{$booking->id} was released after its payment window closed."])
+@component('mail::status', ['tone' => 'warning'])
+Payment window closed
+@endcomponent
+
 # Your booking has been released
 
 Dear {{ $booking->guest_name }},
 
 Booking **#{{ $booking->id }}** was held for you pending payment. That window has now closed, so the {{ \Illuminate\Support\Str::plural('room', max(1, $booking->reservations->count())) }} went back on sale and the booking is marked expired.
 
-**What was booked**
-- Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
-- Guests: {{ $booking->expected_guests }}
-@if($booking->reservations->isNotEmpty())
-- {{ \Illuminate\Support\Str::plural('Room', $booking->reservations->count()) }}: {{ $booking->reservations->pluck('room_number')->implode(', ') }}
-@endif
+@component('mail::details', ['title' => 'What was booked', 'rows' => $bookingDetails])
+@endcomponent
 
 You have not been charged for this booking.
 

@@ -1,52 +1,48 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\StaffAuthController;
-use App\Http\Controllers\PasswordResetLinkController;
-use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingStatusFeedController;
 use App\Http\Controllers\DiscountController;
-use App\Http\Controllers\RescheduleController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\NewPasswordController;
+use App\Http\Controllers\PasswordResetLinkController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PsgcController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\RescheduleController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\StaffDashboardController;
-use App\Http\Controllers\Staff\RoomController;
-use App\Http\Controllers\Staff\RoomTypeController;
-use App\Http\Controllers\Staff\DiscountAdminController;
-use App\Http\Controllers\Staff\BookingHubController;
-use App\Http\Controllers\Staff\CompletedBookingsController;
-use App\Http\Controllers\Staff\BookingLogsController;
-use App\Http\Controllers\Staff\PaymentLogsController;
-use App\Http\Controllers\Staff\PaymentVerificationController;
-use App\Http\Controllers\Staff\NotificationFeedController;
-use App\Http\Controllers\Staff\RescheduleAdminController;
-use App\Http\Controllers\Staff\UserRecordsController;
-use App\Http\Controllers\Staff\StaffRecordsController;
 use App\Http\Controllers\Staff\AuditLogController;
-use App\Http\Controllers\Staff\GlobalSearchController;
-
-use App\Http\Controllers\Staff\ManualBookingController;
-
-use App\Http\Controllers\Staff\Reports\BookingReportController;
-use App\Http\Controllers\Staff\Reports\PaymentReportController;
-use App\Http\Controllers\Staff\Reports\UserReportController;
-use App\Http\Controllers\Staff\Reports\DiscountReportController;
-use App\Http\Controllers\Staff\Reports\MainReportsController;
-
+use App\Http\Controllers\Staff\BookingHubController;
+use App\Http\Controllers\Staff\BookingLogsController;
+use App\Http\Controllers\Staff\CompletedBookingsController;
+use App\Http\Controllers\Staff\DiscountAdminController;
+use App\Http\Controllers\Staff\FrontDesk\BookingsController;
 use App\Http\Controllers\Staff\FrontDesk\FrontDeskDashboardController;
 use App\Http\Controllers\Staff\FrontDesk\FrontDeskRoomController;
 use App\Http\Controllers\Staff\FrontDesk\WalkInBookingController;
-use App\Http\Controllers\Staff\FrontDesk\BookingsController;
+use App\Http\Controllers\Staff\GlobalSearchController;
+use App\Http\Controllers\Staff\ManualBookingController;
+use App\Http\Controllers\Staff\NotificationFeedController;
+use App\Http\Controllers\Staff\PaymentLogsController;
+use App\Http\Controllers\Staff\PaymentVerificationController;
+use App\Http\Controllers\Staff\Reports\BookingReportController;
+use App\Http\Controllers\Staff\Reports\DiscountReportController;
+use App\Http\Controllers\Staff\Reports\MainReportsController;
+use App\Http\Controllers\Staff\Reports\PaymentReportController;
+use App\Http\Controllers\Staff\Reports\UserReportController;
+use App\Http\Controllers\Staff\RescheduleAdminController;
+use App\Http\Controllers\Staff\RoomController;
+use App\Http\Controllers\Staff\RoomTypeController;
+use App\Http\Controllers\Staff\StaffRecordsController;
+use App\Http\Controllers\Staff\UserRecordsController;
+use App\Http\Controllers\StaffAuthController;
+use App\Http\Controllers\StaffDashboardController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
-
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ReceiptController;
 /*
 |--------------------------------------------------------------------------
 | Guest-only Routes
@@ -115,7 +111,7 @@ Route::middleware('guest:web,staff')->group(function () {
     // kept because middleware and older links still redirect to it.
     Route::get('/staff/login', fn () => redirect()->route('login'))->name('staff.login');
 
-     // OTP verification
+    // OTP verification
     Route::get('/staff/otp', [StaffAuthController::class, 'showOtpForm'])->name('staff.otp.form');
     Route::post('/staff/otp', [StaffAuthController::class, 'verifyOtp'])->name('staff.otp.verify');
     // Resend OTP
@@ -144,7 +140,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/booking/{booking}', [BookingController::class, 'show'])->name('booking.show');
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 
-    //discount
+    // discount
     Route::get('discount/{booking}/create', [DiscountController::class, 'create'])->name('discount.create');
     Route::post('discount/{booking}', [DiscountController::class, 'store'])->name('discount.store');
     Route::post('/discount/{booking}/cancel', [DiscountController::class, 'cancel'])->name('discount.cancel');
@@ -156,19 +152,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-bookings/status', BookingStatusFeedController::class)
         ->name('bookings.status.feed');
 
-    //user settings page
+    // user settings page
     Route::get('/settings', [SettingsController::class, 'profile'])->name('settings.profile');
     Route::get('/my-bookings', [SettingsController::class, 'bookings'])->name('settings.bookings');
     Route::get('/transactions', [SettingsController::class, 'transactions'])->name('settings.transactions');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    //cancel booking — unpaid only; see SettingsController::cancelBooking
+    // cancel booking — unpaid only; see SettingsController::cancelBooking
     Route::post('/booking/{booking}/cancel', [SettingsController::class, 'cancelBooking'])->name('booking.cancel');
 
     /*
     | Reschedule. The only thing a guest can do about a *paid* booking they
-    | cannot make, and only until check-in time on their arrival day. Asking is
-    | all that happens here — the dates are moved by staff.
+    | cannot make. They must ask at least 24 hours before check-in, and only one
+    | approved move is allowed; the dates are moved by staff.
     */
     Route::get('/booking/{booking}/reschedule', [RescheduleController::class, 'create'])->name('booking.reschedule.create');
     Route::post('/booking/{booking}/reschedule', [RescheduleController::class, 'store'])
@@ -176,13 +172,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('booking.reschedule.store');
     Route::post('/booking/{booking}/reschedule/withdraw', [RescheduleController::class, 'withdraw'])->name('booking.reschedule.withdraw');
 
-    //payments
+    // payments
 
     // Logout
     Route::post('/logout', function (Request $request) {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     })->name('logout');
 });
@@ -220,7 +217,7 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
     Route::post('/staff/room-types', [RoomTypeController::class, 'store'])->name('staff.roomtypes.store');
     Route::put('/staff/room-types/{roomType}', [RoomTypeController::class, 'update'])->name('staff.roomtypes.update');
 
-    //Booking Hub
+    // Booking Hub
     Route::get('/bookings', [BookingHubController::class, 'index'])->name('staff.bookings.index');
 
     Route::prefix('staff')->group(function () {
@@ -270,34 +267,14 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
 
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('staff.audit.index');
         Route::get('audit-logs/{id}', [AuditLogController::class, 'show'])->name('staff.audit.show');
-        
+
         Route::get('/manual-booking', [ManualBookingController::class, 'create'])->name('staff.manualbooking');
         Route::post('/manual-booking/store', [ManualBookingController::class, 'store'])->name('staff.manualbooking.store');
         Route::get('/manual-booking/{booking}', [ManualBookingController::class, 'show'])->name('staff.manualbooking.show');
         Route::post('/manual-booking/available-rooms', [ManualBookingController::class, 'getAvailableRoomsAjax'])->name('staff.manualbooking.available');
-        
+
     });
-
-
-    //Discount Management
-        // Discount requests index (list all)
-    Route::get('/staff/discounts', [DiscountAdminController::class, 'index'])->name('staff.discounts.index');
-
-    // Single discount review page
-    Route::get('/staff/discounts/{discount}', [DiscountAdminController::class, 'show'])->name('staff.discounts.show');
-
-    // Final approve/reject for entire discount request
-    Route::post('/staff/discounts/{discount}/approve', [DiscountAdminController::class, 'approve'])->name('staff.discounts.approve');
-    Route::post('/staff/discounts/{discount}/reject', [DiscountAdminController::class, 'reject'])->name('staff.discounts.reject');
-
-    // Per-file approve/reject
-    Route::post('/staff/discounts/{discount}/file/{file}/approve', [DiscountAdminController::class, 'approveFile'])->name('staff.discounts.file.approve');
-    Route::post('/staff/discounts/{discount}/file/{file}/reject', [DiscountAdminController::class, 'rejectFile'])->name('staff.discounts.file.reject');
-
-    // Secure preview for file (stream private storage)
-    Route::get('/staff/discounts/file/{file}/preview', [DiscountAdminController::class, 'previewFile'])->name('staff.discounts.file.preview');
-
-    //reports group for staff
+    // reports group for staff
     Route::prefix('/staff/reports')->group(function () {
 
         // Bookings Reports
@@ -309,7 +286,7 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::get('payments/all', [PaymentReportController::class, 'exportAll'])->name('reports.payments.all');
         Route::get('payments/cash', [PaymentReportController::class, 'exportCash'])->name('reports.payments.cash');
 
-         // Users Reports
+        // Users Reports
         Route::get('users/all', [UserReportController::class, 'exportAll'])->name('reports.users.all');
         Route::get('users/active', [UserReportController::class, 'exportActive'])->name('reports.users.active');
         Route::get('users/suspended', [UserReportController::class, 'exportSuspended'])->name('reports.users.suspended');
@@ -319,12 +296,38 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin'
         Route::get('discounts/pending', [DiscountReportController::class, 'exportPending'])->name('reports.discounts.pending');
         Route::get('discounts/approved', [DiscountReportController::class, 'exportApproved'])->name('reports.discounts.approved');
         Route::get('discounts/rejected', [DiscountReportController::class, 'exportRejected'])->name('reports.discounts.rejected');
-        
+
         Route::get('/view', [MainReportsController::class, 'index'])->name('staff.reports.index');
         Route::post('/generate', [MainReportsController::class, 'generate'])->name('reports.generate');
         Route::post('/export', [MainReportsController::class, 'export'])->name('reports.export');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Senior / PWD discount verification — admin AND front desk
+|--------------------------------------------------------------------------
+| An online request only holds the rooms. The actual entitlement decision is
+| made when original IDs are presented at the counter, so front-desk staff
+| must be able to work this queue. Cashier is intentionally absent: that role
+| verifies money received remotely, not identity-based discounts.
+*/
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,frontdesk'])
+    ->prefix('staff/discounts')
+    ->name('staff.discounts.')
+    ->group(function () {
+        Route::get('/', [DiscountAdminController::class, 'index'])->name('index');
+        Route::get('/{discount}', [DiscountAdminController::class, 'show'])->name('show');
+
+        Route::post('/{discount}/approve', [DiscountAdminController::class, 'approve'])->name('approve');
+        Route::post('/{discount}/reject', [DiscountAdminController::class, 'reject'])->name('reject');
+
+        Route::post('/{discount}/file/{file}/approve', [DiscountAdminController::class, 'approveFile'])->name('file.approve');
+        Route::post('/{discount}/file/{file}/reject', [DiscountAdminController::class, 'rejectFile'])->name('file.reject');
+
+        // Streams a privately stored ID image through the same role guard.
+        Route::get('/file/{file}/preview', [DiscountAdminController::class, 'previewFile'])->name('file.preview');
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -337,6 +340,7 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
         Auth::guard('staff')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     })->name('staff.logout');
 
@@ -347,6 +351,7 @@ Route::middleware(['auth:staff', 'staff.active'])->group(function () {
     // reads exactly what the topbar already rendered for this user and exposes
     // nothing further.
     Route::get('/staff/notifications/feed', NotificationFeedController::class)
+        ->middleware('staff.role:admin,master_admin,frontdesk')
         ->name('staff.notifications.feed');
 
 });
@@ -393,12 +398,14 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,
 
 /*
 |--------------------------------------------------------------------------
-| Payment Verification — admin AND front desk
+| Payment Verification — cashier decisions, admin oversight
 |--------------------------------------------------------------------------
-| Guests settle over GCash or a bank transfer and upload the receipt. Whoever
-| is at the desk clears it, so this is deliberately not admin-only.
+| Guests settle over GCash or a bank transfer and upload the receipt. The
+| cashier can compare that claim with the actual bank account, so only that
+| dedicated role may change the financial state. Admins may inspect the proof
+| and audit result, but cannot turn an unverified claim into a paid booking.
 */
-Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,frontdesk'])
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,cashier'])
     ->prefix('staff/payment-verification')
     ->name('staff.paymentverification.')
     ->group(function () {
@@ -407,6 +414,16 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:admin,master_admin,
         // Streams from the private disk — never a public storage URL.
         Route::get('/{payment}/proof', [PaymentVerificationController::class, 'proof'])->name('proof');
 
+        // Email alerts land on one exact claim so the cashier reviews the
+        // receipt before making either state-changing decision below. This
+        // GET is also the read-only audit view admins receive afterwards.
+        Route::get('/{payment}', [PaymentVerificationController::class, 'show'])->name('show');
+    });
+
+Route::middleware(['auth:staff', 'staff.active', 'staff.role:cashier'])
+    ->prefix('staff/payment-verification')
+    ->name('staff.paymentverification.')
+    ->group(function () {
         Route::post('/{payment}/approve', [PaymentVerificationController::class, 'approve'])->name('approve');
         Route::post('/{payment}/reject', [PaymentVerificationController::class, 'reject'])->name('reject');
     });
@@ -457,7 +474,7 @@ Route::middleware(['auth:staff', 'staff.active', 'staff.role:frontdesk,master_ad
         // this it had no route to `paid` and would simply expire.
         route::post('/booking/{booking}/settle', [BookingsController::class, 'settle'])->name('frontdesk.booking.settle');
 
-});
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -473,12 +490,14 @@ Route::get('/email/verify', function () {
 // Verify via link
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill(); // updates email_verified_at
+
     return redirect('/checkout'); // redirect after verification
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
 // Resend verification email
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
+
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 

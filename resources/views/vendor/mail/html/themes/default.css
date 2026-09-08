@@ -1,0 +1,578 @@
+/* =========================================================================
+   Farmers Hostel — transactional email system
+   Editorial hospitality styling aligned with the admin design tokens.
+   ========================================================================= */
+
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #F4F8F5;
+    color: #14201A;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.65;
+    text-align: left;
+}
+
+a {
+    color: #087443;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #095C37;
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #14201A;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 27px;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 12px;
+    text-align: left;
+    letter-spacing: -0.35px;
+    line-height: 1.22;
+}
+
+h2 {
+    color: #14201A;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    text-align: left;
+    line-height: 1.35;
+}
+
+h3 {
+    color: #14201A;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+p {
+    color: #51655A;
+    font-size: 15px;
+    line-height: 1.7em;
+    margin-top: 0;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+p.sub {
+    font-size: 13px;
+    color: #5C7266;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #F4F8F5;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header */
+
+.header {
+    padding: 0;
+    text-align: center;
+}
+
+.header a {
+    color: #ffffff;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Body */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #F4F8F5;
+    border: none;
+    margin: 0;
+    padding: 0 12px;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 600px;
+    background-color: #FFFFFF;
+    border: 1px solid #DCE6DE;
+    border-radius: 0 0 14px 14px;
+    border-top: 0;
+    box-shadow: 0 10px 30px rgba(9, 60, 38, 0.07);
+    margin: 0 auto;
+    padding: 0;
+    width: 600px;
+    overflow: hidden;
+}
+
+.inner-body a {
+    word-break: break-all;
+}
+
+/* Subcopy */
+
+.subcopy {
+    background-color: #F6F9F6;
+    border-top: 1px solid #DCE6DE;
+    margin-top: 32px;
+    padding: 20px 22px;
+    border-radius: 6px;
+}
+
+.subcopy p {
+    font-size: 13px;
+    color: #5C7266;
+    line-height: 1.6;
+}
+
+/* Footer */
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 600px;
+}
+
+.footer p {
+    color: #5C7266;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.footer a {
+    color: #5C7266;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: #51655A;
+    text-decoration: underline;
+}
+
+/* Tables */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 30px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 2px solid #C3D2C7;
+    color: #14201A;
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.table td {
+    color: #51655A;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid #E2EBE4;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 44px 42px 42px;
+}
+
+/* Buttons */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 30px auto 20px;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    float: unset;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 5px;
+    color: #fff;
+    display: inline-block;
+    overflow: hidden;
+    text-decoration: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: none;
+    box-shadow: 0 3px 0 rgba(8, 116, 67, 0.16);
+    word-break: normal;
+}
+
+.inner-body a.button {
+    word-break: normal;
+}
+
+.button-blue,
+.button-primary {
+    background-color: #0F8F51;
+    border-bottom: 13px solid #0F8F51;
+    border-left: 30px solid #0F8F51;
+    border-right: 30px solid #0F8F51;
+    border-top: 13px solid #0F8F51;
+}
+
+.button-blue:hover,
+.button-primary:hover {
+    background-color: #16B364;
+    border-bottom: 13px solid #16B364;
+    border-left: 30px solid #16B364;
+    border-right: 30px solid #16B364;
+    border-top: 13px solid #16B364;
+}
+
+.button-green,
+.button-success {
+    background-color: #0F8F51;
+    border-bottom: 13px solid #0F8F51;
+    border-left: 30px solid #0F8F51;
+    border-right: 30px solid #0F8F51;
+    border-top: 13px solid #0F8F51;
+}
+
+.button-red,
+.button-error {
+    background-color: #B91C1C;
+    border-bottom: 12px solid #B91C1C;
+    border-left: 28px solid #B91C1C;
+    border-right: 28px solid #B91C1C;
+    border-top: 12px solid #B91C1C;
+}
+
+/* Panels */
+
+.panel {
+    border-left: #F79009 solid 3px;
+    margin: 26px 0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.panel-content {
+    background-color: #FFFAEB;
+    color: #39463E;
+    padding: 18px 21px 19px 23px;
+    border: 1px solid #FEDF89;
+    border-left: none;
+}
+
+.panel-content p {
+    color: #51655A;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.panel-content .panel-label {
+    color: #93370D;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    line-height: 1.3;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Utilities */
+
+.break-all {
+    word-break: break-all;
+}
+
+/* ---- Farmers Hostel masthead ---- */
+
+.hostel-header-banner {
+    background-color: #0F8F51;
+    padding: 23px 34px 22px;
+}
+
+.header-shell {
+    background-color: #0F8F51;
+    border-radius: 14px 14px 0 0;
+    overflow: hidden;
+    width: 600px;
+}
+
+.hostel-logo {
+    display: block;
+    width: 56px;
+    height: 56px;
+    border: 0;
+}
+
+.hostel-header-eyebrow {
+    color: #D3F8E0;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.hostel-header-name {
+    color: #ffffff;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 25px;
+    font-weight: bold;
+    text-decoration: none;
+    display: block;
+    line-height: 1.2;
+}
+
+.hostel-header-meta {
+    background-color: #087443;
+    border-top: 1px solid #3CCB7F;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    padding: 9px 34px 10px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.hostel-gold-rule {
+    border: none;
+    margin: 0;
+    padding: 0;
+    background-color: #16B364;
+    height: 3px;
+}
+
+/* ---- Footer ---- */
+
+.hostel-footer-location {
+    color: #5C7266;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+.hostel-footer-help {
+    color: #51655A;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 7px;
+    text-align: center;
+}
+
+/* ---- Guest booking summary ---- */
+
+.mail-details {
+    border-collapse: separate;
+    margin: 22px 0 26px;
+    width: 100%;
+}
+
+.mail-details-cell {
+    background-color: #F6F9F6;
+    border: 1px solid #DCE6DE;
+    border-radius: 7px;
+    border-top: 3px solid #0F8F51;
+    padding: 21px 23px 20px;
+}
+
+.mail-details-eyebrow {
+    color: #5C7266;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    line-height: 1.35;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+}
+
+.mail-details-title {
+    color: #14201A;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 12px;
+}
+
+.mail-details-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.mail-details-label,
+.mail-details-value {
+    border-top: 1px solid #DCE6DE;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.mail-details-label {
+    color: #5C7266;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+    padding: 11px 12px 11px 0;
+    width: 38%;
+}
+
+.mail-details-value {
+    color: #14201A;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.45;
+    padding: 11px 0;
+}
+
+/* ---- Lifecycle status ---- */
+
+.mail-status {
+    border-collapse: separate;
+    margin: 0 0 20px;
+}
+
+.mail-status-cell {
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    line-height: 1.2;
+    padding: 7px 12px;
+    text-transform: uppercase;
+}
+
+/* ---- Operational staff alerts ---- */
+
+.alert-card {
+    border-collapse: separate;
+    margin: 24px 0;
+    width: 100%;
+}
+
+.alert-detail-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.alert-detail-label,
+.alert-detail-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.alert-action-note strong {
+    color: #087443;
+}
+
+.alert-fallback a {
+    word-break: break-all;
+}
+
+/* ---- Booking Details List ---- */
+
+.booking-details {
+    margin: 20px 0;
+}
+
+.booking-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.booking-details li {
+    padding: 10px 0;
+    border-bottom: 1px solid #E2EBE4;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.booking-details li:last-child {
+    border-bottom: none;
+}
+
+.booking-details strong {
+    color: #14201A;
+    font-weight: 600;
+}

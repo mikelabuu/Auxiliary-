@@ -19,7 +19,7 @@
                 <span class="h-px w-8 bg-emerald/50"></span> Proof of Payment
             </span>
             <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Upload your <span class="italic text-gold">receipt</span></h1>
-            <p class="text-sm font-medium text-ink/55 mt-3 max-w-xl">Send the payment first, then attach the receipt here. Your booking is confirmed once our front desk has verified it against the transfer.</p>
+            <p class="text-sm font-medium text-ink/55 mt-3 max-w-xl">Send the payment first, then attach the receipt here. Your booking is confirmed once our cashier has verified it against the transfer.</p>
         </div>
 
         @if ($errors->any())

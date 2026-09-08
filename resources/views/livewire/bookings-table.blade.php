@@ -1,17 +1,17 @@
-<x-admin.ui.section-card wire:poll.15s icon="clipboard" title="Complete Booking Log" subtitle="Every booking that has not been checked out yet.">
+<x-admin.ui.section-card wire:poll.15s icon="clipboard" title="All bookings" subtitle="Bookings that have not been checked out yet." class="booking-log">
     {{-- data-no-loader: these serve a spreadsheet download and leave the page
          where it is, so the navigation curtain (partials/page-loader) must not
          be raised for them. --}}
     <x-slot:actions>
         <a href="{{ route('reports.bookings.full') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-clsu-700 border border-clsu-200 bg-white rounded-lg px-3 py-1.5 hover:bg-clsu-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
-            All
+            Export all
         </a>
-        <a href="{{ route('reports.bookings.paid') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-3 py-1.5 hover:bg-palay-50 transition-colors !no-underline">
+        <a href="{{ route('reports.bookings.paid') }}" data-no-loader aria-label="Export paid bookings" class="flex items-center gap-1.5 text-xs font-semibold text-palay-800 border border-palay-200 bg-white rounded-lg px-3 py-1.5 hover:bg-palay-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Paid
         </a>
-        <a href="{{ route('reports.bookings.completed') }}" data-no-loader class="flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors !no-underline">
+        <a href="{{ route('reports.bookings.completed') }}" data-no-loader aria-label="Export completed bookings" class="flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors !no-underline">
             <x-admin.ui.icon name="download" class="w-3.5 h-3.5" stroke-width="2" />
             Completed
         </a>
@@ -22,13 +22,13 @@
     @php
         $statusPills = [
             '' => 'All',
-            'pending_payment' => 'Pending Payment',
-            'pending_discount' => 'Pending Discount',
+            'pending_payment' => 'Pending payment',
+            'pending_discount' => 'Pending discount',
             'paid' => 'Paid',
             'active' => 'Active',
             'cancelled' => 'Cancelled',
             'expired' => 'Expired',
-            'no_show' => 'No Show',
+            'no_show' => 'No show',
         ];
         $statusClassMap = [
             'paid' => 'status-paid', 'active' => 'status-active',
@@ -38,6 +38,7 @@
     @endphp
 
     {{-- Search + date --}}
+    <div class="booking-log-controls">
     <div class="filter-toolbar">
         <div class="filter-search">
             <x-admin.ui.icon name="search" class="w-4 h-4" stroke-width="2" />
@@ -80,10 +81,11 @@
     </div>
 
     {{-- Status pills --}}
-    <div class="filter-row mb-3">
+    <div class="filter-row booking-status-filters" role="group" aria-label="Booking status">
         <span class="filter-row-label">Status</span>
         @foreach($statusPills as $value => $label)
             <button type="button" wire:click="setStatus('{{ $value }}')"
+                    aria-pressed="{{ $statusFilter === $value ? 'true' : 'false' }}"
                     @class(['filter-tab', 'selected' => $statusFilter === $value])>
                 {{ $label }}
                 <span class="ft-count">{{ $value === '' ? $statusCounts->sum() : ($statusCounts[$value] ?? 0) }}</span>
@@ -92,15 +94,16 @@
     </div>
 
     {{-- Quick filters --}}
-    <div class="filter-row mb-6">
+    <div class="filter-row booking-quick-filters" role="group" aria-label="Quick booking filters">
         <span class="filter-row-label">Quick filters</span>
-        <button type="button" wire:click="toggleDate('today_checkin')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkin'])>Arriving today</button>
-        <button type="button" wire:click="toggleDate('today_checkout')" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkout'])>Departing today</button>
-        <button type="button" wire:click="toggleStatus('active')" @class(['filter-tab', 'selected' => $statusFilter === 'active'])>Active stays</button>
+        <button type="button" wire:click="toggleDate('today_checkin')" aria-pressed="{{ $dateFilter === 'today_checkin' ? 'true' : 'false' }}" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkin'])>Arriving today</button>
+        <button type="button" wire:click="toggleDate('today_checkout')" aria-pressed="{{ $dateFilter === 'today_checkout' ? 'true' : 'false' }}" @class(['filter-tab', 'selected' => $dateFilter === 'today_checkout'])>Departing today</button>
+        <button type="button" wire:click="toggleStatus('active')" aria-pressed="{{ $statusFilter === 'active' ? 'true' : 'false' }}" @class(['filter-tab', 'selected' => $statusFilter === 'active'])>Active stays</button>
+    </div>
     </div>
 
     @if($bookings->isEmpty())
-        <x-admin.ui.empty-state icon="clipboard" title="No bookings found." />
+        <x-admin.ui.empty-state icon="clipboard" :title="($search !== '' || $statusFilter !== '' || $dateFilter !== '') ? 'No matching bookings. Try another search or clear the filters.' : 'No bookings yet. Create a booking to get started.'" />
     @else
         {{-- table-fold makes this the query container for the four-column
              layout (see 20-table-fold.css). It sits on .wire-panel rather than
@@ -157,7 +160,7 @@
                                 <div class="cell-name">
                                     <x-admin.ui.avatar />
                                     <div class="cell-name-text">
-                                        <p class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</p>
+                                        <button type="button" class="cell-name-primary guest-history-link cursor-pointer hover:text-clsu-700 hover:underline text-left" data-booking-id="{{ $booking->id }}" title="{{ $booking->guest_name }} — view guest history">{{ $booking->guest_name }}</button>
                                         <p class="cell-name-secondary">
                                             <span class="fold-hide">#{{ $booking->id }}</span>
                                             <span class="fold-show">{{ $rooms ? 'Room ' . $rooms : 'No room assigned' }}</span>

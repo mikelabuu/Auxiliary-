@@ -38,18 +38,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const iconBank = document.getElementById('bookingIcons');
   const icon = (name) => iconBank?.content?.querySelector(`[data-icon="${name}"]`)?.innerHTML || '';
 
-  // Animated currency count-up for summary totals
-  function animateCurrency(el, from, to, ms = 380) {
+  // Totals are working figures: update immediately, including on rapid input.
+  function animateCurrency(el, from, to) {
     if (!el) return;
-    if (from === to || !window.requestAnimationFrame) { el.textContent = formatPrice(to); return; }
-    const start = performance.now();
-    function frame(now) {
-      const t = Math.min(1, (now - start) / ms);
-      const eased = 1 - Math.pow(1 - t, 3);
-      el.textContent = formatPrice(Math.round(from + (to - from) * eased));
-      if (t < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
+    el.textContent = formatPrice(to);
   }
   let lastSummaryTotal = 0;
 
@@ -2182,6 +2174,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Per-room-type availability for the chosen dates. Badges each type card so a
   // guest can see at a glance that, say, every Double Room is taken — before
   // they pick it. Uses the same /rooms/availability-summary the landing page does.
+  let availabilityController = null;
+  let availabilityKey = '';
   async function updateTypeAvailability() {
     // Guest's chosen dates, or a default (tonight → tomorrow) so the type cards
     // show "Fully booked" / "Only N left" on load, before stay dates are picked.
@@ -2193,15 +2187,24 @@ document.addEventListener('DOMContentLoaded', function () {
       const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
       ci = iso(today); co = iso(tomorrow);
     }
+    const key = ci + '|' + co;
+    if (availabilityController && availabilityKey === key) return;
+    availabilityController?.abort();
+    const controller = new AbortController();
+    availabilityController = controller;
+    availabilityKey = key;
     try {
       const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
       const resp = await fetch('/rooms/availability-summary', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
         body: JSON.stringify({ check_in: ci, check_out: co })
       });
       if (!resp.ok) return;
       const data = await resp.json();
+      // A slow response for an earlier date choice must never repaint this one.
+      if (controller.signal.aborted || availabilityController !== controller) return;
       (data.summary || []).forEach(row => {
         // Kept so the form can tell a guest they are asking for four Doubles
         // when three are free. With the picker gone there is no grid running
@@ -2254,7 +2257,11 @@ document.addEventListener('DOMContentLoaded', function () {
       // guest touches — which, on the Rooms step they have just arrived at, is
       // the room they are about to be told they cannot have.
       updateProgressRail();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error(e);
+    } finally {
+      if (availabilityController === controller) availabilityController = null;
+    }
   }
 
   /**

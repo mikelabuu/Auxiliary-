@@ -2,6 +2,7 @@
 
 @section('title', 'Admin - Dashboard')
 @section('page-title', 'Dashboard')
+@section('body-class', 'admin-refined')
 @section('content')
 {{-- The csrf-token meta and $.ajaxSetup that used to sit here were a duplicate
      of the one layouts/admin already emits in <head>; the setup call now lives

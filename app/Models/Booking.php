@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Booking extends Model
 {
-
     use HasFactory;
 
     /**
@@ -85,24 +84,33 @@ class Booking extends Model
             $q->whereIn($status, self::SETTLED_BLOCKING_STATUSES)
                 ->orWhere(function ($q) use ($status, $since, $checkIn, $lapsedBefore, $liveFrom) {
                     $q->where($status, 'pending_payment')
-                        // A missing stamp cannot be reasoned about. The status
-                        // mutator below always sets one, so this should be
-                        // unreachable — but treat it as still holding rather
-                        // than release a room somebody may be paying for.
-                        ->where(function ($q) use ($since, $lapsedBefore) {
-                            $q->whereNull($since)
-                                ->orWhere($since, '>', $lapsedBefore);
-                        })
-                        // Both sides are bare `Y-m-d`: the column via
-                        // setCheckInAttribute, the bound because
-                        // earliestLiveCheckInDate() returns a date string.
-                        // This was whereDate() while the stored value could
-                        // still carry a midnight time component; it no longer
-                        // can, and the plain comparison is the one that can
-                        // use idx_bookings_availability. This scope sits under
-                        // every availability query in the app, so it is the
-                        // single place where that matters most.
-                        ->where($checkIn, '>=', $liveFrom);
+                        ->where(function ($q) use ($since, $checkIn, $lapsedBefore, $liveFrom) {
+                            // Once proof is submitted, the guest has done their
+                            // part. Keep the room held while a human checks the
+                            // transfer even if either unpaid clock ends.
+                            // Correlated EXISTS rather than a relationship:
+                            // this scope also runs on Reservation builders
+                            // joined to bookings, where `whereHas()` would look
+                            // for the relationship on the wrong model.
+                            $q->whereExists(function ($payments) {
+                                $payments->selectRaw('1')
+                                    ->from('payments')
+                                    ->whereColumn('payments.booking_id', 'bookings.id')
+                                    ->where('payments.status', Payment::STATUS_AWAITING_VERIFICATION);
+                            })
+                                ->orWhere(function ($q) use ($since, $checkIn, $lapsedBefore, $liveFrom) {
+                                    // A missing stamp cannot be reasoned about.
+                                    // The status mutator normally sets one, so
+                                    // treat an exceptional null as still live.
+                                    $q->where(function ($q) use ($since, $lapsedBefore) {
+                                        $q->whereNull($since)
+                                            ->orWhere($since, '>', $lapsedBefore);
+                                    })
+                                    // Both sides are bare `Y-m-d`, so this can
+                                    // use idx_bookings_availability.
+                                    ->where($checkIn, '>=', $liveFrom);
+                                });
+                        });
                 });
         });
     }
@@ -192,7 +200,7 @@ class Booking extends Model
         'discount',
         'num_seniors',
         'total_price',
-        'payable_amount',   // 
+        'payable_amount',   //
         'status',
         'wants_discount',
         'expected_guests',    //
@@ -300,7 +308,7 @@ class Booking extends Model
 
     public function rooms(): BelongsToMany
     {
-    return $this->belongsToMany(Room::class, 'booking_room')->withTimestamps();
+        return $this->belongsToMany(Room::class, 'booking_room')->withTimestamps();
     }
     public function getRoomTypeAttribute()
     {
@@ -348,8 +356,8 @@ class Booking extends Model
     }
 
     /**
-     * Asks to move this stay. Plural because a declined or withdrawn request
-     * does not stop the guest trying again — only a *pending* one does, and
+     * Asks to move this stay. Plural because declined or withdrawn requests do
+     * not consume the allowance. The first approved request does, permanently;
      * that guard lives in RescheduleRequest::isOpenFor().
      */
     public function rescheduleRequests()
@@ -362,16 +370,20 @@ class Booking extends Model
         return $this->hasOne(\App\Models\Payment::class, 'booking_id')->latestOfMany();
     }
 
+    /** Every claim, including rejected attempts and the one staff is reviewing. */
+    public function paymentAttempts()
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'booking_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->whereIn('status', [self::STATUS_PAID, self::STATUS_ACTIVE])
                     ->where('check_out', '>=', now(config('hostel.timezone'))->startOfDay());
     }
-    
+
     public function balance()
     {
         return $this->hasOne(Balance::class);
     }
-}   
-
-
+}

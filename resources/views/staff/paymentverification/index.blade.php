@@ -1,9 +1,9 @@
 @php
-    // One page, two consoles. Front desk clears receipts as often as admin
-    // does, so it renders inside whichever shell the viewer already lives in.
-    $isFrontDesk = auth('staff')->user()?->role === 'frontdesk';
+    // Cashiers work from a focused console; admins retain a read-only audit
+    // view in their normal shell.
+    $isCashier = auth('staff')->user()?->role === 'cashier';
 @endphp
-@extends($isFrontDesk ? 'layouts.frontdesk' : 'layouts.admin')
+@extends($isCashier ? 'layouts.frontdesk' : 'layouts.admin')
 @section('title', 'Payment Verification')
 @section('page-title', 'Payment Verification')
 
@@ -18,8 +18,8 @@
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
 
-    @unless($isFrontDesk)
-        <x-admin.ui.page-header subtitle="Guests who paid by GCash or bank transfer and uploaded their receipt. Nothing is confirmed until a staff member has checked the image against the transfer.">
+    @unless($isCashier)
+        <x-admin.ui.page-header subtitle="Read-only oversight of payment proofs handled by the cashier. Only the cashier can verify or reject a claim.">
             Payment Verification
         </x-admin.ui.page-header>
     @endunless
@@ -113,7 +113,7 @@
                             </div>
                         </dl>
 
-                        @if ($isPending)
+                        @if ($isPending && $isCashier)
                             <div class="flex items-start gap-2.5 rounded-[var(--radius)] border border-palay-200 bg-palay-50 px-4 py-3 text-xs font-semibold text-palay-800 leading-relaxed">
                                 <x-admin.ui.icon name="shield" class="w-4 h-4 mt-0.5 shrink-0" stroke-width="2" />
                                 Confirm the amount, reference and date on the receipt against the actual transfer before verifying. Verifying marks the booking paid and emails the official receipt.
@@ -142,6 +142,19 @@
                                     Reject
                                 </button>
 
+                                <a href="{{ route('staff.paymentverification.proof', $payment->id) }}" target="_blank" rel="noopener"
+                                   class="btn btn-ghost btn-sm">
+                                    <x-admin.ui.icon name="eye" class="w-4 h-4" stroke-width="2" />
+                                    Open receipt
+                                </a>
+                            </div>
+                        @elseif ($isPending)
+                            <div class="flex items-start gap-2.5 rounded-[var(--radius)] border border-palay-200 bg-palay-50 px-4 py-3 text-xs font-semibold text-palay-800 leading-relaxed">
+                                <x-admin.ui.icon name="shield" class="w-4 h-4 mt-0.5 shrink-0" stroke-width="2" />
+                                This proof is awaiting the cashier. Admin access is read-only because the cashier is the role that can confirm the bank transfer.
+                            </div>
+
+                            <div class="mt-4">
                                 <a href="{{ route('staff.paymentverification.proof', $payment->id) }}" target="_blank" rel="noopener"
                                    class="btn btn-ghost btn-sm">
                                     <x-admin.ui.icon name="eye" class="w-4 h-4" stroke-width="2" />
@@ -184,6 +197,7 @@
 
 {{-- Reject: a reason is mandatory, because the guest is shown it and has to
      know what to correct before uploading again. --}}
+@if ($isCashier)
 <x-admin.ui.modal id="rejectProofModal" icon="block" title="Reject proof of payment" max-width="lg">
     <form method="POST" id="rejectProofForm" data-busy-form>
         @csrf
@@ -255,4 +269,5 @@
     });
 </script>
 @endpush
+@endif
 @endsection

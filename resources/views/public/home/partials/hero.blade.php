@@ -22,7 +22,7 @@
          (42 KB) on desktop and scaled unpredictably elsewhere, because a fixed
          px hint ignores how wide the element actually paints. --}}
     <x-img src="image/farmers-hostel-wide.png" alt="" aria-hidden="true"
-           decoding="async" class="fh-hero-wash" sizes="25vw" />
+           loading="lazy" decoding="async" class="fh-hero-wash" sizes="25vw" />
 
     {{-- Stacked radial suns + corner falloff. --}}
     <div class="fh-hero-lights" aria-hidden="true"></div>
@@ -36,7 +36,7 @@
              most this one can give up while 14px of blur still hides it. It is
              a softer stretch than the wash above because this band is only
              barely defocused. --}}
-        <x-img src="image/farmers-hostel-wide.png" alt="" decoding="async" sizes="50vw" />
+        <x-img src="image/farmers-hostel-wide.png" alt="" loading="lazy" decoding="async" sizes="50vw" />
     </div>
 
     {{-- Dusk wash — opacity driven by scroll in home.js as the hero leaves. --}}
@@ -88,7 +88,7 @@
         <x-img src="image/hostel-front.png"
                alt="Farmers Hostel building inside the CLSU campus"
                fetchpriority="high" decoding="async" class="fh-hero-build"
-               sizes="(max-width: 900px) calc(118vw - 47px), calc(104vw - 90px)" />
+               sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 900px) calc(118vw - 47px), calc(104vw - 90px)" />
 
         {{-- Raked legibility scrim — darkens the copy column, not the picture. --}}
         <div class="fh-hero-scrim" aria-hidden="true"></div>

@@ -38,11 +38,9 @@ class StaffAuthSecurityTest extends TestCase
      *
      * `otp_enabled` alone is not enough: IssuesStaffOtp::otpRequiredFor() also
      * requires the role to be listed in `staff.otp_roles`, which defaults to
-     * master_admin only — and staff() here creates an admin. Setting just the
-     * feature flag therefore let every login skip straight to the dashboard,
-     * and the step-one tests were asserting against a redirect that no longer
-     * happened. config/staff.php says this list "fails open"; this is what
-     * that looks like from the test side.
+     * admin and master_admin — and the helper remains explicit so each test is
+     * isolated from environment configuration. config/staff.php says this list
+     * "fails open"; a missing role would silently skip the second factor.
      */
     private function enableOtp(string $role = 'admin'): void
     {

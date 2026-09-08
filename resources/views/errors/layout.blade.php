@@ -33,7 +33,9 @@
             $role = auth('staff')->user()->role;
             $home = in_array($role, ['admin', 'master_admin'], true)
                 ? route('staff.dashboard')
-                : ($role === 'frontdesk' ? route('frontdesk.dashboard.index') : route('login'));
+                : ($role === 'frontdesk'
+                    ? route('frontdesk.dashboard.index')
+                    : ($role === 'cashier' ? route('staff.paymentverification.index') : route('login')));
 
             $actions = [['label' => 'Back to dashboard', 'href' => $home, 'primary' => true]];
         } elseif (auth('web')->check()) {

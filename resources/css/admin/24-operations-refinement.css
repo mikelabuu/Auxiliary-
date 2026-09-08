@@ -1,0 +1,249 @@
+/* Pilot on Dashboard and Bookings. Colors inherit the original admin palette;
+   these rules refine spacing, typography and controls on the two screens. */
+body.admin-refined {
+    --ops-shadow: 0 1px 2px rgba(9, 60, 38, .035), 0 4px 12px rgba(9, 60, 38, .025);
+    background: var(--color-surface);
+}
+
+body.admin-refined .grid-overlay,
+body.admin-refined .gb-page { display: none; }
+
+body.admin-refined .shell-topbar {
+    border-bottom-color: var(--color-border);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* One surface family. Only interactive objects change their edge on hover. */
+body.admin-refined :is(.card, .stat-card, .mini-stat, .dash-welcome, .dash-cal, [data-component="arrivals-departures"]) {
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    box-shadow: var(--ops-shadow);
+    transform: none;
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+body.admin-refined :is(.card, .stat-card, .mini-stat)::before,
+body.admin-refined :is(.card, .stat-card, .mini-stat)::after { display: none; }
+
+body.admin-refined .card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 14px 14px 0 0;
+}
+body.admin-refined .card-header::after { display: none; }
+body.admin-refined .card-title { font-weight: 600; letter-spacing: -.025em; }
+body.admin-refined .card-subtitle { margin-top: 5px; }
+body.admin-refined .arrivals-panel-header { padding: 20px 24px; border-color: var(--color-border); }
+body.admin-refined .arrivals-panel-title { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.025em; }
+
+body.admin-refined :is(.btn, .dash-btn, .filter-tab, .filter-select, .filter-search input) {
+    border-radius: 8px;
+    box-shadow: none;
+    transform: none;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+body.admin-refined :is(.btn, .dash-btn) { text-decoration: none; }
+body.admin-refined .dash-btn { justify-content: center; }
+body.admin-refined .dash-btn--primary { background: var(--btn-fill); color: #fff; }
+body.admin-refined :is(a, button, input, select):focus-visible {
+    outline: 3px solid var(--color-g-800);
+    outline-offset: 3px;
+}
+
+/* The welcome/calendar pairing remains the opening of the dashboard. */
+body.admin-refined .dash-welcome { padding: 28px; }
+body.admin-refined .dash-welcome__meta { margin-bottom: 18px; }
+body.admin-refined .dash-welcome__title {
+    font-size: clamp(1.6rem, 2.2vw, 2rem);
+    line-height: 1.25;
+    letter-spacing: -.035em;
+}
+body.admin-refined .dash-welcome__title em {
+    font-style: normal;
+    font-weight: inherit;
+}
+body.admin-refined :is(.dash-welcome__date, .dash-ops__label, .dash-cal__eyebrow, .stat-period, .stat-label, .filter-row-label) {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 550;
+}
+body.admin-refined .dash-welcome__summary { font-size: var(--fs-md); }
+body.admin-refined .dash-ops {
+    margin-top: 24px;
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    border-radius: 10px;
+}
+body.admin-refined .dash-ops__item { padding: 16px; gap: 10px; border-color: var(--color-border); }
+body.admin-refined .dash-ops__label { font-size: var(--fs-sm); }
+body.admin-refined .dash-ops__value { font-size: 28px; }
+body.admin-refined .dash-ops__item--attention { background: var(--color-ember-50); }
+body.admin-refined .dash-ops__item--attention .dash-ops__label { color: var(--color-ember-700); }
+body.admin-refined .dash-welcome__actions { gap: 8px; margin-top: 24px; }
+body.admin-refined .dash-cal__head { flex-wrap: wrap; gap: 12px; border-color: var(--color-border); }
+body.admin-refined .dash-cal__month { font-size: 21px; font-weight: 600; letter-spacing: -.03em; }
+body.admin-refined .dash-cal__eyebrow { font-size: var(--fs-sm); }
+body.admin-refined :is(.dash-cal__nav-btn, .dash-cal__today) { min-height: 44px; border-radius: 8px; }
+body.admin-refined .dash-cal__nav-btn { min-width: 44px; }
+
+/* Keep the revenue accent; the remaining KPIs read as one family. */
+body.admin-refined .stat-card { min-width: 0; padding: 22px; gap: 12px; }
+body.admin-refined .stat-value { font-size: clamp(1.5rem, 2vw, 2rem); font-weight: 650; letter-spacing: -.04em; overflow-wrap: anywhere; }
+body.admin-refined .stat-value-row { flex-wrap: wrap; }
+body.admin-refined .stat-label { font-size: var(--fs-md); }
+body.admin-refined .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    transform: none;
+}
+body.admin-refined .stat-card-hero { border-color: rgba(255, 255, 255, .18); }
+body.admin-refined .stat-card-hero .stat-icon { backdrop-filter: none; }
+body.admin-refined .stat-card-go { opacity: .65; transform: none; }
+
+/* A compact booking header replaces the tall banner and its repeated live
+   status text. Counts still come from the original polling component. */
+body.admin-refined .booking-page-header {
+    padding: 24px;
+    border-radius: 14px;
+    background: var(--color-brand-fill);
+    color: #fff;
+}
+body.admin-refined .booking-page-header__top > .btn {
+    background: #fff;
+    border-color: #fff;
+    color: var(--color-g-800);
+}
+body.admin-refined .booking-page-header__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+body.admin-refined .booking-page-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 2.2vw, 2rem);
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -.035em;
+}
+body.admin-refined .booking-page-description { margin-top: 8px; color: rgba(255, 255, 255, .82); }
+body.admin-refined .booking-page-overview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 24px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, .2);
+}
+body.admin-refined .booking-page-overview .ops-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, .9);
+    font-size: var(--fs-sm);
+    font-weight: 450;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    white-space: normal;
+    transform: none;
+}
+body.admin-refined .booking-page-overview .ops-pill-num {
+    color: #fff;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+body.admin-refined .booking-page-overview .ops-pill-dot { align-self: center; }
+
+body.admin-refined .section-nav-bar {
+    gap: 4px;
+    padding: 6px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: var(--ops-shadow);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+body.admin-refined .section-nav-bar .filter-tab { border-color: transparent; }
+body.admin-refined .filter-tab.selected {
+    box-shadow: none;
+}
+body.admin-refined .section-nav-bar .filter-tab.selected { border-color: transparent; }
+
+/* Search, date, sort and row size share one toolbar. Status/quick filters
+   keep their existing behavior and expose pressed state to assistive tech. */
+body.admin-refined .filter-toolbar { padding: 0; border: 0; border-radius: 0; box-shadow: none; gap: 12px; }
+body.admin-refined .filter-search { max-width: none; }
+body.admin-refined .filter-select { max-width: 100%; }
+body.admin-refined .booking-log-controls { margin-bottom: 24px; }
+body.admin-refined .booking-log-controls .filter-toolbar { margin-bottom: 20px; }
+body.admin-refined .booking-status-filters { gap: 8px; }
+body.admin-refined .booking-quick-filters { padding-top: 16px; border-top: 1px solid var(--color-border); }
+body.admin-refined .filter-row-label { min-width: 80px; color: var(--color-muted); }
+body.admin-refined .booking-log .card-header-actions a {
+    min-height: 44px;
+}
+body.admin-refined .data-table thead th {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--fs-sm);
+    font-weight: 650;
+}
+body.admin-refined .data-table tbody tr:hover td:first-child { box-shadow: none; }
+body.admin-refined .data-table:has(.table-actions) tbody td:last-child { border-left: 1px solid var(--color-border); }
+body.admin-refined :is(.ref-cell-sub, .cell-tag, .status) { letter-spacing: 0; }
+body.admin-refined .ref-cell-sub { text-transform: none; }
+body.admin-refined .cell-name-primary { font-weight: 650; }
+body.admin-refined button.cell-name-primary { display: block; max-width: 100%; }
+
+/* No hiding/revealing or count-up while someone is reading live data.
+   Leave spinners, focus feedback, disclosure and dialog motion intact. */
+html.js-anim body.admin-refined .animate-children > *,
+body.admin-refined :is(.animate-in, .data-table tbody tr) {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    animation: none;
+}
+body.admin-refined.density-switching .data-table { opacity: 1; }
+
+@media (hover: hover) and (pointer: fine) {
+    body.admin-refined :is(.stat-card-link, a.mini-stat):hover { border-color: var(--color-g-300); }
+    body.admin-refined :is(.btn-primary, .dash-btn--primary):hover { background: var(--btn-fill-hover); color: #fff; }
+    body.admin-refined .booking-page-header__top > .btn:hover { background: var(--color-g-50); color: var(--color-g-800); }
+}
+
+@media (min-width: 1100px) and (max-width: 1279px) {
+    body.admin-refined .dash-hero-row { grid-template-columns: 1fr; }
+}
+@media (min-width: 1024px) and (max-width: 1399px) {
+    body.admin-refined .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+    body.admin-refined .dash-welcome { padding: 20px; }
+    body.admin-refined .dash-ops__item { padding: 14px; }
+    body.admin-refined .dash-welcome__actions .dash-btn { flex: 1 1 auto; }
+    body.admin-refined .card-header { padding: 18px 20px; }
+    body.admin-refined .booking-page-header__top > .btn { width: 100%; justify-content: center; }
+    body.admin-refined .booking-page-overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    body.admin-refined .booking-page-overview .ops-pill { flex-wrap: wrap; }
+    body.admin-refined .filter-search { flex-basis: 100%; min-width: 0; }
+    body.admin-refined .filter-select { flex: 1 1 160px; width: 100%; }
+    body.admin-refined .filter-row-label { width: 100%; }
+    body.admin-refined .section-nav-bar .filter-tab { flex-shrink: 0; }
+    body.admin-refined .booking-log .card-header-actions { gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.admin-refined :is(.btn, .dash-btn, .filter-tab, .stat-card, .mini-stat) { transition: none; }
+}

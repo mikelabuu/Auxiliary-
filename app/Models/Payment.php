@@ -37,6 +37,7 @@ class Payment extends Model
         'proof_path',
         'proof_method',
         'proof_reference',
+        'accepted_reference_key',
         'proof_submitted_at',
         'verified_by',
         'verified_at',
@@ -75,6 +76,24 @@ class Payment extends Model
     public function isAwaitingVerification(): bool
     {
         return $this->status === self::STATUS_AWAITING_VERIFICATION;
+    }
+
+    /**
+     * Canonical identity of an accepted bank/e-wallet transaction.
+     * Formatting characters are ignored, so "AB-12 34" and "ab1234" cannot
+     * be used to pay two bookings.
+     */
+    public static function acceptedReferenceKey(?string $method, ?string $reference): ?string
+    {
+        $method = strtolower(trim((string) $method));
+
+        if (! array_key_exists($method, self::PROOF_METHODS)) {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim((string) $reference)));
+
+        return filled($normalized) ? $method . ':' . $normalized : null;
     }
 
     /** Human label for the method the guest claims they used. */

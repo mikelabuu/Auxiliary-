@@ -25,6 +25,7 @@
             <h1 class="text-balance font-display text-4xl sm:text-5xl leading-[1.08] text-ink tracking-tight">Move your <span class="italic text-gold">stay</span></h1>
             <p class="text-sm font-medium text-ink/55 mt-3 max-w-xl">
                 This booking is paid, so it cannot be cancelled — but we can move it. Tell us the dates you would rather come, and our front desk will check whether your rooms are free and email you the answer.
+                An approved move uses this booking's one reschedule; a declined or withdrawn request does not.
             </p>
         </div>
 

@@ -25,6 +25,7 @@
         'master_admin' => ['badge' => 'bg-stone-900 text-white border-stone-900',        'label' => 'Master Admin'],
         'admin'        => ['badge' => 'bg-clsu-50 text-clsu-700 border-clsu-200',        'label' => 'Admin'],
         'frontdesk'    => ['badge' => 'bg-palay-100 text-palay-800 border-palay-200',    'label' => 'Front Desk'],
+        'cashier'      => ['badge' => 'bg-sky-50 text-sky-700 border-sky-200',            'label' => 'Cashier'],
     ];
     $inputClasses = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-700 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-clsu-500/25 focus:border-clsu-500 transition-colors';
     $labelClasses = 'block text-2xs font-bold uppercase tracking-widest text-muted mb-1.5';
@@ -100,6 +101,7 @@
                 <option value="master_admin" @selected($role === 'master_admin')>Master Admin</option>
                 <option value="admin" @selected($role === 'admin')>Admin</option>
                 <option value="frontdesk" @selected($role === 'frontdesk')>Front Desk</option>
+                <option value="cashier" @selected($role === 'cashier')>Cashier</option>
             </select>
             <select name="sort" class="filter-select" aria-label="Sort order">
                 <option value="latest" @selected($sort === 'latest')>Newest first</option>

@@ -2,6 +2,7 @@
 
 @section('title', 'Admin - Booking Operations')
 @section('page-title', 'Booking Operations')
+@section('body-class', 'admin-refined')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -14,24 +15,21 @@ $.ajaxSetup({
 </script>
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.ui.ops-header
-        subtitle="Manage, monitor, and verify every booking from reservation to check-out. Arrivals, departures, and active stays in one live view.">
-        Booking Operations
-        <x-slot:pills>
-            <livewire:dashboard.booking-ops-stats />
-        </x-slot:pills>
-        <x-slot:aside>
-            <p class="ops-aside-label">Live View</p>
-            <p class="ops-aside-value">Real-time</p>
-            <p class="ops-aside-meta">All bookings included</p>
-            <div class="ops-aside-divider"></div>
-            <p class="ops-aside-foot"><span class="live-dot"></span> Auto-refresh · 15s</p>
-            <a href="{{ route('staff.manualbooking') }}" class="btn btn-center !no-underline mt-3" style="width:100%;background:#fff;color:var(--color-g-800);box-shadow:0 2px 8px rgba(5,46,28,.18);">
+    <header class="booking-page-header">
+        <div class="booking-page-header__top">
+            <div>
+                <h1 class="booking-page-title">Booking Operations</h1>
+                <p class="booking-page-description">Arrivals, departures and reservations, in one place.</p>
+            </div>
+            <a href="{{ route('staff.manualbooking') }}" class="btn btn-primary">
                 <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2" />
-                New Booking
+                New booking
             </a>
-        </x-slot:aside>
-    </x-admin.ui.ops-header>
+        </div>
+        <div class="booking-page-overview" aria-label="Booking overview">
+            <livewire:dashboard.booking-ops-stats />
+        </div>
+    </header>
 
     <x-admin.ui.section-nav :items="[
         ['id' => 'arrivals', 'label' => 'Arrivals & Departures', 'icon' => 'arrival'],

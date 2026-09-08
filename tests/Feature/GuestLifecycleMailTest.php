@@ -5,10 +5,15 @@ namespace Tests\Feature;
 use App\Mail\BookingCancelledMail;
 use App\Mail\BookingExpiredMail;
 use App\Mail\BookingNoShowMail;
+use App\Mail\BookingReceivedMail;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Markdown;
+use Illuminate\Mail\Transport\ArrayTransport;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mime\Part\DataPart;
 use Tests\TestCase;
 
 /**
@@ -110,6 +115,38 @@ class GuestLifecycleMailTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_a_booking_waiting_on_payment_verification_does_not_expire(): void
+    {
+        Mail::fake();
+
+        $guest = $this->guest();
+        $booking = $this->booking($guest, Booking::STATUS_PENDING_PAYMENT, [
+            'check_in' => now()->addDays(3),
+            'check_out' => now()->addDays(5),
+        ], now()->subMinutes((int) config('bookings.expiry_minutes') + 5));
+
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'user_id' => $guest->id,
+            'amount' => $booking->payable_amount,
+            'status' => Payment::STATUS_AWAITING_VERIFICATION,
+            'payment_type' => 'manual',
+            'reference_no' => 'WAITVERIFY1',
+            'gateway' => 'gcash',
+            'proof_path' => 'payment_proofs/waiting.png',
+            'proof_method' => 'gcash',
+            'proof_reference' => '9988776655',
+            'proof_submitted_at' => now(),
+        ]);
+
+        $this->artisan('bookings:expire')->assertSuccessful();
+
+        $this->assertSame(Booking::STATUS_PENDING_PAYMENT, $booking->fresh()->status);
+        $this->assertSame(Payment::STATUS_AWAITING_VERIFICATION, $payment->fresh()->status);
+        $this->assertDatabaseMissing('expiry_logs', ['booking_id' => $booking->id]);
+        Mail::assertNothingSent();
+    }
+
     public function test_marking_a_no_show_emails_the_guest(): void
     {
         Mail::fake();
@@ -139,6 +176,74 @@ class GuestLifecycleMailTest extends TestCase
 
         $this->assertSame('cancelled', $booking->fresh()->status);
         Mail::assertSent(BookingCancelledMail::class, fn ($mail) => $mail->hasTo($guest->email));
+    }
+
+    public function test_guest_email_shell_embeds_the_farmers_hostel_logo(): void
+    {
+        config(['app.name' => 'Farmers Hostel']);
+
+        $guest = $this->guest('brand@example.test');
+        $booking = $this->booking($guest, Booking::STATUS_CANCELLED);
+        $messages = [
+            (new BookingCancelledMail($booking, 'Plans changed'))->render(),
+            (new BookingReceivedMail($booking))->render(),
+            view('emails.booking.paid', [
+                'booking' => $booking->load('reservations'),
+                'payment' => new Payment,
+                'receipt' => null,
+            ])->render(),
+        ];
+
+        foreach ($messages as $html) {
+            $this->assertStringContainsString('Stay at CLSU', $html);
+            $this->assertStringContainsString('Farmers Hostel', $html);
+            $this->assertStringContainsString('Reservations &amp; Guest Services', $html);
+            $this->assertStringContainsString('Science City of Muñoz, Nueva Ecija', $html);
+            $this->assertStringContainsString('mail-details', $html);
+            $this->assertStringContainsString('mail-status', $html);
+            $this->assertStringNotContainsString('image/derived/fh-mark-120.png', $html);
+            $this->assertStringContainsString('class="hostel-logo"', $html);
+            $this->assertStringContainsString('alt="Farmers Hostel"', $html);
+            $this->assertStringContainsString('src="cid:farmers-hostel-logo@clsu"', $html);
+            $this->assertStringNotContainsString('/email-assets/', $html);
+            $this->assertStringNotContainsString('clsu.logo', $html);
+            $this->assertStringNotContainsString('Central Luzon State University', $html);
+        }
+
+        $plainText = app(Markdown::class)->renderText('emails.booking.paid', [
+            'booking' => $booking,
+            'payment' => new Payment,
+            'receipt' => null,
+        ]);
+
+        $this->assertStringContainsString('Check-in:', $plainText);
+        $this->assertStringContainsString('Total paid:', $plainText);
+    }
+
+    public function test_outgoing_email_contains_the_inline_farmers_hostel_logo(): void
+    {
+        $guest = $this->guest('inline-logo@example.test');
+        $booking = $this->booking($guest, Booking::STATUS_CANCELLED);
+        $transport = Mail::mailer()->getSymfonyTransport();
+
+        $this->assertInstanceOf(ArrayTransport::class, $transport);
+        $transport->flush();
+
+        Mail::to($guest->email)->send(new BookingCancelledMail($booking));
+
+        $email = $transport->messages()->last()->getOriginalMessage();
+        $logo = collect($email->getAttachments())->first(
+            fn (DataPart $attachment) => $attachment->hasContentId()
+                && $attachment->getContentId() === 'farmers-hostel-logo@clsu'
+        );
+
+        $this->assertInstanceOf(DataPart::class, $logo);
+        $this->assertSame('inline', $logo->getDisposition());
+        $this->assertSame('image/png', $logo->getContentType());
+        $this->assertStringContainsString(
+            'src="cid:farmers-hostel-logo@clsu"',
+            $email->getHtmlBody()
+        );
     }
 
     /**

@@ -90,6 +90,8 @@ trait IssuesStaffOtp
                 return redirect()->intended('/staff/dashboard');
             case 'frontdesk':
                 return redirect()->intended('/front-desk/dashboard');
+            case 'cashier':
+                return redirect()->intended('/staff/payment-verification');
             default:
                 Auth::guard('staff')->logout();
 

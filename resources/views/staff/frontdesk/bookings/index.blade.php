@@ -192,9 +192,9 @@
             <p class="mt-1 text-lg font-black tabnum text-stone-800">₱<span data-settle-amount-text></span></p>
         </div>
 
-        {{-- Shown only for a discounted booking, because that is the one where
-             the desk has a job to do before taking the money: the discount
-             exists precisely because nobody has yet seen the ID. --}}
+        {{-- Shown only for a discounted booking. The approval audit records an
+             original-ID check, and this reminder gives the person actually
+             taking the money one final chance to catch a mismatch. --}}
         <p class="hidden items-start gap-2 rounded-xl border border-palay-200 bg-palay-50 px-4 py-3 text-xs font-semibold leading-relaxed text-palay-800"
            data-settle-discount-note>
             <x-admin.ui.icon name="tag" class="mt-px h-3.5 w-3.5 shrink-0" stroke-width="2" />

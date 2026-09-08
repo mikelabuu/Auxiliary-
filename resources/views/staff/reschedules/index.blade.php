@@ -62,6 +62,9 @@
                 // deadline for the *new* stay, which is a different question.
                 $isPending = $req->isPending();
                 $lapsed = $isPending && $deadline?->isPast();
+                $allowanceUsed = $isPending
+                    && $booking
+                    && RescheduleRequest::hasApprovedFor($booking, $req->id);
 
                 // Same nightly rates the stay is already billed at, so the desk
                 // sees the consequence of approving before it approves. The
@@ -145,7 +148,12 @@
                     </div>
 
                     @if ($isPending)
-                        @if ($lapsed)
+                        @if ($allowanceUsed)
+                            <div class="flex items-start gap-2.5 rounded-[var(--radius)] border border-ember-200 bg-ember-50 px-4 py-3 text-xs font-semibold leading-relaxed text-ember-700">
+                                <x-admin.ui.icon name="block" class="w-4 h-4 mt-0.5 shrink-0" stroke-width="2" />
+                                This booking already has an approved reschedule. This stale request cannot move the dates again; decline it to clear the queue.
+                            </div>
+                        @elseif ($lapsed)
                             {{-- The deadline passed while this sat in the queue.
                                  Approving is still allowed — the guest asked in
                                  time and the desk was late, which is not their
@@ -162,6 +170,7 @@
                         @endif
 
                         <div class="mt-4 flex flex-wrap items-center gap-2.5">
+                            @unless ($allowanceUsed)
                             <form method="POST" action="{{ route('staff.reschedules.approve', $req->id) }}"
                                   data-busy-form
                                   data-confirm-title="Move this stay?"
@@ -173,6 +182,7 @@
                                     Approve &amp; move dates
                                 </button>
                             </form>
+                            @endunless
 
                             <button type="button" class="btn btn-ghost btn-sm text-ember-700"
                                     onclick="openDeclineModal({{ $req->id }}, {{ $req->booking_id }})">

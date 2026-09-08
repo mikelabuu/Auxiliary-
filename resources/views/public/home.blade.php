@@ -40,22 +40,8 @@
     @include('public.home.partials.cta')
     @include('public.home.partials.room-modal')
 
-    {{-- No jQuery needed: these are vanilla, and lightbox2 ships with its own
-         bundled copy. home.js must come after booking.js/availability-search.js
-         (it calls into their window hooks).
-
-         All six are `defer`. The first four used to be plain <script> tags,
-         which are parser-blocking: the browser stopped building the DOM at this
-         point in <main> and downloaded + executed ~105 KB before it would even
-         look at the footer. Every one of them wraps its whole body in a
-         DOMContentLoaded handler, so none of them needed to run during parse —
-         they were blocking the parser to register a callback.
-
-         `defer` keeps them in document order (that is part of the spec, not an
-         accident) and runs them after parsing but before DOMContentLoaded
-         fires, so the handlers are still registered in time and home.js still
-         sees the window hooks the two before it install. --}}
-    <script src="{{ \App\Support\PublicScript::url('js/booking.js') }}" defer></script>
+    {{-- Preserve dependency order without blocking HTML parsing. The checkout
+         engine belongs only on checkout; home uses availability-search.js. --}}
     <script src="{{ \App\Support\PublicScript::url('js/availability-search.js') }}" defer></script>
     <script src="{{ \App\Support\PublicScript::url('js/room-filters.js') }}" defer></script>
     <script src="{{ \App\Support\PublicScript::url('js/home.js') }}" defer></script>

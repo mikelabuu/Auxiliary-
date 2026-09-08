@@ -49,6 +49,7 @@ class PaymentSecurityTest extends TestCase
         // Staff verification mails an official receipt; nothing here should
         // reach a real mailer.
         Mail::fake();
+        config(['staff.alerts.enabled' => false]);
     }
 
     private function user(string $email): User
@@ -346,5 +347,28 @@ class PaymentSecurityTest extends TestCase
             ])->assertRedirect(route('booking.show', $booking->id));
 
         $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_proof_cannot_revive_a_hold_after_its_payment_window_ended(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->user('late-payer@example.test');
+        $booking = $this->booking($owner);
+        $booking->forceFill([
+            'pending_payment_since' => now()->subMinutes((int) config('bookings.expiry_minutes') + 5),
+        ])->save();
+
+        $this->actingAs($owner)
+            ->post(route('bookings.pay.proof.store', $booking), [
+                'proof_method' => 'gcash',
+                'proof_reference' => 'TOO-LATE-01',
+                'proof' => UploadedFile::fake()->image('receipt.png'),
+            ])
+            ->assertRedirect(route('booking.show', $booking))
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, Payment::where('booking_id', $booking->id)->count());
+        $this->assertSame([], Storage::disk('local')->allFiles('payment_proofs'));
     }
 }

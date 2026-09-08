@@ -2,17 +2,17 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Booking;
-use App\Models\Payment;
-use App\Models\ExpiryLog;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\RoomStatusChanged;
+use App\Models\Booking;
+use App\Models\ExpiryLog;
+use App\Models\Payment;
 use App\Support\GuestNotice;
 use App\Support\PaymentWindow;
 use App\Support\Realtime;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ExpireBookingsCommand extends Command
@@ -21,7 +21,7 @@ class ExpireBookingsCommand extends Command
     protected $description = 'Expire bookings that passed their pending payment window';
 
     public function handle()
-    {   
+    {
         $threshold = Carbon::now()->subMinutes(PaymentWindow::minutes());
         $liveFrom  = PaymentWindow::earliestLiveCheckInDate();
 
@@ -33,7 +33,12 @@ class ExpireBookingsCommand extends Command
         //   · the guest's own arrival time came and went while still unpaid,
         //     which at a 24-hour window is the commoner of the two for
         //     anything booked for tonight or tomorrow
-        $expiredBookings = Booking::where('status', Booking::STATUS_PENDING_PAYMENT)
+        $candidates = Booking::where('status', Booking::STATUS_PENDING_PAYMENT)
+            // The guest has already claimed a transfer and is waiting on us.
+            // Expiring here could release and resell their room before staff
+            // opens the receipt, then make the approval action impossible.
+            ->whereDoesntHave('paymentAttempts', fn ($payments) =>
+                $payments->where('status', Payment::STATUS_AWAITING_VERIFICATION))
             ->where(function ($q) use ($threshold, $liveFrom) {
                 $q->where(function ($q) use ($threshold) {
                     $q->whereNotNull('pending_payment_since')
@@ -42,31 +47,55 @@ class ExpireBookingsCommand extends Command
             })
             ->get();
 
-        if ($expiredBookings->isEmpty()) {
-            $this->info(" No expired bookings found.");
+        if ($candidates->isEmpty()) {
+            $this->info(' No expired bookings found.');
+
             return;
         }
 
-        DB::transaction(function () use ($expiredBookings, $liveFrom) {
-            foreach ($expiredBookings as $booking) {
-                $previousStatus = $booking->status;
+        $expiredBookings = collect();
 
-                // Which clock ran out. Worth recording separately: "they never
-                // paid in 24 hours" and "they were due at 2 PM today and still
-                // had not paid" are the same status but different stories, and
-                // the second is the one a guest will ring up about.
-                $missedArrival = Carbon::parse($booking->check_in)->toDateString() < $liveFrom;
+        foreach ($candidates as $candidate) {
+            $expired = DB::transaction(function () use ($candidate, $threshold, $liveFrom) {
+                // Re-read under the same booking -> payment lock order used by
+                // proof submission and staff decisions. The candidate query is
+                // only an optimization; these checks decide whether we write.
+                $booking = Booking::whereKey($candidate->id)->lockForUpdate()->first();
 
-                $pendingPayment = Payment::where('booking_id', $booking->id)
-                    ->where('status', 'pending')
-                    ->first();
-
-                if ($pendingPayment) {
-                    $pendingPayment->update([
-                        'status' => 'failed',
-                    ]);
+                if (! $booking || $booking->status !== Booking::STATUS_PENDING_PAYMENT) {
+                    return null;
                 }
 
+                $awaitingPayment = Payment::where('booking_id', $booking->id)
+                    ->where('status', Payment::STATUS_AWAITING_VERIFICATION)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($awaitingPayment) {
+                    return null;
+                }
+
+                // Which clock ran out. Worth recording separately: "they never
+                // paid in 24 hours" and "they were due at check-in and still
+                // had not paid" are the same status but different stories.
+                $missedArrival = Carbon::parse($booking->check_in)->toDateString() < $liveFrom;
+                $windowExpired = $booking->pending_payment_since
+                    && $booking->pending_payment_since->lessThanOrEqualTo($threshold);
+
+                if (! $missedArrival && ! $windowExpired) {
+                    return null;
+                }
+
+                $pendingPayments = Payment::where('booking_id', $booking->id)
+                    ->where('status', 'pending')
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($pendingPayments as $pendingPayment) {
+                    $pendingPayment->update(['status' => 'failed']);
+                }
+
+                $previousStatus = $booking->status;
                 $booking->update(['status' => Booking::STATUS_EXPIRED]);
 
                 ExpiryLog::create([
@@ -79,13 +108,28 @@ class ExpireBookingsCommand extends Command
                     'expired_at' => Carbon::now(config('hostel.timezone')),
                     'processed_by' => null,
                 ]);
+
+                return $booking->fresh();
+            });
+
+            if ($expired) {
+                $expiredBookings->push($expired);
             }
-        });
+        }
+
+        // A proof may have arrived, or another process may have completed the
+        // booking, after the candidate list was read. Never broadcast or mail
+        // an expiry unless this invocation actually wrote one.
+        if ($expiredBookings->isEmpty()) {
+            $this->info(' No expired bookings found.');
+
+            return;
+        }
 
         // Expiry releases the booking's hold on its rooms (BLOCKING_STATUSES),
         // so both the booking panels and the room map need a push.
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
 
         // Losing a reservation to the payment window is the change a guest is
         // least likely to be expecting, so tell whoever is sitting on the page.

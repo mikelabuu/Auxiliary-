@@ -89,6 +89,8 @@
          and count it down. --}}
     @php
         $holdEndsAt = \App\Support\PaymentWindow::deadlineFor($booking);
+        $awaitingProof = ($latestPayment ?? null)
+            && $latestPayment->status === \App\Models\Payment::STATUS_AWAITING_VERIFICATION;
         // Per booking, not the configured window: a hold cut short by the
         // check-in cap is genuinely shorter, and a bar measured against the
         // full 24 hours would open two-thirds empty and drain at the wrong rate.
@@ -101,7 +103,7 @@
             && $holdEndsAt->equalTo(\App\Support\PaymentWindow::checkInMomentFor($booking));
     @endphp
 
-    @if($holdEndsAt && $holdEndsAt->isFuture())
+    @if(!$awaitingProof && $holdEndsAt && $holdEndsAt->isFuture())
         <div class="co-enter mb-8 hold-bar" style="--co:0"
              data-hold-ends="{{ $holdEndsAt->timestamp }}"
              data-hold-window="{{ $holdWindow }}">
@@ -355,7 +357,7 @@
                                     <div class="p-3 bg-gold/12 ring-1 ring-gold/30 rounded-xl text-xs space-y-3">
                                         <div class="flex gap-2 text-palay-800">
                                             <x-booking.ui.icon-solid name="hourglass" class="text-[16px] flex-shrink-0 mt-0.5" />
-                                            <div class="font-bold leading-relaxed">Verification Request Submitted. Please wait for staff review and approval before making payments.</div>
+                                            <div class="font-bold leading-relaxed">Request saved and your rooms are on hold. Bring every original ID to the front desk for in-person verification before payment.</div>
                                         </div>
                                         <form action="{{ route('discount.cancel', $booking->id) }}" method="POST" class="w-full" data-busy-form>
                                             @csrf
@@ -377,8 +379,6 @@
                     <!-- Primary Payments Button -->
                     @if($booking->status === 'pending_payment')
                         @php
-                            $awaitingProof = ($latestPayment ?? null)
-                                && $latestPayment->status === \App\Models\Payment::STATUS_AWAITING_VERIFICATION;
                             $proofRejected = ($latestPayment ?? null)
                                 && $latestPayment->status === \App\Models\Payment::STATUS_REJECTED;
                         @endphp
@@ -404,13 +404,13 @@
                                     @endif
                                 </div>
                             @elseif($awaitingProof)
-                                {{-- The guest has paid and proved it; the ball is with the front
-                                     desk now, so the pay button would only invite a double payment. --}}
+                                {{-- The guest has paid and proved it; the ball is with the cashier
+                                     now, so the pay button would only invite a double payment. --}}
                                 <div class="flex flex-col gap-3 rounded-2xl bg-gold/12 ring-1 ring-gold/30 px-4 py-3.5 text-xs">
                                     <div class="flex gap-2 text-palay-800">
                                         <x-booking.ui.icon-solid name="hourglass" class="text-[16px] flex-shrink-0 mt-0.5" />
                                         <div class="font-bold leading-relaxed">
-                                            Proof of payment received. Our front desk is verifying it against the transfer. Your official receipt is emailed as soon as it clears.
+                                            Proof of payment received. Our cashier is verifying it against the transfer. Your official receipt is emailed as soon as it clears.
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-stone-500">
@@ -453,6 +453,7 @@
             @if(in_array($booking->status, \App\Models\RescheduleRequest::RESCHEDULABLE_STATUSES, true))
                 @php
                     $openReschedule = \App\Models\RescheduleRequest::openFor($booking);
+                    $approvedReschedule = \App\Models\RescheduleRequest::approvedFor($booking);
                     $rescheduleDeadline = \App\Models\RescheduleRequest::deadlineFor($booking);
                 @endphp
 
@@ -464,7 +465,17 @@
                         <h3 class="text-lg font-semibold text-ink tracking-tight font-display">Can't make it?</h3>
                     </div>
 
-                    @if($openReschedule)
+                    @if($approvedReschedule)
+                        <p class="text-xs font-semibold text-stone-600 leading-relaxed">
+                            This booking has used its one reschedule. Our front desk approved the move to
+                            <strong class="text-ink">{{ $booking->check_in->format('M d') }} – {{ $booking->check_out->format('M d, Y') }}</strong>,
+                            so these dates are now final.
+                        </p>
+                        <div class="mt-4 w-full py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-emerald-deep/8 text-emerald-deep ring-1 ring-emerald-deep/20">
+                            <x-booking.ui.icon-solid name="check-circle" class="text-[15px]" />
+                            Reschedule used
+                        </div>
+                    @elseif($openReschedule)
                         <p class="text-xs font-semibold text-stone-600 leading-relaxed">
                             You asked to move this stay to
                             <strong class="text-ink">{{ $openReschedule->requested_check_in->format('M d') }} – {{ $openReschedule->requested_check_out->format('M d, Y') }}</strong>.
@@ -473,9 +484,9 @@
                         <a href="{{ route('booking.reschedule.create', $booking->id) }}" class="press !no-underline mt-4 w-full py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] bg-gold/12 text-palay-800 ring-1 ring-gold/40 hover:bg-gold hover:text-night transition-colors cursor-pointer">
                             View request
                         </a>
-                    @elseif($rescheduleDeadline->isFuture())
+                    @elseif(\App\Models\RescheduleRequest::isOpenFor($booking))
                         <p class="text-xs font-semibold text-stone-600 leading-relaxed">
-                            A paid booking can't be cancelled, but we can move it. Tell us by
+                            A paid booking can't be cancelled, but it can be moved once. Tell us by
                             <strong class="text-ink">{{ $rescheduleDeadline->format('g:i A') }} on {{ $rescheduleDeadline->format('M d') }}</strong>
                             — 24 hours before your {{ $booking->check_in->format('M d') }} check-in — and we'll try to find you new dates.
                         </p>

@@ -322,6 +322,13 @@
 
 @media (min-width: 640px) {
     .guest-pop { left: 0; right: auto; }
+
+    /* The desktop popover is intentionally absolute, so reserve the space it
+       occupies below the three-part stay bar. This keeps the following action
+       surface from passing through the middle of the open picker. */
+    .stay-bar:has(.stay-field-trigger[aria-expanded="true"]) {
+        margin-bottom: 12rem;
+    }
 }
 
 /* On a phone the bar is stacked and the guests row is its last one, which puts
@@ -336,6 +343,15 @@
         box-shadow: none;
         background: rgba(255, 255, 255, 0.55);
     }
+}
+
+/* At every width, an open picker temporarily owns the space above the primary
+   action. Let that action follow the booking card instead of sticking over the
+   picker; closing Done restores its normal sticky position immediately. */
+.checkout-page:has(.stay-field-trigger[aria-expanded="true"]) .co-actions {
+    position: static;
+    bottom: auto;
+    z-index: auto;
 }
 
 .guest-pop-head {

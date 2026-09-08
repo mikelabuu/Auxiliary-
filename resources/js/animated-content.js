@@ -141,7 +141,9 @@ function init(root) {
 }
 
 function boot() {
-    if (reduceMotion()) { revealAll(); return; }
+    // Operational screens keep their data visible immediately, including
+    // panels refreshed by Livewire. Other pages retain their entrance motion.
+    if (reduceMotion() || document.body.classList.contains('admin-refined')) { revealAll(); return; }
     init(document);
 }
 

@@ -1,19 +1,35 @@
-@component('mail::message')
+@php
+    $bookingDetails = [
+        'Check-in' => $booking->check_in->format('M d, Y') . " ({$checkinTime})",
+        'Check-out' => $booking->check_out->format('M d, Y') . " ({$checkoutTime})",
+        'Nights' => max(1, $booking->check_in->diffInDays($booking->check_out)),
+        'Guests' => $booking->expected_guests,
+    ];
+
+    if ($booking->reservations->isNotEmpty()) {
+        $bookingDetails[\Illuminate\Support\Str::plural('Room', $booking->reservations->count())]
+            = $booking->reservations->pluck('room_number')->implode(', ');
+    }
+
+    $bookingDetails['Amount due'] = '₱' . number_format(
+        $booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price,
+        2
+    );
+@endphp
+
+@component('mail::message', ['preheader' => "Booking #{$booking->id} is on hold. Review your dates, amount, and next step."])
+@component('mail::status', ['tone' => 'warning'])
+Booking on hold
+@endcomponent
+
 # Your rooms are on hold
 
 Dear {{ $booking->guest_name }},
 
 Thanks for booking with **{{ config('app.name') }}**. We have your reservation — it is not confirmed until payment is settled.
 
-**Booking #{{ $booking->id }}**
-- Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
-- Nights: {{ max(1, $booking->check_in->diffInDays($booking->check_out)) }}
-- Guests: {{ $booking->expected_guests }}
-@if($booking->reservations->isNotEmpty())
-- {{ \Illuminate\Support\Str::plural('Room', $booking->reservations->count()) }}: {{ $booking->reservations->pluck('room_number')->implode(', ') }}
-@endif
-- Amount due: **₱{{ number_format($booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price, 2) }}**
+@component('mail::details', ['title' => "Booking #{$booking->id}", 'rows' => $bookingDetails])
+@endcomponent
 
 @if($holdEndsAt && $paysAtDesk)
 @component('mail::panel')

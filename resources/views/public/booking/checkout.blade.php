@@ -41,7 +41,7 @@
         $openStep = $errors->any() ? 'details' : 'dates';
     @endphp
 
-    <div class="min-h-screen bg-canvas pt-28 pb-24 relative isolate overflow-x-clip">
+    <div class="checkout-page min-h-screen bg-canvas pt-28 pb-24 relative isolate overflow-x-clip">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="co-enter mb-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4" style="--co:0">
                 <div>
@@ -410,7 +410,7 @@
                                         <button type="button" class="co-check-more" @click="open = !open" :aria-expanded="open ? 'true' : 'false'"
                                                 x-text="open ? 'Hide the full terms' : 'Read the full terms'">Read the full terms</button>
                                         <p class="co-terms-full" x-show="open" x-transition.opacity style="display:none;">
-                                            Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong>A paid booking cannot be cancelled</strong> — if your plans change, request a reschedule before {{ $checkinTime }} on your check-in day. Miss that and the booking is forfeited with no refund.
+                                            Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong>A paid booking cannot be cancelled and may be rescheduled only once</strong> — if your plans change, request that move at least 24 hours before check-in. Miss that and the booking is forfeited with no refund.
                                         </p>
                                     </div>
                                 </div>
@@ -551,7 +551,7 @@
     window.INITIAL_GUESTS = "{{ $guests ?? 1 }}";
     window.ROOM_TYPES_CONFIG = @json($roomTypes);
 </script>
-<script src="{{ \App\Support\PublicScript::url('js/booking.js') }}"></script>
+<script src="{{ \App\Support\PublicScript::url('js/booking.js') }}" defer></script>
 
 <script>
     // Senior/PWD bookings are settled in person (PaymentController refuses the

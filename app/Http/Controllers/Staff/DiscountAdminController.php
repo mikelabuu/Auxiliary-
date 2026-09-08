@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers\Staff;
 
-use App\Models\Booking;
 use App\Events\BookingChanged;
 use App\Events\BookingStatusChanged;
 use App\Events\DiscountChanged;
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Discount;
 use App\Models\DiscountFile;
-use App\Models\Balance;
+use App\Services\AuditLogger;
 use App\Services\DiscountService;
 use App\Support\Realtime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Services\AuditLogger;
 
 class DiscountAdminController extends Controller
 {
@@ -33,12 +31,11 @@ class DiscountAdminController extends Controller
         return view('staff.discounts.index');
     }
 
-
     public function show($id)
     {
         $discount = Discount::with([
             'files.reviewer',   // to show who reviewed
-            'booking.reservations.discountFiles.reviewer' // eager load per-reservation files + reviewer
+            'booking.reservations.discountFiles.reviewer', // eager load per-reservation files + reviewer
         ])->findOrFail($id);
 
         $booking = $discount->booking;
@@ -60,7 +57,11 @@ class DiscountAdminController extends Controller
     {
         $this->authorizeFile($discount, $file);
 
-            // Check if already reviewed
+        if (! $this->isOpenForInPersonReview($discount)) {
+            return back()->with('error', 'This discount request is no longer an active booking hold.');
+        }
+
+        // Check if already reviewed
         if ($file->status !== 'pending') {
             return back()->with('error', 'This file has already been reviewed by another staff.');
         }
@@ -83,7 +84,7 @@ class DiscountAdminController extends Controller
         );
 
         // Per-file reviews move the request's progress bar in the queue.
-        Realtime::emit(new DiscountChanged());
+        Realtime::emit(new DiscountChanged);
 
         return back()->with('success', 'File approved for reservation #' . ($file->reservation->room_number ?? 'N/A'));
     }
@@ -91,6 +92,10 @@ class DiscountAdminController extends Controller
     public function rejectFile(Discount $discount, DiscountFile $file)
     {
         $this->authorizeFile($discount, $file);
+
+        if (! $this->isOpenForInPersonReview($discount)) {
+            return back()->with('error', 'This discount request is no longer an active booking hold.');
+        }
 
         if ($file->status !== 'pending') {
             return back()->with('error', 'This file has already been reviewed by another staff.');
@@ -113,41 +118,70 @@ class DiscountAdminController extends Controller
             "Staff {$staff->name} rejected a discount ID file (ID: {$file->id}) for booking #{$discount->booking->id}"
         );
 
-        Realtime::emit(new DiscountChanged());
+        Realtime::emit(new DiscountChanged);
 
         return back()->with('success', 'File rejected for reservation #' . ($file->reservation->room_number ?? 'N/A'));
     }
 
-    public function approve(Discount $discount)
-    {   
+    public function approve(Request $request, Discount $discount)
+    {
         if ($discount->status !== 'pending') {
             return back()->with('error', 'This discount request has already been reviewed.');
+        }
+
+        if (! $this->isOpenForInPersonReview($discount)) {
+            return back()->with('error', 'This booking is no longer awaiting an in-person discount decision.');
         }
 
         if ($discount->files()->where('status', 'pending')->exists()) {
             return back()->with('error', 'Please review all files before finalizing.');
         }
 
-        DB::transaction(function () use ($discount) {
+        if (! $discount->files()->where('status', 'approved')->exists()) {
+            return back()->with('error', 'No ID was approved. Reject the request so the booking can continue at the regular rate.');
+        }
+
+        $request->validate([
+            'original_ids_verified' => ['accepted'],
+        ], [
+            'original_ids_verified.accepted' => 'Confirm that every approved original ID was checked in person.',
+        ]);
+
+        $outcome = DB::transaction(function () use ($discount) {
+            $booking = Booking::whereKey($discount->booking_id)->lockForUpdate()->first();
+            $locked = Discount::whereKey($discount->id)->lockForUpdate()->first();
 
             $staff = Auth::guard('staff')->user();
-            $discount->lockForUpdate();
 
-            // Recheck inside transaction (safety)
-            if ($discount->status !== 'pending') {
-                throw new \Exception('Concurrent update detected.');
+            // Both the request and its booking are re-read under locks. A
+            // second reviewer, an expiry or a guest withdrawal must not revive
+            // a stale hold or apply the same discount twice.
+            if (! $locked || $locked->status !== 'pending') {
+                return 'already_reviewed';
             }
 
-            $amount = $this->discountService->calculate($discount);
+            if (! $booking || $booking->status !== Booking::STATUS_PENDING_DISCOUNT) {
+                return 'booking_closed';
+            }
 
-            $discount->update([
+            if ($locked->files()->where('status', 'pending')->exists()) {
+                return 'files_pending';
+            }
+
+            if (! $locked->files()->where('status', 'approved')->exists()) {
+                return 'none_approved';
+            }
+
+            $locked->load(['booking.reservations', 'files']);
+            $amount = $this->discountService->calculate($locked);
+
+            $locked->update([
                 'amount' => $amount,
                 'status' => 'approved',
                 'reviewed_by' => auth('staff')->id(),
                 'reviewed_at' => now(),
             ]);
 
-            $booking = $discount->booking;
             $booking->update([
                 'discount' => $amount,
                 'payable_amount' => $booking->total_price - $amount,
@@ -155,27 +189,39 @@ class DiscountAdminController extends Controller
             ]);
 
             // Delete all reviewed files
-            foreach ($discount->files as $file) {
+            foreach ($locked->files as $file) {
                 Storage::delete($file->file_path);
             }
 
             AuditLogger::log(
                 'discount_request_applied',
-                $discount,
+                $locked,
                 ['status' => 'pending'],
                 ['status' => 'approved'],
-                "Staff {$staff->name} Approved a discount #{$discount->id} for booking #{$discount->booking->id} (₱{$amount})."
+                "Staff {$staff->name} approved discount #{$locked->id} for booking #{$booking->id} after checking the original IDs in person (₱{$amount})."
             );
+
+            return 'approved';
         });
+
+        if ($outcome !== 'approved') {
+            $message = match ($outcome) {
+                'files_pending' => 'Please review all files before finalizing.',
+                'none_approved' => 'No ID was approved. Reject the request so the booking can continue at the regular rate.',
+                'booking_closed' => 'This booking is no longer awaiting an in-person discount decision.',
+                default => 'This discount request has already been reviewed by another staff member.',
+            };
+
+            return back()->with('error', $message);
+        }
 
         // This is the decision the guest is sitting on their booking page
         // waiting for: the payable amount just changed and payment is now
         // unblocked. Emitted post-commit so subscribers read the new figures.
-        $this->announceDecision($discount);
+        $this->announceDecision($discount->refresh());
 
-        return redirect()->route('staff.discounts.index')->with('success', 'Discount approved successfully.');
+        return redirect()->route('staff.discounts.index')->with('success', 'Discount approved after the original IDs were verified in person.');
     }
-
 
     public function reject(Discount $discount)
     {
@@ -184,15 +230,23 @@ class DiscountAdminController extends Controller
             return back()->with('error', 'This discount request has already been reviewed.');
         }
 
-        DB::transaction(function () use ($discount) {
-            $staff = Auth::guard('staff')->user();
-            $discount->lockForUpdate();
+        if (! $this->isOpenForInPersonReview($discount)) {
+            return back()->with('error', 'This booking is no longer awaiting an in-person discount decision.');
+        }
 
-            if ($discount->status !== 'pending') {
-                throw new \Exception('Concurrent update detected.');
+        $rejected = DB::transaction(function () use ($discount) {
+            $booking = Booking::whereKey($discount->booking_id)->lockForUpdate()->first();
+            $locked = Discount::whereKey($discount->id)->lockForUpdate()->first();
+            $staff = Auth::guard('staff')->user();
+
+            if (! $locked || $locked->status !== 'pending'
+                || ! $booking || $booking->status !== Booking::STATUS_PENDING_DISCOUNT) {
+                return false;
             }
 
-            $discount->update([
+            $locked->load('files');
+
+            $locked->update([
                 'amount' => 0, // make sure discount resets
                 'status' => 'rejected',
                 'reviewed_by' => auth('staff')->id(),
@@ -204,7 +258,6 @@ class DiscountAdminController extends Controller
             // ordinary rate online like any other — leaving the flag set would
             // have PaymentController turn the guest away with an instruction
             // to bring IDs that have just been rejected.
-            $booking = $discount->booking;
             $booking->update([
                 'discount' => 0,
                 'payable_amount' => $booking->total_price,
@@ -213,20 +266,26 @@ class DiscountAdminController extends Controller
             ]);
 
             // Delete all reviewed files
-            foreach ($discount->files as $file) {
+            foreach ($locked->files as $file) {
                 Storage::delete($file->file_path);
             }
 
             AuditLogger::log(
                 'discount_request_rejected',
-                $discount,
+                $locked,
                 ['status' => 'pending'],
-                ['status' => 'approved'],
-                "Staff {$staff->name} Rejected a discount #{$discount->id} for booking #{$discount->booking->id}."
+                ['status' => 'rejected'],
+                "Staff {$staff->name} rejected discount #{$locked->id} for booking #{$booking->id}."
             );
+
+            return true;
         });
 
-        $this->announceDecision($discount);
+        if (! $rejected) {
+            return back()->with('error', 'This discount request was already handled or its booking is no longer on hold.');
+        }
+
+        $this->announceDecision($discount->refresh());
 
         return redirect()->route('staff.discounts.index')->with('success', 'Discount request rejected.');
     }
@@ -237,8 +296,8 @@ class DiscountAdminController extends Controller
      */
     private function announceDecision(Discount $discount): void
     {
-        Realtime::emit(new DiscountChanged());
-        Realtime::emit(new BookingChanged());
+        Realtime::emit(new DiscountChanged);
+        Realtime::emit(new BookingChanged);
 
         $booking = $discount->booking()->first();
         if (BookingStatusChanged::shouldEmitFor($booking)) {
@@ -263,6 +322,15 @@ class DiscountAdminController extends Controller
         if ($file->discount_id !== $discount->id) {
             abort(403, 'Unauthorized action.');
         }
+    }
+
+    /** Only a live pending-discount hold may be decided at the counter. */
+    private function isOpenForInPersonReview(Discount $discount): bool
+    {
+        return $discount->status === 'pending'
+            && $discount->booking()
+                ->where('status', Booking::STATUS_PENDING_DISCOUNT)
+                ->exists();
     }
 
 }

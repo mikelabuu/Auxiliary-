@@ -107,7 +107,7 @@
         <x-slot name="icon">
           <x-admin.ui.icon name="check-circle" />
         </x-slot>
-        Verify Payments
+        Payment Proofs
       </x-admin.layout.sidebar-link>
 
       <x-admin.layout.sidebar-link :href="route('staff.discounts.index')" :active="request()->routeIs('staff.discounts.*')" badge-key="discounts" :badge="$queues['discounts']">

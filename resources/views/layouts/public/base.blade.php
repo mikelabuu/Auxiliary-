@@ -16,10 +16,15 @@
 
     <title>@yield('title', 'Farmers Hostel · Boutique Stay Inside CLSU Campus')</title>
 
-    <!-- Gates the scroll-reveal hidden state (see reveal.js) so content is
-         never invisible if JS doesn't run. Must execute before first paint. -->
+    {{-- Keep content visible until the reveal engine is ready. Small screens
+         and constrained connections skip decorative effects before first paint. --}}
     <script>
-        document.documentElement.classList.add('js-reveal');
+        (function () {
+            var connection = navigator.connection;
+            var light = window.matchMedia('(max-width: 1023px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches
+                || !!(connection && (connection.saveData || /(^|-)2g$/.test(connection.effectiveType)));
+            if (light) document.documentElement.classList.add('fh-lite');
+        })();
     </script>
 
     {{-- `window.pubModalClose` used to be defined here: a bare hide/show with no

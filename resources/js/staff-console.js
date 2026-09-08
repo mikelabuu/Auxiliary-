@@ -32,6 +32,7 @@ document.addEventListener(
 
 /* ── Cursor-tracked spotlight on cards (CSS reads --spot-x/--spot-y) ── */
 (function spotlight() {
+    if (document.body.classList.contains('admin-refined')) return;
     let raf = null;
     document.addEventListener(
         'pointermove',
@@ -64,7 +65,7 @@ document.addEventListener(
    already hidden (the server-rendered text is correct — leave it), and snap to
    target if it goes hidden while running. */
 (function countUp() {
-    if (reduceMotion()) return;
+    if (reduceMotion() || document.body.classList.contains('admin-refined')) return;
 
     const settlers = [];
 

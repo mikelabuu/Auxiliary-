@@ -1,10 +1,14 @@
+@php
+  $isCashierWorkspace = auth('staff')->user()?->role === 'cashier';
+  $workspaceName = $isCashierWorkspace ? 'Cashier' : 'Front Desk';
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Farmers Hostel · Front Desk')</title>
+  <title>@yield('title', 'Farmers Hostel · ' . $workspaceName)</title>
   {{-- 96px derivative, not the 2500px / 1.26 MB source. --}}
   <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('image/derived/clsu.logo-96.png') }}">
 
@@ -31,7 +35,7 @@
 {{-- Gate for the private `staff.alerts` Reverb subscription — see
      resources/js/admin-notifications.js. The desk gets the same live alerts as
      the admin console; it is usually the screen someone is actually sitting at. --}}
-<body class="bg-surface text-ink antialiased" data-staff-alerts
+<body class="bg-surface text-ink antialiased" @unless($isCashierWorkspace) data-staff-alerts @endunless
       x-data="{
         density: (localStorage.getItem('adminDensity') || (localStorage.getItem('adminDensityCompact') === '1' ? 'compact' : 'normal')),
         setDensity(v) {

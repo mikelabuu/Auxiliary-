@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Support\StaffAlerts;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mime\Part\DataPart;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->bootRateLimiters();
+        $this->bootEmailBranding();
 
         // The check-in time, as guest-facing copy says it: "2:00 PM".
         //
@@ -50,6 +54,43 @@ class AppServiceProvider extends ServiceProvider
         // anyone reloading the page.
         View::composer('components.admin.layout.topbar', function ($view) {
             $view->with('notifications', StaffAlerts::current());
+        });
+    }
+
+    /**
+     * Package the Farmers Hostel mark inside every branded HTML email.
+     *
+     * Remote logo URLs fail when APP_URL is private or a mail proxy cannot
+     * reach the application. A fixed Content-ID makes the image part of the
+     * MIME message, so recipients do not need to request it from the server.
+     */
+    protected function bootEmailBranding(): void
+    {
+        Event::listen(MessageSending::class, function (MessageSending $event): void {
+            $contentId = 'farmers-hostel-logo@clsu';
+            $html = $event->message->getHtmlBody();
+
+            if (! is_string($html) || ! str_contains($html, "cid:{$contentId}")) {
+                return;
+            }
+
+            foreach ($event->message->getAttachments() as $attachment) {
+                if ($attachment->hasContentId() && $attachment->getContentId() === $contentId) {
+                    return;
+                }
+            }
+
+            $path = public_path('image/derived/fh-mark-120.png');
+
+            if (! is_file($path)) {
+                return;
+            }
+
+            $logo = DataPart::fromPath($path, 'farmers-hostel-logo.png', 'image/png')
+                ->asInline()
+                ->setContentId($contentId);
+
+            $event->message->addPart($logo);
         });
     }
 

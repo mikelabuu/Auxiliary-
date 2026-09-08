@@ -60,7 +60,7 @@
     'use strict';
 
     const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduceMQ.matches) return;
+    if (document.documentElement.classList.contains('fh-lite') || reduceMQ.matches) return;
 
     // Shared scheduler. If frame-bus.js failed to load, install an equivalent
     // local one rather than going static — same API, same one-loop guarantee.

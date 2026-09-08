@@ -169,6 +169,14 @@ class StaffAlertBroadcastTest extends TestCase
         $this->assertFalse($this->authCallback()($staff));
     }
 
+    /** Cashiers receive only the payment-proof queue, not broad desk alerts. */
+    public function test_cashier_is_not_authorised_for_the_general_staff_alert_channel(): void
+    {
+        $staff = $this->staff(['role' => 'cashier', 'email' => 'cashier@example.test']);
+
+        $this->assertFalse($this->authCallback()($staff));
+    }
+
     /**
      * A suspended account keeps its session cookie until it expires, so the
      * role check alone would keep feeding it desk traffic.

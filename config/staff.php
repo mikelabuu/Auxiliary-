@@ -13,24 +13,23 @@ return [
     // Which roles the second factor actually applies to, once it is enabled
     // above. Anyone whose role is not listed signs in on password alone.
     //
-    // Front desk is deliberately absent. Theirs is a counter machine signed in
-    // and out of all day by whoever is on shift, and a code mailed to an
-    // address the whole desk shares is a delay in front of a guest rather than
-    // a factor only one person holds. master_admin is the account that can
-    // create, suspend and delete other staff, so it is the one that keeps it.
+    // Front desk and cashier are deliberately absent. Both are operational
+    // workstations that need to move through a live guest/payment queue; their
+    // dedicated accounts still require a password, but not an emailed code.
+    // Admin and master-admin accounts retain the second factor because they can
+    // change system configuration, staff access and oversight records.
     //
-    // Comma-separated in .env, e.g. STAFF_OTP_ROLES=master_admin,admin.
+    // Comma-separated in .env, e.g. STAFF_OTP_ROLES=admin,master_admin.
     //
     // Values must be spelled exactly as they appear in Staff::ROLES. A typo
     // does not error — it just never matches, and that role logs in WITHOUT a
     // code. This list fails open, so check it after editing.
     'otp_roles' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('STAFF_OTP_ROLES', 'master_admin'))
+        explode(',', (string) env('STAFF_OTP_ROLES', 'admin,master_admin'))
     ))),
 
-    // Desk alerts (App\Mail\StaffBookingAlertMail): a new booking, or a guest
-    // uploading a proof of payment.
+    // Operational alerts sent through App\Mail\StaffBookingAlertMail.
     'alerts' => [
         'enabled' => env('STAFF_ALERTS_ENABLED', true),
 
@@ -40,8 +39,18 @@ return [
         // inbox instead.
         'to' => env('STAFF_ALERT_RECIPIENTS'),
 
-        // Who is on the hook when no explicit recipient list is configured.
+        // A proof goes to the cashier inbox/account, not the broad desk list.
+        // The legacy general override remains a fallback so existing
+        // deployments keep delivering while they adopt the specific key.
+        'cashier_to' => env('STAFF_CASHIER_RECIPIENTS', env('STAFF_ALERT_RECIPIENTS')),
+        'admin_to' => env('STAFF_ADMIN_RECIPIENTS'),
+
+        // General desk work when no explicit recipient list is configured.
         'roles' => ['frontdesk', 'admin', 'master_admin'],
+
+        // Financial decisions and post-decision oversight stay separate.
+        'cashier_roles' => ['cashier'],
+        'admin_roles' => ['admin', 'master_admin'],
 
         // Hard cap. Without it, a growing staff table quietly turns one
         // booking into dozens of SMTP round-trips on an inline mailer.

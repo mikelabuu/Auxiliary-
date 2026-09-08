@@ -1,4 +1,30 @@
-@component('mail::message')
+@php
+    $bookingDetails = [
+        'Check-in' => $booking->check_in->format('M d, Y') . " ({$checkinTime})",
+        'Check-out' => $booking->check_out->format('M d, Y') . " ({$checkoutTime})",
+        'Nights' => max(1, $booking->check_in->diffInDays($booking->check_out)),
+    ];
+
+    if ($booking->reservations->isNotEmpty()) {
+        $bookingDetails[\Illuminate\Support\Str::plural('Room', $booking->reservations->count())]
+            = $booking->reservations->pluck('room_number')->implode(', ');
+    }
+
+    if ($approved) {
+        $bookingDetails['Total for the stay'] = '₱' . number_format(
+            $booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price,
+            2
+        );
+    }
+@endphp
+
+@component('mail::message', ['preheader' => $approved
+    ? "Booking #{$booking->id} has been moved. These approved dates are now final."
+    : "Booking #{$booking->id} keeps its current dates. You may try again before the deadline."])
+@component('mail::status', ['tone' => $approved ? 'success' : 'warning'])
+{{ $approved ? 'Reschedule approved' : 'Reschedule not approved' }}
+@endcomponent
+
 # {{ $approved ? 'Your stay has been moved' : 'We could not move your stay' }}
 
 Dear {{ $booking->guest_name }},
@@ -10,23 +36,13 @@ Our front desk was not able to move booking **#{{ $booking->id }}** to the dates
 @endif
 
 @if ($approved)
-**Your stay now**
-- Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
-- Nights: {{ max(1, $booking->check_in->diffInDays($booking->check_out)) }}
-@if($booking->reservations->isNotEmpty())
-- {{ \Illuminate\Support\Str::plural('Room', $booking->reservations->count()) }}: {{ $booking->reservations->pluck('room_number')->implode(', ') }}
-@endif
-- Total for the stay: **₱{{ number_format($booking->payable_amount > 0 ? $booking->payable_amount : $booking->total_price, 2) }}**
+@component('mail::details', ['title' => 'Your stay now', 'rows' => $bookingDetails])
+@endcomponent
 
 Previously {{ $reschedule->original_check_in->format('M d, Y') }} – {{ $reschedule->original_check_out->format('M d, Y') }} ({{ $reschedule->original_nights }} {{ \Illuminate\Support\Str::plural('night', $reschedule->original_nights) }}).
 @else
-**The booking as it stands**
-- Check-in: {{ $booking->check_in->format('M d, Y') }} ({{ $checkinTime }})
-- Check-out: {{ $booking->check_out->format('M d, Y') }} ({{ $checkoutTime }})
-@if($booking->reservations->isNotEmpty())
-- {{ \Illuminate\Support\Str::plural('Room', $booking->reservations->count()) }}: {{ $booking->reservations->pluck('room_number')->implode(', ') }}
-@endif
+@component('mail::details', ['title' => 'The booking as it stands', 'rows' => $bookingDetails])
+@endcomponent
 
 You asked to move it to {{ $reschedule->requested_check_in->format('M d, Y') }} – {{ $reschedule->requested_check_out->format('M d, Y') }}.
 @endif
@@ -44,7 +60,9 @@ You asked to move it to {{ $reschedule->requested_check_in->format('M d, Y') }} 
      here would have guests arriving expecting money back. --}}
 If your new stay is longer, the difference is settled at our front desk when you arrive. If it is shorter, the amount you have already paid stands — we do not issue refunds.
 
-The same rule applies to your new dates: if you cannot make them either, tell us by {{ $deadline->format('g:i A, M d') }} — a full 24 hours before your {{ $booking->check_in->format('M d') }} check-in. After that the booking is forfeited and there is no refund.
+@component('mail::panel')
+**This approval used the booking's one reschedule.** The dates above are now final. If an exceptional situation comes up, contact our front desk directly rather than submitting another request.
+@endcomponent
 @else
 @component('mail::panel')
 **Please call us.** Your booking is still for {{ $booking->check_in->format('M d') }}, and if nobody checks in that day it is forfeited with no refund. We would much rather find you dates that work — and we need 24 hours' notice, so talk to our front desk by {{ $deadline->format('g:i A, M d') }}.

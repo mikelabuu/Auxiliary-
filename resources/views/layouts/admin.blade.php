@@ -52,7 +52,7 @@
      subscription (resources/js/admin-notifications.js). It is only ever on a
      layout that has already passed a staff auth middleware, so the module never
      attempts the authorisation handshake from a page with no staff session. --}}
-<body class="shell-root bg-surface text-ink antialiased" data-staff-alerts
+<body class="shell-root bg-surface text-ink antialiased @yield('body-class')" data-staff-alerts
       x-data="{
         sidebarOpen: false,
         sidebarCollapsed: localStorage.getItem('adminSidebarCollapsed') === '1',

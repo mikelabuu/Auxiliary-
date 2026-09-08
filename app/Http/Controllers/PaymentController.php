@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
-use App\Models\Payment;
-use App\Support\Realtime;
-use App\Support\StaffAlert;
 use App\Events\PaymentProofSubmitted;
 use App\Events\StaffNotification;
+use App\Models\Booking;
+use App\Models\Payment;
+use App\Models\Room;
+use App\Support\PaymentWindow;
+use App\Support\Realtime;
+use App\Support\StaffAlert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -32,7 +35,7 @@ class PaymentController extends Controller
     {
         $this->authorizeBooking($booking);
 
-        if ($redirect = $this->rejectIfNotPayable($booking)) {
+        if ($redirect = $this->rejectIfNotPayable($booking, checkWindow: false)) {
             return $redirect;
         }
 
@@ -41,6 +44,10 @@ class PaymentController extends Controller
         if ($this->awaitingProofFor($booking)) {
             return redirect()->route('booking.show', $booking->id)
                 ->with('info', 'Your proof of payment is already with our staff for verification.');
+        }
+
+        if ($redirect = $this->rejectIfNotPayable($booking)) {
+            return $redirect;
         }
 
         return view('public.payment.proof', [
@@ -66,7 +73,7 @@ class PaymentController extends Controller
     {
         $this->authorizeBooking($booking);
 
-        if ($redirect = $this->rejectIfNotPayable($booking)) {
+        if ($redirect = $this->rejectIfNotPayable($booking, checkWindow: false)) {
             return $redirect;
         }
 
@@ -77,47 +84,110 @@ class PaymentController extends Controller
                 ->with('info', 'Your proof of payment is already with our staff for verification.');
         }
 
+        if ($redirect = $this->rejectIfNotPayable($booking)) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'proof_method' => ['required', Rule::in(array_keys(Payment::PROOF_METHODS))],
-            'proof_reference' => ['required', 'string', 'max:60'],
+            'proof_reference' => ['required', 'string', 'max:60', 'regex:/[A-Za-z0-9]/'],
             'proof' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:4096'],
         ], [
             'proof.required' => 'Please attach a photo or screenshot of your receipt.',
             'proof.max' => 'The receipt image must be 4MB or smaller.',
             'proof_reference.required' => 'Enter the reference number printed on your receipt.',
+            'proof_reference.regex' => 'The payment reference must contain at least one letter or number.',
         ]);
 
         // Private disk. A receipt shows a guest's name, phone and balance —
         // it must never be reachable by guessing a public URL, so it is served
         // only through the authorised staff preview route.
-        $path = $request->file('proof')->store('payment_proofs');
+        $path = $request->file('proof')->store('payment_proofs', 'local');
 
-        $payment = $this->pendingPaymentFor($booking) ?? $this->openPayment($booking, 'manual', $validated['proof_method']);
+        try {
+            $result = DB::transaction(function () use ($booking, $validated, $path) {
+                // Booking creation locks these same room rows first. This
+                // closes the deadline race where a lapsed room is sold to a
+                // second guest while the first guest's proof is being queued.
+                $roomNumbers = $booking->reservations()->pluck('room_number');
 
-        $payment->update([
-            'status' => Payment::STATUS_AWAITING_VERIFICATION,
-            'payment_type' => 'manual',
-            'gateway' => $validated['proof_method'],
-            'proof_path' => $path,
-            'proof_method' => $validated['proof_method'],
-            'proof_reference' => $validated['proof_reference'],
-            'proof_submitted_at' => now(),
-            // A retry after a rejection must not carry the old verdict.
-            'verified_by' => null,
-            'verified_at' => null,
-            'rejection_reason' => null,
-        ]);
+                if ($roomNumbers->isNotEmpty()) {
+                    Room::whereIn('room_number', $roomNumbers)->lockForUpdate()->get();
+                }
+
+                $lockedBooking = Booking::whereKey($booking->id)->lockForUpdate()->first();
+
+                if (! $lockedBooking) {
+                    return ['message' => 'This booking is no longer available.', 'level' => 'error'];
+                }
+
+                if ($message = $this->notPayableMessage($lockedBooking, checkWindow: false)) {
+                    return ['message' => $message, 'level' => 'error'];
+                }
+
+                if ($this->awaitingProofFor($lockedBooking)) {
+                    return [
+                        'message' => 'Your proof of payment is already with our staff for verification.',
+                        'level' => 'info',
+                    ];
+                }
+
+                if ($message = $this->notPayableMessage($lockedBooking)) {
+                    return ['message' => $message, 'level' => 'error'];
+                }
+
+                $payment = $this->pendingPaymentFor($lockedBooking)
+                    ?? $this->openPayment($lockedBooking, 'manual', $validated['proof_method']);
+
+                $payment->update([
+                    // A rejected/abandoned row may predate a discount or other
+                    // legitimate price change. The claim being reviewed must
+                    // always carry the amount currently owed by the booking.
+                    'amount' => $this->amountFor($lockedBooking),
+                    'status' => Payment::STATUS_AWAITING_VERIFICATION,
+                    'payment_type' => 'manual',
+                    'gateway' => $validated['proof_method'],
+                    'proof_path' => $path,
+                    'proof_method' => $validated['proof_method'],
+                    'proof_reference' => $validated['proof_reference'],
+                    'accepted_reference_key' => null,
+                    'proof_submitted_at' => now(),
+                    // A retry after a rejection must not carry the old verdict.
+                    'verified_by' => null,
+                    'verified_at' => null,
+                    'rejection_reason' => null,
+                ]);
+
+                return ['booking' => $lockedBooking, 'payment' => $payment];
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($path);
+
+            throw $e;
+        }
+
+        if (! isset($result['payment'])) {
+            Storage::disk('local')->delete($path);
+
+            return redirect()->route('booking.show', $booking->id)
+                ->with($result['level'], $result['message']);
+        }
+
+        /** @var Booking $booking */
+        $booking = $result['booking'];
+        /** @var Payment $payment */
+        $payment = $result['payment'];
 
         // The verification queue is worked live — a guest who has just uploaded
         // a receipt is standing by for a decision.
-        Realtime::emit(new PaymentProofSubmitted());
+        Realtime::emit(new PaymentProofSubmitted);
         Realtime::emit(StaffNotification::proofSubmitted($payment->fresh()->load('booking')));
 
         // And by email, for whoever is not sitting in front of the console.
         StaffAlert::proofSubmitted($booking, $payment);
 
         return redirect()->route('booking.show', $booking->id)
-            ->with('success', 'Proof of payment submitted. Our front desk will verify it shortly.');
+            ->with('success', 'Proof of payment submitted. Our cashier will verify it shortly.');
     }
 
     /**
@@ -148,16 +218,30 @@ class PaymentController extends Controller
      * DiscountAdminController::reject) — at which point the guest is paying
      * the ordinary rate and this route opens back up.
      */
-    private function rejectIfNotPayable(Booking $booking)
+    private function rejectIfNotPayable(Booking $booking, bool $checkWindow = true)
+    {
+        if ($message = $this->notPayableMessage($booking, $checkWindow)) {
+            return redirect()->route('booking.show', $booking->id)
+                ->with('error', $message);
+        }
+
+        return null;
+    }
+
+    private function notPayableMessage(Booking $booking, bool $checkWindow = true): ?string
     {
         if ($booking->status !== Booking::STATUS_PENDING_PAYMENT) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('error', 'This booking is not awaiting payment.');
+            return 'This booking is not awaiting payment.';
         }
 
         if ($booking->wants_discount) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('error', 'A Senior Citizen / PWD booking is settled at our front desk. Bring the original ID for every discounted guest — we cannot take this payment online.');
+            return 'A Senior Citizen / PWD booking is settled at our front desk. Bring the original ID for every discounted guest — we cannot take this payment online.';
+        }
+
+        $deadline = $checkWindow ? PaymentWindow::deadlineFor($booking) : null;
+
+        if ($deadline && now()->greaterThanOrEqualTo($deadline)) {
+            return 'This booking’s payment window has ended. If you already transferred the money, contact the front desk before making another booking.';
         }
 
         return null;

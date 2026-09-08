@@ -35,6 +35,10 @@ class RedirectIfAuthenticated
                     if ($staff->role === 'frontdesk') {
                         return redirect()->route('frontdesk.dashboard.index');
                     }
+
+                    if ($staff->role === 'cashier') {
+                        return redirect()->route('staff.paymentverification.index');
+                    }
                 }
             }
         }

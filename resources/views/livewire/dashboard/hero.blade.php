@@ -32,7 +32,7 @@
             <span class="dash-ops__label"><span class="dash-ops__dot dash-ops__dot--slate"></span>In-house</span>
             <span class="dash-ops__value tabnum">{{ $inHouse }}</span>
         </div>
-        <div class="dash-ops__item">
+        <div @class(['dash-ops__item', 'dash-ops__item--attention' => $overdue > 0])>
             <span class="dash-ops__label"><span class="dash-ops__dot dash-ops__dot--red"></span>Overdue</span>
             <span class="dash-ops__value tabnum {{ $overdue > 0 ? 'is-alert' : '' }}">{{ $overdue }}</span>
         </div>
@@ -44,7 +44,7 @@
     <div class="dash-welcome__actions">
         <a href="{{ route('staff.manualbooking') }}" class="dash-btn dash-btn--primary">
             <x-admin.ui.icon name="plus" class="w-4 h-4" stroke-width="2.5" />
-            New Booking
+            New booking
         </a>
         <a href="{{ route('staff.bookings.index') }}#arrivals" class="dash-btn">
             <x-admin.ui.icon name="log-in" class="w-4 h-4" />

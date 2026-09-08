@@ -27,7 +27,7 @@
     var els = document.querySelectorAll('[data-aos]');
     if (!els.length) return;
 
-    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var reduceMotion = document.documentElement.classList.contains('fh-lite') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // ── BlurText (reactbits.dev/text-animations/blur-text port) ──────
     // Split [data-blur-text] elements into word spans (recursing through
@@ -149,5 +149,11 @@
         threshold: 0,
     });
 
-    els.forEach(function (el) { io.observe(el); });
+    // Only arm hidden states once the observer exists. Above-fold content
+    // stays visible; a failed script download can never hide the document.
+    els.forEach(function (el) {
+        if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('aos-animate');
+        else io.observe(el);
+    });
+    document.documentElement.classList.add('js-reveal');
 })();

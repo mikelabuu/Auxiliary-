@@ -12,10 +12,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * A guest asking to move a paid stay.
  *
  * The rule this table exists to serve: a paid booking cannot be cancelled, so
- * a guest who cannot arrive has exactly one thing to do — say so before
- * check-in time on their arrival day. Do that and the desk will move the stay.
- * Miss it and the booking is forfeited, with no refund, via
- * bookings:mark-no-show.
+ * a guest who cannot arrive may ask for one approved move, with at least 24
+ * hours' notice. A declined or withdrawn attempt does not spend that allowance;
+ * an approval does. Miss the deadline and the booking is forfeited, with no
+ * refund, via bookings:mark-no-show.
  *
  * The deadline is therefore not decoration. {@see isOpenFor()} is the single
  * expression of it, and both the controller and every screen that offers the
@@ -89,6 +89,11 @@ class RescheduleRequest extends Model
         return $query->where('status', self::STATUS_PENDING);
     }
 
+    public function scopeApproved($query)
+    {
+        return $query->where('status', self::STATUS_APPROVED);
+    }
+
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
@@ -131,7 +136,7 @@ class RescheduleRequest extends Model
 
     /**
      * Whether this booking can still be moved: right status, deadline not
-     * passed, and nothing already in the queue for it.
+     * passed, its one approved move unused, and nothing already in the queue.
      *
      * The third condition is not merely tidiness. Two open requests against one
      * booking means two staff can approve two different sets of dates, and the
@@ -148,7 +153,37 @@ class RescheduleRequest extends Model
             return false;
         }
 
-        return ! self::where('booking_id', $booking->id)->pending()->exists();
+        return ! self::hasApprovedFor($booking)
+            && ! self::where('booking_id', $booking->id)->pending()->exists();
+    }
+
+    /**
+     * Whether the booking has spent its single approved reschedule.
+     *
+     * Declined and withdrawn attempts are intentionally ignored. The optional
+     * exception is used while approving a locked request so a repeated call on
+     * that same row is not mistaken for a different approval.
+     */
+    public static function hasApprovedFor(?Booking $booking, ?int $exceptRequestId = null): bool
+    {
+        if (! $booking) {
+            return false;
+        }
+
+        return self::where('booking_id', $booking->id)
+            ->approved()
+            ->when($exceptRequestId, fn ($query) => $query->whereKeyNot($exceptRequestId))
+            ->exists();
+    }
+
+    /** The approved request that consumed the allowance, if there is one. */
+    public static function approvedFor(?Booking $booking): ?self
+    {
+        if (! $booking) {
+            return null;
+        }
+
+        return self::where('booking_id', $booking->id)->approved()->latest('reviewed_at')->first();
     }
 
     /** The open request for a booking, if there is one. */

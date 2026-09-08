@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Odometer roll (vengence-ui animated-number): outgoing value slides
     // out, incoming slides in from the opposite edge based on direction.
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion = document.documentElement.classList.contains('fh-lite') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function setGuests(val) {
         val = Math.min(40, Math.max(1, val));
         const prev = parseInt(hiddenInput.value) || 1;
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const track = host.querySelector('.word-rotate-track');
     const words = (host.dataset.words || '').split(',').map(w => w.trim()).filter(Boolean);
 
-    if (reduceMQ.matches) return; // reduced motion keeps the static first word
+    if (document.documentElement.classList.contains('fh-lite') || reduceMQ.matches) return; // reduced motion keeps the static first word
 
     if (!track || words.length < 2) return;
 
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!hero || (!word && !deepen)) return;
 
     const reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduceMQ.matches) return;
+    if (document.documentElement.classList.contains('fh-lite') || reduceMQ.matches) return;
 
     // Placeholder, not a measurement. The measure pass below sets the real
     // value and is the only thing that should read layout — taking offsetHeight
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
 (function () {
     const wrap = document.querySelector('[data-hero-word]');
     if (!wrap) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (document.documentElement.classList.contains('fh-lite') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
 
     const chars = Array.prototype.slice.call(wrap.querySelectorAll('.fh-wm-char'));
@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // back on leave. Pointer-coarse devices skip it — there's no cursor to
 // follow, and the transform would fight the tap highlight.
 (function () {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (document.documentElement.classList.contains('fh-lite') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
 
     // The hover transitions (gap/background/shadow) have to be restated here —

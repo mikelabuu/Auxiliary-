@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
  * The app previously sent none of these. The one that mattered most is
  * X-Frame-Options: without it any site can load the staff console in an
  * invisible iframe over its own page and collect the clicks of a signed-in
- * admin — approve a discount, verify a payment, suspend a user — with the
+ * staff — approve a discount, verify a payment, suspend a user — with the
  * admin seeing only whatever the attacker chose to display. The session is
  * valid, the request is genuine, and nothing in the logs looks unusual.
  *

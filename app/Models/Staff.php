@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-
 class Staff extends Authenticatable
 {
     use Notifiable;
@@ -16,7 +15,7 @@ class Staff extends Authenticatable
      *
      * `housekeeping` used to be listed here and in ASSIGNABLE_ROLES, but the
      * system never grew a console for it: IssuesStaffOtp::redirectForRole()
-     * knows master_admin, admin and frontdesk, and sends anything else back to
+     * knows master_admin, admin, frontdesk and cashier, and sends anything else back to
      * the login with "your staff account has no valid role assigned" — after
      * the account has already cleared its password and burned an emailed OTP.
      * So the role could be handed out but never signed into, which reads to
@@ -27,22 +26,23 @@ class Staff extends Authenticatable
      * originally declared as still lists the value and is harmless; dropping
      * it is a schema change nobody needs.
      */
-    public const ROLES = ['master_admin', 'admin', 'frontdesk'];
+    public const ROLES = ['master_admin', 'admin', 'frontdesk', 'cashier'];
 
     /**
      * Roles selectable through the staff-management UI. `master_admin` is
      * provisioned out of band and must never be assignable from a form.
      */
-    public const ASSIGNABLE_ROLES = ['admin', 'frontdesk'];
+    public const ASSIGNABLE_ROLES = ['admin', 'frontdesk', 'cashier'];
 
     /**
      * Roles the "New Staff Account" form may hand out. Narrower than
      * ASSIGNABLE_ROLES on purpose: `admin` is an elevated console role, so a
      * fresh account is never born into it — an existing account is promoted to
      * it through the edit form instead, which leaves an audit entry naming the
-     * account that was raised. `master_admin` is out of band as always.
+     * account that was raised. Cashier is intentionally creatable because it
+     * is a narrow operational role. `master_admin` is out of band as always.
      */
-    public const CREATABLE_ROLES = ['frontdesk'];
+    public const CREATABLE_ROLES = ['frontdesk', 'cashier'];
 
     protected $fillable = [
         'name',
@@ -59,7 +59,7 @@ class Staff extends Authenticatable
     ];
 
     protected $casts = [
-        
+
         'password' => 'hashed',
     ];
 }

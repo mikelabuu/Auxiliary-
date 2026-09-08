@@ -25,6 +25,7 @@ class StaffBookingAlertMail extends Mailable
 
     public const KIND_NEW_BOOKING = 'new_booking';
     public const KIND_PROOF_SUBMITTED = 'proof_submitted';
+    public const KIND_PAYMENT_VERIFIED = 'payment_verified';
     public const KIND_RESCHEDULE = 'reschedule_requested';
 
     public function __construct(
@@ -32,8 +33,7 @@ class StaffBookingAlertMail extends Mailable
         public string $kind,
         public ?Payment $payment = null,
         public ?RescheduleRequest $reschedule = null,
-    ) {
-    }
+    ) {}
 
     public static function newBooking(Booking $booking): self
     {
@@ -45,6 +45,11 @@ class StaffBookingAlertMail extends Mailable
         return new self($booking, self::KIND_PROOF_SUBMITTED, $payment);
     }
 
+    public static function paymentVerified(Booking $booking, Payment $payment): self
+    {
+        return new self($booking, self::KIND_PAYMENT_VERIFIED, $payment);
+    }
+
     public static function rescheduleRequested(Booking $booking, RescheduleRequest $reschedule): self
     {
         return new self($booking, self::KIND_RESCHEDULE, null, $reschedule);
@@ -53,23 +58,43 @@ class StaffBookingAlertMail extends Mailable
     public function build()
     {
         $booking = $this->booking->loadMissing('reservations');
+        $this->payment?->loadMissing('verifier:id,name,role');
         $isProof = $this->kind === self::KIND_PROOF_SUBMITTED;
+        $isVerified = $this->kind === self::KIND_PAYMENT_VERIFIED;
         $isReschedule = $this->kind === self::KIND_RESCHEDULE;
 
         $subject = match ($this->kind) {
             self::KIND_PROOF_SUBMITTED => "Proof of payment to verify — booking #{$booking->id}",
+            self::KIND_PAYMENT_VERIFIED => "Payment verified by cashier — booking #{$booking->id}",
             self::KIND_RESCHEDULE => "Reschedule request — booking #{$booking->id}",
             default => "New booking #{$booking->id} — awaiting payment",
+        };
+
+        $amount = (float) ($booking->payable_amount ?: $booking->total_price);
+
+        $preheader = match ($this->kind) {
+            self::KIND_PROOF_SUBMITTED => '₱' . number_format($amount, 2)
+                . " payment proof for booking #{$booking->id} is waiting for review.",
+            self::KIND_PAYMENT_VERIFIED => '₱' . number_format($amount, 2)
+                . " payment for booking #{$booking->id} was verified by the cashier.",
+            self::KIND_RESCHEDULE => "A reschedule request for booking #{$booking->id} needs a staff decision.",
+            default => "New booking #{$booking->id} is holding room inventory while payment is pending.",
         };
 
         // Front desk clears proofs, the reschedule queue owns date changes, and
         // the booking hub is where a new booking is picked up. Send each alert
         // to the screen that resolves it.
-        $actionUrl = match ($this->kind) {
-            self::KIND_PROOF_SUBMITTED => route('staff.paymentverification.index'),
-            self::KIND_RESCHEDULE => route('staff.reschedules.index'),
-            default => route('staff.bookings.index', ['search' => $booking->id]),
+        $actionPath = match ($this->kind) {
+            self::KIND_PROOF_SUBMITTED => route('staff.paymentverification.show', $this->payment, absolute: false),
+            self::KIND_PAYMENT_VERIFIED => route('staff.paymentverification.show', $this->payment, absolute: false),
+            self::KIND_RESCHEDULE => route('staff.reschedules.index', absolute: false),
+            default => route('staff.bookings.index', ['search' => $booking->id], absolute: false),
         };
+
+        // This mail is built during a guest request. Never inherit its Host
+        // header for a staff-facing link: APP_URL is the deployment-controlled
+        // canonical origin, while Host may be supplied by the requester.
+        $actionUrl = rtrim((string) config('app.url'), '/') . $actionPath;
 
         return $this->subject($subject)
             ->markdown('emails.booking.staff-alert', [
@@ -77,10 +102,12 @@ class StaffBookingAlertMail extends Mailable
                 'payment' => $this->payment,
                 'reschedule' => $this->reschedule,
                 'isProof' => $isProof,
+                'isVerified' => $isVerified,
                 'isReschedule' => $isReschedule,
                 'actionUrl' => $actionUrl,
+                'preheader' => $preheader,
                 'rooms' => $booking->reservations->pluck('room_number')->implode(', '),
-                'amount' => $booking->payable_amount ?: $booking->total_price,
+                'amount' => $amount,
             ]);
     }
 }

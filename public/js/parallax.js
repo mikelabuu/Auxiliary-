@@ -57,7 +57,7 @@
 
     // ── Accessibility bail ──────────────────────────────────────────
     const reduceMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduceMotionMQ.matches) return;
+    if (document.documentElement.classList.contains('fh-lite') || reduceMotionMQ.matches) return;
 
     // ── Shared frame scheduler ───────────────────────────────────────
     // This engine used to own a scroll listener and a rAF loop. So did

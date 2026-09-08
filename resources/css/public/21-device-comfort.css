@@ -1,0 +1,51 @@
+/* Small screens keep the photography and booking controls, with static
+   decoration. fh-lite also covers reduced motion and constrained networks. */
+html.fh-lite { scroll-behavior: auto; }
+.fh-lite :is(.film-grain, .fh-hero-wash, .fh-hero-horizon, .fh-hero-lights, .fh-hero-deepen) { display: none; }
+.fh-lite :is([data-aos], [data-fx-band], [data-fx-card], [data-fx-words], [data-prlx-y], .prlx-hero-bg, .prlx-hero-content) {
+    will-change: auto;
+    filter: none;
+    animation: none;
+    transition: none;
+}
+.fh-lite :is(.co-enter, .co-panel.is-active) { animation: none; opacity: 1; transform: none; }
+.fh-lite :is(.fh-wm-char, .fh-hero-build, .fh-hero-pitch, .fh-rule, .fh-capsule, .fh-hero-note, .fh-marquee-track, .reveal-line > span, .split-char, .flip-char, .hero-sub) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+}
+.fh-lite .fh-hero-build { filter: none; }
+.fh-lite :is(#navWrap, .glass-night, .room-card, .co-actions) { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.checkout-page { min-height: 100dvh; }
+.checkout-page :is(input, select, textarea, button) { scroll-margin-block: 7rem; }
+.checkout-page .co-actions { bottom: max(.75rem, env(safe-area-inset-bottom)); }
+
+@media (max-width: 639px) {
+    .fh-hero { padding-top: 88px; padding-bottom: 24px; }
+    .fh-hero .fh-wordmark { display: none; }
+    .fh-hero .fh-hero-stage { margin-top: 0; padding-inline: 20px; }
+    .fh-hero .fh-hero-build { width: 100%; margin: 0; }
+    .fh-hero .fh-hero-copy { margin-top: 0; }
+    .fh-hero .fh-hero-pitch .hero-sub { margin-block: 12px 18px; font-size: 14px; }
+    .fh-hero .fh-hero-note { margin-block: 20px 14px; padding-inline: 20px; letter-spacing: .1em; font-size: 10px; }
+    .fh-hero .fh-capsule { margin-inline: 16px; padding: 12px; border-radius: 16px; }
+    .fh-capsule > .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+    .fh-capsule .fh-field { min-width: 0; padding: 10px; }
+    .fh-capsule .fh-field:nth-child(3) { grid-column: 1 / -1; }
+    .fh-capsule .fh-search { grid-column: 1 / -1; min-height: 44px; }
+    .fh-capsule .fh-field-label { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0; text-transform: none; }
+    .fh-capsule :is(#btn_minus_guests, #btn_plus_guests) { width: 40px; height: 40px; }
+    .checkout-page { padding-top: 6.5rem; padding-bottom: 2rem; }
+    .checkout-page h1 { font-size: 2rem; line-height: 1.15; }
+    .checkout-page .co-enter.mb-9 { margin-bottom: 1.5rem; }
+    .checkout-page .co-rail { gap: .6rem; margin-bottom: 1.25rem; }
+    .checkout-page .co-rail-label { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; text-transform: none; }
+    .checkout-page .co-card { padding: 1rem; border-radius: 12px; }
+    .checkout-page .co-actions { gap: .65rem; padding: .75rem; border-radius: 12px; }
+    .checkout-page .co-btn { font-family: var(--font-sans); font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; padding: .75rem 1rem; }
+    .checkout-page .co-actions .blocker-line { flex-basis: 100%; order: 5; font-size: 12px; }
+    .checkout-page .co-actions-total { margin-right: auto; }
+    .checkout-page .co-actions-total-label,
+    .checkout-page .co-actions-total-meta { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0; text-transform: none; }
+}

@@ -1,15 +1,20 @@
-@extends('layouts.admin')
+@extends(auth('staff')->user()?->role === 'frontdesk' ? 'layouts.frontdesk' : 'layouts.admin')
 
-@section('title', 'Admin - Discount Requests')
+@section('title', 'Discount Verification')
 @section('page-title', 'Discount Requests')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="space-y-6 max-w-[1680px] mx-auto">
-    <x-admin.ui.page-header subtitle="Review Senior Citizen / PWD verification documents and approve the 20% discount.">
+    <x-admin.ui.page-header subtitle="Verify original Senior Citizen / PWD IDs in person before approving the 20% discount.">
         Discount Requests
     </x-admin.ui.page-header>
+
+    <div class="flex items-start gap-2.5 rounded-2xl border border-palay-200 bg-palay-50 px-5 py-3 text-sm font-medium leading-relaxed text-palay-800">
+        <x-admin.ui.icon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+        Online uploads are advance references only. Keep the booking on hold until the guest presents each original ID at the front desk.
+    </div>
 
     @livewire('staff.discounts.discount-list')
 </div>

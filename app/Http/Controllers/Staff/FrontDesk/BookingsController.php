@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\Staff\FrontDesk;
 
@@ -12,29 +12,25 @@ use App\Models\Booking;
 use App\Models\Checkout;
 use App\Models\Payment;
 use App\Models\Reservation;
+use App\Services\AuditLogger;
 use App\Support\Realtime;
 use App\Support\RefCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
-use Carbon\Carbon;
 use Illuminate\Support\Str;
-use App\Services\AuditLogger;
+use Illuminate\Validation\Rule;
 
-class BookingsController extends Controller{
-
+class BookingsController extends Controller
+{
     /**
-     * How money can arrive across the counter. Cash is the one the online
-     * flow has no equivalent for — Payment::PROOF_METHODS covers only the two
-     * a guest can transfer from home and photograph afterwards.
+     * How money can arrive across the front-desk counter. Remote GCash and
+     * bank transfers belong to the cashier verification queue; accepting them
+     * here would bypass the one role that can inspect the bank account.
      */
     public const DESK_PAYMENT_METHODS = [
-        'cash'          => 'Cash',
-        'gcash'         => 'GCash',
-        'bank_transfer' => 'Bank Transfer',
+        'cash' => 'Cash',
     ];
 
     public function viewBookings(Request $request)
@@ -88,7 +84,7 @@ class BookingsController extends Controller{
 
         return view('staff.frontdesk.bookings.index', compact('bookings', 'search', 'sort', 'status', 'statusCounts'));
     }
-    
+
     /**
      * Take payment over the counter for a booking made online.
      *
@@ -131,13 +127,21 @@ class BookingsController extends Controller{
                 return null;
             }
 
+            // A guest may arrive while their uploaded bank receipt is still
+            // being reviewed. Do not overwrite that claim with a cash result;
+            // the cashier must decide it first to avoid recording two payments
+            // as one or charging the guest twice.
+            if (Payment::where('booking_id', $locked->id)->awaitingVerification()->exists()) {
+                return null;
+            }
+
             $amount = $locked->payable_amount ?? $locked->total_price;
 
             // Reuse a half-finished attempt rather than orphaning it, the same
             // way PaymentController does — a booking ends up with one payment
             // row, not one per attempt.
             $payment = Payment::where('booking_id', $locked->id)
-                ->whereIn('status', ['pending', Payment::STATUS_AWAITING_VERIFICATION, Payment::STATUS_REJECTED])
+                ->whereIn('status', ['pending', Payment::STATUS_REJECTED])
                 ->latest('id')
                 ->first();
 
@@ -174,7 +178,7 @@ class BookingsController extends Controller{
                 ['status' => Booking::STATUS_PENDING_PAYMENT],
                 ['status' => Booking::STATUS_PAID],
                 "Front desk staff {$staff->name} took " . self::DESK_PAYMENT_METHODS[$validated['method']]
-                    . " payment of ₱" . number_format((float) $amount, 2) . " for booking #{$locked->id}"
+                    . ' payment of ₱' . number_format((float) $amount, 2) . " for booking #{$locked->id}"
                     . ($validated['reference'] ? " (ref {$validated['reference']})" : '')
             );
 
@@ -182,13 +186,17 @@ class BookingsController extends Controller{
         });
 
         if ($payment === null) {
+            if (Payment::where('booking_id', $booking->id)->awaitingVerification()->exists()) {
+                return back()->with('error', 'An uploaded bank or GCash payment is awaiting cashier verification. It must be decided before a cash payment can be recorded.');
+            }
+
             return back()->with('error', 'That booking is no longer awaiting payment — someone may have settled it already.');
         }
 
         $booking->refresh();
 
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
 
         if (BookingStatusChanged::shouldEmitFor($booking)) {
             Realtime::emit(BookingStatusChanged::for($booking));
@@ -257,8 +265,8 @@ class BookingsController extends Controller{
         // an open transaction. The admin-side checkout already did this; the
         // front desk doing the same work did not, which is why the dashboard
         // room map lagged behind desk activity.
-        Realtime::emit(new BookingChanged());
-        Realtime::emit(new RoomStatusChanged());
+        Realtime::emit(new BookingChanged);
+        Realtime::emit(new RoomStatusChanged);
         if (BookingStatusChanged::shouldEmitFor($booking)) {
             Realtime::emit(BookingStatusChanged::for($booking->refresh()));
         }

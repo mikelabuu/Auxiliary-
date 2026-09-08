@@ -5,8 +5,8 @@
      legend all already say it, and a number stated four times on one screen is
      stated once too many. Each card's meter shows the number's denominator. --}}
 <div wire:poll.30s class="space-y-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <x-admin.ui.stat-card icon="receipt" dark badge="THIS MONTH" label="Revenue" :delay="40" :href="route('staff.paymentlogs.index')"
+    <div class="dashboard-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <x-admin.ui.stat-card icon="receipt" dark badge="This month" label="Revenue" :delay="40" :href="route('staff.paymentlogs.index')"
                               :spark="$revenueSpark"
                               spark-label="Revenue per month, last 12 months">
             ₱{{ number_format($revenueThisMonth, 2) }}
@@ -19,7 +19,7 @@
             </x-slot:footnote>
         </x-admin.ui.stat-card>
 
-        <x-admin.ui.stat-card icon="clipboard" badge="ALL-TIME" label="Total Bookings" :delay="80" :href="route('staff.bookings.index')"
+        <x-admin.ui.stat-card icon="clipboard" badge="All time" label="Total bookings" :delay="80" :href="route('staff.bookings.index')"
                               :spark="$bookingSpark"
                               spark-label="New bookings per week, last 12 weeks">
             {{ $totalBookings }}
@@ -31,7 +31,7 @@
             </x-slot:footnote>
         </x-admin.ui.stat-card>
 
-        <x-admin.ui.stat-card icon="users" color="sky" badge="REGISTERED" label="Guest Accounts" :delay="120" :href="route('staff.userrecords.index')"
+        <x-admin.ui.stat-card icon="users" color="sky" badge="Registered" label="Guest accounts" :delay="120" :href="route('staff.userrecords.index')"
                               :spark="$userSpark"
                               spark-label="New sign-ups per week, last 12 weeks">
             {{ $totalUsers }}
@@ -43,7 +43,7 @@
             </x-slot:footnote>
         </x-admin.ui.stat-card>
 
-        <x-admin.ui.stat-card icon="check-circle" color="palay" badge="RIGHT NOW" label="Available Now" :delay="160" :href="route('staff.rooms')"
+        <x-admin.ui.stat-card icon="check-circle" color="palay" badge="Right now" label="Available now" :delay="160" :href="route('staff.rooms')"
                               :progress="$sellablePct"
                               :progress-label="round($sellablePct) . '% sellable'">
             {{ $availableCount }}

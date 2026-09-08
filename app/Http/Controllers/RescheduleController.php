@@ -11,6 +11,8 @@ use App\Support\StaffAlert;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The guest half of moving a paid stay.
@@ -35,6 +37,14 @@ class RescheduleController extends Controller
     public function create(Booking $booking)
     {
         $this->authorizeBooking($booking);
+
+        // An approval is the permanent stop. Check it before showing any old
+        // pending anomaly so the guest is never invited back into a workflow
+        // whose single allowance has already been used.
+        if (RescheduleRequest::hasApprovedFor($booking)) {
+            return redirect()->route('booking.show', $booking->id)
+                ->with('info', 'This booking has already used its one allowed reschedule. The approved dates are now final; please contact our front desk if you need help.');
+        }
 
         // An existing request is the page the guest actually wants: they came
         // back to see what happened to it, not to file a second one.
@@ -85,61 +95,70 @@ class RescheduleController extends Controller
             'reason.required'                    => 'Tell us why you need to move the stay — the front desk decides on it.',
         ]);
 
-        // A reschedule moves a stay; it does not resize one. The guest paid for
-        // a set number of nights and this form is about *when* they are taken,
-        // so the new range has to be the same length as the one it replaces.
-        //
-        // The form derives check-out from check-in and posts it read-only, so
-        // reaching this branch means the value was edited in flight or the
-        // request was made without the page. It is checked here rather than
-        // trusted there for exactly that reason.
-        // max(1, …) on both sides, matching the $nights the form renders from:
-        // the two must agree or the page would show a length the controller
-        // then refuses.
-        $originalNights = max(1, (int) $booking->check_in->diffInDays($booking->check_out));
-        $requestedNights = max(1, (int) Carbon::parse($validated['requested_check_in'])
-            ->diffInDays(Carbon::parse($validated['requested_check_out'])));
+        // Serialize every request mutation on the booking row. Without this,
+        // two fast submissions could both observe "no pending request" and
+        // create two queue entries, or a submission could slip in while staff
+        // is approving the one move this booking is allowed.
+        $outcome = DB::transaction(function () use ($booking, $validated) {
+            $lockedBooking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
-        if ($requestedNights !== $originalNights) {
-            return back()
-                ->withErrors([
+            if ($closed = $this->closedReason($lockedBooking)) {
+                return ['closed' => $closed];
+            }
+
+            // A reschedule moves a stay; it does not resize one. Recompute from
+            // the locked booking rather than trusting the model loaded before
+            // validation, because an approval in another request may have just
+            // changed these dates.
+            $originalNights = max(1, (int) $lockedBooking->check_in->diffInDays($lockedBooking->check_out));
+            $requestedNights = max(1, (int) Carbon::parse($validated['requested_check_in'])
+                ->diffInDays(Carbon::parse($validated['requested_check_out'])));
+
+            if ($requestedNights !== $originalNights) {
+                throw ValidationException::withMessages([
                     'requested_check_out' => 'A reschedule keeps the same length of stay — '
                         . $originalNights . ' ' . ($originalNights === 1 ? 'night' : 'nights')
                         . '. Pick a new arrival date and the whole stay moves with it.',
-                ])
-                ->withInput();
+                ]);
+            }
+
+            $sameDates = Carbon::parse($validated['requested_check_in'])->isSameDay($lockedBooking->check_in)
+                && Carbon::parse($validated['requested_check_out'])->isSameDay($lockedBooking->check_out);
+
+            if ($sameDates) {
+                throw ValidationException::withMessages([
+                    'requested_check_in' => 'Those are the dates you already have. Pick the dates you would like to move to.',
+                ]);
+            }
+
+            return ['reschedule' => RescheduleRequest::create([
+                'booking_id'          => $lockedBooking->id,
+                'user_id'             => Auth::id(),
+                'status'              => RescheduleRequest::STATUS_PENDING,
+                // Copied, not referenced: approving the request is the act
+                // that overwrites the booking's dates, so without a snapshot
+                // the record of what changed would erase itself.
+                'original_check_in'   => $lockedBooking->check_in,
+                'original_check_out'  => $lockedBooking->check_out,
+                'requested_check_in'  => $validated['requested_check_in'],
+                'requested_check_out' => $validated['requested_check_out'],
+                'reason'              => trim($validated['reason']),
+                'submitted_at'        => now(),
+            ])];
+        });
+
+        if (isset($outcome['closed'])) {
+            return redirect()->route('booking.show', $booking->id)
+                ->with($outcome['closed']['level'], $outcome['closed']['message']);
         }
 
-        // Asking for the dates you already have is not a request, it is a
-        // no-op that would sit in the queue until somebody read it closely
-        // enough to notice.
-        $sameDates = Carbon::parse($validated['requested_check_in'])->isSameDay($booking->check_in)
-            && Carbon::parse($validated['requested_check_out'])->isSameDay($booking->check_out);
-
-        if ($sameDates) {
-            return back()
-                ->withErrors(['requested_check_in' => 'Those are the dates you already have. Pick the dates you would like to move to.'])
-                ->withInput();
-        }
-
-        $reschedule = RescheduleRequest::create([
-            'booking_id'          => $booking->id,
-            'user_id'             => Auth::id(),
-            'status'              => RescheduleRequest::STATUS_PENDING,
-            // Copied, not referenced: approving the request is the act that
-            // overwrites the booking's dates, so without a snapshot the record
-            // of what changed would erase itself.
-            'original_check_in'   => $booking->check_in,
-            'original_check_out'  => $booking->check_out,
-            'requested_check_in'  => $validated['requested_check_in'],
-            'requested_check_out' => $validated['requested_check_out'],
-            'reason'              => trim($validated['reason']),
-            'submitted_at'        => now(),
-        ]);
+        /** @var RescheduleRequest $reschedule */
+        $reschedule = $outcome['reschedule'];
+        $booking = $reschedule->booking()->with('reservations')->firstOrFail();
 
         // The desk works this queue live, and the deadline on the booking
         // underneath it may be hours away.
-        Realtime::emit(new BookingChanged());
+        Realtime::emit(new BookingChanged);
         Realtime::emit(StaffNotification::rescheduleRequested($reschedule->load('booking')));
 
         // …and by mail, for whoever is not sitting in front of the console.
@@ -161,21 +180,38 @@ class RescheduleController extends Controller
     {
         $this->authorizeBooking($booking);
 
-        $open = RescheduleRequest::openFor($booking);
+        $withdrawn = DB::transaction(function () use ($booking) {
+            // Match request creation and staff decisions: booking first, then
+            // request. A stale browser can no longer overwrite an approval
+            // with "withdrawn" after staff has already moved the dates.
+            Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
-        if (! $open) {
+            $open = RescheduleRequest::where('booking_id', $booking->id)
+                ->pending()
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $open) {
+                return null;
+            }
+
+            $open->update([
+                'status'      => RescheduleRequest::STATUS_WITHDRAWN,
+                'reviewed_at' => now(),
+            ]);
+
+            return $open;
+        });
+
+        if (! $withdrawn) {
             return redirect()->route('booking.show', $booking->id)
                 ->with('error', 'There is no reschedule request to withdraw.');
         }
 
-        $open->update([
-            'status'       => RescheduleRequest::STATUS_WITHDRAWN,
-            'reviewed_at'  => now(),
-        ]);
-
         // Withdrawn requests must leave the staff queue as promptly as they
         // entered it.
-        Realtime::emit(new BookingChanged());
+        Realtime::emit(new BookingChanged);
 
         return redirect()->route('booking.show', $booking->id)
             ->with('success', 'Reschedule request withdrawn. Your original dates still stand.');
@@ -196,21 +232,45 @@ class RescheduleController extends Controller
      */
     private function rejectIfClosed(Booking $booking)
     {
-        if (! in_array($booking->status, RescheduleRequest::RESCHEDULABLE_STATUSES, true)) {
+        if ($closed = $this->closedReason($booking)) {
             return redirect()->route('booking.show', $booking->id)
-                ->with('error', $booking->status === Booking::STATUS_PENDING_PAYMENT || $booking->status === Booking::STATUS_PENDING_DISCOUNT
+                ->with($closed['level'], $closed['message']);
+        }
+
+        return null;
+    }
+
+    /** @return array{level: string, message: string}|null */
+    private function closedReason(Booking $booking): ?array
+    {
+        if (! in_array($booking->status, RescheduleRequest::RESCHEDULABLE_STATUSES, true)) {
+            return [
+                'level' => 'error',
+                'message' => $booking->status === Booking::STATUS_PENDING_PAYMENT || $booking->status === Booking::STATUS_PENDING_DISCOUNT
                     ? 'This booking has not been paid yet, so there is nothing to move — cancel it and book the dates you want instead.'
-                    : 'Only a paid booking that has not started yet can be moved. Please contact our front desk.');
+                    : 'Only a paid booking that has not started yet can be moved. Please contact our front desk.',
+            ];
+        }
+
+        if (RescheduleRequest::hasApprovedFor($booking)) {
+            return [
+                'level' => 'info',
+                'message' => 'This booking has already used its one allowed reschedule. The approved dates are now final; please contact our front desk if you need help.',
+            ];
         }
 
         if (RescheduleRequest::deadlineFor($booking)->isPast()) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('error', 'The deadline to move this stay has passed — we need at least 24 hours of notice before your check-in. Please contact our front desk.');
+            return [
+                'level' => 'error',
+                'message' => 'The deadline to move this stay has passed — we need at least 24 hours of notice before your check-in. Please contact our front desk.',
+            ];
         }
 
         if (RescheduleRequest::where('booking_id', $booking->id)->pending()->exists()) {
-            return redirect()->route('booking.show', $booking->id)
-                ->with('info', 'You already have a reschedule request waiting on our front desk.');
+            return [
+                'level' => 'info',
+                'message' => 'You already have a reschedule request waiting on our front desk.',
+            ];
         }
 
         return null;

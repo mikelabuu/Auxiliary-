@@ -13,8 +13,8 @@ use Illuminate\Queue\SerializesModels;
  *
  * One mailable for both outcomes rather than two, because the guest is reading
  * for the same three facts either way — which dates apply now, what the desk
- * said, and what they have to do next — and splitting it would be two templates
- * that have to keep agreeing about the deadline.
+ * said, and what they have to do next. Approval also states plainly that it
+ * consumes the booking's single move; a decline leaves that allowance intact.
  *
  * A decline is the more important of the two to get right. The guest is left
  * holding a paid booking for dates they have already told us they cannot make,
@@ -27,8 +27,7 @@ class RescheduleDecidedMail extends Mailable
     public function __construct(
         public Booking $booking,
         public RescheduleRequest $reschedule,
-    ) {
-    }
+    ) {}
 
     public function build()
     {
@@ -44,9 +43,9 @@ class RescheduleDecidedMail extends Mailable
                 'booking'    => $booking,
                 'reschedule' => $this->reschedule,
                 'approved'   => $approved,
-                // The deadline is recomputed from the booking as it now stands.
-                // On an approval that is the *new* arrival day, which is the
-                // one the guest has to work to from here.
+                // Only the declined branch uses this: an approval consumes the
+                // single allowance, while a decline may be retried before the
+                // unchanged booking's deadline.
                 'deadline'   => RescheduleRequest::deadlineFor($booking),
                 'bookingUrl' => route('booking.show', $booking->id),
             ]);

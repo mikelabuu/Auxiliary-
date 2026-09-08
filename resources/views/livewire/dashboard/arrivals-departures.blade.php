@@ -1,12 +1,12 @@
 <div wire:poll.15s data-component="arrivals-departures" class="bg-white rounded-2xl border border-stone-200 shadow-card hover:shadow-card-lg transition-shadow duration-200 p-0 flex flex-col h-full overflow-hidden">
     {{-- Header --}}
-    <div class="p-5 border-b border-stone-100 bg-stone-50/50">
+    <div class="arrivals-panel-header p-5 border-b border-stone-100 bg-stone-50/50">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-clsu-100 text-clsu-700 flex items-center justify-center shrink-0">
                     <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                 </div>
-                <p class="font-semibold text-stone-900 text-sm">Arrivals &amp; Departures</p>
+                <h2 class="arrivals-panel-title font-semibold text-stone-900 text-sm">Arrivals &amp; Departures</h2>
             </div>
 
             {{-- Day navigation --}}
