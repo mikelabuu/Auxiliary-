@@ -47,7 +47,6 @@
                 <a href="{{ route('home') }}#rooms" class="co-back-link">&larr; Back to rooms</a>
                 <div class="co-intro-line">
                     <h1>Make yourself at home.</h1>
-                    <span class="co-intro-note"><x-booking.ui.icon-solid name="lock" /> No payment needed to reserve</span>
                 </div>
                 <p>A few details, and your stay at Farmers Hostel is one step closer.</p>
             </header>
