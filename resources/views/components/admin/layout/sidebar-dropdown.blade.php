@@ -9,10 +9,7 @@
           title="{{ $title }}" :aria-expanded="open.toString()">
     {{ $icon ?? '' }}
     <span class="truncate flex-1 text-left">{{ $title }}</span>
-    <svg class="sidebar-link-caret" :class="{ 'open': open }"
-         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
+    <x-admin.ui.icon name="chevron-down" class="sidebar-link-caret" ::class="{ 'open': open }" />
   </button>
 
   {{-- Dropdown items --}}

@@ -9,7 +9,7 @@
 
     {{-- Desktop rail collapse toggle --}}
     <button class="sidebar-collapse-btn" @click="toggleSidebarCollapsed()" :aria-expanded="(!sidebarCollapsed).toString()" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" aria-label="Toggle sidebar width">
-      <svg :class="{ 'is-collapsed': sidebarCollapsed }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="9.5" y1="4" x2="9.5" y2="20"/><path d="m15.5 10-2 2 2 2"/></svg>
+      <x-admin.ui.icon name="sidebar-left" ::class="{ 'is-collapsed': sidebarCollapsed }" />
     </button>
 
     <div>

@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-lg bg-clsu-100 text-clsu-700 flex items-center justify-center">
-        <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12A9 9 0 1 1 12 3v9z"/></svg>
+        <x-admin.ui.icon name="chart-pie" class="icon w-4 h-4" />
       </div>
       <p class="font-semibold text-stone-900 text-sm">Occupancy</p>
     </div>
@@ -10,7 +10,7 @@
          keep-alive poll below would spin this every quarter minute, which
          reads as the page doing something the user did not ask for. --}}
     <button wire:click="forceRecalculate" class="text-stone-300 hover:text-clsu-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clsu-500/40 focus-visible:ring-offset-2 rounded-full p-1" aria-label="Refresh occupancy">
-      <svg wire:loading.remove wire:target="forceRecalculate" class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <x-admin.ui.icon name="refresh" wire:loading.remove wire:target="forceRecalculate" class="icon w-4 h-4" />
       <x-admin.ui.spinner wire:loading.flex wire:target="forceRecalculate"
                           variant="bounce" size="sm" current label="Recalculating occupancy" class="text-clsu-600" />
     </button>
@@ -104,7 +104,7 @@
     </p>
     <a href="{{ route('staff.rooms') }}" class="group mt-2 text-xs font-bold text-clsu-700 flex items-center gap-1 !no-underline w-fit">
       Manage Rooms
-      <svg class="icon w-3 h-3 transition-transform duration-200 ease-out group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <x-admin.ui.icon name="chevron-right" class="icon w-3 h-3 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
     </a>
   </div>
 </div>

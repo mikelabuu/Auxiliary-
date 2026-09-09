@@ -4,7 +4,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-clsu-100 text-clsu-700 flex items-center justify-center shrink-0">
-                    <svg class="icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    <x-admin.ui.icon name="exchange" class="icon w-4 h-4" />
                 </div>
                 <h2 class="arrivals-panel-title font-semibold text-stone-900 text-sm">Arrivals &amp; Departures</h2>
             </div>
@@ -16,11 +16,11 @@
                     Updating
                 </span>
                 <button wire:click="previousDay" class="w-11 h-11 flex items-center justify-center rounded-lg border border-stone-200 text-muted hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Previous day">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    <x-admin.ui.icon name="chevron-left" class="w-3.5 h-3.5" />
                 </button>
                 <span class="min-w-[76px] text-center text-xs font-bold text-stone-700 tabnum">{{ $viewLabel }}</span>
                 <button wire:click="nextDay" class="w-11 h-11 flex items-center justify-center rounded-lg border border-stone-200 text-muted hover:bg-stone-50 hover:text-clsu-700 transition cursor-pointer" aria-label="Next day">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    <x-admin.ui.icon name="chevron-right" class="w-3.5 h-3.5" />
                 </button>
                 @unless($isToday)
                     <button wire:click="goToday" class="ml-0.5 text-2xs font-bold text-clsu-700 bg-clsu-50 border border-clsu-200 rounded-lg px-2 py-1 hover:bg-clsu-100 transition cursor-pointer">Today</button>
@@ -66,7 +66,7 @@
         <div class="px-5 pt-4">
             <div class="rounded-xl border border-ember-300 bg-ember-50/70 overflow-hidden">
                 <div class="flex items-center gap-2 px-4 py-2.5 border-b border-ember-100">
-                    <svg class="w-4 h-4 text-ember-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <x-admin.ui.icon name="alert" class="w-4 h-4 text-ember-600 shrink-0" />
                     <p class="text-2xs font-bold text-ember-800 uppercase tracking-wide">Needs attention</p>
                     <span class="ml-auto text-2xs font-bold text-ember-800 bg-ember-100 rounded-full px-2 py-0.5">{{ $overdueCheckouts->count() + $missedArrivals->count() }}</span>
                 </div>
@@ -123,7 +123,7 @@
             @if($arrivalsDepartures->isEmpty())
                 <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <div class="w-12 h-12 rounded-full bg-clsu-50 flex items-center justify-center text-clsu-500 mb-3 ring-1 ring-clsu-100">
-                    <svg class="icon w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/><path d="m9 14 2 2 4-4"/></svg>
+                    <x-admin.ui.icon name="calendar-check" class="icon w-5 h-5" />
                   </div>
                   <p class="text-sm font-semibold text-stone-700">No arrivals or departures {{ $isToday ? 'today' : 'on ' . $viewLabel }}</p>
                   <p class="text-xs text-faint mt-1 max-w-xs">Guest check-ins and check-outs will show up here automatically as they happen.</p>
@@ -144,7 +144,7 @@
                                     aria-pressed="{{ $sortField === $field ? 'true' : 'false' }}">
                                 {{ $label }}
                                 @if($sortField === $field)
-                                    <svg class="w-2.5 h-2.5 {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                    <x-admin.ui.icon name="chevron-up" class="w-2.5 h-2.5 {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}" />
                                 @endif
                             </button>
                         @endforeach
@@ -220,7 +220,7 @@
                                          after the button has already been pressed
                                          in front of a waiting guest. --}}
                                     <p class="arrival-row-block">
-                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <x-admin.ui.icon name="alert-circle" class="w-3.5 h-3.5 shrink-0" />
                                         {{ $item->checkin_block }}
                                     </p>
                                 @endif

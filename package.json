@@ -7,17 +7,19 @@
         "build:only": "vite build",
         "views:cache": "php artisan view:cache",
         "dev": "vite",
-        "icons:build": "node scripts/build-icon-registry.mjs",
+        "icons:build": "node scripts/build-icon-registry.mjs && node scripts/build-admin-icons.mjs",
         "js:minify": "node scripts/minify-public-js.mjs",
         "vendor:sync": "node scripts/sync-vendor.mjs",
         "postinstall": "node scripts/sync-vendor.mjs",
-        "images:build": "node scripts/build-images.mjs"
+        "images:build": "node scripts/build-images.mjs",
+        "icons:admin": "node scripts/build-admin-icons.mjs"
     },
     "devDependencies": {
         "@fontsource-variable/manrope": "^5.3.0",
         "@fontsource-variable/oswald": "^5.3.0",
         "@fontsource-variable/playfair-display": "^5.3.0",
         "@fortawesome/fontawesome-free": "^7.3.1",
+        "@hugeicons/core-free-icons": "4.3.2",
         "@tailwindcss/vite": "^4.0.0",
         "alpinejs": "^3.15.12",
         "autoprefixer": "^10.4.24",
