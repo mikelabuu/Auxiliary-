@@ -152,15 +152,15 @@
    the strongest white ink. */
 .stat-card-hero .stat-spark__bar {
     background: #fff;
-    opacity: 0.16;
+    opacity: 0.20;
 }
 
 .stat-card-hero .stat-spark__bar:nth-last-child(-n + 4) {
-    opacity: 0.28;
+    opacity: 0.29;
 }
 
 .stat-card-hero .stat-spark__bar:last-child {
-    opacity: 0.46;
+    opacity: 0.47;
 }
 
 .stat-card-hero .stat-foot,
