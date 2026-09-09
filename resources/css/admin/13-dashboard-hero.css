@@ -615,9 +615,9 @@
     background: #f87171;
 }
 
-/* ── KPI trend glyph ───────────────────────────────────────── */
-/* 12 weekly bars beside the value. Heights are static inline styles, so this
-   costs nothing to render — it isn't animated, it's just information. */
+/* ── KPI trend backdrop ────────────────────────────────────── */
+/* The 12 data-driven bars sit behind the card content. Their heights remain
+   static inline styles, so the larger treatment adds no runtime charting cost. */
 .stat-value-row {
     display: flex;
     align-items: flex-end;
@@ -625,30 +625,43 @@
     gap: 0.75rem;
 }
 
+.stat-card-has-spark > :not(.stat-spark) {
+    position: relative;
+    z-index: 1;
+}
+
 .stat-spark {
+    position: absolute;
+    z-index: 0;
+    right: clamp(0.8rem, 4%, 1.35rem);
+    bottom: -1px;
     display: flex;
     align-items: flex-end;
-    gap: 2px;
-    height: 30px;
-    flex: none;
-    padding-bottom: 0.35rem;
+    gap: clamp(3px, 1.1vw, 7px);
+    width: min(58%, 13.5rem);
+    height: 76%;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 34%, #000 100%);
 }
 
 .stat-spark__bar {
-    width: 3px;
+    flex: 1 1 0;
+    min-width: 3px;
+    max-width: 12px;
     height: var(--h, 20%);
-    border-radius: 1.5px;
+    border-radius: 4px 4px 0 0;
     background: var(--color-clsu-500);
-    opacity: 0.28;
+    opacity: 0.07;
 }
 
 /* The most recent weeks read stronger, so the eye lands on "now" first. */
 .stat-spark__bar:nth-last-child(-n + 4) {
-    opacity: 0.55;
+    opacity: 0.11;
 }
 
 .stat-spark__bar:last-child {
-    opacity: 1;
+    opacity: 0.17;
 }
 
 .stat-spark__bar--palay {

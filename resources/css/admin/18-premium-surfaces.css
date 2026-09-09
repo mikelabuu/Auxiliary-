@@ -146,21 +146,19 @@
     background-image: none;
 }
 
-/* The hero card's brand-green sparkline and footnote were invisible against
-   its own brand-green fill — those two parts were written for white cards and
-   never restated here. On saturated ground the only readable ink is white at
-   varying opacity, so the trend reads by opacity rather than by hue. */
+/* On the saturated hero card, the background sparkline uses quiet white ink;
+   its stepped opacity still makes the newest reading easiest to find. */
 .stat-card-hero .stat-spark__bar {
     background: #fff;
-    opacity: 0.3;
+    opacity: 0.07;
 }
 
 .stat-card-hero .stat-spark__bar:nth-last-child(-n + 4) {
-    opacity: 0.6;
+    opacity: 0.12;
 }
 
 .stat-card-hero .stat-spark__bar:last-child {
-    opacity: 1;
+    opacity: 0.2;
 }
 
 .stat-card-hero .stat-foot,

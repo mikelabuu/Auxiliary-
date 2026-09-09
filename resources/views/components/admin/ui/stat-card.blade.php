@@ -41,8 +41,18 @@
 
 <{{ $tag }}
     @if($href) href="{{ $href }}" @endif
-    {{ $attributes->merge(['class' => 'stat-card animate-in' . ($dark ? ' stat-card-hero' : '') . ($href ? ' stat-card-link' : '')]) }}
+    {{ $attributes->merge(['class' => 'stat-card animate-in' . ($dark ? ' stat-card-hero' : '') . ($href ? ' stat-card-link' : '') . (!empty($spark) ? ' stat-card-has-spark' : '')]) }}
     @if($delay) style="animation-delay:{{ $delay }}ms" @endif>
+    @if(!empty($spark))
+        @php $sparkMax = max(max($spark), 1); @endphp
+        <span class="stat-spark" role="img" aria-label="{{ $sparkLabel ?? 'Recent trend' }}">
+            @foreach($spark as $v)
+                <span class="stat-spark__bar stat-spark__bar--{{ $color }}"
+                      style="--h:{{ max(6, round(($v / $sparkMax) * 100)) }}%"></span>
+            @endforeach
+        </span>
+    @endif
+
     <div class="flex items-start justify-between flex-row-reverse">
         <div class="stat-icon {{ $iconBg }}">
             <x-admin.ui.icon :name="$icon" class="w-5 h-5" />
@@ -52,21 +62,11 @@
         @endif
     </div>
 
-    {{-- Value, with an optional trend glyph beside it. A share-meter answers
-         "how much of the total?"; a sparkline answers "which way is it going?".
-         Cards take whichever question actually applies to their metric. --}}
+    {{-- The optional sparkline is painted behind the card content so it gives
+         the metric context without competing with the value. A share-meter
+         answers "how much of the total?" when that is the more useful cue. --}}
     <div class="stat-value-row">
         <p @if($valueId) id="{{ $valueId }}" @endif class="stat-value tabnum">{{ $slot }}</p>
-
-        @if(!empty($spark))
-            @php $sparkMax = max(max($spark), 1); @endphp
-            <span class="stat-spark" role="img" aria-label="{{ $sparkLabel ?? 'Recent trend' }}">
-                @foreach($spark as $v)
-                    <span class="stat-spark__bar stat-spark__bar--{{ $color }}"
-                          style="--h:{{ max(6, round(($v / $sparkMax) * 100)) }}%"></span>
-                @endforeach
-            </span>
-        @endif
     </div>
 
     <p class="stat-label">
