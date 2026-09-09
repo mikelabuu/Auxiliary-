@@ -53,7 +53,7 @@ class MainReportsController extends Controller
             // Was read by ReportExportService as $params['format'] but never
             // validated, so validate() stripped it and every export was xlsx
             // regardless of what was asked for.
-            'format'           => ['nullable', Rule::in(['xlsx', 'pdf'])],
+            'format'           => ['nullable', Rule::in(['xlsx', 'pdf', 'csv'])],
 
             'date_range'       => ['required', 'array'],
             'date_range.type'  => ['required', Rule::in(['monthly', 'yearly', 'weekly', 'range'])],

@@ -53,7 +53,7 @@ class RescheduleController extends Controller
                 'booking'  => $booking,
                 'existing' => $open,
                 'deadline' => RescheduleRequest::deadlineFor($booking),
-                'horizon'  => Carbon::today()->addDays(BookingController::BOOKING_HORIZON_DAYS),
+                'horizon'  => RescheduleRequest::latestCheckInFor($booking),
             ]);
         }
 
@@ -65,7 +65,7 @@ class RescheduleController extends Controller
             'booking'  => $booking,
             'existing' => null,
             'deadline' => RescheduleRequest::deadlineFor($booking),
-            'horizon'  => Carbon::today()->addDays(BookingController::BOOKING_HORIZON_DAYS),
+            'horizon'  => RescheduleRequest::latestCheckInFor($booking),
         ]);
     }
 
@@ -77,9 +77,9 @@ class RescheduleController extends Controller
             return $redirect;
         }
 
-        // Same bounds the original booking was held to, so a reschedule cannot
-        // be used to book a stay the checkout form would have refused.
-        $horizon = Carbon::today()->addDays(BookingController::BOOKING_HORIZON_DAYS);
+        // The replacement arrival may be up to one calendar year after the
+        // original arrival; the existing maximum stay length still applies.
+        $horizon = RescheduleRequest::latestCheckInFor($booking);
         $maxStay = Carbon::parse($request->input('requested_check_in', 'today'))
             ->addDays(BookingController::MAX_STAY_NIGHTS);
 
@@ -89,7 +89,7 @@ class RescheduleController extends Controller
             'reason'              => ['required', 'string', 'max:1000'],
         ], [
             'requested_check_in.after_or_equal'  => 'Pick a new arrival date from today onwards.',
-            'requested_check_in.before_or_equal' => 'We only take bookings up to ' . BookingController::BOOKING_HORIZON_DAYS . ' days ahead.',
+            'requested_check_in.before_or_equal' => 'Choose a new check-in on or before ' . $horizon->format('F d, Y') . ', within one year of your original check-in.',
             'requested_check_out.after'          => 'The new departure date has to be after the new arrival date.',
             'requested_check_out.before_or_equal' => 'A single stay can run at most ' . BookingController::MAX_STAY_NIGHTS . ' nights. Please contact us for longer stays.',
             'reason.required'                    => 'Tell us why you need to move the stay — the front desk decides on it.',
@@ -104,6 +104,10 @@ class RescheduleController extends Controller
 
             if ($closed = $this->closedReason($lockedBooking)) {
                 return ['closed' => $closed];
+            }
+
+            if (Carbon::parse($validated['requested_check_in'])->gt(RescheduleRequest::latestCheckInFor($lockedBooking))) {
+                throw ValidationException::withMessages(['requested_check_in' => 'Your new check-in must be within one year of your original check-in.']);
             }
 
             // A reschedule moves a stay; it does not resize one. Recompute from

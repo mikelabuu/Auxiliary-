@@ -120,7 +120,7 @@
                     <x-booking.ui.icon-solid name="triangle-exclamation" class="text-[18px] text-palay-800 shrink-0 mt-0.5" />
                     <p class="text-xs font-bold text-palay-800 leading-relaxed">
                         Ask by {{ $deadline->format('g:i A') }} on {{ $deadline->format('F d') }} — a full 24 hours before your {{ $booking->check_in->format('F d') }} check-in.
-                        <span class="block font-semibold text-stone-600 mt-1">After that we cannot move the stay, and a booking nobody checks in to is forfeited with no refund.</span>
+                        <span class="block font-semibold text-stone-600 mt-1">Choose a new check-in on or before {{ $horizon->format('F d, Y') }}, within one year of your original check-in. Room availability and staff approval apply.</span>
                     </p>
                 </div>
 

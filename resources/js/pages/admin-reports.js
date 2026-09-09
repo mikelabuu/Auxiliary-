@@ -106,6 +106,10 @@ function initAdminReports() {
     // The criteria as of the last Update. Paging and sorting run against this,
     // never against `state`, for the reason in the file header.
     let lastPayload = null;
+    let requestVersion = 0;
+    let exportReady = false;
+    let exporting = false;
+    let currentPage = 1;
 
     /* ------------------- PENDING-CHANGES MARKER ------------------- */
     // Filters compose without querying, which is only tolerable if "you have
@@ -141,7 +145,7 @@ function initAdminReports() {
         state.direction = 'desc';
         renderReportType();
         renderAllFilterChips();
-        setDirty(true);
+        runReport(1);
     });
 
     /* ------------------- DATE TYPE ------------------- */
@@ -474,7 +478,7 @@ function initAdminReports() {
             // through the same map that produced the select list, so the two
             // cannot disagree about what exists.
             const dir = state.sort === col ? (state.direction === 'asc' ? 'sort-asc' : 'sort-desc') : '';
-            html += `<th class="sortable ${dir}" data-sort-col="${col}" title="Sort by ${humanize(col)}">${humanize(col)}</th>`;
+            html += `<th class="sortable ${dir}" aria-sort="${state.sort === col ? (state.direction === 'asc' ? 'ascending' : 'descending') : 'none'}"><button type="button" class="text-left" data-sort-col="${col}" title="Sort by ${humanize(col)}">${humanize(col)}</button></th>`;
         });
         html += '</tr></thead><tbody>';
 
@@ -483,6 +487,8 @@ function initAdminReports() {
             columns.forEach(col => {
                 let val = row[col] ?? '—';
                 const key = String(val).toLowerCase().trim();
+                val = escapeHtml(val);
+                if (col.endsWith('_amount') && row[col] !== null) val = Number(row[col]).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 if (Object.prototype.hasOwnProperty.call(STATUS_COLOR, key)) {
                     const color = STATUS_COLOR[key];
                     val = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold border ${BADGE_CLASS[color]}">${humanize(key)}</span>`;
@@ -496,11 +502,11 @@ function initAdminReports() {
         const from = data.from || 0;
         const to = data.to || 0;
         html += `
-            <div id="reportPagination" class="flex items-center justify-between px-6 py-4 border-t border-stone-100">
+            <div id="reportPagination" class="flex flex-wrap gap-3 items-center justify-between px-6 py-4 border-t border-stone-100">
                 <p class="text-xs text-faint">Showing <span class="font-bold text-stone-700">${from}–${to}</span> of <span class="font-bold text-stone-700">${data.total}</span></p>
                 <div class="flex items-center gap-2">
                     <button type="button" class="page-btn flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" data-page="${data.current_page - 1}" ${data.current_page <= 1 ? 'disabled' : ''}>${ICON.chevronLeft} Previous</button>
-                    <span class="text-xs text-faint">Page ${data.current_page} of ${data.last_page}</span>
+                    <label class="flex items-center gap-1 text-xs text-faint whitespace-nowrap">Page <input id="reportPage" aria-label="Go to report page" class="w-16 border border-stone-200 rounded px-2 py-1" type="number" min="1" max="${data.last_page}" value="${data.current_page}"> of ${data.last_page}</label>
                     <button type="button" class="page-btn flex items-center gap-1.5 text-xs font-semibold text-stone-600 border border-stone-200 bg-white rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" data-page="${data.current_page + 1}" ${data.current_page >= data.last_page ? 'disabled' : ''}>Next ${ICON.chevronRight}</button>
                 </div>
             </div>`;
@@ -535,8 +541,22 @@ function initAdminReports() {
     });
 
     function toggleExport(enabled) {
-        $('#exportBtn, #exportPdfBtn').prop('disabled', !enabled);
+        exportReady = enabled;
+        $('#exportBtn, #exportPdfBtn, #exportCsvBtn').prop('disabled', !enabled || exporting);
     }
+
+    $(document).on('change', '#reportPage', function () {
+        const page = Number(this.value);
+        if (Number.isInteger(page) && page >= 1 && page <= Number(this.max)) runReport(page, { reuse: true });
+        else this.value = currentPage;
+    });
+
+    $('#copyReportLink').on('click', async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            $('#reportNotice, #exportNotice').text('Report link copied.');
+        } catch { $('#reportNotice, #exportNotice').text('Copy the address from your browser to share this report.'); }
+    });
 
     /* ------------------- GENERATE ------------------- */
     /**
@@ -557,19 +577,27 @@ function initAdminReports() {
             ? Object.assign({}, lastPayload, { per_page: state.perPage, sort: state.sort, direction: state.direction })
             : buildPayload();
 
-        lastPayload = payload;
-        renderSummary(payload);
-        syncUrl(payload);
+        const version = ++requestVersion;
+        toggleExport(false);
+        $('#reportTable').attr('aria-busy', 'true');
         showSkeleton();
         skeletonTotals();
         if (!opts.reuse) setDirty(false);
 
         window.axios.post(ROUTES.generate + '?page=' + page, payload)
             .then(res => {
+                if (version !== requestVersion) return;
+                lastPayload = payload;
+                currentPage = res.data.rows.current_page;
+                renderSummary(payload);
+                if (!opts.history) syncUrl(payload, currentPage);
+                $('#reportTable').attr('aria-busy', 'false');
                 renderTable(res.data.rows);
                 renderTotals(res.data.summary);
             })
             .catch(err => {
+                if (version !== requestVersion) return;
+                $('#reportTable').attr('aria-busy', 'false');
                 console.error(err);
                 $('#reportTotals').empty();
 
@@ -586,7 +614,7 @@ function initAdminReports() {
                     <div class="flex flex-col items-center text-center py-14 px-6">
                         <div class="w-10 h-10 rounded-full bg-ember-50 text-ember-600 flex items-center justify-center mb-3">${ICON.alert}</div>
                         <p class="text-sm font-semibold text-stone-700">${errors ? 'Check your criteria' : 'Something went wrong'}</p>
-                        <p class="text-xs text-muted mt-1 max-w-sm">${message}</p>
+                        <p class="text-xs text-muted mt-1 max-w-sm">${escapeHtml(message)}</p>
                     </div>
                 `);
                 toggleExport(false);
@@ -600,10 +628,12 @@ function initAdminReports() {
         // The export must match what is on screen, so it goes out with the
         // criteria that produced the current table — not whatever the form has
         // been edited to since.
-        const payload = Object.assign({}, lastPayload || buildPayload(), { format });
+        if (!exportReady || exporting || !lastPayload) return;
+        const payload = Object.assign({}, lastPayload, { format });
 
-        const $btn = format === 'pdf' ? $('#exportPdfBtn') : $('#exportBtn');
-        $btn.prop('disabled', true);
+        exporting = true;
+        toggleExport(exportReady);
+        $('#reportNotice, #exportNotice').text('Preparing ' + format.toUpperCase() + ' download…');
 
         window.axios.post(ROUTES.export, payload, { responseType: 'blob' })
             .then(response => {
@@ -613,16 +643,20 @@ function initAdminReports() {
 
                 const disposition = response.headers['content-disposition'];
                 if (disposition && disposition.includes('filename=')) {
-                    const match = disposition.match(/filename="?([^"]+)"?/);
+                    const match = disposition.match(/filename="?([^";]+)"?/);
                     if (match && match[1]) filename = match[1];
                 }
 
                 link.href = window.URL.createObjectURL(blob);
                 link.download = filename;
+                document.body.appendChild(link);
                 link.click();
-                window.URL.revokeObjectURL(link.href);
+                link.remove();
+                setTimeout(() => window.URL.revokeObjectURL(link.href), 1000);
+                $('#reportNotice, #exportNotice').text(format.toUpperCase() + ' download ready.');
             })
             .catch(() => {
+                $('#reportNotice, #exportNotice').text('Export failed. Please try again.');
                 window.Swal.fire({
                     icon: 'error',
                     title: 'Export failed',
@@ -631,10 +665,11 @@ function initAdminReports() {
                     showConfirmButton: false,
                 });
             })
-            .then(() => $btn.prop('disabled', false));
+            .finally(() => { exporting = false; toggleExport(exportReady); });
     }
 
     $('#exportBtn').on('click', () => download('xlsx'));
+    $('#exportCsvBtn').on('click', () => download('csv'));
     $('#exportPdfBtn').on('click', () => download('pdf'));
 
     /* ------------------- RESET ------------------- */
@@ -678,8 +713,9 @@ function initAdminReports() {
     // duplicate entry in the history before the user had done anything.
     let urlPrimed = false;
 
-    function syncUrl(payload) {
+    function syncUrl(payload, page = 1) {
         const q = new URLSearchParams();
+        if (page > 1) q.set('page', page);
         q.set('type', payload.report_type);
         q.set('period', payload.date_range.type);
 
@@ -700,14 +736,19 @@ function initAdminReports() {
         if (payload.sort) { q.set('sort', payload.sort); q.set('dir', payload.direction); }
 
         const url = window.location.pathname + '?' + q.toString();
-        if (urlPrimed) window.history.pushState(null, '', url);
+        if (urlPrimed && url !== window.location.pathname + window.location.search) window.history.pushState(null, '', url);
         else window.history.replaceState(null, '', url);
         urlPrimed = true;
     }
 
     function hydrateFromUrl() {
         const q = new URLSearchParams(window.location.search);
-        if (![...q.keys()].length) return;
+        Object.assign(state, { reportType: 'booking', dateType: 'monthly', perPage: 10, sort: null, direction: 'desc', filters: { booking_status: ['all'], payment_status: ['all'], gateway: ['all'] } });
+        $('#perPage').val(10);
+        $('#date_month').val(currentMonth());
+        $('#date_year').val(new Date().getFullYear());
+        $('#date_from, #date_to').val('');
+        currentPage = Math.max(1, parseInt(q.get('page'), 10) || 1);
 
         const type = q.get('type');
         if (['booking', 'payment', 'combined'].includes(type)) state.reportType = type;
@@ -747,7 +788,7 @@ function initAdminReports() {
         renderReportType();
         renderDateType();
         renderAllFilterChips();
-        runReport(1);
+        runReport(currentPage, { history: true });
     });
 
     /* ------------------- INIT ------------------- */
@@ -779,7 +820,7 @@ function initAdminReports() {
     toggleExport(false);
     setDirty(false);
 
-    runReport(1);
+    runReport(currentPage);
 }
 
 $(initAdminReports);

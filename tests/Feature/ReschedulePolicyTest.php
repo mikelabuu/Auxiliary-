@@ -118,6 +118,19 @@ class ReschedulePolicyTest extends TestCase
         ];
     }
 
+    public function test_rescheduling_preserves_the_one_time_mattress_charge(): void
+    {
+        $booking = $this->booking($this->guest(), 'M-101');
+        $booking->update(['extra_mattress' => 1, 'extra_mattress_amount' => 500, 'total_price' => 3700, 'payable_amount' => 3700]);
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_PENDING, 7, [
+            'requested_check_out' => $booking->check_out->copy()->addDays(8),
+        ]);
+        $this->actingAs($this->frontDesk(), 'staff')->post(route('staff.reschedules.approve', $request))->assertSessionHas('success');
+        $this->assertEquals(5300, (float) $booking->fresh()->total_price);
+        $this->assertEquals(5300, (float) $booking->fresh()->payable_amount);
+        $this->assertEquals(500, (float) $booking->fresh()->extra_mattress_amount);
+    }
+
     public function test_an_approved_reschedule_permanently_blocks_another_guest_request(): void
     {
         $guest = $this->guest();
@@ -187,6 +200,54 @@ class ReschedulePolicyTest extends TestCase
         $this->assertSame(RescheduleRequest::STATUS_PENDING, $second->fresh()->status);
         $this->assertSame($approvedCheckIn, $booking->fresh()->check_in->toDateString());
         $this->assertSame($approvedCheckOut, $booking->fresh()->check_out->toDateString());
+    }
+
+    public function test_the_anniversary_checkin_is_allowed_and_the_next_day_is_rejected(): void
+    {
+        $guest = $this->guest();
+        $booking = $this->booking($guest, 'YEAR-101');
+        $last = RescheduleRequest::latestCheckInFor($booking)->startOfDay();
+        $this->actingAs($guest)->post(route('booking.reschedule.store', $booking), [
+            'requested_check_in' => $last->copy()->addDay()->toDateString(),
+            'requested_check_out' => $last->copy()->addDays(3)->toDateString(),
+            'reason' => 'Event postponed.',
+        ])->assertSessionHasErrors('requested_check_in');
+        $this->assertSame(0, RescheduleRequest::count());
+        $this->actingAs($guest)->post(route('booking.reschedule.store', $booking), [
+            'requested_check_in' => $last->toDateString(),
+            'requested_check_out' => $last->copy()->addDays(2)->toDateString(),
+            'reason' => 'Event postponed.',
+        ])->assertSessionHas('success');
+        $this->assertSame($last->toDateString(), RescheduleRequest::sole()->requested_check_in->toDateString());
+    }
+
+    public function test_one_year_uses_the_calendar_anniversary_without_leap_day_overflow(): void
+    {
+        $booking = new Booking(['check_in' => '2028-02-29']);
+        $this->assertSame('2029-02-28', RescheduleRequest::latestCheckInFor($booking)->toDateString());
+    }
+
+    public function test_a_year_of_new_dates_does_not_extend_the_request_deadline(): void
+    {
+        $guest = $this->guest();
+        $booking = $this->booking($guest, 'YEAR-102');
+        $this->travelTo(RescheduleRequest::deadlineFor($booking)->addMinute());
+        $this->actingAs($guest)->post(route('booking.reschedule.store', $booking), $this->requestPayload($booking))
+            ->assertSessionHas('error');
+        $this->assertSame(0, RescheduleRequest::count());
+        $this->travelBack();
+    }
+
+    public function test_staff_cannot_approve_a_request_beyond_the_year_limit(): void
+    {
+        $booking = $this->booking($this->guest(), 'YEAR-103');
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_PENDING, 7, [
+            'requested_check_in' => RescheduleRequest::latestCheckInFor($booking)->addDay(),
+            'requested_check_out' => RescheduleRequest::latestCheckInFor($booking)->addDays(3),
+        ]);
+        $this->actingAs($this->frontDesk(), 'staff')->post(route('staff.reschedules.approve', $request))
+            ->assertSessionHas('error');
+        $this->assertSame(RescheduleRequest::STATUS_PENDING, $request->fresh()->status);
     }
 
     public function test_approval_email_says_the_one_reschedule_has_been_used(): void

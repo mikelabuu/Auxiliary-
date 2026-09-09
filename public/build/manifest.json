@@ -12,17 +12,17 @@
     "isDynamicEntry": true
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-CrD5CtPs.css",
+    "file": "assets/admin-De-iGK1V.css",
     "src": "resources/css/admin.css",
     "isEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-BfP71TIN.css",
+    "file": "assets/app-C1YKXhbe.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-Ouclp19e.js",
+    "file": "assets/admin-DbcLSq8c.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true,

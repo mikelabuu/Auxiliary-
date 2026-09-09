@@ -85,6 +85,24 @@ class BookingCapacityAndPricingTest extends TestCase
         $this->assertEquals(3200, (float) $booking->payable_amount);
     }
 
+    public function test_extra_mattress_adds_one_fixed_charge_to_the_public_booking(): void
+    {
+        $this->rooms();
+        $this->book(['extra_mattress' => 1, 'extra_mattress_amount' => 1])->assertSessionHasNoErrors();
+        $booking = Booking::sole();
+        $this->assertSame(1, $booking->extra_mattress);
+        $this->assertEquals(500, (float) $booking->extra_mattress_amount);
+        $this->assertEquals(3700, (float) $booking->total_price);
+        $this->assertEquals(3700, (float) $booking->payable_amount);
+    }
+
+    public function test_public_booking_rejects_multiple_mattresses(): void
+    {
+        $this->rooms();
+        $this->book(['extra_mattress' => 2])->assertSessionHasErrors('extra_mattress');
+        $this->assertSame(0, Booking::count());
+    }
+
     public function test_an_unknown_room_type_is_rejected(): void
     {
         $this->rooms();

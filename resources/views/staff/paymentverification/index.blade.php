@@ -92,13 +92,13 @@
                             </span>
                         </div>
 
-                        <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 text-xs">
+                        <dl class="grid grid-cols-2 sm:grid-cols-3 gap-4 py-4 text-xs">
                             <div>
                                 <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Method</dt>
                                 <dd class="mt-1 font-bold text-stone-700">{{ $payment->proof_method_label }}</dd>
                             </div>
                             <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Guest reference</dt>
+                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Payment reference</dt>
                                 <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->proof_reference ?: '—' }}</dd>
                             </div>
                             <div>
@@ -106,10 +106,6 @@
                                 <dd class="mt-1 font-bold text-stone-700 tabnum">
                                     {{ $payment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, g:i A') ?? '—' }}
                                 </dd>
-                            </div>
-                            <div>
-                                <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Our reference</dt>
-                                <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->reference_no }}</dd>
                             </div>
                         </dl>
 
@@ -165,6 +161,9 @@
                             @php
                                 $wasVerified = $payment->status === 'success';
                             @endphp
+                            @if($wasVerified)
+                                <a download href="{{ route('receipts.download', $payment->booking_id) }}" class="btn btn-outline mb-3">Download official receipt</a>
+                            @endif
                             <div @class([
                                 'flex items-start gap-2.5 rounded-[var(--radius)] px-4 py-3 text-xs font-semibold leading-relaxed border',
                                 'border-clsu-200 bg-clsu-50 text-clsu-800' => $wasVerified,

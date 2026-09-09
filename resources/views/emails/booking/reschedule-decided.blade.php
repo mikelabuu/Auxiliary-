@@ -16,6 +16,9 @@
             2
         );
     }
+    if ($booking->extra_mattress) {
+        $bookingDetails['Extra mattress (included)'] = '1 · ₱' . number_format($booking->extra_mattress_amount, 2) . ' per stay';
+    }
 @endphp
 
 @component('mail::message', ['preheader' => $approved

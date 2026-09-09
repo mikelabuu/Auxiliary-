@@ -65,6 +65,13 @@
         Analytics &amp; Reporting
     </x-admin.ui.page-header>
 
+    <nav aria-label="Report navigation" class="flex flex-wrap items-center gap-3">
+        <a href="#reportFilters" class="btn btn-outline btn-sm">Edit filters</a>
+        <a href="#reportResults" class="btn btn-outline btn-sm">View results</a>
+        <button type="button" id="copyReportLink" class="btn btn-outline btn-sm">Copy report link</button>
+        <span id="reportNotice" role="status" aria-live="polite" class="text-xs text-muted"></span>
+    </nav>
+    <div id="reportFilters" class="scroll-mt-24"></div>
     <!-- Filters -->
     <x-admin.ui.section-card icon="filter" title="Report Filters" subtitle="Choose a category and timeframe, refine with status filters, then generate." :delay="40">
         <div class="space-y-5">
@@ -215,6 +222,7 @@
          every row of the answer and not the answer. --}}
     <div id="reportTotals" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
 
+    <div id="reportResults" class="scroll-mt-24"></div>
     <!-- Results -->
     <x-admin.ui.section-card icon="chart-bar" title="Report Results" :delay="80">
         <x-slot:actions>
@@ -227,14 +235,8 @@
                 </select>
             </div>
             <span class="hidden sm:block w-px h-4 bg-stone-200" aria-hidden="true"></span>
-            {{-- On the results card rather than the page header: these export
-                 the table directly below them and stay disabled until it holds
-                 something, which is only legible next to the table itself.
-
-                 Two buttons rather than a format dropdown: the choice is not a
-                 setting to configure, it is which of two jobs you are doing —
-                 keep working on the numbers, or hand the report to someone. --}}
             <span class="section-label hidden sm:inline">Export</span>
+            <x-admin.ui.button variant="secondary" size="sm" type="button" id="exportCsvBtn" disabled>CSV</x-admin.ui.button>
             <x-admin.ui.button variant="secondary" size="sm" type="button" id="exportPdfBtn" disabled>
                 <x-admin.ui.icon name="file" class="w-3.5 h-3.5" stroke-width="2" />
                 PDF
@@ -245,6 +247,8 @@
             </x-admin.ui.button>
         </x-slot:actions>
 
+        <p class="text-xs text-muted mb-4">Exports include all matching rows, with your applied filters and sort order. Amounts are in Philippine pesos (PHP). PDF is limited to 2,000 rows; use Excel or CSV for the full report.</p>
+        <p id="exportNotice" role="status" aria-live="polite" class="text-xs text-muted mb-3"></p>
         <div id="reportTableContainer" class="-mx-6 -mb-6 border-t border-stone-100">
             <div id="reportTable"></div>
         </div>

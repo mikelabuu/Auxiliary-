@@ -291,10 +291,66 @@ class PaymentVerificationEmailTest extends TestCase
         ]);
         Mail::assertSent(BookingPaidMail::class, 1);
 
+        $receipt = \App\Models\Receipt::where('booking_id', $booking->id)->sole();
+        Storage::disk('local')->assertExists($receipt->file_path);
+        $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($receipt->file_path));
+
         // A stale email tab or a second cashier cannot issue a second receipt.
         $this->actingAs($cashier, 'staff')->post($approveUrl)->assertSessionHas('error');
         Mail::assertSent(BookingPaidMail::class, 1);
         $this->assertSame(1, AuditLog::where('action', 'payment_proof_verified')->count());
+        $this->assertSame(1, \App\Models\Receipt::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_receipt_is_downloadable_by_owner_and_cashier_but_not_another_guest(): void
+    {
+        $booking = $this->booking();
+        $payment = $this->awaitingPayment($booking);
+        $cashier = $this->staff();
+        $this->actingAs($cashier, 'staff')->post(route('staff.paymentverification.approve', $payment))
+            ->assertSessionHas('success');
+        $url = route('receipts.download', $booking);
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        auth('staff')->logout();
+        $this->actingAs($booking->user, 'web')->get($url)->assertOk()->assertDownload('R-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT) . '.pdf');
+        $this->actingAs($this->guest('unrelated@example.test'), 'web')->get($url)->assertForbidden();
+        auth('web')->logout();
+        $this->get($url)->assertForbidden();
+        $this->assertSame(1, \App\Models\Receipt::where('booking_id', $booking->id)->count());
+    }
+
+    public function test_pending_payment_has_no_downloadable_receipt(): void
+    {
+        $booking = $this->booking();
+        $this->awaitingPayment($booking);
+        $this->actingAs($booking->user)->get(route('receipts.download', $booking))->assertNotFound();
+        $this->assertSame(0, \App\Models\Receipt::count());
+    }
+
+    public function test_receipt_failure_keeps_payment_in_the_verification_queue(): void
+    {
+        $booking = $this->booking();
+        $payment = $this->awaitingPayment($booking);
+        $this->mock(\App\Services\ReceiptService::class, fn ($mock) => $mock->shouldReceive('issue')->once()->andThrow(new \RuntimeException('Storage unavailable')));
+        $this->actingAs($this->staff(), 'staff')->post(route('staff.paymentverification.approve', $payment))->assertSessionHas('error');
+        $this->assertSame(Payment::STATUS_AWAITING_VERIFICATION, $payment->fresh()->status);
+        $this->assertSame(Booking::STATUS_PENDING_PAYMENT, $booking->fresh()->status);
+        $this->assertNull($payment->fresh()->accepted_reference_key);
+        Mail::assertNotSent(BookingPaidMail::class);
+    }
+
+    public function test_email_and_repeat_downloads_reuse_the_original_receipt(): void
+    {
+        $booking = $this->booking();
+        $payment = $this->awaitingPayment($booking);
+        $this->actingAs($this->staff(), 'staff')->post(route('staff.paymentverification.approve', $payment))->assertSessionHas('success');
+        $receipt = \App\Models\Receipt::sole();
+        $original = Storage::disk('local')->get($receipt->file_path);
+        $mail = (new BookingPaidMail($booking->fresh(), $payment->fresh()))->build();
+        $this->assertTrue($mail->hasAttachmentFromStorageDisk('local', $receipt->file_path, $receipt->receipt_number . '.pdf', ['mime' => 'application/pdf']));
+        (new BookingPaidMail($booking->fresh(), $payment->fresh()))->build();
+        $this->assertSame(1, \App\Models\Receipt::count());
+        $this->assertSame($original, Storage::disk('local')->get($receipt->file_path));
     }
 
     public function test_only_cashier_can_change_a_payment_verification(): void
@@ -435,6 +491,7 @@ class PaymentVerificationEmailTest extends TestCase
         $this->assertNull($secondPayment->fresh()->accepted_reference_key);
         $this->assertSame(Booking::STATUS_PENDING_PAYMENT, $secondBooking->fresh()->status);
         $this->assertSame(1, AuditLog::where('action', 'payment_proof_verified')->count());
+        $this->assertSame(1, \App\Models\Receipt::where('booking_id', $firstBooking->id)->count());
         Mail::assertSent(BookingPaidMail::class, 1);
     }
 
@@ -532,7 +589,7 @@ class PaymentVerificationEmailTest extends TestCase
         $this->actingAs($cashier, 'staff')
             ->post(route('staff.paymentverification.approve', $payment))
             ->assertSessionHas('success')
-            ->assertSessionHas('error', 'No guest email on file, so no receipt was sent.');
+            ->assertSessionHas('error', 'No guest email on file. The official receipt is ready to download from this payment.');
 
         $this->assertSame('success', $payment->fresh()->status);
         Mail::assertSent(StaffBookingAlertMail::class, fn (StaffBookingAlertMail $mail) =>

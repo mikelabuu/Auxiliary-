@@ -197,6 +197,8 @@ class Booking extends Model
         'arrival_time',
         'special_requests',
         'accepted_terms_at',
+        'extra_mattress',
+        'extra_mattress_amount',
         'discount',
         'num_seniors',
         'total_price',
@@ -215,6 +217,8 @@ class Booking extends Model
         // payment window — so this is a datetime, unlike check_in/check_out.
         'pending_payment_since' => 'datetime',
         'accepted_terms_at' => 'datetime',
+        'extra_mattress' => 'integer',
+        'extra_mattress_amount' => 'decimal:2',
         'num_seniors' => 'integer',
         'expected_guests' => 'integer',   //
         // Money, and the columns are decimal(10,2). Cast as float these went

@@ -19,17 +19,17 @@
         <p>Official Receipt</p>
     </div>
 
-    {{-- The receipt number was passed into this view and never printed, so the
-         only copy of it on the page was inside the verification URL. With that
-         line gone the sheet had no reference at all — nothing staff could look
-         up if a QR will not scan. --}}
-    @isset($receipt_number)
-        <p><strong>Receipt No.:</strong> {{ $receipt_number }}</p>
-    @endisset
+    <p style="font-size:15px;"><strong>Receipt No.: {{ $receipt_number }}</strong></p>
     <p><strong>Booking ID:</strong> #{{ $booking->id }}</p>
     <p><strong>Guest:</strong> {{ $booking->guest_name }}</p>
     <p><strong>Check-in:</strong> {{ \Carbon\Carbon::parse($booking->check_in)->format('M d, Y') }}</p>
     <p><strong>Check-out:</strong> {{ \Carbon\Carbon::parse($booking->check_out)->format('M d, Y') }}</p>
+
+    <p><strong>Payment method:</strong> {{ $payment->proof_method_label }}</p>
+    @if($payment->proof_reference)
+        <p><strong>Payment reference:</strong> {{ $payment->proof_reference }}</p>
+    @endif
+    <p><strong>Payment confirmed:</strong> {{ ($payment->verified_at ?? $payment->paid_at ?? $payment->created_at)?->timezone(config('hostel.timezone'))->format('M d, Y g:i A') }}</p>
 
     <table class="table">
         <thead>
@@ -47,37 +47,19 @@
                         {{ trim($room) }}@if(!$loop->last), @endif
                     @endforeach
                 </td>
-                <td>₱{{ number_format((float)$booking->total_price, 2) }}</td>
+                <td>₱{{ number_format((float)$booking->total_price, 2) }}@if($booking->extra_mattress)<br><small>Includes one extra mattress: ₱{{ number_format((float)$booking->extra_mattress_amount, 2) }} per stay</small>@endif</td>
                 <td>₱{{ number_format((float)$booking->discount, 2) }}</td>
                 <td>
-                    @if($booking->payable_amount > 0)
-                        ₱{{ number_format((float)$booking->payable_amount, 2) }}
-                    @else
-                        ₱{{ number_format((float)$booking->total_price, 2) }}
-                    @endif
+                    ₱{{ number_format((float) $payment->amount, 2) }}
                 </td>
             </tr>
         </tbody>
     </table>
 
-    {{-- The Transaction ID / Date / Verification Link block that used to sit
-         here is gone. The transaction id printed empty for every payment that
-         did not come through the bank gateway, the date was the payment row's
-         updated_at (which moves whenever staff touch the record, so it was not
-         reliably the payment date), and the link spelled out a URL nobody can
-         usefully type off a printout. The QR below carries that same link, and
-         the receipt number identifies the record. --}}
-
-    <div style="text-align:center; margin-top:20px;">
-        @if(isset($qrBase64))
-            <img src="data:image/png;base64,{{ trim($qrBase64) }}" width="120" alt="QR Code">
-        @endif
-    </div>
-
     <div class="footer">
         <hr style="margin-top:15px;">
         <p>This receipt was generated electronically by the Farmers Hostel Auxiliary System.</p>
-        <p>Verify authenticity by letting a staff scan the QR code above for your check-in.</p>
+        <p>Keep this receipt and present it at check-in. Quote the receipt number for payment inquiries.</p>
     </div>
 </body>
 </html>

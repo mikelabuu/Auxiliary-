@@ -395,16 +395,23 @@
                                  RescheduleRequestController, and the configured
                                  check-in time the confirmation page states. Nothing
                                  is promised here that the system does not do. --}}
+                            <div class="co-check-card mt-6">
+                                <input type="checkbox" id="extra_mattress" name="extra_mattress" value="1" data-price="{{ \App\Support\BookingCharges::MATTRESS_PRICE }}" class="co-check" @checked(old('extra_mattress'))>
+                                <div class="co-check-body">
+                                    <label for="extra_mattress" class="co-check-title">Add an extra mattress · ₱500</label>
+                                    <span class="co-check-sub">Maximum one per booking, charged once for the entire stay. Room guest limits still apply.</span>
+                                </div>
+                            </div>
                             <div class="co-check-card co-check-card--terms mt-6" id="termsCard">
                                 <input type="checkbox" id="accept_terms" name="accept_terms" value="1" required class="co-check" @checked(old('accept_terms'))>
                                 <div class="co-check-body">
                                     <label for="accept_terms" class="co-check-title">I agree to the booking terms</label>
-                                    <span class="co-check-sub">Free to cancel while unpaid · {{ $holdLabel }} hold · a paid booking can’t be cancelled</span>
+                                    <span class="co-check-sub">Payments are non-refundable · unpaid bookings held for {{ $holdLabel }} · one reschedule may be requested</span>
                                     <div x-data="{ open: false }">
                                         <button type="button" class="co-check-more" @click="open = !open" :aria-expanded="open ? 'true' : 'false'"
                                                 x-text="open ? 'Hide the full terms' : 'Read the full terms'">Read the full terms</button>
                                         <p class="co-terms-full" x-show="open" x-transition.opacity style="display:none;">
-                                            Check-in from {{ $checkinTime }} with a valid ID for every guest. An unpaid booking can be cancelled free of charge, and is released automatically once the {{ $holdLabel }} hold runs out. <strong>A paid booking cannot be cancelled and may be rescheduled only once</strong> — if your plans change, request that move at least 24 hours before check-in. Miss that and the booking is forfeited with no refund.
+                                            <strong>Payment and cancellation.</strong> Unpaid bookings may be cancelled free of charge and expire after the {{ $holdLabel }} payment hold. Once paid, a booking cannot be cancelled. Payments are non-refundable for guest cancellations, no-shows, late arrivals, or early departures, except where a refund is required by law.<br><br><strong>Changing your dates.</strong> You may request one reschedule at least 24 hours before your original check-in. The new check-in must be within one year of the original check-in date, subject to room availability and staff approval. The same length of stay applies. A request does not change your booking until confirmed. Requests made later and no-shows forfeit the booking without a refund.<br><br><strong>Arrival and occupancy.</strong> Check-in starts at {{ $checkinTime }}. Every guest must bring valid identification. Senior / PWD guests must present their original qualifying IDs for verification. Stay within the selected rooms’ guest limits and follow hostel rules.<br><br><strong>Extra mattress.</strong> One optional mattress costs ₱500 for the entire booking and is included in the total when selected. It does not increase the permitted guest count.
                                         </p>
                                     </div>
                                 </div>

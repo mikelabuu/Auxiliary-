@@ -56,9 +56,15 @@ class ReportExportService
 
     private function exportExcel($query, $params)
     {
+        $format = ($params['format'] ?? 'xlsx') === 'csv' ? 'csv' : 'xlsx';
+        $columns = array_keys(app(ReportColumnMapper::class)->getSortable($params['column_set'] ?? match ($params['report_type']) {
+            'payment' => 'financial', 'combined' => 'combined', default => 'booking_summary',
+        }));
+
         return Excel::download(
-            new GenericReportExport($query->get()),
-            $this->generateFilename($params) . '.xlsx'
+            new GenericReportExport($query->get(), $columns),
+            $this->generateFilename($params) . '.' . $format,
+            $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX
         );
     }
 

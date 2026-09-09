@@ -294,6 +294,33 @@ class StayScheduleAndReportingTest extends TestCase
         );
     }
 
+    public function test_workbook_has_frozen_headers_filters_and_numeric_amounts(): void
+    {
+        $export = new \App\Exports\GenericReportExport(collect([(object) [
+            'guest_name' => '=HYPERLINK("https://example.test")', 'payable_amount' => '1234.50',
+        ]]));
+        $raw = \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+        $path = tempnam(sys_get_temp_dir(), 'report-test');
+        try {
+            file_put_contents($path, $raw);
+            $sheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path)->getActiveSheet();
+            $this->assertSame('A2', $sheet->getFreezePane());
+            $this->assertSame('A1:B2', $sheet->getAutoFilter()->getRange());
+            $this->assertSame('s', $sheet->getCell('A2')->getDataType());
+            $this->assertStringStartsWith("'=", $sheet->getCell('A2')->getValue());
+            $this->assertEquals(1234.5, $sheet->getCell('B2')->getValue());
+            $this->assertSame('n', $sheet->getCell('B2')->getDataType());
+        } finally { unlink($path); }
+    }
+
+    public function test_csv_export_has_headings_and_protects_formula_text(): void
+    {
+        $export = new \App\Exports\GenericReportExport(collect([(object) ['guest_name' => '=1+1', 'payable_amount' => '500.00']]));
+        $csv = \Maatwebsite\Excel\Facades\Excel::raw($export, \Maatwebsite\Excel\Excel::CSV);
+        $this->assertStringContainsString('Guest Name', $csv);
+        $this->assertStringContainsString("'=1+1", $csv);
+    }
+
     // ── Fixtures ─────────────────────────────────────────────────────────────
 
     private function booking(string $status, $checkOut): Booking

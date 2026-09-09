@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   expectedGuestsInput?.addEventListener('input', updateCapsDisplay);
   document.getElementById('request_discount')?.addEventListener('change', generateBookingSummary);
+  document.getElementById('extra_mattress')?.addEventListener('change', generateBookingSummary);
 
   function bindMealInputs(block) {
     const guestInput = block.querySelector('.res-num-guests');
@@ -2491,9 +2492,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // the desk once the IDs are verified, and quoting a number the system has
     // not agreed to would be a promise this page cannot keep.
     const wantsDiscount = !!document.getElementById('request_discount')?.checked;
+    const roomTotal = totalPrice;
+    const mattressInput = document.getElementById('extra_mattress');
+    const mattressAmount = mattressInput?.checked ? Number(mattressInput.dataset.price) : 0;
+    if (totalPrice) totalPrice += mattressAmount;
     html += '<div class="co-sum-tally">'
       + '<div class="co-sum-tally-row"><span>Rooms \u00d7 ' + (nights || 1) + ' night' + ((nights || 1) > 1 ? 's' : '') + '</span>'
-      + '<span>' + (totalPrice ? formatPrice(totalPrice) : '\u2014') + '</span></div>'
+      + '<span>' + (roomTotal ? formatPrice(roomTotal) : '\u2014') + '</span></div>'
+      + (mattressAmount ? '<div class="co-sum-tally-row"><span>Extra mattress × 1 · per stay</span><span>' + formatPrice(mattressAmount) + '</span></div>' : '')
       + (wantsDiscount
         ? '<div class="co-sum-tally-row" data-kind="discount"><span>Senior / PWD 20%</span><span>Applied at the desk</span></div>'
         : '')

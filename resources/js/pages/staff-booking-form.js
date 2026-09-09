@@ -54,6 +54,8 @@ function initStaffBookingForm() {
     const checkInInput = document.getElementById('check_in');
     const checkOutInput = document.getElementById('check_out');
     const discountInput = document.getElementById('discount_amount');
+    const seniorToggle = document.getElementById('has_senior_pwd');
+    const mattressInput = document.getElementById('extra_mattress');
     const expectedGuestsInput = document.getElementById('expected_guests');
     const progressBar = document.getElementById('assign-progress-bar');
     const progressText = document.getElementById('assign-progress-text');
@@ -464,7 +466,6 @@ function initStaffBookingForm() {
     const summarySubtotalEl = document.getElementById('summary-subtotal');
     const summaryTotalEl = document.getElementById('summary-total');
     const nightsBadgeEl = document.getElementById('nights-badge');
-    const discountHintEl = document.getElementById('discount-hint');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let lastTotal = 0;
 
@@ -525,6 +526,7 @@ function initStaffBookingForm() {
             : `${expected} guest${expected === 1 ? '' : 's'} expected`;
 
         let subtotal = 0;
+        let discount = 0;
         let lines = '';
         assignmentList.querySelectorAll('.assignment-card').forEach(card => {
             const number = card.dataset.room;
@@ -534,6 +536,8 @@ function initStaffBookingForm() {
             const g = parseInt(card.querySelector('[data-slot="guests"]').value, 10) || 1;
             const lineTotal = price * nights;
             subtotal += lineTotal;
+            const eligible = parseInt(card.querySelector('[data-slot="seniors"]').value, 10) || 0;
+            discount += Math.round((lineTotal / Math.max(1, Number(room.capacity))) * 0.20 * eligible * 100) / 100;
             lines += `
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
@@ -547,17 +551,25 @@ function initStaffBookingForm() {
         summaryRoomsEl.innerHTML = lines || '<p class="text-faint">Pick rooms on the board to build the summary.</p>';
         summarySubtotalEl.textContent = peso(subtotal);
 
-        let discount = Math.max(0, parseFloat(discountInput.value) || 0);
-        if (discount > subtotal && subtotal > 0) {
-            discountHintEl.textContent = `Discount is larger than the ${peso(subtotal)} subtotal.`;
-            discountHintEl.classList.remove('hidden');
-        } else {
-            discountHintEl.classList.add('hidden');
-        }
-        rollTotal(Math.max(0, subtotal - discount));
+        discountInput.value = discount.toFixed(2);
+        seniorToggle.checked = seniors > 0;
+        const mattress = mattressInput.checked ? Number(mattressInput.dataset.price) : 0;
+        document.getElementById('summary-mattress-row').hidden = !mattress;
+        rollTotal(Math.max(0, subtotal + mattress - discount));
     }
 
-    discountInput.addEventListener('input', updateSummary);
+    mattressInput.addEventListener('change', updateSummary);
+    seniorToggle.addEventListener('change', () => {
+        const counts = [...assignmentList.querySelectorAll('[data-slot="seniors"]')];
+        if (seniorToggle.checked && !counts.length) {
+            seniorToggle.checked = false;
+            toast('Pick a room first, then apply the Senior / PWD discount.', 'warning');
+            return;
+        }
+        if (seniorToggle.checked) counts[0].value = Math.max(1, Number(counts[0].value));
+        else counts.forEach(input => { input.value = 0; });
+        updateSummary();
+    });
 
     /* ───────────────────── Submit guard ───────────────────── */
     form.addEventListener('submit', function (e) {

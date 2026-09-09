@@ -4,14 +4,9 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use App\Models\Payment;
-use App\Models\Receipt;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Endroid\QrCode\Builder\Builder;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 
 class BookingPaidMail extends Mailable
 {
@@ -30,53 +25,7 @@ class BookingPaidMail extends Mailable
     {
         $booking = $this->booking;
 
-        // room_numbers is derived from reservations; ensure they're present
-        // (this mailable may be queued/serialized without the relation loaded).
-        $booking->loadMissing('reservations');
-
-        // Generate receipt number and verification URL.
-        //
-        // Signed, and with no expiry: the QR below is printed into a PDF the
-        // guest keeps, so a link that ages out would turn every archived receipt
-        // unverifiable. The signature is what authorises the reader — receipt
-        // numbers are sequential from the booking id, so an unsigned link would
-        // let anyone enumerate the receipt table.
-        $receiptNumber = 'R-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
-        $verificationUrl = URL::signedRoute('receipts.verify', ['number' => $receiptNumber]);
-
-        // Generate QR code as raw PNG
-        $qr = Builder::create()
-            ->data($verificationUrl)
-            ->size(150)
-            ->margin(0)
-            ->build();
-
-        $qrBase64 = trim(base64_encode($qr->getString()));
-
-        // Generate PDF with clean Blade
-        $pdf = Pdf::loadView('pdf.receipt', [
-            'booking' => $booking,
-            'payment' => $this->payment,
-            'qrBase64' => $qrBase64,
-            'receipt_number' => $receiptNumber,
-            'verificationUrl' => $verificationUrl
-        ])->setPaper('a4')->setWarnings(false);
-
-        // Save PDF to storage
-        $filename = "receipts/Receipt_{$booking->id}.pdf";
-        Storage::disk('local')->put($filename, $pdf->output());
-
-        // Compute SHA256 hash
-        $sha = hash('sha256', Storage::disk('local')->get($filename));
-
-        // Create receipt record
-        $receipt = Receipt::create([
-            'booking_id' => $booking->id,
-            'receipt_number' => $receiptNumber,
-            'generated_by' => 'system',
-            'file_path' => $filename,
-            'sha256_hash' => $sha,
-        ]);
+        $receipt = app(\App\Services\ReceiptService::class)->issue($booking, $this->payment);
 
         // Send email with PDF attached
         return $this->subject('Booking Confirmation & Official Receipt')
@@ -85,7 +34,7 @@ class BookingPaidMail extends Mailable
                         'receipt' => $receipt,
                         'payment' => $this->payment,
                     ])
-                    ->attachData($pdf->output(), "Receipt_{$booking->id}.pdf", [
+                    ->attachFromStorageDisk('local', $receipt->file_path, $receipt->receipt_number . '.pdf', [
                         'mime' => 'application/pdf',
                     ]);
     }

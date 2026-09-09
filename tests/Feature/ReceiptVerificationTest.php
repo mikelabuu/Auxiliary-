@@ -20,6 +20,12 @@ class ReceiptVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+    }
+
     private function makeReceipt(string $contents = 'pretend-pdf-bytes'): Receipt
     {
         $guest = User::forceCreate([
@@ -110,8 +116,7 @@ class ReceiptVerificationTest extends TestCase
     }
 
     /**
-     * The check has to be a hash comparison, not a lookup — otherwise an edited
-     * PDF with a real receipt number would pass.
+     * Verify the integrity of the stored PDF. The scanned paper is not uploaded.
      */
     public function test_an_altered_file_fails_verification(): void
     {

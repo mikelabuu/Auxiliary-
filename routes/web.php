@@ -86,6 +86,9 @@ Route::middleware('throttle:public-lookup')->group(function () {
 // authorization and refuses anything that is neither a valid signature nor a
 // staff session; receipt numbers run in sequence from the booking id, so an
 // unguarded version would be trivially enumerable.
+// Download authorizes the booking owner or active staff inside the controller.
+Route::get('/booking/{booking}/receipt', [ReceiptController::class, 'download'])->name('receipts.download');
+
 Route::get('/verify-receipt/{number}', [ReceiptController::class, 'verify'])
     ->name('receipts.verify');
 

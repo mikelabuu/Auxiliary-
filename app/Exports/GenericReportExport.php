@@ -5,49 +5,68 @@ namespace App\Exports;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-/**
- * The spreadsheet behind Analytics & Reporting's Export button.
- *
- * WithHeadings is not decoration. The rows arrive as bare stdClass records
- * straight from ReportQueryBuilder's select(), so without a heading row the
- * download opened as five or six unlabelled columns of ids, names, amounts and
- * dates — readable on screen, where the table renders its own <th>, and
- * anonymous the moment it left the browser. Anyone who had to act on the file
- * was left matching columns by eye.
- *
- * The labels are derived from the query's own column aliases rather than
- * hard-coded, so a change to a column set in ReportColumnMapper cannot leave
- * the headings describing the previous one. humanize() in
- * resources/js/pages/admin-reports.js formats the on-screen <th> the same way,
- * which is what keeps the sheet and the screen reading identically.
- */
-class GenericReportExport implements FromCollection, WithHeadings
+class GenericReportExport extends DefaultValueBinder implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithCustomValueBinder, WithColumnFormatting
 {
-    protected $data;
-
-    public function __construct($data)
-    {
-        $this->data = $data;
-    }
+    public function __construct(protected $data, protected array $columns = []) {}
 
     public function collection()
     {
         return collect($this->data);
     }
 
-    public function headings(): array
+    private function keys(): array
     {
         $first = collect($this->data)->first();
+        return $first ? array_keys((array) $first) : $this->columns;
+    }
 
-        // An empty result still exports, and a sheet with headings and no rows
-        // says "nothing matched" far more clearly than a blank one.
-        if (! $first) {
-            return [];
+    public function headings(): array
+    {
+        return array_map(fn ($key) => Str::of($key)->replace('_', ' ')->title()->toString(), $this->keys());
+    }
+
+    public function bindValue(Cell $cell, $value): bool
+    {
+        $key = $this->keys()[Coordinate::columnIndexFromString($cell->getColumn()) - 1] ?? '';
+        $numeric = in_array($key, ['id', 'expected_guests', 'payable_amount', 'extra_mattress', 'extra_mattress_amount'], true);
+        if ($cell->getRow() > 1 && $numeric && is_numeric($value)) {
+            $cell->setValueExplicit((float) $value, DataType::TYPE_NUMERIC);
+        } else {
+            // Guest-entered text must never become an executable spreadsheet formula.
+            $text = (string) ($value ?? '');
+            if (preg_match('/^[\\s]*[=+@-]/u', $text)) $text = "'" . $text;
+            $cell->setValueExplicit($text, DataType::TYPE_STRING);
         }
+        return true;
+    }
 
-        return collect(array_keys((array) $first))
-            ->map(fn ($key) => Str::of($key)->replace('_', ' ')->title()->toString())
-            ->all();
+    public function columnFormats(): array
+    {
+        $formats = [];
+        foreach ($this->keys() as $index => $key) {
+            if (in_array($key, ['payable_amount', 'extra_mattress_amount'], true)) {
+                $formats[Coordinate::stringFromColumnIndex($index + 1)] = '#,##0.00';
+            }
+        }
+        return $formats;
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter($sheet->calculateWorksheetDimension());
+        $sheet->getRowDimension(1)->setRowHeight(28);
+        return [1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '14532D']]]];
     }
 }

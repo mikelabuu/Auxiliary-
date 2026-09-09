@@ -103,6 +103,11 @@ class RescheduleAdminController extends Controller
                     throw new RoomUnavailable('Booking #' . $booking->id . ' has already used its one allowed reschedule. This request can no longer be approved.');
                 }
 
+                if ($locked->requested_check_in->gt(RescheduleRequest::latestCheckInFor($booking))
+                    || $locked->requested_check_in->lt(\Carbon\Carbon::today(\App\Support\StaySchedule::timezone()))) {
+                    throw new RoomUnavailable('The new check-in must be from today through one year after the original check-in. Ask the guest to submit valid dates.');
+                }
+
                 $roomNumbers = $booking->reservations->pluck('room_number')
                     ->map(fn ($n) => trim((string) $n))
                     ->filter()
@@ -154,7 +159,7 @@ class RescheduleAdminController extends Controller
                 // a rate change since the booking was made cannot be applied
                 // retroactively to a guest who has already paid.
                 $nights = max(1, $locked->requested_check_in->diffInDays($locked->requested_check_out));
-                $newTotal = round((float) $booking->reservations->sum('price') * $nights, 2);
+                $newTotal = round((float) $booking->reservations->sum('price') * $nights + (float) $booking->extra_mattress_amount, 2);
                 $paidBefore = (float) ($booking->payable_amount ?? $booking->total_price);
 
                 // What is owed can go up but never down. There is no refund

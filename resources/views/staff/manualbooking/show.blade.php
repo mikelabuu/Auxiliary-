@@ -116,6 +116,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <x-admin.ui.stat-card icon="receipt" label="Total Price" :delay="80">
             &#8369;{{ number_format($booking->total_price, 2) }}
+            @if($booking->extra_mattress)<p class="text-xs font-normal text-muted mt-2">Includes one extra mattress · ₱{{ number_format($booking->extra_mattress_amount, 2) }} per stay</p>@endif
         </x-admin.ui.stat-card>
         <x-admin.ui.stat-card icon="tag" label="Discount" :delay="100">
             &#8369;{{ number_format($booking->discount, 2) }}

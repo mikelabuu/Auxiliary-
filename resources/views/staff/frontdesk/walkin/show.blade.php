@@ -56,6 +56,7 @@
                     'Check-out' => \Carbon\Carbon::parse($booking->check_out)->format('M d, Y'),
                     'Booking method' => $booking->method ? ucfirst($booking->method) : '—',
                     'Total price' => '₱' . number_format($booking->total_price, 2),
+                    'Extra mattress (included)' => $booking->extra_mattress ? '1 · ₱' . number_format($booking->extra_mattress_amount, 2) . ' per stay' : 'None',
                     'Discount' => '₱' . number_format($booking->discount, 2),
                 ] as $label => $value)
                     <div class="record-detail-row">

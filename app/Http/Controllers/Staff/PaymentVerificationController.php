@@ -159,6 +159,12 @@ class PaymentVerificationController extends Controller
                     'payment_mode' => $locked->proof_method ?? 'manual',
                 ]);
 
+                try {
+                    app(\App\Services\ReceiptService::class)->issue($booking, $locked);
+                } catch (\Throwable $e) {
+                    throw new \App\Exceptions\ReceiptIssuanceFailed('Receipt generation failed.', 0, $e);
+                }
+
                 AuditLogger::log(
                     'payment_proof_verified',
                     $locked,
@@ -170,6 +176,9 @@ class PaymentVerificationController extends Controller
 
                 return $booking;
             });
+        } catch (\App\Exceptions\ReceiptIssuanceFailed $e) {
+            Log::error('Payment approval rolled back: ' . $e->getPrevious()?->getMessage());
+            return back()->with('error', 'The receipt could not be created. Payment is still awaiting verification; please try again.');
         } catch (QueryException $e) {
             $sqlState = (string) ($e->errorInfo[0] ?? $e->getCode());
 
@@ -214,7 +223,7 @@ class PaymentVerificationController extends Controller
         // approval action. Delivery failure must not roll back the decision.
         StaffAlert::paymentVerified($booking->refresh(), $payment->refresh());
 
-        // The official receipt is generated inside the mailable. A dead SMTP —
+        // The receipt already exists. A dead SMTP —
         // or a booking with no account behind it — must not undo a
         // verification that already committed.
         try {
@@ -223,21 +232,21 @@ class PaymentVerificationController extends Controller
             if (blank($email)) {
                 // Two flashes: both layouts turn `success` and `error` into
                 // toasts, so the verification and its caveat each get said.
-                return back()
+                return redirect()->route('staff.paymentverification.show', $payment)
                     ->with('success', "Payment verified. Booking #{$booking->id} is now paid.")
-                    ->with('error', 'No guest email on file, so no receipt was sent.');
+                    ->with('error', 'No guest email on file. The official receipt is ready to download from this payment.');
             }
 
             Mail::to($email)->send(new BookingPaidMail($booking, $payment->refresh()));
         } catch (\Throwable $e) {
             Log::error('Failed to send booking confirmation email after manual verification: ' . $e->getMessage());
 
-            return back()
+            return redirect()->route('staff.paymentverification.show', $payment)
                 ->with('success', "Payment verified. Booking #{$booking->id} is now paid.")
-                ->with('error', 'The receipt email could not be sent — check the mail settings.');
+                ->with('error', 'The receipt email could not be sent. The official receipt is ready to download from this payment.');
         }
 
-        return back()->with('success', "Payment verified. Booking #{$booking->id} is paid and the official receipt has been emailed.");
+        return redirect()->route('staff.paymentverification.show', $payment)->with('success', "Payment verified. Booking #{$booking->id} is paid and the official receipt has been emailed.");
     }
 
     /**

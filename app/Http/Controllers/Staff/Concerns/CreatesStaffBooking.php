@@ -108,7 +108,7 @@ trait CreatesStaffBooking
             'reservations.*.price_per_night' => 'nullable|numeric|min:0',
             'reservations.*.num_guests'      => 'required|integer|min:1',
             'reservations.*.num_seniors'     => 'nullable|integer|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
+            'extra_mattress' => 'nullable|integer|min:0|max:1',
             // Same "CODE|NAME" contract as the public form, and the same rule.
             // The desk types these on a guest's behalf, so an address that
             // silently loses its barangay is if anything worse here.
@@ -135,6 +135,7 @@ trait CreatesStaffBooking
         $totalGuests    = 0;
         $totalSeniors   = 0;
         $totalPrice     = 0;
+        $discount = 0;
         $roomPrices     = []; // room_number => authoritative nightly rate
 
         // Authoritative room records — type ownership comes from here, not
@@ -190,6 +191,7 @@ trait CreatesStaffBooking
             $totalGuests  += $numGuests;
             $totalSeniors += $numSeniors;
             $totalPrice   += $price * $nights;
+            $discount += \App\Support\BookingCharges::seniorPwdDiscount($price * $nights, (int) $capacity, $numSeniors);
 
             if (in_array($roomNumber, $allRoomNumbers)) {
                 return back()->withErrors([
@@ -207,22 +209,9 @@ trait CreatesStaffBooking
         }
 
         $status = 'paid';
-        $discount = (float) $request->input('discount_amount', 0);
-
-        // A discount may not exceed what the stay actually costs. `min:0` was
-        // the only bound, so a posted discount_amount larger than the total
-        // drove payable_amount negative — a "paid" booking worth less than
-        // nothing, with a successful Payment row to match.
-        //
-        // Rejected rather than clamped: a fat-fingered 99999 that silently
-        // became "the whole stay is free" is exactly the mistake nobody would
-        // catch until the books did. The ceiling is the server-computed total,
-        // never anything the form claimed it was.
-        if ($discount > $totalPrice) {
-            return back()->withErrors([
-                'discount_amount' => 'The discount (₱' . number_format($discount, 2) . ') cannot exceed the total for this stay (₱' . number_format($totalPrice, 2) . ').'
-            ])->withInput();
-        }
+        $mattressAmount = (int) $request->input('extra_mattress', 0) * \App\Support\BookingCharges::MATTRESS_PRICE;
+        $totalPrice += $mattressAmount;
+        $discount = round($discount, 2);
 
         DB::beginTransaction();
         try {
@@ -285,6 +274,8 @@ trait CreatesStaffBooking
                 'referred_by_purpose' => trim((string) $request->referred_by_purpose) ?: null,
                 'check_in'        => $request->check_in,
                 'check_out'       => $request->check_out,
+                'extra_mattress' => (int) $request->input('extra_mattress', 0),
+                'extra_mattress_amount' => $mattressAmount,
                 'discount'        => $discount,
                 'total_price'     => $totalPrice,
                 'num_seniors'     => $totalSeniors,

@@ -186,39 +186,53 @@ class StaffBookingPricingTest extends TestCase
         $this->assertEquals(7000, (float) $booking->total_price, 'Two nights should follow the published rate.');
     }
 
-    /**
-     * A discount may not exceed what the stay costs.
-     *
-     * `discount_amount` was validated as `min:0` with no ceiling, and
-     * payable_amount is `total - discount`. A mistyped figure produced a
-     * booking marked paid, worth negative money, with a matching successful
-     * payment row — and nothing in the flow would have said so.
-     */
     #[\PHPUnit\Framework\Attributes\DataProvider('bookingRoutes')]
-    public function test_a_discount_larger_than_the_total_is_rejected(string $route): void
+    public function test_pwd_discount_is_calculated_and_posted_deduction_is_ignored(string $route): void
     {
         $this->actingAsStaff();
-        $this->room('201', 'deluxe', 3000);
-
-        // Two nights at ₱3,000 is ₱6,000. A slipped keystroke offers ₱99,999.
-        $response = $this->post(route($route), $this->payload(overrides: ['discount_amount' => 99999]));
-
-        $response->assertSessionHasErrors('discount_amount');
-        $this->assertSame(0, Booking::count(), 'A discount beyond the stay total still created a booking.');
+        $this->room(price: 3000);
+        $this->post(route($route), $this->payload(['num_seniors' => 1], ['discount_amount' => 99999]))
+            ->assertSessionHasNoErrors();
+        $booking = Booking::sole();
+        // 6,000 for two nights / four capacity slots × 20% × one eligible guest.
+        $this->assertEquals(300, (float) $booking->discount);
+        $this->assertEquals(5700, (float) $booking->payable_amount);
+        $this->assertEquals(5700, (float) $booking->payments()->sole()->amount);
     }
 
-    /** The boundary is allowed: a stay may be comped in full, just not beyond. */
     #[\PHPUnit\Framework\Attributes\DataProvider('bookingRoutes')]
-    public function test_a_discount_equal_to_the_total_is_allowed(string $route): void
+    public function test_no_eligible_guests_means_no_discount_even_with_a_posted_deduction(string $route): void
     {
         $this->actingAsStaff();
-        $this->room('201', 'deluxe', 3000);
+        $this->room();
+        $this->post(route($route), $this->payload(overrides: ['discount_amount' => 6000]))->assertSessionHasNoErrors();
+        $this->assertEquals(6000, (float) Booking::sole()->payable_amount);
+        $this->assertEquals(0, (float) Booking::sole()->discount);
+    }
 
-        $this->post(route($route), $this->payload(overrides: ['discount_amount' => 6000]));
+    #[\PHPUnit\Framework\Attributes\DataProvider('bookingRoutes')]
+    public function test_mattress_is_charged_once_and_does_not_change_the_room_discount(string $route): void
+    {
+        $this->actingAsStaff();
+        $this->room();
+        $this->post(route($route), $this->payload(['num_seniors' => 2], ['extra_mattress' => 1, 'extra_mattress_amount' => 1]))
+            ->assertSessionHasNoErrors();
+        $booking = Booking::sole();
+        $this->assertSame(1, $booking->extra_mattress);
+        $this->assertEquals(500, (float) $booking->extra_mattress_amount);
+        $this->assertEquals(6500, (float) $booking->total_price);
+        $this->assertEquals(600, (float) $booking->discount);
+        $this->assertEquals(5900, (float) $booking->payable_amount);
+        $this->assertEquals(5900, (float) $booking->payments()->sole()->amount);
+    }
 
-        $booking = Booking::firstOrFail();
-
-        $this->assertEquals(0, (float) $booking->payable_amount);
+    #[\PHPUnit\Framework\Attributes\DataProvider('bookingRoutes')]
+    public function test_more_than_one_mattress_is_rejected(string $route): void
+    {
+        $this->actingAsStaff();
+        $this->room();
+        $this->post(route($route), $this->payload(overrides: ['extra_mattress' => 2]))->assertSessionHasErrors('extra_mattress');
+        $this->assertSame(0, Booking::count());
     }
 
     /**

@@ -53,17 +53,23 @@
                 <span id="summary-subtotal" class="font-semibold tabnum text-ink">₱0</span>
             </div>
 
+            <label for="extra_mattress" class="flex cursor-pointer items-start gap-2.5 text-sm text-ink">
+                <input type="checkbox" name="extra_mattress" id="extra_mattress" value="1" data-price="{{ \App\Support\BookingCharges::MATTRESS_PRICE }}" class="row-check" @checked(old('extra_mattress'))>
+                <span>Extra mattress · ₱500<small class="block text-xs text-muted">One per booking. Charged once for the stay; room guest limits still apply.</small></span>
+            </label>
+            <div class="flex justify-between text-sm" id="summary-mattress-row" hidden><span>Extra mattress × 1</span><span id="summary-mattress" class="tabnum">₱500</span></div>
+
             {{-- Senior / PWD flag --}}
             <label for="has_senior_pwd" class="flex cursor-pointer items-center gap-2.5 text-sm text-ink">
                 <input type="checkbox" name="has_senior_pwd" id="has_senior_pwd" class="row-check">
-                Senior / PWD guest present
+                Apply Senior / PWD discount
             </label>
 
             {{-- Discount --}}
             <div class="form-group">
-                <label class="form-label" for="discount_amount">Discount (₱)</label>
-                <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="1" class="form-input tabnum">
-                <p id="discount-hint" class="hidden text-2xs font-semibold" style="color:var(--color-au-700);"></p>
+                <label class="form-label" for="discount_amount">Automatic discount (₱)</label>
+                <input type="number" id="discount_amount" value="0.00" readonly aria-describedby="discount-hint" class="form-input tabnum">
+                <p id="discount-hint" class="text-2xs text-muted">20% of each eligible guest’s share of the room rate (room rate ÷ capacity). Verify original IDs and set the Senior / PWD count in each room.</p>
             </div>
         </div>
 

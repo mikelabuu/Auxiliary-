@@ -125,6 +125,12 @@ class RescheduleRequest extends Model
         return static::checkInMomentFor($booking)->subHours(static::NOTICE_HOURS);
     }
 
+    /** Latest replacement arrival: one calendar year after the original arrival. */
+    public static function latestCheckInFor(Booking $booking): CarbonInterface
+    {
+        return Carbon::parse($booking->check_in, StaySchedule::timezone())->addYearNoOverflow()->endOfDay();
+    }
+
     /** When the guest was actually due to arrive. */
     public static function checkInMomentFor(Booking $booking): CarbonInterface
     {

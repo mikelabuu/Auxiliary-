@@ -8,13 +8,31 @@ use Illuminate\Support\Facades\Storage;
 
 class ReceiptController extends Controller
 {
+    public function download(\App\Models\Booking $booking)
+    {
+        $staff = auth('staff')->user();
+        $guest = auth('web')->user();
+        $allowedStaff = $staff && ! $staff->is_suspended
+            && in_array($staff->role, ['master_admin', 'admin', 'cashier', 'frontdesk'], true);
+        $owner = $guest && ! $guest->is_suspended && $guest->hasVerifiedEmail()
+            && (int) $booking->user_id === (int) $guest->id;
+        abort_unless($allowedStaff || $owner, 403);
+
+        $payment = $booking->paymentAttempts()->where('status', 'success')->orderBy('id')->first();
+        abort_unless($payment, 404);
+        $receipt = app(\App\Services\ReceiptService::class)->issue($booking, $payment);
+        abort_unless(Storage::disk('local')->exists($receipt->file_path), 404, 'The receipt file is unavailable. Please contact the front desk.');
+        abort_unless(hash_equals($receipt->sha256_hash, hash('sha256', Storage::disk('local')->get($receipt->file_path))), 409, 'This receipt does not match the issued copy. Please contact the front desk.');
+
+        return Storage::disk('local')->download($receipt->file_path, $receipt->receipt_number . '.pdf', [
+            'Content-Type' => 'application/pdf',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
     /**
-     * Confirm that a receipt PDF is the one this system issued.
-     *
-     * The check is a hash comparison, not a lookup: the stored SHA-256 is taken
-     * at the moment the PDF is generated, so an altered copy — a changed total,
-     * a different name — produces a different digest and fails here even though
-     * the receipt number is real.
+     * Confirm that the receipt is on record and its stored PDF is intact.
+     * Scanning a QR alone cannot authenticate changes to a printed copy.
      */
     public function verify(Request $request, string $number)
     {
@@ -27,7 +45,10 @@ class ReceiptController extends Controller
         // Without one of the two this is refused rather than answered, because
         // receipt numbers run in sequence from the booking id and an open
         // endpoint would be trivially enumerable.
-        if (! $request->hasValidSignature() && ! auth('staff')->check()) {
+        $staff = auth('staff')->user();
+        $allowedStaff = $staff && ! $staff->is_suspended
+            && in_array($staff->role, ['master_admin', 'admin', 'cashier', 'frontdesk'], true);
+        if (! $request->hasValidSignature() && ! $allowedStaff) {
             abort(403);
         }
 

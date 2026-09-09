@@ -287,7 +287,7 @@
                         </div>
                         <div class="p-5 space-y-2.5 text-sm">
                             <div class="flex items-center justify-between gap-4">
-                                <span class="text-muted">Subtotal</span>
+                                <span class="text-muted">Subtotal @if($booking->extra_mattress)<small class="block">Includes one extra mattress · ₱{{ number_format($booking->extra_mattress_amount, 2) }} per stay</small>@endif</span>
                                 <span class="text-stone-800 font-semibold font-data tabnum">₱{{ number_format($booking->total_price, 2) }}</span>
                             </div>
                             <div class="flex items-center justify-between gap-4">

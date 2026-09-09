@@ -325,6 +325,9 @@
                         <span class="tabnum">₱{{ number_format($booking->total_price, 2) }}</span>
                     </div>
 
+                    @if($booking->extra_mattress)
+                        <div class="flex justify-between text-xs text-stone-600"><span>Includes extra mattress × 1 (per stay)</span><span class="tabnum">₱{{ number_format($booking->extra_mattress_amount, 2) }}</span></div>
+                    @endif
                     @if($booking->discount > 0)
                         <div class="flex justify-between items-center text-emerald-deep bg-emerald/10 ring-1 ring-emerald/30 px-3 py-2 rounded-xl text-xs">
                             <span class="flex items-center gap-1"><x-booking.ui.icon-solid name="tag" class="text-[14px]" /> Discount Approved</span>
@@ -342,6 +345,12 @@
                     @endif
 
                     <!-- Discount Uploads Processing -->
+                    @if($booking->paymentAttempts()->where('status', 'success')->exists())
+                        <a download href="{{ route('receipts.download', $booking) }}" class="press w-full py-3 rounded-full flex items-center justify-center gap-2 text-xs font-bold bg-emerald-deep text-cream">
+                            <x-booking.ui.icon-solid name="receipt" class="text-[14px]" /> Download official receipt
+                        </a>
+                        <p class="text-xs text-stone-500">Your receipt is available here even if the confirmation email has not arrived.</p>
+                    @endif
                     @if($booking->wants_discount)
                         <div class="pt-4 border-t border-emerald-deep/10 space-y-3.5">
                             <h4 class="text-[10px] font-bold text-stone-500 uppercase tracking-widest leading-none">Senior / PWD Verification</h4>
@@ -488,7 +497,7 @@
                         <p class="text-xs font-semibold text-stone-600 leading-relaxed">
                             A paid booking can't be cancelled, but it can be moved once. Tell us by
                             <strong class="text-ink">{{ $rescheduleDeadline->format('g:i A') }} on {{ $rescheduleDeadline->format('M d') }}</strong>
-                            — 24 hours before your {{ $booking->check_in->format('M d') }} check-in — and we'll try to find you new dates.
+                            — 24 hours before your {{ $booking->check_in->format('M d') }} check-in. Your new check-in may be as late as {{ \App\Models\RescheduleRequest::latestCheckInFor($booking)->format('M d, Y') }}, within one year of the original date, subject to availability and approval.
                         </p>
                         <p class="text-[11px] font-medium text-stone-500 leading-relaxed mt-2">
                             After that we can't move it, and a booking nobody checks in to is forfeited — no refund.

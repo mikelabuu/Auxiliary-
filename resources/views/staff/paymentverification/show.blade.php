@@ -75,7 +75,7 @@
                         <dd class="mt-1 font-bold text-stone-700">{{ $payment->proof_method_label }}</dd>
                     </div>
                     <div>
-                        <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Guest reference</dt>
+                        <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Payment reference</dt>
                         <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->proof_reference ?: '—' }}</dd>
                     </div>
                     <div>
@@ -83,10 +83,6 @@
                         <dd class="mt-1 font-bold text-stone-700 tabnum">
                             {{ $payment->proof_submitted_at?->timezone(config('hostel.timezone'))->format('M d, Y g:i A') ?? '—' }}
                         </dd>
-                    </div>
-                    <div>
-                        <dt class="font-bold uppercase tracking-[0.14em] text-faint text-2xs">Our reference</dt>
-                        <dd class="mt-1 font-bold text-stone-700 font-data break-all">{{ $payment->reference_no }}</dd>
                     </div>
                 </dl>
 
@@ -131,6 +127,7 @@
                         Awaiting cashier verification. Admins can inspect the proof, but only a cashier can verify or reject it.
                     </div>
                 @elseif ($payment->status === 'success')
+                    <a download href="{{ route('receipts.download', $payment->booking_id) }}" class="btn btn-outline mb-3">Download official receipt</a>
                     <div class="flex items-start gap-2.5 rounded-[var(--radius)] border border-clsu-200 bg-clsu-50 px-4 py-3 text-xs font-semibold text-clsu-800 leading-relaxed">
                         <x-admin.ui.icon name="check-circle" class="w-4 h-4 mt-0.5 shrink-0" stroke-width="2" />
                         <div>

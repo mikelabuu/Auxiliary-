@@ -279,21 +279,17 @@ class GuestLifecycleMailTest extends TestCase
         $this->assertSame('expired', $booking->fresh()->status);
     }
 
-    /**
-     * PRODUCT.md: tell the truth or say nothing. This system has no refund
-     * policy written down, so the no-show mail — the one going to a guest who
-     * has already paid — must not imply one either way.
-     */
-    public function test_the_no_show_mail_promises_nothing_about_money(): void
+    /** The no-show notice must match the non-refundable checkout policy. */
+    public function test_the_no_show_mail_explains_forfeiture_and_how_to_contact_staff(): void
     {
         $guest = $this->guest();
         $booking = $this->booking($guest, 'no_show');
 
         $html = (new BookingNoShowMail($booking))->render();
 
-        foreach (['refund', 'non-refundable', 'forfeit', 'no refund'] as $claim) {
-            $this->assertStringNotContainsStringIgnoringCase($claim, strip_tags($html));
-        }
+        $this->assertStringContainsStringIgnoringCase('no refund', strip_tags($html));
+        $this->assertStringContainsStringIgnoringCase('forfeited', strip_tags($html));
+        $this->assertStringContainsStringIgnoringCase('24 hours', strip_tags($html));
 
         $this->assertStringContainsStringIgnoringCase('front desk', strip_tags($html));
     }

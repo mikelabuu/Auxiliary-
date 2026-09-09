@@ -121,6 +121,8 @@ class BookingCreator
             ]);
         }
 
+        $totalPrice += (int) $request->input('extra_mattress', 0) * \App\Support\BookingCharges::MATTRESS_PRICE;
+
         // seniors cannot exceed guests
         if ($totalSeniors > $request->expected_guests) {
             throw ValidationException::withMessages([
@@ -261,6 +263,8 @@ class BookingCreator
                 // Stamped server-side. The checkbox only proves a box was
                 // ticked; this records when the agreement actually happened.
                 'accepted_terms_at' => now(),
+                'extra_mattress' => (int) $request->input('extra_mattress', 0),
+                'extra_mattress_amount' => (int) $request->input('extra_mattress', 0) * \App\Support\BookingCharges::MATTRESS_PRICE,
                 'discount'        => 0,
                 'total_price'     => $totalPrice,
                 // What the guest actually owes. Left unset here for a long

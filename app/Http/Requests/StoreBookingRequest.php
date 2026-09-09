@@ -83,6 +83,7 @@ class StoreBookingRequest extends FormRequest
             // `accepted` rather than `boolean`: an unticked box posts nothing
             // at all, and `boolean` would happily pass a missing field.
             'accept_terms'     => 'accepted',
+            'extra_mattress' => 'nullable|integer|min:0|max:1',
             'reservations'    => 'required|array|min:1|max:' . BookingController::MAX_ROOMS_PER_BOOKING,
             'reservations.*.room_type'       => 'required|string',
             // No room_number. A guest chooses a room *style* and how many of
