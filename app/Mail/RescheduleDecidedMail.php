@@ -7,6 +7,7 @@ use App\Models\RescheduleRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The desk's answer to a request to move a paid stay.
@@ -34,6 +35,23 @@ class RescheduleDecidedMail extends Mailable
         $booking = $this->booking->loadMissing('reservations');
         $approved = $this->reschedule->status === RescheduleRequest::STATUS_APPROVED;
 
+        $receipt = null;
+        if ($approved) {
+            $payment = $booking->paymentAttempts()->where('status', 'success')->orderBy('id')->first();
+            if ($payment) {
+                try {
+                    $receipt = app(\App\Services\ReceiptService::class)->issue($booking, $payment);
+                    $this->attachFromStorageDisk('local', $receipt->file_path, $receipt->receipt_number . '.pdf', [
+                        'mime' => 'application/pdf',
+                    ]);
+                } catch (\Throwable $e) {
+                    // Still tell the guest their approved dates if PDF generation
+                    // fails. Their booking link lets them retry the download.
+                    Log::warning("Could not attach the revised receipt for booking #{$booking->id}: " . $e->getMessage());
+                }
+            }
+        }
+
         $subject = $approved
             ? "Booking #{$booking->id} moved to " . $booking->check_in->format('M d, Y')
             : "We could not move booking #{$booking->id}";
@@ -43,6 +61,7 @@ class RescheduleDecidedMail extends Mailable
                 'booking'    => $booking,
                 'reschedule' => $this->reschedule,
                 'approved'   => $approved,
+                'receipt'    => $receipt,
                 // Only the declined branch uses this: an approval consumes the
                 // single allowance, while a decline may be retried before the
                 // unchanged booking's deadline.

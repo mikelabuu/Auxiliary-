@@ -24,6 +24,9 @@
     <p><strong>Guest:</strong> {{ $booking->guest_name }}</p>
     <p><strong>Check-in:</strong> {{ \Carbon\Carbon::parse($booking->check_in)->format('M d, Y') }}</p>
     <p><strong>Check-out:</strong> {{ \Carbon\Carbon::parse($booking->check_out)->format('M d, Y') }}</p>
+    @if(isset($reschedule))
+        <p><strong>Schedule updated:</strong> {{ $reschedule->reviewed_at?->timezone(config('hostel.timezone'))->format('M d, Y g:i A') }}. This copy replaces the previous schedule; the payment recorded below is unchanged.</p>
+    @endif
 
     <p><strong>Payment method:</strong> {{ $payment->proof_method_label }}</p>
     @if($payment->proof_reference)

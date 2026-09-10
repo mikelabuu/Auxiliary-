@@ -4,18 +4,146 @@ namespace Tests\Feature;
 
 use App\Mail\RescheduleDecidedMail;
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Models\Receipt;
 use App\Models\RescheduleRequest;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\ReceiptService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ReschedulePolicyTest extends TestCase
 {
     use RefreshDatabase;
+
+    private array $receiptHtml = [];
+
+    private function prepareReceipt(Booking $booking): array
+    {
+        Storage::fake('local');
+        // Capture the actual Blade input while still rendering real PDF bytes.
+        Pdf::shouldReceive('loadView')->andReturnUsing(function ($view, $data) {
+            $this->receiptHtml[] = view($view, $data)->render();
+
+            $pdf = new \Barryvdh\DomPDF\PDF(app('dompdf'), app('config'), app('files'), app('view'));
+
+            return $pdf->loadView($view, $data);
+        });
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'user_id' => $booking->user_id,
+            'amount' => 3200,
+            'status' => 'success',
+            'payment_type' => 'manual',
+            'reference_no' => 'RESCHEDULE-' . $booking->id,
+            'gateway' => 'cash',
+            'paid_at' => now(),
+        ]);
+
+        return [$payment, app(ReceiptService::class)->issue($booking, $payment)];
+    }
+
+    public function test_approval_updates_the_receipt_and_email_without_changing_the_payment(): void
+    {
+        $booking = $this->booking($this->guest(), 'RECEIPT-1');
+        [$payment, $original] = $this->prepareReceipt($booking);
+        $originalBytes = Storage::disk('local')->get($original->file_path);
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_PENDING, 7, [
+            'requested_check_out' => $booking->check_out->copy()->addDays(8),
+        ]);
+
+        $this->actingAs($this->frontDesk(), 'staff')
+            ->post(route('staff.reschedules.approve', $request))->assertSessionHas('success');
+
+        $revised = $original->fresh();
+        $this->assertSame(1, Receipt::count());
+        $this->assertSame($original->receipt_number, $revised->receipt_number);
+        $this->assertNotSame($original->file_path, $revised->file_path);
+        $this->assertSame($originalBytes, Storage::disk('local')->get($original->file_path));
+        $bytes = Storage::disk('local')->get($revised->file_path);
+        $this->assertStringStartsWith('%PDF-', $bytes);
+        $this->assertNotSame($original->sha256_hash, $revised->sha256_hash);
+        $this->assertSame(hash('sha256', $bytes), $revised->sha256_hash);
+        $this->assertEquals(4800, $booking->fresh()->payable_amount);
+        $this->assertEquals(3200, $payment->fresh()->amount);
+        $this->assertStringContainsString('Check-in:</strong> ' . $request->requested_check_in->format('M d, Y'), $this->receiptHtml[1]);
+        $this->assertStringContainsString('Check-out:</strong> ' . $request->requested_check_out->format('M d, Y'), $this->receiptHtml[1]);
+        $this->assertStringNotContainsString('Check-in:</strong> ' . $booking->check_in->format('M d, Y'), $this->receiptHtml[1]);
+        $this->assertStringContainsString('₱3,200.00', $this->receiptHtml[1]);
+
+        $mail = new RescheduleDecidedMail($booking->fresh(), $request->fresh());
+        $this->assertStringContainsString('Your updated official receipt is attached', $mail->render());
+        $this->assertTrue($mail->hasAttachmentFromStorageDisk('local', $revised->file_path, $revised->receipt_number . '.pdf', ['mime' => 'application/pdf']));
+        $this->get(route('receipts.download', $booking))->assertOk()->assertStreamedContent($bytes);
+        $this->get(route('receipts.verify', $revised->receipt_number))->assertOk()->assertViewHas('valid', true);
+        $this->assertCount(2, $this->receiptHtml);
+    }
+
+    public function test_downloading_a_previously_rescheduled_booking_repairs_its_old_receipt(): void
+    {
+        $booking = $this->booking($this->guest(), 'RECEIPT-2');
+        [$payment, $original] = $this->prepareReceipt($booking);
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_APPROVED);
+        $booking->update([
+            'check_in' => $request->requested_check_in,
+            'check_out' => $request->requested_check_out,
+        ]);
+
+        $this->actingAs($booking->user)->get(route('receipts.download', $booking))->assertOk();
+
+        $this->assertNotSame($original->file_path, $original->fresh()->file_path);
+        $this->assertStringContainsString('Check-in:</strong> ' . $request->requested_check_in->format('M d, Y'), $this->receiptHtml[1]);
+        $this->assertSame(1, Receipt::count());
+        $this->get(route('receipts.download', $booking))->assertOk();
+        $this->assertCount(2, $this->receiptHtml);
+    }
+
+    public function test_pending_and_declined_reschedules_keep_the_issued_receipt(): void
+    {
+        $booking = $this->booking($this->guest(), 'RECEIPT-3');
+        [$payment, $original] = $this->prepareReceipt($booking);
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_PENDING);
+        $this->assertSame($original->sha256_hash, app(ReceiptService::class)->issue($booking, $payment)->sha256_hash);
+
+        $this->actingAs($this->frontDesk(), 'staff')->post(route('staff.reschedules.decline', $request), [
+            'decision_note' => 'The requested dates are unavailable.',
+        ])->assertSessionHas('success');
+
+        $mail = new RescheduleDecidedMail($booking->fresh(), $request->fresh());
+        $mail->build();
+        $this->assertEmpty($mail->diskAttachments);
+        $this->get(route('receipts.download', $booking))->assertOk();
+        $this->assertSame($original->sha256_hash, $original->fresh()->sha256_hash);
+        $this->assertCount(1, $this->receiptHtml);
+    }
+
+    public function test_receipt_failure_preserves_the_approved_move_and_download_can_retry(): void
+    {
+        $booking = $this->booking($this->guest(), 'RECEIPT-4');
+        [$payment, $original] = $this->prepareReceipt($booking);
+        $request = $this->reschedule($booking, RescheduleRequest::STATUS_PENDING);
+        $this->mock(ReceiptService::class, fn ($mock) => $mock->shouldReceive('issue')->twice()
+            ->andThrow(new \RuntimeException('Storage unavailable')));
+
+        $this->actingAs($this->frontDesk(), 'staff')->post(route('staff.reschedules.approve', $request))
+            ->assertSessionHas('success')->assertSessionHas('error');
+
+        $this->assertSame(RescheduleRequest::STATUS_APPROVED, $request->fresh()->status);
+        $this->assertTrue($booking->fresh()->check_in->equalTo($request->requested_check_in));
+        $this->assertSame($original->sha256_hash, $original->fresh()->sha256_hash);
+        $mail = new RescheduleDecidedMail($booking->fresh(), $request->fresh());
+        $this->assertStringContainsString('Your stay has been moved', $mail->render());
+        $this->assertEmpty($mail->diskAttachments);
+        $this->app->forgetInstance(ReceiptService::class);
+        $this->get(route('receipts.download', $booking))->assertOk();
+        $this->assertNotSame($original->file_path, $original->fresh()->file_path);
+    }
 
     protected function setUp(): void
     {

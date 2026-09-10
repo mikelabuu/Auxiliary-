@@ -43,6 +43,10 @@ Our front desk was not able to move booking **#{{ $booking->id }}** to the dates
 @endcomponent
 
 Previously {{ $reschedule->original_check_in->format('M d, Y') }} – {{ $reschedule->original_check_out->format('M d, Y') }} ({{ $reschedule->original_nights }} {{ \Illuminate\Support\Str::plural('night', $reschedule->original_nights) }}).
+@if ($receipt ?? null)
+
+Your updated official receipt is attached. It shows your approved dates and the amount already paid. Please use this copy at check-in.
+@endif
 @else
 @component('mail::details', ['title' => 'The booking as it stands', 'rows' => $bookingDetails])
 @endcomponent

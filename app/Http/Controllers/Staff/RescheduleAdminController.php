@@ -13,12 +13,14 @@ use App\Models\RescheduleRequest;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Services\AuditLogger;
+use App\Services\ReceiptService;
 use App\Support\GuestNotice;
 use App\Support\Realtime;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The desk half of moving a paid stay.
@@ -222,6 +224,19 @@ class RescheduleAdminController extends Controller
             return back()->with('error', 'That request was already decided by another staff member.');
         }
 
+        // The dates are committed. A PDF/storage failure must not undo the move;
+        // ReceiptService will retry the revision when the receipt is downloaded.
+        $receiptFailed = false;
+        $payment = $booking->paymentAttempts()->where('status', 'success')->orderBy('id')->first();
+        if ($payment) {
+            try {
+                app(ReceiptService::class)->issue($booking, $payment);
+            } catch (\Throwable $e) {
+                $receiptFailed = true;
+                Log::warning("Could not update the receipt after rescheduling booking #{$booking->id}: " . $e->getMessage());
+            }
+        }
+
         // The stay now covers different nights, so both the booking boards and
         // the room map are looking at stale inventory.
         Realtime::emit(new BookingChanged);
@@ -237,7 +252,13 @@ class RescheduleAdminController extends Controller
 
         GuestNotice::rescheduleDecided($booking->refresh(), $reschedule->refresh());
 
-        return back()->with('success', "Booking #{$booking->id} moved to {$reschedule->requested_check_in->format('M d')} – {$reschedule->requested_check_out->format('M d')}. The guest has been emailed.");
+        $response = back()->with('success', "Booking #{$booking->id} moved to {$reschedule->requested_check_in->format('M d')} – {$reschedule->requested_check_out->format('M d')}. The guest has been emailed.");
+
+        if ($receiptFailed) {
+            $response->with('error', 'The dates were updated, but the revised receipt could not be generated. Download the receipt again to retry.');
+        }
+
+        return $response;
     }
 
     /**
